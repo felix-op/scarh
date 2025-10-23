@@ -1,0 +1,9 @@
+# Backend
+.venv
+__pycache__
+.env
+db.sqlite3
+# Frontend
+node_modules
+# Notas personales
+notas.md
