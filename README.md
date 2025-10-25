@@ -19,3 +19,16 @@ Sistema de Control y Análisis de Recursos Hídricos.
 
 1. Instalar dependencias: npm install
 2. Iniciar servidor: npm run dev
+
+# Docker compose comandos
+docker-compose -f docker-compose.dev.yml up --build
+
+docker-compose -f docker-compose.yml up --build -d
+# crear .env con datos genericos
+DB_NAME=scarh_db
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DEBUG=True
+SECRET_KEY='ejemplo'
