@@ -21,10 +21,11 @@ Sistema de Control y Análisis de Recursos Hídricos.
 2. Iniciar servidor: npm run dev
 
 # Docker compose comandos
-docker-compose -f docker-compose.dev.yml up --build
-
-docker-compose -f docker-compose.yml up --build -d
-# crear .env con datos genericos
+- Dev:
+docker-compose -f docker compose.dev.yml up --build
+- Prod:
+docker-compose -f docker compose.yml up --build -d
+# crear .env con datos genericos en carpeta backend
 DB_NAME=scarh_db
 DB_USER=postgres
 DB_PASSWORD=postgres
