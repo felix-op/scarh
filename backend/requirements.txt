@@ -7,4 +7,6 @@ python-dotenv
 djangorestframework-simplejwt
 drf-spectacular
 django-cors-headers==4.4.0
+pyproj
+
 
