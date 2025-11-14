@@ -18,10 +18,10 @@ class Limnigrafo(models.Model):
     tipo_de_comunicacion = ArrayField(models.CharField(max_length=25, choices=COMUNICACIONES_CHOICES), default=list)
     bateria_max = models.FloatField()
     bateria_min = models.FloatField()
-    tiempo_de_advertencia = models.FloatField()
-    tiempo_de_peligro = models.FloatField()
+    tiempo_de_advertencia = models.TimeField()
+    tiempo_de_peligro = models.TimeField()
     token_hash = models.CharField(max_length=64, null=True, blank=True)
-    estado = models.CharField(max_length=20, choices=[('activo', 'Activo'), ('en_prueba', 'En prueba'), ('fuera_de_servicio', 'Fuera de servicio')], default='activo')
+    estado = models.CharField(max_length=20, choices=[('normal', 'Normal'), ('advertencia', 'Advertencia'),('peligro', 'Peligro'), ('fuera_de_servicio', 'Fuera de servicio')], default='normal')
     ubicacion = models.OneToOneField('Ubicacion', on_delete=models.PROTECT, related_name='limnigrafo')
     sector_rio = models.ForeignKey('SectorRio', on_delete=models.PROTECT, related_name='limnigrafos')
 
