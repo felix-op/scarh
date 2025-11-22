@@ -28,7 +28,5 @@ Sistema de Control y Análisis de Recursos Hídricos.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 # Docker compose comandos
-- Dev:
-docker-compose -f docker compose.dev.yml up --build
 - Prod:
 docker-compose -f docker compose.yml up --build -d
