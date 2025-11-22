@@ -19,17 +19,16 @@ Sistema de Control y Análisis de Recursos Hídricos.
 
 1. Instalar dependencias: npm install
 2. Iniciar servidor: npm run dev
+3. Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
+
+## Documentación de Frontend
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 # Docker compose comandos
 - Dev:
 docker-compose -f docker compose.dev.yml up --build
 - Prod:
 docker-compose -f docker compose.yml up --build -d
-# crear .env con datos genericos en carpeta backend
-DB_NAME=scarh_db
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_HOST=localhost
-DB_PORT=5432
-DEBUG=True
-SECRET_KEY='ejemplo'
