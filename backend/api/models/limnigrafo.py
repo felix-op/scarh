@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 import secrets, hashlib
-
+from simple_history.models import HistoricalRecords
 class Limnigrafo(models.Model):
+    history = HistoricalRecords()
     COMUNICACIONES_CHOICES = [
         ('internet-https-2G', 'Internet HTTPS 2G'),
         ('internet-https-3G', 'Internet HTTPS 3G'),

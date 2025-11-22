@@ -3,11 +3,14 @@ from .views import hola_api
 from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 from .views import LogoutView
 from rest_framework.routers import DefaultRouter
-from .viewsets import UsuarioViewSet, LimnigrafoViewSet
+from .viewsets import UsuarioViewSet, LimnigrafoViewSet, HistorialViewSet
+
 router = DefaultRouter()
 
 router.register(r'usuarios', UsuarioViewSet, basename='usuarios')
 router.register(r'limnigrafos', LimnigrafoViewSet, basename='limnigrafos') 
+router.register(r'historial', HistorialViewSet, basename='historial') 
+
 urlpatterns = [
     path('hola/', hola_api),
     path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

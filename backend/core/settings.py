@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'drf_spectacular',  
     'corsheaders',
     'api',
+    'simple_history',
 ]
 AUTH_USER_MODEL = 'api.Usuario'
 
@@ -68,6 +69,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 
 ]
 
