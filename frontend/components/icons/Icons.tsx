@@ -399,6 +399,8 @@ export function NotificationNewdotFillIcon({
   );
 }
 
+/* ───── ArrowDownIcon ───── */
+
 export function ArrowDownIcon({
   size = 24,
   color = "currentColor",
@@ -423,6 +425,8 @@ export function ArrowDownIcon({
     </svg>
   );
 }
+
+/* ───── SettingsIcon ───── */
 
 export function SettingsIcon({
   size = 24,
@@ -471,6 +475,8 @@ export function SettingsIcon({
   );
 }
 
+/* ───── AddIcon ───── */
+
 export function AddIcon({
   size = 24,
   color = "currentColor",
@@ -494,6 +500,8 @@ export function AddIcon({
     </svg>
   );
 }
+
+/* ───── LessIcon ───── */
 
 export function LessIcon({
   size = 24,
