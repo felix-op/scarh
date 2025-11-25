@@ -3,12 +3,19 @@
 import { useState } from "react";
 import Boton from "./Boton";
 
-export default function LoginCard({ onLogin }) {
+// definimos la forma de las props
+type LoginCardProps = {
+  onLogin?: (email: string, password: string) => void; 
+};
+
+export default function LoginCard({ onLogin }: LoginCardProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   function handleSubmit() {
-    if (onLogin) onLogin(email, password);
+    if (onLogin) {
+      onLogin(email, password);
+    }
   }
 
   return (
@@ -29,7 +36,6 @@ export default function LoginCard({ onLogin }) {
       {/* EMAIL */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <label style={{ fontSize: 16, color: "#1E1E1E" }}>Email</label>
-
         <input
           type="email"
           placeholder="example@gmail.com"
@@ -38,7 +44,7 @@ export default function LoginCard({ onLogin }) {
           style={{
             width: "100%",
             padding: "12px 16px",
-            background: "white", 
+            background: "white",
             borderRadius: 8,
             border: "1px solid #D9D9D9",
             outline: "none",
@@ -70,7 +76,7 @@ export default function LoginCard({ onLogin }) {
         />
       </div>
 
-      {/* BOTÓN EXPANDIDO */}
+      {/* BOTÓN */}
       <Boton
         onClick={handleSubmit}
         className="w-full"

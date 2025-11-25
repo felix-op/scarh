@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import Boton from "../components/Boton";
 import { TextField } from "../components/TextField";
 
@@ -8,7 +8,7 @@ export default function Home() {
   const [name, setName] = useState("");
   const [showWelcome, setShowWelcome] = useState(false);
 
-  function handleSubmit(event) {
+function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (name.trim().length === 0) {
