@@ -32,3 +32,8 @@ body {
 .font-outfit {
   font-family: var(--font-outfit);
 }
+
+.leaflet-conteiner {
+  width: 100vw;
+  height: 100vh;
+}
