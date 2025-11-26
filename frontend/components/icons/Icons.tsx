@@ -426,6 +426,33 @@ export function ArrowDownIcon({
   );
 }
 
+/* ───── ChevronRightIcon ───── */
+
+export function ChevronRightIcon({
+  size = 24,
+  color = "currentColor",
+  className = "",
+}: IconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+    >
+      <path
+        d="m9 6 6 6l-6 6"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /* ───── SettingsIcon ───── */
 
 export function SettingsIcon({
@@ -519,4 +546,50 @@ export function LessIcon({
       <path fill={color} d="M1 229.3h512v85.3H1z" />
     </svg>
   );
+}
+
+/* ───── Circulo ───── */
+
+export function circle({
+  size = 24,
+  color = "currentColor",
+  className = "",
+}: IconProps) {
+  return (
+<svg xmlns="http://www.w3.org/2000/svg" 
+width={size} 
+height={size}  
+viewBox="0 0 24 24"
+className={className}>
+  <circle 
+  cx="12" 
+  cy="12" 
+  r="8" 
+  fill={color} 
+  opacity="0.3"/>
+  <path
+  fill="currentColor"
+  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10s10-4.47 10-10S17.53 2 12 2m0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8s8 3.58 8 8s-3.58 8-8 8"/>
+  </svg>
+  )
+}
+
+/* ───── Walter ───── */
+
+export function water({
+  size = 24,
+  color = "currentColor",
+  className = "",
+}: IconProps) {
+  return (
+  <svg 
+  xmlns="http://www.w3.org/2000/svg" 
+  width={size} 
+  height={size} 
+  viewBox="0 0 24 24">
+    <path 
+    fill={color} 
+    d="M21.98 14H22zM5.35 13c1.19 0 1.42 1 3.33 1c1.95 0 2.09-1 3.33-1c1.19 0 1.42 1 3.33 1c1.95 0 2.09-1 3.33-1c1.19 0 1.4.98 3.31 1v-2c-1.19 0-1.42-1-3.33-1c-1.95 0-2.09 1-3.33 1c-1.19 0-1.42-1-3.33-1c-1.95 0-2.09 1-3.33 1c-1.19 0-1.42-1-3.33-1c-1.95 0-2.09 1-3.33 1v2c1.9 0 2.17-1 3.35-1m13.32 2c-1.95 0-2.09 1-3.33 1c-1.19 0-1.42-1-3.33-1c-1.95 0-2.1 1-3.34 1s-1.38-1-3.33-1s-2.1 1-3.34 1v2c1.95 0 2.11-1 3.34-1c1.24 0 1.38 1 3.33 1s2.1-1 3.34-1c1.19 0 1.42 1 3.33 1c1.94 0 2.09-1 3.33-1c1.19 0 1.42 1 3.33 1v-2c-1.24 0-1.38-1-3.33-1M5.35 9c1.19 0 1.42 1 3.33 1c1.95 0 2.09-1 3.33-1c1.19 0 1.42 1 3.33 1c1.95 0 2.09-1 3.33-1c1.19 0 1.4.98 3.31 1V8c-1.19 0-1.42-1-3.33-1c-1.95 0-2.09 1-3.33 1c-1.19 0-1.42-1-3.33-1c-1.95 0-2.09 1-3.33 1c-1.19 0-1.42-1-3.33-1C3.38 7 3.24 8 2 8v2c1.9 0 2.17-1 3.35-1"/>
+    </svg>
+    )
 }
