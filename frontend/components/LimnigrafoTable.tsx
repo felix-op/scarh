@@ -57,11 +57,11 @@ export default function LimnigrafoTable({
         ${className}
       `}
     >
-      <header className="flex items-center justify-between border-b border-[#6E6F72]/30 px-6 py-3">
+      <header className="flex items-center justify-between border-b border-[#6E6F72]/30 px-5 py-2">
         {columnTitles.map((title) => (
           <div
             key={title}
-            className="flex-1 text-center text-[20px] font-medium text-[#605E5E]"
+            className="flex-1 text-center text-[18px] font-medium text-[#605E5E]"
           >
             {title}
           </div>

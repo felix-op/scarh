@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useState, type CSSProperties } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { ReactElement } from "react";
 import {
   Map as MapIcon,
@@ -41,24 +41,35 @@ type NavButtonProps = {
   Icon: IconComponent;
   collapsed: boolean;
   href?: string;
+  isActive?: boolean;
+  onNavigate?: (href: string) => void;
 };
 
-function NavButton({ label, Icon, collapsed, href }: NavButtonProps) {
+function NavButton({
+  label,
+  Icon,
+  collapsed,
+  href,
+  isActive = false,
+  onNavigate,
+}: NavButtonProps) {
   const content = (
     <div
-      className="flex w-full items-center justify-center rounded-[10px] bg-[#F0F0F0] text-[#011018]"
+      className="flex w-full items-center justify-center rounded-[10px]"
       style={{
         gap: collapsed ? 0 : 12,
         height: collapsed ? 48 : 56,
         padding: collapsed ? "6px" : "14px 20px",
         justifyContent: collapsed ? "center" : "flex-start",
+        backgroundColor: isActive ? "#011018" : "#F0F0F0",
+        color: isActive ? "#F9FBFF" : "#011018",
       }}
     >
       <div style={{ marginLeft: collapsed ? 0 : 12 }}>
-        <Icon size={collapsed ? 28 : 32} color="#011018" />
+        <Icon size={collapsed ? 28 : 32} color={isActive ? "#F9FBFF" : "#011018"} />
       </div>
       {!collapsed && (
-        <span style={{ fontSize: 20, fontWeight: 400, color: "#011018" }}>
+        <span style={{ fontSize: 20, fontWeight: 400, color: isActive ? "#F9FBFF" : "#011018" }}>
           {label}
         </span>
       )}
@@ -67,9 +78,14 @@ function NavButton({ label, Icon, collapsed, href }: NavButtonProps) {
 
   if (href) {
     return (
-      <Link href={href} className="block w-full no-underline">
+      <button
+        type="button"
+        onClick={() => onNavigate?.(href)}
+        className="block w-full border-0 bg-transparent p-0"
+        style={{ cursor: "pointer" }}
+      >
         {content}
-      </Link>
+      </button>
     );
   }
 
@@ -190,15 +206,28 @@ type NavProps = {
   onCollapseChange?: (collapsed: boolean) => void;
 };
 
+const NAV_COLLAPSE_STORAGE_KEY = "scarh-nav-collapsed";
+
 export function Nav({ userName, userEmail, onCollapseChange }: NavProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname() ?? "";
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return window.sessionStorage.getItem(NAV_COLLAPSE_STORAGE_KEY) === "true";
+  });
+
+  useEffect(() => {
+    window.sessionStorage.setItem(
+      NAV_COLLAPSE_STORAGE_KEY,
+      isCollapsed ? "true" : "false",
+    );
+    onCollapseChange?.(isCollapsed);
+  }, [isCollapsed, onCollapseChange]);
 
   function toggleSidebar() {
-    setIsCollapsed((prev) => {
-      const nextValue = !prev;
-      onCollapseChange?.(nextValue);
-      return nextValue;
-    });
+    setIsCollapsed((prev) => !prev);
   }
 
   return (
@@ -284,6 +313,14 @@ export function Nav({ userName, userEmail, onCollapseChange }: NavProps) {
               Icon={Icon}
               collapsed={isCollapsed}
               href={href}
+              isActive={href ? pathname.startsWith(href) : false}
+              onNavigate={(target) => {
+                try {
+                  router.push(target);
+                } catch {
+                  window.location.href = target;
+                }
+              }}
             />
           ))}
         </div>

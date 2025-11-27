@@ -1,23 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import { Nav } from "@/components/Nav";
 import type { MapViewProps } from "@/components/MapView";
 
-const MapView = dynamic<MapViewProps>(() => import("../components/MapView"), {
+const MapView = dynamic<MapViewProps>(() => import("@/components/MapView"), {
   ssr: false,
 });
 
-const MapPage: React.FC = () => {
+export default function MapPage() {
   const [resizeToken, setResizeToken] = useState(0);
+
+  const handleCollapseChange = useCallback(() => {
+    setResizeToken((token) => token + 1);
+  }, []);
 
   return (
     <div className="flex min-h-screen w-full bg-[#EEF4FB]">
       <Nav
         userName="Juan Perez"
         userEmail="juan.perez@scarh.com"
-        onCollapseChange={() => setResizeToken((token) => token + 1)}
+        onCollapseChange={handleCollapseChange}
       />
 
       <main className="flex flex-1">
@@ -27,7 +31,4 @@ const MapPage: React.FC = () => {
       </main>
     </div>
   );
-};
-
-export default MapPage;
-
+}
