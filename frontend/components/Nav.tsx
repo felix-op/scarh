@@ -1,8 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import type { ReactElement } from "react";
-import Boton from "./Boton";
 import {
   Map as MapIcon,
   Chip as LimnigraphIcon,
@@ -19,9 +19,11 @@ import {
 
 type IconComponent = (props: { size?: number; color?: string }) => ReactElement;
 
-const NAV_ITEMS: { label: string; Icon: IconComponent }[] = [
-  { label: "Mapa", Icon: MapIcon },
-  { label: "Limnigrafo", Icon: LimnigraphIcon },
+type NavItem = { label: string; Icon: IconComponent; href?: string };
+
+const NAV_ITEMS: NavItem[] = [
+  { label: "Mapa", Icon: MapIcon, href: "/map" },
+  { label: "Limnigrafo", Icon: LimnigraphIcon, href: "/home" },
   { label: "Metricas", Icon: MeasuresIcon },
   { label: "Estadisticas", Icon: StatisticsIcon },
   { label: "Usuarios", Icon: UserIcon },
@@ -38,47 +40,40 @@ type NavButtonProps = {
   label: string;
   Icon: IconComponent;
   collapsed: boolean;
+  href?: string;
 };
 
-function NavButton({ label, Icon, collapsed }: NavButtonProps) {
-  return (
-    <Boton
-      type="button"
+function NavButton({ label, Icon, collapsed, href }: NavButtonProps) {
+  const content = (
+    <div
+      className="flex w-full items-center justify-center rounded-[10px] bg-[#F0F0F0] text-[#011018]"
       style={{
-        width: "100%",
-        margin: 0,
-        background: "#F0F0F0",
-        color: "#011018",
-        borderRadius: 10,
-        display: "flex",
-        alignItems: "center",
+        gap: collapsed ? 0 : 12,
+        height: collapsed ? 48 : 56,
+        padding: collapsed ? "6px" : "14px 20px",
         justifyContent: collapsed ? "center" : "flex-start",
-        gap: collapsed ? 0 : 16,
-        height: collapsed ? 60 : 64,
-        padding: collapsed ? "10px" : "20px 30px",
       }}
-      className="!bg-[#F0F0F0] !text-[#011018] !px-0 !mx-0 w-full"
     >
-      <div
-        style={{
-          marginLeft: collapsed ? 0 : 20,
-        }}
-      >
-        <Icon size={collapsed ? 36 : 38} color="#011018" />
+      <div style={{ marginLeft: collapsed ? 0 : 12 }}>
+        <Icon size={collapsed ? 28 : 32} color="#011018" />
       </div>
       {!collapsed && (
-        <span
-          style={{
-            fontSize: 24,
-            fontWeight: 400,
-            color: "#011018",
-          }}
-        >
+        <span style={{ fontSize: 20, fontWeight: 400, color: "#011018" }}>
           {label}
         </span>
       )}
-    </Boton>
+    </div>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block w-full no-underline">
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className="w-full">{content}</div>;
 }
 
 type ProfileCardProps = {
@@ -88,89 +83,103 @@ type ProfileCardProps = {
 };
 
 function ProfileCard({ collapsed, userName, userEmail }: ProfileCardProps) {
+  if (collapsed) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#F0F0F0",
+          borderRadius: 12,
+          padding: "6px 4px",
+          gap: 6,
+          minHeight: 50,
+        }}
+      >
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: "18px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <UserIcon size={36} color="#080404" />
+        </div>
+        <NotificationNewdotFillIcon size={17} color="#2982CB" />
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
         width: "100%",
         display: "flex",
-        flexDirection: collapsed ? "column" : "row",
         alignItems: "center",
-        justifyContent: collapsed ? "center" : "flex-start",
         background: "#F0F0F0",
         borderRadius: 12,
-        padding: collapsed ? "12px 0" : "12px 16px",
-        gap: collapsed ? 6 : 12,
-        minHeight: collapsed ? 96 : 110,
-        position: "relative",
+        padding: "8px 12px",
+        gap: 10,
+        minHeight: 76,
       }}
     >
       <div
         style={{
-          width: collapsed ? 58 : 70,
-          height: collapsed ? 58 : 70,
-          borderRadius: "20px",
-          background: "none",
+          width: 52,
+          height: 52,
+          borderRadius: "16px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <UserIcon size={collapsed ? 40 : 46} color="#080404" />
+        <UserIcon size={34} color="#080404" />
       </div>
 
-      {!collapsed && (
-        <div
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <span
           style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            gap: 4,
+            color: "#121212",
+            fontSize: 18,
+            fontWeight: 500,
           }}
         >
-          <span
-            style={{
-              color: "#121212",
-              fontSize: 26,
-              fontWeight: 500,
-            }}
-          >
-            {userName}
-          </span>
-          <span
-            style={{
-              color: "#999999",
-              fontSize: 18,
-              fontWeight: 400,
-            }}
-          >
-            {userEmail}
-          </span>
-        </div>
-      )}
+          {userName}
+        </span>
+        <span
+          style={{
+            color: "#999999",
+            fontSize: 14,
+            fontWeight: 400,
+          }}
+        >
+          {userEmail}
+        </span>
+      </div>
 
-      {collapsed ? (
-        <div
-          style={{
-            position: "absolute",
-            bottom: 8,
-            right: 12,
-          }}
-        >
-          <NotificationNewdotFillIcon size={22} color="#2982CB" />
-        </div>
-      ) : (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginLeft: "auto",
-          }}
-        >
-          <NotificationNewdotFillIcon size={18} color="#2982CB" />
-          <ChevronRightIcon size={20} color="#160404" />
-        </div>
-      )}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          marginLeft: "auto",
+        }}
+      >
+        <NotificationNewdotFillIcon size={16} color="#2982CB" />
+        <ChevronRightIcon size={16} color="#160404" />
+      </div>
     </div>
   );
 }
@@ -178,10 +187,19 @@ function ProfileCard({ collapsed, userName, userEmail }: ProfileCardProps) {
 type NavProps = {
   userName: string;
   userEmail: string;
+  onCollapseChange?: (collapsed: boolean) => void;
 };
 
-export function Nav({ userName, userEmail }: NavProps) {
+export function Nav({ userName, userEmail, onCollapseChange }: NavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  function toggleSidebar() {
+    setIsCollapsed((prev) => {
+      const nextValue = !prev;
+      onCollapseChange?.(nextValue);
+      return nextValue;
+    });
+  }
 
   return (
     <div
@@ -195,11 +213,11 @@ export function Nav({ userName, userEmail }: NavProps) {
     >
       <div
         style={{
-          width: isCollapsed ? 124 : 321,
-          padding: isCollapsed ? "24px 10px" : "24px 10px",
+          width: isCollapsed ? 96 : 260,
+          padding: isCollapsed ? "20px 8px" : "20px 10px",
           display: "flex",
           flexDirection: "column",
-          gap: 16,
+          gap: 12,
           alignItems: isCollapsed ? "center" : "stretch",
         }}
       >
@@ -212,20 +230,20 @@ export function Nav({ userName, userEmail }: NavProps) {
         >
           <button
             type="button"
-            onClick={() => setIsCollapsed((prev) => !prev)}
+            onClick={toggleSidebar}
             style={{
               border: "none",
               background: "transparent",
               cursor: "pointer",
-              padding: 6,
+              padding: 4,
               borderRadius: 8,
             }}
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
-              <BurgerArrowRightIcon size={28} color="#6B6B6B" />
+              <BurgerArrowRightIcon size={22} color="#6B6B6B" />
             ) : (
-              <BurgerArrowLeftIcon size={28} color="#6B6B6B" />
+              <BurgerArrowLeftIcon size={22} color="#6B6B6B" />
             )}
           </button>
         </div>
@@ -238,7 +256,7 @@ export function Nav({ userName, userEmail }: NavProps) {
             padding: isCollapsed ? "0 0 2px" : "0 0 4px",
           }}
         >
-          <WaterIcon size={isCollapsed ? 96 : 128} color="#38BDF8" />
+          <WaterIcon size={isCollapsed ? 72 : 108} color="#38BDF8" />
         </div>
 
         <div style={dividerStyle} />
@@ -259,12 +277,13 @@ export function Nav({ userName, userEmail }: NavProps) {
             width: "100%",
           }}
         >
-          {NAV_ITEMS.map(({ label, Icon }) => (
+          {NAV_ITEMS.map(({ label, Icon, href }) => (
             <NavButton
               key={label}
               label={label}
               Icon={Icon}
               collapsed={isCollapsed}
+              href={href}
             />
           ))}
         </div>
@@ -272,21 +291,21 @@ export function Nav({ userName, userEmail }: NavProps) {
 
       <div
         style={{
-          width: 24,
+          width: 18,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          paddingTop: isCollapsed ? 70 : 120,
-          paddingBottom: 50,
-          gap: 40,
+          paddingTop: isCollapsed ? 60 : 90,
+          paddingBottom: 40,
+          gap: 20,
           position: "relative",
         }}
       >
         <div
           style={{
             position: "absolute",
-            top: isCollapsed ? 70 : 120,
-            bottom: 50,
+            top: isCollapsed ? 60 : 90,
+            bottom: 40,
             width: 1,
             backgroundColor: "#D3D4D5",
           }}

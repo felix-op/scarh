@@ -593,3 +593,67 @@ export function water({
     </svg>
     )
 }
+
+/* ───── Filtro ───── */
+
+export function FiltroDeslizadores({
+  size = 32,
+  color = "currentColor",
+  className = "",
+}: IconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      fill="none"
+      className={className}
+    >
+      <g stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M7 9h18" />
+        <path d="M7 16h18" />
+        <path d="M7 23h18" />
+        <circle cx="12" cy="9" r="2.5" />
+        <circle cx="20" cy="16" r="2.5" />
+        <circle cx="14" cy="23" r="2.5" />
+      </g>
+    </svg>
+  );
+}
+
+/* ───── Lupa ───── */
+
+export function LupaBusqueda({
+  size = 22,
+  color = "#8A8A8A",
+  className = "",
+}: IconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+    >
+      <circle
+        cx="11"
+        cy="11"
+        r="7"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="m21 21l-4.3-4.3"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
