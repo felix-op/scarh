@@ -11,6 +11,7 @@ type MapMarkerProps = {
 	size?: number;
 	color?: string;
 	popupContent?: string;
+	onMarkerClick?: () => void;
 };
 
 export function MapMarker({
@@ -18,6 +19,7 @@ export function MapMarker({
 	size = 32,
 	color = "#1D4ED8",
 	popupContent,
+	onMarkerClick,
 }: MapMarkerProps) {
 	const map = useMap();
 
@@ -47,10 +49,17 @@ export function MapMarker({
 			marker.bindPopup(popupContent);
 		}
 
+		if (onMarkerClick) {
+			marker.on("click", onMarkerClick);
+		}
+
 		return () => {
+			if (onMarkerClick) {
+				marker.off("click", onMarkerClick);
+			}
 			map.removeLayer(marker);
 		};
-	}, [map, markerIcon, position, popupContent]);
+	}, [map, markerIcon, position, popupContent, onMarkerClick]);
 
 	return null;
 }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapMarker } from "@componentes/MapMarker";
+import { LimnigrafoMapInfoPanel } from "@componentes/LimnigrafoMapInfoPanel";
 import {
 	EXTRA_LIMNIGRAFOS_STORAGE_KEY,
 	type LimnigrafoDetalleData,
@@ -72,33 +73,43 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 	);
 
 	const mapCenter = markers[0]?.coordenadas ?? DEFAULT_CENTER;
+	const [selectedLimnigrafo, setSelectedLimnigrafo] =
+		useState<LimnigrafoDetalleData | null>(null);
 
 	return (
-		<MapContainer
-			center={mapCenter}
-			zoom={13}
-			className="h-full w-full min-h-[400px]"
-			scrollWheelZoom={false}
-		>
-			<TileLayer
-				url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-			/>
-
-			{markers.map((limnigrafo) => (
-				<MapMarker
-					key={limnigrafo.id}
-					position={[
-						limnigrafo.coordenadas.lat,
-						limnigrafo.coordenadas.lng,
-					]}
-					color={getEstadoColor(limnigrafo.estado.variante)}
-					popupContent={`${limnigrafo.nombre} – ${limnigrafo.ubicacion}`}
+		<div className="relative h-full w-full">
+			<MapContainer
+				center={mapCenter}
+				zoom={15}
+				className="h-full w-full min-h-[400px]"
+				scrollWheelZoom={false}
+			>
+				<TileLayer
+					url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 				/>
-			))}
 
-			<AutoResizeMap resizeToken={resizeToken} />
-		</MapContainer>
+				{markers.map((limnigrafo) => (
+					<MapMarker
+						key={limnigrafo.id}
+						position={[
+							limnigrafo.coordenadas.lat,
+							limnigrafo.coordenadas.lng,
+						]}
+						color={getEstadoColor(limnigrafo.estado.variante)}
+						popupContent={`${limnigrafo.nombre} – ${limnigrafo.ubicacion}`}
+						onMarkerClick={() => setSelectedLimnigrafo(limnigrafo)}
+					/>
+				))}
+
+				<AutoResizeMap resizeToken={resizeToken} />
+			</MapContainer>
+
+			<LimnigrafoMapInfoPanel
+				limnigrafo={selectedLimnigrafo}
+				onClose={() => setSelectedLimnigrafo(null)}
+			/>
+		</div>
 	);
 };
 
