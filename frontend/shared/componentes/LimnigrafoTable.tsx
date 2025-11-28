@@ -68,7 +68,7 @@ export default function LimnigrafoTable({
         rounded-[20px]
         bg-white
         shadow-[1px_6px_12px_rgba(0,0,0,0.25)]
-        overflow-hidden
+        overflow-hidden custom-scroll
         font-outfit
         ${className}
       `}

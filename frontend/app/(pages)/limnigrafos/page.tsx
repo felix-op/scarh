@@ -31,6 +31,8 @@ const FORM_STATE = {
 	presion: "",
 	ultimoMantenimiento: "",
 	descripcion: "",
+	latitud: "",
+	longitud: "",
 };
 
 export default function Home() {
@@ -102,29 +104,35 @@ export default function Home() {
 	function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		if (!formValues.nombre || !formValues.ubicacion) {
-			setFormError("Nombre y ubicación son obligatorios.");
+			setFormError("Nombre y ubicaci+¦n son obligatorios.");
 			return;
 		}
 
-		const nuevoLimnigrafo: LimnigrafoDetalleData = {
+		const lat = Number.parseFloat(formValues.latitud);
+	const lng = Number.parseFloat(formValues.longitud);
+	const nuevoLimnigrafo: LimnigrafoDetalleData = {
 			id: formValues.id || `lim-extra-${Date.now()}`,
 			nombre: formValues.nombre,
 			ubicacion: formValues.ubicacion,
 			bateria: formValues.bateria || "Bateria 100%",
 			tiempoUltimoDato: formValues.tiempoUltimoDato || "Hace instantes",
 			estado: { variante: formValues.estado },
-			temperatura: formValues.temperatura || "0°",
+			temperatura: formValues.temperatura || "0-¦",
 			altura: formValues.altura || "0 mts",
 			presion: formValues.presion || "0 bar",
 			ultimoMantenimiento: formValues.ultimoMantenimiento || "Sin datos",
 			descripcion:
         formValues.descripcion ||
-        "Sin descripción. Actualice la información cuando esté disponible.",
+        "Sin descripci+¦n. Actualice la informaci+¦n cuando est+® disponible.",
 			datosExtra: [
 				{ label: "Dato 1", value: "N/A" },
 				{ label: "Dato 2", value: "N/A" },
 				{ label: "Dato 3", value: "N/A" },
 			],
+		coordenadas:
+			Number.isFinite(lat) && Number.isFinite(lng)
+				? { lat, lng }
+				: undefined,
 		};
 
 		setExtraLimnigrafos((prev) => [nuevoLimnigrafo, ...prev]);
@@ -157,7 +165,7 @@ export default function Home() {
                 hover:!bg-[#E6F3FB]
               "
 						>
-							{mostrarFormulario ? "Cerrar formulario" : "Añadir Limnigrafo"}
+							{mostrarFormulario ? "Cerrar formulario" : "A+¦adir Limnigrafo"}
 						</Boton>
 					</div>
 
@@ -204,7 +212,7 @@ export default function Home() {
 										/>
 									</label>
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Ubicación *
+										Ubicaci+¦n *
 										<input
 											type="text"
 											value={formValues.ubicacion}
@@ -215,8 +223,34 @@ export default function Home() {
 											required
 										/>
 									</label>
+				<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+					Latitud (opcional)
+					<input
+						type="number"
+						step="any"
+						value={formValues.latitud}
+						onChange={(event) =>
+							handleChange("latitud", event.target.value)
+						}
+						className="rounded-xl border border-[#D3D4D5] p-2.5"
+						placeholder="-54.79"
+					/>
+				</label>
+				<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+					Longitud (opcional)
+					<input
+						type="number"
+						step="any"
+						value={formValues.longitud}
+						onChange={(event) =>
+							handleChange("longitud", event.target.value)
+						}
+						className="rounded-xl border border-[#D3D4D5] p-2.5"
+						placeholder="-68.30"
+					/>
+				</label>
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Batería
+										Bater+¡a
 										<input
 											type="text"
 											value={formValues.bateria}
@@ -227,7 +261,7 @@ export default function Home() {
 										/>
 									</label>
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Tiempo último dato
+										Tiempo +¦ltimo dato
 										<input
 											type="text"
 											value={formValues.tiempoUltimoDato}
@@ -276,7 +310,7 @@ export default function Home() {
 										/>
 									</label>
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Presión
+										Presi+¦n
 										<input
 											type="text"
 											value={formValues.presion}
@@ -287,7 +321,7 @@ export default function Home() {
 										/>
 									</label>
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Último mantenimiento
+										+Ültimo mantenimiento
 										<input
 											type="text"
 											value={formValues.ultimoMantenimiento}
@@ -300,7 +334,7 @@ export default function Home() {
 								</div>
 
 								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Descripción
+									Descripci+¦n
 									<textarea
 										value={formValues.descripcion}
 										onChange={(event) =>
@@ -348,3 +382,4 @@ export default function Home() {
 		</div>
 	);
 }
+

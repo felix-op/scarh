@@ -246,18 +246,23 @@ export function Nav({ userName, userEmail, onCollapseChange, onProfileClick }: N
 	const [isCollapsed, setIsCollapsed] = useState(false);
 
 	useEffect(() => {
-		if (typeof window !== "undefined") {
-			const stored =
-        window.sessionStorage.getItem(NAV_COLLAPSE_STORAGE_KEY) === "true";
-			setIsCollapsed(stored);
+		if (typeof window === "undefined") {
+			return;
 		}
+
+		const stored =
+        window.sessionStorage.getItem(NAV_COLLAPSE_STORAGE_KEY) === "true";
+		// eslint-disable-next-line react-hooks/set-state-in-effect
+		setIsCollapsed(stored);
 	}, []);
 
 	useEffect(() => {
-		window.sessionStorage.setItem(
-			NAV_COLLAPSE_STORAGE_KEY,
-			isCollapsed ? "true" : "false",
-		);
+		if (typeof window !== "undefined") {
+			window.sessionStorage.setItem(
+				NAV_COLLAPSE_STORAGE_KEY,
+				isCollapsed ? "true" : "false",
+			);
+		}
 		onCollapseChange?.(isCollapsed);
 	}, [isCollapsed, onCollapseChange]);
 

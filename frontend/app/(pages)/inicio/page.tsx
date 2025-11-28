@@ -2,61 +2,37 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import LimnigrafoTable, { LimnigrafoRowData } from "@componentes/LimnigrafoTable";
+import LimnigrafoTable from "@componentes/LimnigrafoTable";
 import { Nav } from "@componentes/Nav";
+import { LIMNIGRAFOS, toLimnigrafoRowData } from "@data/limnigrafos";
 
-
-const MOCK_LIMNIGRAFOS: LimnigrafoRowData[] = [
-	{
-		id: "lim-1",
-		nombre: "Limnígrafo 1",
-		ubicacion: "Ubicación Limnígrafo 1",
-		bateria: "Batería 92%",
-		tiempoUltimoDato: "Hace 2 horas",
-		estado: { variante: "activo" },
-	},
-	{
-		id: "lim-2",
-		nombre: "Limnígrafo 2",
-		ubicacion: "Ubicación Limnígrafo 2",
-		bateria: "Batería 80%",
-		tiempoUltimoDato: "Hace 4 horas",
-		estado: { variante: "activo" },
-	},
-	{
-		id: "lim-3",
-		nombre: "Limnígrafo 3",
-		ubicacion: "Ubicación Limnígrafo 3",
-		bateria: "Batería 56%",
-		tiempoUltimoDato: "Hace 1 hora",
-		estado: { variante: "activo" },
-	},
-	{
-		id: "lim-4",
-		nombre: "Limnígrafo 4",
-		ubicacion: "Ubicación Limnígrafo 4",
-		bateria: "En monitoreo",
-		tiempoUltimoDato: "Hace 15 minutos",
-		estado: { variante: "activo" },
-	},
-];
+const BASE_LIMNIGRAFOS = toLimnigrafoRowData(LIMNIGRAFOS);
+const estadoPriority: Record<string, number> = {
+	fuera: 0,
+	advertencia: 1,
+	prueba: 2,
+	activo: 3,
+};
 
 export default function Home() {
 	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
 
 	const filteredData = useMemo(() => {
-		if (!searchValue) {
-			return MOCK_LIMNIGRAFOS;
-		}
+		const normalizedSearch = searchValue.trim().toLowerCase();
+		const baseListado = normalizedSearch
+			? BASE_LIMNIGRAFOS.filter((item) =>
+					[item.nombre, item.ubicacion].some((field) =>
+						field.toLowerCase().includes(normalizedSearch)
+					)
+				)
+			: BASE_LIMNIGRAFOS;
 
-		const normalizedSearch = searchValue.toLowerCase();
-
-		return MOCK_LIMNIGRAFOS.filter((item) =>
-			[item.nombre, item.ubicacion].some((field) =>
-				field.toLowerCase().includes(normalizedSearch),
-			),
-		);
+		return [...baseListado].sort((a, b) => {
+			const priorityA = estadoPriority[a.estado.variante ?? ""] ?? 4;
+			const priorityB = estadoPriority[b.estado.variante ?? ""] ?? 4;
+			return priorityA - priorityB;
+		});
 	}, [searchValue]);
 
 	return (
@@ -75,6 +51,7 @@ export default function Home() {
 					onFilterClick={() => {
 						console.log("Filtro por aplicar");
 					}}
+					className="max-h-[50vh] overflow-y-auto"
 				/>
 			</main>
 		</div>
