@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
 @tailwind utilities;
 
 :root {
@@ -37,4 +35,34 @@ body {
 .leaflet-conteiner {
   width: 100vw;
   height: 100vh;
+}
+
+.map-marker-icon {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #7B8AA5 #EEF4FB;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: #EEF4FB;
+  border-radius: 9999px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #A5B8E0 0%, #7B8AA5 100%);
+  border-radius: 9999px;
+  border: 2px solid #EEF4FB;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #95A8D5 0%, #6A7A96 100%);
 }
