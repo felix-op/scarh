@@ -97,48 +97,59 @@ type ProfileCardProps = {
   userName: string;
   userEmail: string;
   onClick?: () => void;
+  isActive?: boolean;
 };
 
-function ProfileCard({ collapsed, userName, userEmail, onClick }: ProfileCardProps) {
-  if (collapsed) {
-    return (
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#F0F0F0",
-          borderRadius: 12,
-          padding: "6px 4px",
-          gap: 6,
-          minHeight: 50,
-        }}
-      >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: "18px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <UserIcon size={36} color="#080404" />
-        </div>
-        <NotificationNewdotFillIcon size={17} color="#2982CB" />
-      </div>
-    );
-  }
+function ProfileCard({
+  collapsed,
+  userName,
+  userEmail,
+  onClick,
+  isActive = false,
+}: ProfileCardProps) {
+  const background = isActive ? "#011018" : "#F0F0F0";
+  const primaryText = isActive ? "#F9FBFF" : "#121212";
+  const secondaryText = isActive ? "#E0E7FF" : "#999999";
 
-  return (
+  const collapsedContent = (
     <div
       style={{
         width: "100%",
         display: "flex",
         alignItems: "center",
-        background: "#F0F0F0",
+        justifyContent: "center",
+        background: background,
+        borderRadius: 12,
+        padding: "6px 4px",
+        gap: 6,
+        minHeight: 50,
+        color: primaryText,
+      }}
+    >
+      <div
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: "18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <UserIcon size={36} color={primaryText} />
+      </div>
+      <NotificationNewdotFillIcon size={17} color="#2982CB" />
+      <ChevronRightIcon size={16} color={primaryText} />
+    </div>
+  );
+
+  const expandedContent = (
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        background: background,
         borderRadius: 12,
         padding: "8px 12px",
         gap: 10,
@@ -155,7 +166,7 @@ function ProfileCard({ collapsed, userName, userEmail, onClick }: ProfileCardPro
           justifyContent: "center",
         }}
       >
-        <UserIcon size={34} color="#080404" />
+        <UserIcon size={34} color={primaryText} />
       </div>
 
       <div
@@ -168,7 +179,7 @@ function ProfileCard({ collapsed, userName, userEmail, onClick }: ProfileCardPro
       >
         <span
           style={{
-            color: "#121212",
+            color: primaryText,
             fontSize: 18,
             fontWeight: 500,
           }}
@@ -177,7 +188,7 @@ function ProfileCard({ collapsed, userName, userEmail, onClick }: ProfileCardPro
         </span>
         <span
           style={{
-            color: "#999999",
+            color: secondaryText,
             fontSize: 14,
             fontWeight: 400,
           }}
@@ -192,33 +203,32 @@ function ProfileCard({ collapsed, userName, userEmail, onClick }: ProfileCardPro
           alignItems: "center",
           gap: 6,
           marginLeft: "auto",
+          color: primaryText,
         }}
       >
         <NotificationNewdotFillIcon size={16} color="#2982CB" />
-        {onClick ? (
-          <button
-            type="button"
-            onClick={onClick}
-            style={{
-              border: "none",
-              background: "transparent",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              cursor: "pointer",
-              padding: 4,
-              borderRadius: 8,
-            }}
-            aria-label="Ver perfil"
-          >
-            <ChevronRightIcon size={16} color="#160404" />
-          </button>
-        ) : (
-          <ChevronRightIcon size={16} color="#160404" />
-        )}
+        <ChevronRightIcon size={16} color={primaryText} />
       </div>
     </div>
   );
+
+  const content = collapsed ? collapsedContent : expandedContent;
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full border-0 bg-transparent p-0"
+        style={{ cursor: "pointer" }}
+        aria-label="Ver perfil"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return content;
 }
 
 type NavProps = {
@@ -333,7 +343,16 @@ export function Nav({ userName, userEmail, onCollapseChange, onProfileClick }: N
           collapsed={isCollapsed}
           userName={userName}
           userEmail={userEmail}
-          onClick={onProfileClick}
+          onClick={
+            onProfileClick ?? (() => {
+              try {
+                router.push("/profile");
+              } catch {
+                window.location.href = "/profile";
+              }
+            })
+          }
+          isActive={pathname.startsWith("/profile")}
         />
 
         <div style={dividerStyle} />

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import LimnigrafoDetailsCard from "@/components/LimnigrafoDetailsCard";
 import Boton from "@/components/Boton";
 import { Documet, Edit, Map as MapIcon, Ruler } from "@/components/icons/Icons";
@@ -12,27 +12,24 @@ import {
   LIMNIGRAFOS,
 } from "@/data/limnigrafos";
 
-export default function DetalleLimnigrafoPage() {
+function DetalleLimnigrafoContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("id");
-  const [extraLimnigrafos, setExtraLimnigrafos] = useState<
-    LimnigrafoDetalleData[]
-  >([]);
-
-  useEffect(() => {
+  const [extraLimnigrafos] = useState<LimnigrafoDetalleData[]>(() => {
     if (typeof window === "undefined") {
-      return;
+      return [];
     }
     const stored = window.localStorage.getItem(EXTRA_LIMNIGRAFOS_STORAGE_KEY);
     if (stored) {
       try {
-        const parsed = JSON.parse(stored) as LimnigrafoDetalleData[];
-        setExtraLimnigrafos(parsed);
+        return JSON.parse(stored) as LimnigrafoDetalleData[];
       } catch {
-        setExtraLimnigrafos([]);
+        return [];
       }
     }
-  }, []);
+    return [];
+  });
 
   const dataset = useMemo(
     () => [...extraLimnigrafos, ...LIMNIGRAFOS],
@@ -86,7 +83,11 @@ export default function DetalleLimnigrafoPage() {
 
   return (
     <div className="flex min-h-screen w-full bg-[#EEF4FB]">
-      <Nav userName="Juan Perez" userEmail="juan.perez@scarh.com" />
+      <Nav
+        userName="Juan Perez"
+        userEmail="juan.perez@scarh.com"
+        onProfileClick={() => router.push("/profile")}
+      />
 
       <main className="flex flex-1 justify-center px-6 py-10">
         <div className="flex w-full max-w-[1350px] flex-col items-center gap-12">
@@ -236,5 +237,19 @@ export default function DetalleLimnigrafoPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function DetalleLimnigrafoPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#EEF4FB] text-xl text-[#4B4B4B]">
+          Cargando limnigrafo...
+        </div>
+      }
+    >
+      <DetalleLimnigrafoContent />
+    </Suspense>
   );
 }

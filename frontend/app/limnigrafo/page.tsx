@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import LimnigrafoTable from "@/components/LimnigrafoTable";
 import { Nav } from "@/components/Nav";
 import {
@@ -33,6 +34,7 @@ const FORM_STATE = {
 };
 
 export default function Home() {
+  const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
   const [extraLimnigrafos, setExtraLimnigrafos] = useState<
     LimnigrafoDetalleData[]
@@ -132,7 +134,11 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full bg-[#EEF4FB]">
-      <Nav userName="Juan Perez" userEmail="juan.perez@scarh.com" />
+      <Nav
+        userName="Juan Perez"
+        userEmail="juan.perez@scarh.com"
+        onProfileClick={() => router.push("/profile")}
+      />
 
       <main className="flex flex-1 items-start justify-center px-6 py-10">
         <div className="flex w-full max-w-[1568px] flex-col gap-6">

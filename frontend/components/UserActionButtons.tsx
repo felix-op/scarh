@@ -75,31 +75,29 @@ function ActionButton({ label, onClick, className = "", icon, iconClassName = ""
   );
 }
 
-type EditButtonProps = Omit<ActionButtonProps, "label" | "className" | "icon"> & {
-  className?: string;
-};
+type EditButtonProps = Omit<ActionButtonProps, "label">;
 
-type DeleteButtonProps = EditButtonProps;
+type DeleteButtonProps = Omit<ActionButtonProps, "label">;
 
-export function EditButton({ onClick, className = "", icon }: EditButtonProps) {
+export function EditButton({ onClick, className = "", icon, iconClassName }: EditButtonProps) {
   return (
     <ActionButton
       label="Editar"
       onClick={onClick}
       icon={icon ?? <EditVectorIcon />}
-      iconClassName="text-white"
+      iconClassName={iconClassName ?? "text-white"}
       className={`bg-[#0982C8] hover:bg-[#0A6CA3] focus:ring-[#0982C8] ${className}`}
     />
   );
 }
 
-export function DeleteButton({ onClick, className = "", icon }: DeleteButtonProps) {
+export function DeleteButton({ onClick, className = "", icon, iconClassName }: DeleteButtonProps) {
   return (
     <ActionButton
       label="Eliminar"
       onClick={onClick}
       icon={icon ?? <DeleteVectorIcon />}
-      iconClassName="text-white"
+      iconClassName={iconClassName ?? "text-white"}
       className={`bg-[#D92D20] hover:bg-[#B42318] focus:ring-[#D92D20] ${className}`}
     />
   );
