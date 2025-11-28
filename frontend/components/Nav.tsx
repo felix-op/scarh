@@ -26,7 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Limnigrafo", Icon: LimnigraphIcon, href: "/home" },
   { label: "Metricas", Icon: MeasuresIcon },
   { label: "Estadisticas", Icon: StatisticsIcon },
-  { label: "Usuarios", Icon: UserIcon },
+  { label: "Usuarios", Icon: UserIcon, href: "/usersadm" },
   { label: "Historial", Icon: HistoryIcon },
 ];
 
@@ -96,9 +96,10 @@ type ProfileCardProps = {
   collapsed: boolean;
   userName: string;
   userEmail: string;
+  onClick?: () => void;
 };
 
-function ProfileCard({ collapsed, userName, userEmail }: ProfileCardProps) {
+function ProfileCard({ collapsed, userName, userEmail, onClick }: ProfileCardProps) {
   if (collapsed) {
     return (
       <div
@@ -194,7 +195,27 @@ function ProfileCard({ collapsed, userName, userEmail }: ProfileCardProps) {
         }}
       >
         <NotificationNewdotFillIcon size={16} color="#2982CB" />
-        <ChevronRightIcon size={16} color="#160404" />
+        {onClick ? (
+          <button
+            type="button"
+            onClick={onClick}
+            style={{
+              border: "none",
+              background: "transparent",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              cursor: "pointer",
+              padding: 4,
+              borderRadius: 8,
+            }}
+            aria-label="Ver perfil"
+          >
+            <ChevronRightIcon size={16} color="#160404" />
+          </button>
+        ) : (
+          <ChevronRightIcon size={16} color="#160404" />
+        )}
       </div>
     </div>
   );
@@ -204,11 +225,12 @@ type NavProps = {
   userName: string;
   userEmail: string;
   onCollapseChange?: (collapsed: boolean) => void;
+  onProfileClick?: () => void;
 };
 
 const NAV_COLLAPSE_STORAGE_KEY = "scarh-nav-collapsed";
 
-export function Nav({ userName, userEmail, onCollapseChange }: NavProps) {
+export function Nav({ userName, userEmail, onCollapseChange, onProfileClick }: NavProps) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -294,6 +316,7 @@ export function Nav({ userName, userEmail, onCollapseChange }: NavProps) {
           collapsed={isCollapsed}
           userName={userName}
           userEmail={userEmail}
+          onClick={onProfileClick}
         />
 
         <div style={dividerStyle} />
