@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import BarraBusqueda from "./BarraBusqueda";
 import Boton from "./Boton";
 import RenglonDatos, { type CeldaRenglonDatos } from "./RenglonDatos";
@@ -7,7 +8,7 @@ import {
   BotonEstadoLimnigrafo,
   type EstadoLimnigrafo,
 } from "./BotonEstadoLimnigrafo";
-import { FiltroDeslizadores } from "./icons/Icons";
+import { ChevronRightIcon, FiltroDeslizadores } from "./icons/Icons";
 
 export type LimnigrafoRowData = {
   id: string;
@@ -24,9 +25,10 @@ type LimnigrafoTableProps = {
   onSearchChange?: (value: string) => void;
   onFilterClick?: () => void;
   className?: string;
+  showActions?: boolean;
 };
 
-const columnTitles = [
+const baseColumnTitles = [
   "Estados",
   "Limnigrafo",
   "Ubicación de Limnigrafo",
@@ -34,16 +36,28 @@ const columnTitles = [
   "Tiem. Último Dato",
 ];
 
+const ACCION_COLUMN_TITLE = "Acciones";
+
+const columnasTablaBase = "200px repeat(4, minmax(0, 1fr))";
+const columnasTablaConAccion = `${columnasTablaBase} 150px`;
+
 export default function LimnigrafoTable({
   data,
   className = "",
   searchValue = "",
   onSearchChange,
   onFilterClick,
+  showActions = false,
 }: LimnigrafoTableProps) {
   function handleSearchChange(valor: string) {
     onSearchChange?.(valor);
   }
+
+  const columnTitles = showActions
+    ? [...baseColumnTitles, ACCION_COLUMN_TITLE]
+    : baseColumnTitles;
+
+  const columnasTabla = showActions ? columnasTablaConAccion : columnasTablaBase;
 
   return (
     <section
@@ -57,11 +71,14 @@ export default function LimnigrafoTable({
         ${className}
       `}
     >
-      <header className="flex items-center justify-between border-b border-[#6E6F72]/30 px-5 py-2">
+      <header
+        className="grid items-center gap-4 border-b border-[#6E6F72]/30 px-5 py-2"
+        style={{ gridTemplateColumns: columnasTabla }}
+      >
         {columnTitles.map((title) => (
           <div
             key={title}
-            className="flex-1 text-center text-[18px] font-medium text-[#605E5E]"
+            className="text-center text-[18px] font-medium text-[#605E5E]"
           >
             {title}
           </div>
@@ -100,14 +117,32 @@ export default function LimnigrafoTable({
 
       <div className="flex flex-col divide-y divide-[#F0F0F0]">
         {data.map((row) => (
-          <LimnigrafoTableRow key={row.id} data={row} />
+          <LimnigrafoTableRow
+            key={row.id}
+            data={row}
+            showActions={showActions}
+          />
         ))}
       </div>
     </section>
   );
 }
 
-export function LimnigrafoTableRow({ data }: { data: LimnigrafoRowData }) {
+type LimnigrafoTableRowProps = {
+  data: LimnigrafoRowData;
+  showActions?: boolean;
+};
+
+export function LimnigrafoTableRow({
+  data,
+  showActions = false,
+}: LimnigrafoTableRowProps) {
+  const router = useRouter();
+
+  function handleViewMore() {
+    router.push(`/limnigrafo/detalleLimnigrafo?id=${encodeURIComponent(data.id)}`);
+  }
+
   const celdas: CeldaRenglonDatos[] = [
     { contenido: <BotonEstadoLimnigrafo estado={data.estado} /> },
     { contenido: data.nombre, clase: "font-normal" },
@@ -116,10 +151,40 @@ export function LimnigrafoTableRow({ data }: { data: LimnigrafoRowData }) {
     { contenido: data.tiempoUltimoDato },
   ];
 
+  if (showActions) {
+    celdas.push({
+      contenido: (
+        <Boton
+          type="button"
+          onClick={handleViewMore}
+          className="
+            !mx-0
+            !h-[42px]
+            !rounded-[24px]
+            !px-[18px]
+            !bg-[#F3F3F3]
+            !text-[#7F7F7F]
+            gap-2
+            border
+            border-[#E0E0E0]
+            shadow-[0px_2px_6px_rgba(0,0,0,0.12)]
+            hover:!bg-[#E8E8E8]
+          "
+        >
+          <ChevronRightIcon size={18} color="#7F7F7F" />
+          <span className="text-[16px] font-medium">Ver más</span>
+        </Boton>
+      ),
+      clase: "!justify-end",
+    });
+  }
+
+  const columnasTabla = showActions ? columnasTablaConAccion : columnasTablaBase;
+
   return (
     <RenglonDatos
       celdas={celdas}
-      plantillaColumnas="200px repeat(4, minmax(0, 1fr))"
+      plantillaColumnas={columnasTabla}
       claseBaseCelda="text-[18px] font-semibold text-black"
     />
   );

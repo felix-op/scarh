@@ -23,7 +23,7 @@ type NavItem = { label: string; Icon: IconComponent; href?: string };
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Mapa", Icon: MapIcon, href: "/map" },
-  { label: "Limnigrafo", Icon: LimnigraphIcon, href: "/home" },
+  { label: "Limnigrafo", Icon: LimnigraphIcon, href: "/limnigrafo" },
   { label: "Metricas", Icon: MeasuresIcon },
   { label: "Estadisticas", Icon: StatisticsIcon },
   { label: "Usuarios", Icon: UserIcon, href: "/usersadm" },
@@ -233,12 +233,15 @@ const NAV_COLLAPSE_STORAGE_KEY = "scarh-nav-collapsed";
 export function Nav({ userName, userEmail, onCollapseChange, onProfileClick }: NavProps) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored =
+        window.sessionStorage.getItem(NAV_COLLAPSE_STORAGE_KEY) === "true";
+      setIsCollapsed(stored);
     }
-    return window.sessionStorage.getItem(NAV_COLLAPSE_STORAGE_KEY) === "true";
-  });
+  }, []);
 
   useEffect(() => {
     window.sessionStorage.setItem(
@@ -307,7 +310,21 @@ export function Nav({ userName, userEmail, onCollapseChange, onProfileClick }: N
             padding: isCollapsed ? "0 0 2px" : "0 0 4px",
           }}
         >
-          <WaterIcon size={isCollapsed ? 72 : 108} color="#38BDF8" />
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                router.push("/home");
+              } catch {
+                window.location.href = "/home";
+              }
+            }}
+            className="border-0 bg-transparent p-0"
+            style={{ cursor: "pointer" }}
+            aria-label="Ir al home"
+          >
+            <WaterIcon size={isCollapsed ? 72 : 108} color="#38BDF8" />
+          </button>
         </div>
 
         <div style={dividerStyle} />
