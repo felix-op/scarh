@@ -27,7 +27,7 @@ const NAV_ITEMS: NavItem[] = [
 	{ label: "Metricas", Icon: MeasuresIcon, href: "/metricas" },
 	{ label: "Estadisticas", Icon: StatisticsIcon, href: "/estadisticas" },
 	{ label: "Usuarios", Icon: UserIcon, href: "/usuarios" },
-	{ label: "Historial", Icon: HistoryIcon },
+	{ label: "Historial", Icon: HistoryIcon, href: "/historial" },
 ];
 
 const dividerStyle: CSSProperties = {
