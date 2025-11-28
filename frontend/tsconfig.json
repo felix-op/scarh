@@ -19,7 +19,12 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@componentes/*": ["./shared/componentes/*"],
+      "@hooks/*": ["./shared/hooks/*"],
+      "@tipos/*": ["./shared/tipos/*"],
+      "@servicios/*": ["./shared/servicios/*"],
+      "@utilidades/*": ["./shared/utilidades/*"],
+      "@data/*": ["./shared/data/*"],
     }
   },
   "include": [
