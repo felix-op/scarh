@@ -24,8 +24,8 @@ type NavItem = { label: string; Icon: IconComponent; href?: string };
 const NAV_ITEMS: NavItem[] = [
 	{ label: "Mapa", Icon: MapIcon, href: "/mapa" },
 	{ label: "Limnigrafo", Icon: LimnigraphIcon, href: "/limnigrafos" },
-	{ label: "Metricas", Icon: MeasuresIcon },
-	{ label: "Estadisticas", Icon: StatisticsIcon },
+	{ label: "Metricas", Icon: MeasuresIcon, href: "/metricas" },
+	{ label: "Estadisticas", Icon: StatisticsIcon, href: "/estadisticas" },
 	{ label: "Usuarios", Icon: UserIcon, href: "/usuarios" },
 	{ label: "Historial", Icon: HistoryIcon },
 ];
