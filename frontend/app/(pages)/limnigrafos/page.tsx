@@ -39,26 +39,24 @@ export default function Home() {
 	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
 	const [extraLimnigrafos, setExtraLimnigrafos] = useState<
-    LimnigrafoDetalleData[]
-  >([]);
+		LimnigrafoDetalleData[]
+	>(() => {
+		if (typeof window === "undefined") {
+			return [];
+		}
+		const stored = window.localStorage.getItem(EXTRA_LIMNIGRAFOS_STORAGE_KEY);
+		if (!stored) {
+			return [];
+		}
+		try {
+			return JSON.parse(stored) as LimnigrafoDetalleData[];
+		} catch {
+			return [];
+		}
+	});
 	const [mostrarFormulario, setMostrarFormulario] = useState(false);
 	const [formValues, setFormValues] = useState(FORM_STATE);
 	const [formError, setFormError] = useState<string | null>(null);
-
-	useEffect(() => {
-		if (typeof window === "undefined") {
-			return;
-		}
-		const stored = window.localStorage.getItem(EXTRA_LIMNIGRAFOS_STORAGE_KEY);
-		if (stored) {
-			try {
-				const parsed = JSON.parse(stored) as LimnigrafoDetalleData[];
-				setExtraLimnigrafos(parsed);
-			} catch {
-				setExtraLimnigrafos([]);
-			}
-		}
-	}, []);
 
 	useEffect(() => {
 		if (typeof window === "undefined") {
@@ -109,8 +107,8 @@ export default function Home() {
 		}
 
 		const lat = Number.parseFloat(formValues.latitud);
-	const lng = Number.parseFloat(formValues.longitud);
-	const nuevoLimnigrafo: LimnigrafoDetalleData = {
+		const lng = Number.parseFloat(formValues.longitud);
+		const nuevoLimnigrafo: LimnigrafoDetalleData = {
 			id: formValues.id || `lim-extra-${Date.now()}`,
 			nombre: formValues.nombre,
 			ubicacion: formValues.ubicacion,
@@ -129,7 +127,7 @@ export default function Home() {
 				{ label: "Dato 2", value: "N/A" },
 				{ label: "Dato 3", value: "N/A" },
 			],
-		coordenadas:
+			coordenadas:
 			Number.isFinite(lat) && Number.isFinite(lng)
 				? { lat, lng }
 				: undefined,
@@ -156,7 +154,7 @@ export default function Home() {
 							onClick={() => setMostrarFormulario((prev) => !prev)}
 							className="
                 !mx-0
-                !bg-white
+                !bg-[#F4F4F4]
                 !text-[#0982C8]
                 !h-[48px]
                 !px-8
@@ -212,7 +210,7 @@ export default function Home() {
 										/>
 									</label>
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Ubicaci+¦n *
+										Ubicación *
 										<input
 											type="text"
 											value={formValues.ubicacion}
@@ -223,34 +221,34 @@ export default function Home() {
 											required
 										/>
 									</label>
-				<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-					Latitud (opcional)
-					<input
-						type="number"
-						step="any"
-						value={formValues.latitud}
-						onChange={(event) =>
-							handleChange("latitud", event.target.value)
-						}
-						className="rounded-xl border border-[#D3D4D5] p-2.5"
-						placeholder="-54.79"
-					/>
-				</label>
-				<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-					Longitud (opcional)
-					<input
-						type="number"
-						step="any"
-						value={formValues.longitud}
-						onChange={(event) =>
-							handleChange("longitud", event.target.value)
-						}
-						className="rounded-xl border border-[#D3D4D5] p-2.5"
-						placeholder="-68.30"
-					/>
-				</label>
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Bater+¡a
+										Latitud (opcional)
+										<input
+											type="number"
+											step="any"
+											value={formValues.latitud}
+											onChange={(event) =>
+												handleChange("latitud", event.target.value)
+											}
+											className="rounded-xl border border-[#D3D4D5] p-2.5"
+											placeholder="-54.79"
+										/>
+									</label>
+									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										Longitud (opcional)
+										<input
+											type="number"
+											step="any"
+											value={formValues.longitud}
+											onChange={(event) =>
+												handleChange("longitud", event.target.value)
+											}
+											className="rounded-xl border border-[#D3D4D5] p-2.5"
+											placeholder="-68.30"
+										/>
+									</label>
+									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										Batería
 										<input
 											type="text"
 											value={formValues.bateria}
@@ -261,7 +259,7 @@ export default function Home() {
 										/>
 									</label>
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Tiempo +¦ltimo dato
+										Tiempo Último dato
 										<input
 											type="text"
 											value={formValues.tiempoUltimoDato}
@@ -310,7 +308,7 @@ export default function Home() {
 										/>
 									</label>
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Presi+¦n
+										Presión
 										<input
 											type="text"
 											value={formValues.presion}
@@ -321,7 +319,7 @@ export default function Home() {
 										/>
 									</label>
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										+Ültimo mantenimiento
+										Últimmo mantenimiento
 										<input
 											type="text"
 											value={formValues.ultimoMantenimiento}
@@ -334,7 +332,7 @@ export default function Home() {
 								</div>
 
 								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Descripci+¦n
+									Descripción
 									<textarea
 										value={formValues.descripcion}
 										onChange={(event) =>
@@ -382,4 +380,7 @@ export default function Home() {
 		</div>
 	);
 }
+
+
+
 
