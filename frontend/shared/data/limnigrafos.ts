@@ -1,15 +1,36 @@
 "use client";
 
-import type { LimnigrafoRowData } from "@/components/LimnigrafoTable";
+import type { LimnigrafoRowData } from "@componentes/LimnigrafoTable";
+
+export type LimnigrafoCoordenadas = {
+	lat: number;
+	lng: number;
+};
 
 export type LimnigrafoDetalleData = LimnigrafoRowData & {
-  temperatura: string;
-  altura: string;
-  presion: string;
-  ultimoMantenimiento: string;
-  descripcion: string;
-  datosExtra: { label: string; value: string }[];
+	temperatura: string;
+	altura: string;
+	presion: string;
+	ultimoMantenimiento: string;
+	descripcion: string;
+	datosExtra: { label: string; value: string }[];
+	coordenadas?: LimnigrafoCoordenadas;
 };
+
+export function toLimnigrafoRowData(
+	list: LimnigrafoDetalleData[]
+): LimnigrafoRowData[] {
+	return list.map(
+		({ id, nombre, ubicacion, bateria, tiempoUltimoDato, estado }) => ({
+			id,
+			nombre,
+			ubicacion,
+			bateria,
+			tiempoUltimoDato,
+			estado,
+		})
+	);
+}
 
 export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 	{
@@ -30,6 +51,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Flujo estable" },
 			{ label: "Dato 3", value: "Sin alertas" },
 		],
+		coordenadas: { lat: -54.7972, lng: -68.3026 },
 	},
 	{
 		id: "lim-2",
@@ -49,6 +71,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Calibrado abril" },
 			{ label: "Dato 3", value: "Ruta sur" },
 		],
+		coordenadas: { lat: -54.7995, lng: -68.309 },
 	},
 	{
 		id: "lim-3",
@@ -68,6 +91,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Comunicar brigada" },
 			{ label: "Dato 3", value: "Revisión semanal" },
 		],
+		coordenadas: { lat: -54.801, lng: -68.3155 },
 	},
 	{
 		id: "lim-4",
@@ -87,6 +111,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Ruta 12" },
 			{ label: "Dato 3", value: "Pendiente panel" },
 		],
+		coordenadas: { lat: -54.8043, lng: -68.299 },
 	},
 	{
 		id: "lim-5",
@@ -106,6 +131,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Lectura estable" },
 			{ label: "Dato 3", value: "Sin anomalías" },
 		],
+		coordenadas: { lat: -54.7931, lng: -68.305 },
 	},
 	{
 		id: "lim-6",
@@ -125,6 +151,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Batería agotada" },
 			{ label: "Dato 3", value: "Reemplazar módulo" },
 		],
+		coordenadas: { lat: -54.7905, lng: -68.298 },
 	},
 	{
 		id: "lim-7",
@@ -144,6 +171,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Lluvia ligera" },
 			{ label: "Dato 3", value: "Acceso 4x4" },
 		],
+		coordenadas: { lat: -54.807, lng: -68.312 },
 	},
 	{
 		id: "lim-8",
@@ -163,6 +191,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Monitoreo QA" },
 			{ label: "Dato 3", value: "Visita 48h" },
 		],
+		coordenadas: { lat: -54.795, lng: -68.2945 },
 	},
 	{
 		id: "lim-9",
@@ -182,6 +211,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Ruta costera" },
 			{ label: "Dato 3", value: "Panel solar limpio" },
 		],
+		coordenadas: { lat: -54.799, lng: -68.32 },
 	},
 	{
 		id: "lim-10",
@@ -200,6 +230,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Mantenimiento mayo" },
 			{ label: "Dato 3", value: "Ruta 7" },
 		],
+		coordenadas: { lat: -54.8025, lng: -68.3075 },
 	},
 	{
 		id: "lim-11",
@@ -219,6 +250,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Calefacción ok" },
 			{ label: "Dato 3", value: "Refugio cerrado" },
 		],
+		coordenadas: { lat: -54.8088, lng: -68.3188 },
 	},
 	{
 		id: "lim-12",
@@ -238,6 +270,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Equipo en taller" },
 			{ label: "Dato 3", value: "Volver 30 días" },
 		],
+		coordenadas: { lat: -54.7915, lng: -68.3102 },
 	},
 	{
 		id: "lim-13",
@@ -257,6 +290,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Muelle 2" },
 			{ label: "Dato 3", value: "Alertas off" },
 		],
+		coordenadas: { lat: -54.7942, lng: -68.3157 },
 	},
 	{
 		id: "lim-14",
@@ -276,6 +310,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Enviar técnico" },
 			{ label: "Dato 3", value: "Compuerta cerrada" },
 		],
+		coordenadas: { lat: -54.8061, lng: -68.2958 },
 	},
 	{
 		id: "lim-15",
@@ -295,6 +330,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 			{ label: "Dato 2", value: "Camino pavimentado" },
 			{ label: "Dato 3", value: "Panel ok" },
 		],
+		coordenadas: { lat: -54.7923, lng: -68.2997 },
 	},
 ];
 
