@@ -163,7 +163,7 @@ export default function Home() {
                 hover:!bg-[#E6F3FB]
               "
 						>
-							{mostrarFormulario ? "Cerrar formulario" : "A+¦adir Limnigrafo"}
+							{mostrarFormulario ? "Cerrar formulario" : "Añadir Limnigrafo"}
 						</Boton>
 					</div>
 
