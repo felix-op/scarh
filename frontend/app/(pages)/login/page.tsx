@@ -1,10 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
+import Image from "next/image";
 import LoginCard from "@componentes/LoginCard";
-
-const MapView = dynamic(() => import("@componentes/MapView"), { ssr: false });
 
 export default function Page() {
 	const router = useRouter();
@@ -18,47 +16,20 @@ export default function Page() {
 	}
 
 	return (
-		<main
-			style={{
-				position: "relative",
-				minHeight: "100vh",
-				display: "flex",
-				justifyContent: "center",
-				alignItems: "center",
-				padding: "24px",
-				overflow: "hidden",
-			}}
-		>
-			<div
-				style={{
-					position: "absolute",
-					inset: 0,
-					zIndex: 0,
-					pointerEvents: "none",
-				}}
-			>
-				<MapView />
+		<main className="relative min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden">
+			<div className="absolute inset-0 z-0 pointer-events-none">
+				<Image
+					src="/mapa-ushuaia.png"
+					alt="Mapa de fondo"
+					fill
+					className="object-cover"
+					priority
+				/>
 			</div>
 
-			<div
-				style={{
-					position: "absolute",
-					inset: 0,
-					background:
-            "linear-gradient(135deg, rgba(7,28,48,0.65) 0%, rgba(9,130,200,0.35) 100%)",
-					backdropFilter: "blur(6px)",
-					zIndex: 1,
-				}}
-			/>
+			<div className="absolute inset-0 z-1 pointer-events-none backdrop-blur-sm bg-linear-to-br from-azul-marino-oscuro to-azul-marino" />
 
-			<div
-				style={{
-					position: "relative",
-					zIndex: 2,
-					width: "100%",
-					maxWidth: 720,
-				}}
-			>
+			<div className="relative z-2 w-full max-w-[720px]">
 				<LoginCard onLogin={handleLogin} />
 			</div>
 		</main>

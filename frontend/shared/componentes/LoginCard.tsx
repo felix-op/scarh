@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Boton from "./Boton";
+import CampoInput from "./campos/CampoInput";
 
 // definimos la forma de las props
 type LoginCardProps = {
-  onLogin?: (email: string, password: string) => void; 
+  onLogin?: (email: string, password: string) => void;
 };
 
 export default function LoginCard({ onLogin }: LoginCardProps) {
@@ -19,63 +20,29 @@ export default function LoginCard({ onLogin }: LoginCardProps) {
 	}
 
 	return (
-		<div
-			style={{
-				width: "100%",
-				maxWidth: 691,
-				padding: 24,
-				background: "rgba(255,255,255,0.80)",
-				borderRadius: 8,
-				outline: "1px solid #D9D9D9",
-				backdropFilter: "blur(18px)",
-				display: "flex",
-				flexDirection: "column",
-				gap: 24,
-			}}
-		>
-			{/* EMAIL */}
-			<div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-				<label style={{ fontSize: 16, color: "#1E1E1E" }}>Email</label>
-				<input
-					type="email"
-					placeholder="example@gmail.com"
-					value={email}
-					onChange={(e) => setEmail(e.target.value)}
-					style={{
-						width: "100%",
-						padding: "12px 16px",
-						background: "white",
-						borderRadius: 8,
-						border: "1px solid #D9D9D9",
-						outline: "none",
-						color: "#1E1E1E",
-						fontSize: 16,
-					}}
-				/>
-			</div>
+		<div className="
+			flex flex-col gap-6 w-full max-w-[720px]
+			p-6 rounded-lg bg-white/80 backdrop-blur-lg
+			border border-border relative z-2
+		">
+			<CampoInput
+				label="Email"
+				name="email"
+				type="email"
+				placeholder="example@gmail.com"
+				value={email}
+				onChange={(e) => setEmail(e.target.value)}
+			/>
 
-			{/* CONTRASEÑA */}
-			<div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-				<label style={{ fontSize: 16, color: "#1E1E1E" }}>Contraseña</label>
-
-				<input
-					type="password"
-					placeholder="******"
-					value={password}
-					onChange={(e) => setPassword(e.target.value)}
-					style={{
-						width: "100%",
-						padding: "12px 16px",
-						background: "white", 
-						borderRadius: 8,
-						border: "1px solid #D9D9D9",
-						outline: "none",
-						color: "#1E1E1E",
-						fontSize: 16,
-					}}
-				/>
-			</div>
-
+			<CampoInput
+				label="Contraseña"
+				name="password"
+				type="password"
+				placeholder="******"
+				value={password}
+				onChange={(e) => setPassword(e.target.value)}
+			/>
+			
 			{/* BOTÓN */}
 			<Boton
 				onClick={handleSubmit}
