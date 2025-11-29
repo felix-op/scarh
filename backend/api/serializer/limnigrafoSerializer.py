@@ -20,6 +20,7 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'descripcion',
+            'ultimo_mantenimiento',
             'tipo_comunicacion',
             'bateria',
             'memoria',

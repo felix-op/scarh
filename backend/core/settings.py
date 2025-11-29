@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'drf_spectacular',  
     'corsheaders',
     'api',
+    'rest_framework_api_key',
     'simple_history',
 ]
 AUTH_USER_MODEL = 'api.Usuario'

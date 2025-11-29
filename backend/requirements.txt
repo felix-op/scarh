@@ -9,4 +9,4 @@ drf-spectacular
 django-cors-headers==4.4.0
 pyproj
 django-simple-history
-
+djangorestframework-api-key
