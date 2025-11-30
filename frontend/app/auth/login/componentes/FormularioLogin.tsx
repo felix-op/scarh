@@ -1,3 +1,5 @@
+"use client";
+
 import Boton from "@componentes/Boton";
 import CampoInput from "@componentes/campos/CampoInput";
 import LoginCredentials from "@tipos/LoginCredentials";
@@ -39,7 +41,7 @@ export default function FormularioLogin({onSubmit, loading, error}: FormularioLo
 
 			{error && <p className="text-red-500">{error.message}</p>}
 
-			<Boton onClick={() => onSubmit({username, password})} className="w-full gap-2" disabled={loading}>
+			<Boton type="button" onClick={() => onSubmit({username, password})} className="w-full gap-2" disabled={loading}>
 				{loading && <span className="icon-[line-md--loading-twotone-loop]" />}
 				Iniciar Sesión
 			</Boton>
