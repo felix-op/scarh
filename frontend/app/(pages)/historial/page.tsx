@@ -1,9 +1,11 @@
 "use client";
 
+import PaginaBase from "@componentes/base/PaginaBase";
 import FilterBar from "@componentes/FilterBar";
 import HistorialCard from "@componentes/HistorialCard";
 import HistorialTable from "@componentes/HistorialTable";
 import { Nav } from "@componentes/Nav";
+import { useRouter } from "next/navigation";
 
 const FILTER_USERS = [
 	"Todos",
@@ -108,61 +110,59 @@ const HISTORIAL_FILAS = [
 ];
 
 export default function HistorialPage() {
+	const router = useRouter();
+
 	return (
-		<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-			<Nav
-				userName="Juan Perez"
-				userEmail="juan.perez@scarh.com"
-				onProfileClick={() => {
-					try {
-						window.location.href = "/perfil";
-					} catch {
-						// noop
-					}
-				}}
-			/>
+		<PaginaBase>
+			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
+				<Nav
+					userName="Juan Perez"
+					userEmail="juan.perez@scarh.com"
+					onProfileClick={() => router.push("/perfil")}
+				/>
 
-			<main className="flex flex-1 justify-center px-6 py-10">
-				<div className="flex w-full max-w-[1568px] flex-col gap-8">
-					<header className="flex flex-col gap-1">
-						<h1 className="text-[34px] font-semibold text-[#011018]">Historial</h1>
-						<p className="text-[16px] text-[#4B4B4B]">
-							Registros de acciones sobre limnígrafos, métricas y usuarios.
-						</p>
-					</header>
+				<main className="flex flex-1 justify-center px-6 py-10">
+					<div className="flex w-full max-w-[1568px] flex-col gap-8">
+						<header className="flex flex-col gap-1">
+							<h1 className="text-[34px] font-semibold text-[#011018]">Historial</h1>
+							<p className="text-[16px] text-[#4B4B4B]">
+								Registros de acciones sobre limnígrafos, métricas y usuarios.
+							</p>
+						</header>
 
-					<FilterBar
-						users={FILTER_USERS}
-						actions={FILTER_ACTIONS}
-						entities={FILTER_ENTITIES}
-					/>
-
-					<div className="grid gap-6 xl:grid-cols-[3fr_1.2fr]">
-						<section className="flex flex-col gap-4 rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-							<div className="flex flex-wrap items-center justify-between gap-3">
-								<div>
-									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-										Historial de acciones
-									</p>
-								</div>
-								<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569]">
-									{HISTORIAL_FILAS.length} registros
-								</span>
-							</div>
-
-							<HistorialTable rows={HISTORIAL_FILAS} />
-						</section>
-
-						<HistorialCard
-							actionsToday={7}
-							lastAction="Actualizó permisos de usuario"
-							lastUser="ximena"
-							lastTimestamp="2025-11-23 16:40"
-							pendingReviews={1}
+						<FilterBar
+							users={FILTER_USERS}
+							actions={FILTER_ACTIONS}
+							entities={FILTER_ENTITIES}
 						/>
+
+						<div className="grid gap-6 xl:grid-cols-[3fr_1.2fr]">
+							<section className="flex flex-col gap-4 rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
+								<div className="flex flex-wrap items-center justify-between gap-3">
+									<div>
+										<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+											Historial de acciones
+										</p>
+									</div>
+									<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569]">
+										{HISTORIAL_FILAS.length} registros
+									</span>
+								</div>
+
+								<HistorialTable rows={HISTORIAL_FILAS} />
+							</section>
+
+							<HistorialCard
+								actionsToday={7}
+								lastAction="Actualizó permisos de usuario"
+								lastUser="ximena"
+								lastTimestamp="2025-11-23 16:40"
+								pendingReviews={1}
+							/>
+						</div>
 					</div>
-				</div>
-			</main>
-		</div>
+				</main>
+			</div>
+		</PaginaBase>
 	);
 }

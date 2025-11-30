@@ -1,4 +1,8 @@
-import { ReactNode } from "react";
+"use client";
+
+import { useLoginContext } from "@componentes/providers/LoginProvider";
+import { useRouter } from "next/navigation";
+import { ReactNode, useEffect, useState } from "react";
 
 type PaginaBaseProps = {
     children: ReactNode;
@@ -7,9 +11,23 @@ type PaginaBaseProps = {
 export default function PaginaBase({
 	children,
 }: PaginaBaseProps) {
+	const { usuario } = useLoginContext();
+	const router = useRouter();
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		setTimeout(() => {
+			if (!usuario) {
+				router.replace("/login");
+			} else {
+				setLoading(false);
+			}
+		}, 0);
+	}, [usuario, router]);
+
 	return (
 		<div>
-			{children}
+			{loading ? <div>Verificando sesión...</div> : children}
 		</div>
 	);
 }

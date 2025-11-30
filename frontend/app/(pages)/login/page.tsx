@@ -1,18 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import Image from "next/image";
-import LoginCard from "@componentes/LoginCard";
+import FormularioLogin from "./componentes/FormularioLogin";
+import { useLoginContext } from "@componentes/providers/LoginProvider";
 
 export default function Page() {
-	const router = useRouter();
+	const { usuario, onLogin, loadingLogin, errorLogin } = useLoginContext();
 
-	function handleLogin(/*email, password*/) {
-		/*console.log("Intentando login con:", email, password);*/
-
-		// Acá en el futuro validás credenciales contra tu backend
-
-		router.push("/inicio"); 
+	if (usuario) {
+		redirect("/inicio");
 	}
 
 	return (
@@ -29,9 +26,7 @@ export default function Page() {
 
 			<div className="absolute inset-0 z-1 pointer-events-none backdrop-blur-sm bg-linear-to-br from-azul-marino-oscuro to-azul-marino" />
 
-			<div className="relative z-2 w-full max-w-[720px]">
-				<LoginCard onLogin={handleLogin} />
-			</div>
+			<FormularioLogin onSubmit={onLogin} loading={loadingLogin} error={errorLogin} />
 		</main>
 	);
 }

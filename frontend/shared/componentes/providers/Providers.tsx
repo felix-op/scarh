@@ -2,7 +2,7 @@
 
 import { ThemeProvider } from "next-themes";
 import { ReactNode } from "react";
-import AuthProvider from "./AuthProvider";
+import LoginProvider from "./LoginProvider";
 
 type ProvidersProps = {
     children: ReactNode;
@@ -10,10 +10,10 @@ type ProvidersProps = {
 
 export function Providers({ children }: ProvidersProps) {
 	return (
-		<AuthProvider>
+		<LoginProvider>
 			<ThemeProvider attribute="class" defaultTheme="system">
 				{children}
 			</ThemeProvider>
-		</AuthProvider>
+		</LoginProvider>
 	);
 }
