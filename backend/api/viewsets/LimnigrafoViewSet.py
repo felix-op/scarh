@@ -4,12 +4,13 @@ from ..serializer import LimnigrafoSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_api_key.models import APIKey
 
 class LimnigrafoViewSet(viewsets.ModelViewSet):
     queryset = Limnigrafo.objects.all()
     serializer_class = LimnigrafoSerializer
+    permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['post'])
     def generate_key(self, request, pk=None):

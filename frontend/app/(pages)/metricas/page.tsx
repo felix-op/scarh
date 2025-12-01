@@ -1,7 +1,9 @@
 "use client";
 
+import PaginaBase from "@componentes/base/PaginaBase";
 import MetricaCard from "@componentes/MetricaCard";
 import { Nav } from "@componentes/Nav";
+import { useRouter } from "next/navigation";
 
 function GraphPlaceholder({
 	title,
@@ -98,110 +100,108 @@ const METEORO_METRICAS = [
 ];
 
 export default function MetricasPage() {
+	const router = useRouter();
+
 	return (
-		<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-			<Nav
-				userName="Juan Perez"
-				userEmail="juan.perez@scarh.com"
-				onProfileClick={() => {
-					try {
-						window.location.href = "/perfil";
-					} catch {
-						// fallback noop
-					}
-				}}
-			/>
+		<PaginaBase>
+			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
+				<Nav
+					userName="Juan Perez"
+					userEmail="juan.perez@scarh.com"
+					onProfileClick={() => router.push("/perfil")}
+				/>
 
-			<main className="flex flex-1 justify-center px-6 py-10">
-				<div className="flex w-full max-w-[1568px] flex-col gap-8">
-					<header className="flex flex-col gap-1">
-						<h1 className="text-[34px] font-semibold text-[#011018]">
-							Métricas
-						</h1>
-					</header>
+				<main className="flex flex-1 justify-center px-6 py-10">
+					<div className="flex w-full max-w-[1568px] flex-col gap-8">
+						<header className="flex flex-col gap-1">
+							<h1 className="text-[34px] font-semibold text-[#011018]">
+								Métricas
+							</h1>
+						</header>
 
-					<section className="rounded-[28px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-						<div className="flex items-center justify-between gap-4">
-							<div>
-								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-									Métricas Hidrometeorológicas
-								</p>
-								<p className="text-[16px] text-[#6B6B6B]">
-									Indicadores clave del cuerpo de agua (placeholders).
-								</p>
+						<section className="rounded-[28px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
+							<div className="flex items-center justify-between gap-4">
+								<div>
+									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+										Métricas Hidrometeorológicas
+									</p>
+									<p className="text-[16px] text-[#6B6B6B]">
+										Indicadores clave del cuerpo de agua (placeholders).
+									</p>
+								</div>
+								<div className="h-10 w-10 rounded-full bg-[#E6F3FB] shadow-[0px_4px_10px_rgba(0,0,0,0.08)]" />
 							</div>
-							<div className="h-10 w-10 rounded-full bg-[#E6F3FB] shadow-[0px_4px_10px_rgba(0,0,0,0.08)]" />
-						</div>
 
-						<div className="mt-6 grid gap-4 lg:grid-cols-3 xl:grid-cols-4">
-							{HIDROMETE_METRICAS.map((item) => (
-								<MetricaCard
-									key={item.title}
-									title={item.title}
-									value={item.value}
-									detail={item.detail}
-									accent={item.accent}
+							<div className="mt-6 grid gap-4 lg:grid-cols-3 xl:grid-cols-4">
+								{HIDROMETE_METRICAS.map((item) => (
+									<MetricaCard
+										key={item.title}
+										title={item.title}
+										value={item.value}
+										detail={item.detail}
+										accent={item.accent}
+									/>
+								))}
+							</div>
+						</section>
+
+						<section className="rounded-[28px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
+							<div className="flex items-center justify-between gap-4">
+								<div>
+									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+										Métricas Meteorológicas
+									</p>
+									<p className="text-[16px] text-[#6B6B6B]">
+										Condiciones del entorno, valores de muestra (sin cálculo).
+									</p>
+								</div>
+								<div className="h-10 w-10 rounded-full bg-[#F5F7FB] shadow-[0px_4px_10px_rgba(0,0,0,0.08)]" />
+							</div>
+
+							<div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+								{METEORO_METRICAS.map((item) => (
+									<MetricaCard
+										key={item.title}
+										title={item.title}
+										value={item.value}
+										detail={item.detail}
+										accent={item.accent}
+									/>
+								))}
+							</div>
+						</section>
+
+						<section className="rounded-[28px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
+							<div className="flex items-center justify-between gap-4">
+								<div>
+									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+										Gráficos de referencia
+									</p>
+									<p className="text-[16px] text-[#6B6B6B]">
+										Placeholder de gráficos lineales / barras.
+									</p>
+								</div>
+								<div className="h-10 w-10 rounded-full bg-[#E9F5FF] shadow-[0px_4px_10px_rgba(0,0,0,0.08)]" />
+							</div>
+
+							<div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+								<GraphPlaceholder
+									title="Nivel del agua en el tiempo"
+									subtitle="Gráfico placeholder"
 								/>
-							))}
-						</div>
-					</section>
-
-					<section className="rounded-[28px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-						<div className="flex items-center justify-between gap-4">
-							<div>
-								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-									Métricas Meteorológicas
-								</p>
-								<p className="text-[16px] text-[#6B6B6B]">
-									Condiciones del entorno, valores de muestra (sin cálculo).
-								</p>
-							</div>
-							<div className="h-10 w-10 rounded-full bg-[#F5F7FB] shadow-[0px_4px_10px_rgba(0,0,0,0.08)]" />
-						</div>
-
-						<div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-							{METEORO_METRICAS.map((item) => (
-								<MetricaCard
-									key={item.title}
-									title={item.title}
-									value={item.value}
-									detail={item.detail}
-									accent={item.accent}
+								<GraphPlaceholder
+									title="Precipitación"
+									subtitle="Acumulada e intensidad"
 								/>
-							))}
-						</div>
-					</section>
-
-					<section className="rounded-[28px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-						<div className="flex items-center justify-between gap-4">
-							<div>
-								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-									Gráficos de referencia
-								</p>
-								<p className="text-[16px] text-[#6B6B6B]">
-									Placeholder de gráficos lineales / barras.
-								</p>
+								<GraphPlaceholder
+									title="Temperatura"
+									subtitle="Serie temporal"
+								/>
 							</div>
-							<div className="h-10 w-10 rounded-full bg-[#E9F5FF] shadow-[0px_4px_10px_rgba(0,0,0,0.08)]" />
-						</div>
-
-						<div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-							<GraphPlaceholder
-								title="Nivel del agua en el tiempo"
-								subtitle="Gráfico placeholder"
-							/>
-							<GraphPlaceholder
-								title="Precipitación"
-								subtitle="Acumulada e intensidad"
-							/>
-							<GraphPlaceholder
-								title="Temperatura"
-								subtitle="Serie temporal"
-							/>
-						</div>
-					</section>
-				</div>
-			</main>
-		</div>
+						</section>
+					</div>
+				</main>
+			</div>
+		</PaginaBase>
 	);
 }
