@@ -21,6 +21,8 @@ export default function Home() {
 
 	const filteredData = useMemo(() => {
 		const normalizedSearch = searchValue.trim().toLowerCase();
+
+		// 1) Filtro por texto si hubiera búsqueda (hoy no hay input, pero dejamos la lógica)
 		const baseListado = normalizedSearch
 			? BASE_LIMNIGRAFOS.filter((item) =>
 				[item.nombre, item.ubicacion].some((field) =>
@@ -29,7 +31,15 @@ export default function Home() {
 			)
 			: BASE_LIMNIGRAFOS;
 
-		return [...baseListado].sort((a, b) => {
+		// 2) Solo mostrar estados "advertencia" y "fuera"
+		const soloCriticos = baseListado.filter(
+			(item) =>
+				item.estado.variante === "advertencia" ||
+				item.estado.variante === "fuera"
+		);
+
+		// 3) Ordenar por prioridad de estado (fuera primero, luego advertencia)
+		return [...soloCriticos].sort((a, b) => {
 			const priorityA = estadoPriority[a.estado.variante ?? ""] ?? 4;
 			const priorityB = estadoPriority[b.estado.variante ?? ""] ?? 4;
 			return priorityA - priorityB;
