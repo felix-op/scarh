@@ -59,6 +59,10 @@ export default function EstadisticasPage() {
 							<h1 className="text-[34px] font-semibold text-[#011018]">
 								Estadísticas
 							</h1>
+							<p className="text-base text-[#4D5562]">
+								Analiza tendencias y comparaciones para entender el comportamiento
+								historico de los limnigrafos en cada periodo.
+							</p>
 						</header>
 
 						<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">

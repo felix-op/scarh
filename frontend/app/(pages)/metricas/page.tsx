@@ -117,6 +117,10 @@ export default function MetricasPage() {
 							<h1 className="text-[34px] font-semibold text-[#011018]">
 								Métricas
 							</h1>
+							<p className="text-base text-[#4D5562]">
+								Explora indicadores hidrometeorologicos y meteorologicos para
+								obtener una vision rapida del estado del sistema.
+							</p>
 						</header>
 
 						<section className="rounded-[28px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">

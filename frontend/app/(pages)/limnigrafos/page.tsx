@@ -59,6 +59,8 @@ export default function Home() {
 		const [mostrarFormulario, setMostrarFormulario] = useState(false);
 		const [formValues, setFormValues] = useState(FORM_STATE);
 		const [formError, setFormError] = useState<string | null>(null);
+		const [persistError, setPersistError] = useState<string | null>(null);
+		const [isPersisting, setIsPersisting] = useState(false);
 
 	useEffect(() => {
 		if (typeof window === "undefined") {
@@ -101,10 +103,10 @@ export default function Home() {
 		setFormError(null);
 	}
 
-	function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		if (!formValues.nombre || !formValues.ubicacion) {
-			setFormError("Nombre y ubicaci+¦n son obligatorios.");
+			setFormError("Nombre y ubicaci+??n son obligatorios.");
 			return;
 		}
 
@@ -115,22 +117,46 @@ export default function Home() {
 			bateria: "Bateria 100%",
 			tiempoUltimoDato: "Hace instantes",
 			estado: { variante: DEFAULT_ESTADO_VARIANTE },
-			temperatura: "0°",
+			temperatura: "0??",
 			altura: "0 mts",
 			presion: "0 bar",
 			ultimoMantenimiento: "Sin datos",
 			descripcion:
         formValues.descripcion ||
-        "Sin descripci+¦n. Actualice la informaci+¦n cuando est+® disponible.",
+        "Sin descripci+??n. Actualice la informaci+??n cuando est+?? disponible.",
 			datosExtra: DATOS_EXTRA_PLACEHOLDER.map((item) => ({ ...item })),
 			coordenadas: undefined,
 		};
 
-		setExtraLimnigrafos((prev) => [nuevoLimnigrafo, ...prev]);
-		setMostrarFormulario(false);
-		resetForm();
-	}
+		setIsPersisting(true);
+		setPersistError(null);
 
+		try {
+			const response = await fetch("/api/limnigrafos", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ limnigrafo: nuevoLimnigrafo }),
+			});
+
+			if (!response.ok) {
+				throw new Error("No se pudo guardar el limnigrafo en el archivo.");
+			}
+
+			setExtraLimnigrafos((prev) => [nuevoLimnigrafo, ...prev]);
+			setMostrarFormulario(false);
+			resetForm();
+		} catch (error) {
+			setPersistError(
+				error instanceof Error
+					? error.message
+					: "Error desconocido al guardar.",
+			);
+		} finally {
+			setIsPersisting(false);
+		}
+	}
 	function handleDialogOpenChange(isOpen: boolean) {
 		if (!isOpen) {
 			resetForm();
@@ -147,8 +173,17 @@ export default function Home() {
 					onProfileClick={() => router.push("/perfil")}
 				/>
 
-			<main className="flex flex-1 items-start justify-center px-6 py-10">
-				<div className="flex w-full max-w-[1568px] flex-col gap-6">
+				<main className="flex flex-1 items-start justify-center px-6 py-10">
+					<div className="flex w-full max-w-[1568px] flex-col gap-6">
+						<header className="flex flex-col gap-1">
+							<h1 className="text-[34px] font-semibold text-[#011018]">
+								Limnigrafos
+							</h1>
+							<p className="text-base text-[#4D5562]">
+								Gestiona el inventario de limnigrafos, agrega nuevos equipos y
+								revisa su ubicacion y estado general.
+							</p>
+						</header>
 						<Dialog open={mostrarFormulario} onOpenChange={handleDialogOpenChange}>
 							<div className="flex justify-end">
 								<DialogTrigger asChild>
@@ -185,6 +220,9 @@ export default function Home() {
 								</DialogHeader>
 								{formError ? (
 									<p className="mt-1 text-[15px] text-red-500">{formError}</p>
+								) : null}
+								{persistError ? (
+									<p className="text-[15px] text-red-500">{persistError}</p>
 								) : null}
 
 								<form onSubmit={handleSubmit} className="mt-4 grid gap-4">
@@ -248,9 +286,10 @@ export default function Home() {
 
 										<Boton
 											type="submit"
-											className="!mx-0 !h-[44px] !px-8"
+											disabled={isPersisting}
+											className="!mx-0 !h-[44px] !px-8 disabled:opacity-60"
 										>
-											Crear Limnigrafo
+											{isPersisting ? "Guardando..." : "Crear Limnigrafo"}
 										</Boton>
 									</div>
 								</form>

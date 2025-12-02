@@ -15,6 +15,7 @@ type RegistroImportado = {
 	presion: string;
 	altura: string;
 	temperatura: string;
+	fecha?: string;
 };
 
 const MANUAL_DEFAULT = {
@@ -137,6 +138,7 @@ function ImportarDatosContent() {
 	const [manualValues, setManualValues] = useState(MANUAL_DEFAULT);
 	const [mensaje, setMensaje] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [isSaving, setIsSaving] = useState(false);
 	const inputArchivoRef = useRef<HTMLInputElement | null>(null);
 
 	function handleManualChange(
@@ -160,6 +162,7 @@ function ImportarDatosContent() {
 		const nuevoRegistro: RegistroImportado = {
 			id: `manual-${Date.now()}`,
 			...manualValues,
+			fecha: new Date().toISOString(),
 		};
 
 		setRegistros((prev) => [nuevoRegistro, ...prev]);
@@ -193,6 +196,10 @@ function ImportarDatosContent() {
 						presion: item.presion ?? "",
 						altura: item.altura ?? "",
 						temperatura: item.temperatura ?? "",
+						fecha:
+							typeof item.fecha === "string"
+								? item.fecha
+								: new Date().toISOString(),
 					}))
 					.filter(
 						(item) => item.presion || item.altura || item.temperatura,
@@ -221,11 +228,52 @@ function ImportarDatosContent() {
 		reader.readAsText(archivo);
 	}
 
-	function guardarCambios() {
-		console.log("Registros a guardar", registros);
-		setMensaje("Los datos se guardaron localmente. Integrá la API para persistirlos.");
+	async function guardarCambios() {
+		if (!limnigrafo) {
+			setError("No se encontro un limnigrafo seleccionado.");
+			return;
+		}
+
+		if (registros.length === 0) {
+			setError("Necesitas agregar al menos un registro antes de guardar.");
+			return;
+		}
+
+		const payload = registros.map((registro, index) => ({
+			id: registro.id || `registro-${Date.now()}-${index}`,
+			temperatura: registro.temperatura,
+			altura: registro.altura,
+			presion: registro.presion,
+			timestamp: registro.fecha ?? new Date().toISOString(),
+		}));
+
+		setIsSaving(true);
 		setError(null);
+		setMensaje(null);
+
+		try {
+			const response = await fetch(`/api/limnigrafos/${limnigrafo.id}/mediciones`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ mediciones: payload }),
+			});
+
+			if (!response.ok) {
+				throw new Error("No se pudieron almacenar las mediciones.");
+			}
+
+			setMensaje("Las mediciones se guardaron en el archivo correctamente.");
+		} catch (err) {
+			setError(
+				err instanceof Error
+					? err.message
+					: "Error desconocido al guardar las mediciones.",
+			);
+		} finally {
+			setIsSaving(false);
+		}
 	}
+
 
 	return (
 		<div className="flex min-h-screen w-full bg-[#EEF4FB]">
@@ -334,9 +382,10 @@ function ImportarDatosContent() {
 						<Boton
 							type="button"
 							onClick={guardarCambios}
-							className="!mx-0 !px-9 !h-[48px]"
+							disabled={isSaving}
+							className="!mx-0 !px-9 !h-[48px] disabled:opacity-60"
 						>
-							Guardar
+							{isSaving ? "Guardando..." : "Guardar"}
 						</Boton>
 					</div>
 				</div>

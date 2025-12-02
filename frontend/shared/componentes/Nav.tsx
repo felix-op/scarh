@@ -7,6 +7,7 @@ import {
 	Map as MapIcon,
 	Chip as LimnigraphIcon,
 	Ruler as MeasuresIcon,
+	Documet as MeasurementsIcon,
 	Funcion as StatisticsIcon,
 	User as UserIcon,
 	HistoryIcon,
@@ -24,6 +25,7 @@ type NavItem = { label: string; Icon: IconComponent; href?: string };
 const NAV_ITEMS: NavItem[] = [
 	{ label: "Mapa", Icon: MapIcon, href: "/mapa" },
 	{ label: "Limnigrafo", Icon: LimnigraphIcon, href: "/limnigrafos" },
+	{ label: "Mediciones", Icon: MeasurementsIcon, href: "/mediciones" },
 	{ label: "Metricas", Icon: MeasuresIcon, href: "/metricas" },
 	{ label: "Estadisticas", Icon: StatisticsIcon, href: "/estadisticas" },
 	{ label: "Usuarios", Icon: UserIcon, href: "/usuarios" },
