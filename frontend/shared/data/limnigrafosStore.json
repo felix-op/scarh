@@ -1,39 +1,6 @@
 {
   "limnigrafos": [
     {
-      "id": "lim-1",
-      "nombre": "Limnigrafo Chapala",
-      "ubicacion": "Presa de Chapala",
-      "bateria": "Bateria 92%",
-      "tiempoUltimoDato": "Hace 15 minutos",
-      "estado": {
-        "variante": "activo"
-      },
-      "temperatura": "24°",
-      "altura": "52 mts",
-      "presion": "1.2 bar",
-      "ultimoMantenimiento": "12/05/2024",
-      "descripcion": "Monitorea el nivel principal de la presa de Chapala con acceso sencillo desde el embarcadero norte.",
-      "datosExtra": [
-        {
-          "label": "Dato 1",
-          "value": "Sensor A-OK"
-        },
-        {
-          "label": "Dato 2",
-          "value": "Flujo estable"
-        },
-        {
-          "label": "Dato 3",
-          "value": "Sin alertas"
-        }
-      ],
-      "coordenadas": {
-        "lat": -54.7972,
-        "lng": -68.3026
-      }
-    },
-    {
       "id": "lim-2",
       "nombre": "Limnigrafo Lago Sur",
       "ubicacion": "Lago Sur - Embarcadero",
@@ -163,39 +130,6 @@
       "coordenadas": {
         "lat": -54.7931,
         "lng": -68.305
-      }
-    },
-    {
-      "id": "lim-6",
-      "nombre": "Limnigrafo Arroyo Seco",
-      "ubicacion": "Arroyo Seco - Km 8",
-      "bateria": "Bateria 15%",
-      "tiempoUltimoDato": "Hace 3 horas",
-      "estado": {
-        "variante": "fuera"
-      },
-      "temperatura": "16°",
-      "altura": "32 mts",
-      "presion": "0.7 bar",
-      "ultimoMantenimiento": "26/01/2024",
-      "descripcion": "Sensor actualmente fuera de servicio por falta de batería; requiere visita técnica.",
-      "datosExtra": [
-        {
-          "label": "Dato 1",
-          "value": "Sin señal"
-        },
-        {
-          "label": "Dato 2",
-          "value": "Batería agotada"
-        },
-        {
-          "label": "Dato 3",
-          "value": "Reemplazar módulo"
-        }
-      ],
-      "coordenadas": {
-        "lat": -54.7905,
-        "lng": -68.298
       }
     },
     {

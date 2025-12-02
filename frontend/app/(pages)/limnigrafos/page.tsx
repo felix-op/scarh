@@ -4,11 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import LimnigrafoTable from "@componentes/LimnigrafoTable";
 import { Nav } from "@componentes/Nav";
-import {
-	EXTRA_LIMNIGRAFOS_STORAGE_KEY,
-	type LimnigrafoDetalleData,
-	LIMNIGRAFOS,
-} from "@data/limnigrafos";
+import { type LimnigrafoDetalleData, LIMNIGRAFOS } from "@data/limnigrafos";
 import type { VarianteEstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
 import Boton from "@componentes/Boton";
 import PaginaBase from "@componentes/base/PaginaBase";
@@ -37,9 +33,14 @@ const FORM_STATE = {
 	descripcion: "",
 };
 
+type LimnigrafoStorePayload = {
+	limnigrafos?: LimnigrafoDetalleData[];
+};
+
 export default function Home() {
 	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
+<<<<<<< HEAD
 	const [extraLimnigrafos, setExtraLimnigrafos] = useState<
 		LimnigrafoDetalleData[]
 	>(() => {
@@ -56,6 +57,11 @@ export default function Home() {
 			return [];
 		}
 	});
+=======
+	const [limnigrafosData, setLimnigrafosData] = useState<LimnigrafoDetalleData[]>([]);
+	const [isLoadingStore, setIsLoadingStore] = useState(true);
+	const [storeError, setStoreError] = useState<string | null>(null);
+>>>>>>> 57d645684ae6bc75a9532887bae4dc403fad77a5
 	const [mostrarFormulario, setMostrarFormulario] = useState(false);
 	const [formValues, setFormValues] = useState(FORM_STATE);
 	const [formError, setFormError] = useState<string | null>(null);
@@ -63,18 +69,53 @@ export default function Home() {
 	const [isPersisting, setIsPersisting] = useState(false);
 
 	useEffect(() => {
-		if (typeof window === "undefined") {
-			return;
+		let cancelado = false;
+
+		async function cargarStore() {
+			setIsLoadingStore(true);
+			try {
+				const response = await fetch("/api/limnigrafos");
+				if (!response.ok) {
+					throw new Error("No se pudo leer el archivo de limnigrafos.");
+				}
+
+				const data = (await response.json()) as LimnigrafoStorePayload;
+				if (cancelado) {
+					return;
+				}
+
+				if (data.limnigrafos && data.limnigrafos.length > 0) {
+					setLimnigrafosData(data.limnigrafos);
+				} else {
+					setLimnigrafosData(LIMNIGRAFOS);
+				}
+				setStoreError(null);
+			} catch (error) {
+				if (!cancelado) {
+					setStoreError(
+						error instanceof Error
+							? error.message
+							: "No se pudo cargar la lista de limnigrafos.",
+					);
+					setLimnigrafosData(LIMNIGRAFOS);
+				}
+			} finally {
+				if (!cancelado) {
+					setIsLoadingStore(false);
+				}
+			}
 		}
-		window.localStorage.setItem(
-			EXTRA_LIMNIGRAFOS_STORAGE_KEY,
-			JSON.stringify(extraLimnigrafos),
-		);
-	}, [extraLimnigrafos]);
+
+		void cargarStore();
+
+		return () => {
+			cancelado = true;
+		};
+	}, []);
 
 	const todosLimnigrafos = useMemo(
-		() => [...extraLimnigrafos, ...LIMNIGRAFOS],
-		[extraLimnigrafos],
+		() => limnigrafosData,
+		[limnigrafosData],
 	);
 
 	const filteredData = useMemo(() => {
@@ -91,10 +132,7 @@ export default function Home() {
 		);
 	}, [searchValue, todosLimnigrafos]);
 
-	function handleChange(
-		field: keyof typeof FORM_STATE,
-		value: string,
-	): void {
+	function handleChange(field: keyof typeof FORM_STATE, value: string): void {
 		setFormValues((prev) => ({ ...prev, [field]: value }));
 	}
 
@@ -106,7 +144,11 @@ export default function Home() {
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		if (!formValues.nombre || !formValues.ubicacion) {
+<<<<<<< HEAD
 			setFormError("Nombre y dirección son obligatorios.");
+=======
+			setFormError("Nombre y ubicacion son obligatorios.");
+>>>>>>> 57d645684ae6bc75a9532887bae4dc403fad77a5
 			return;
 		}
 
@@ -123,7 +165,11 @@ export default function Home() {
 			ultimoMantenimiento: "Sin datos",
 			descripcion:
 				formValues.descripcion ||
+<<<<<<< HEAD
 				"Sin descripci+??n. Actualice la informaci+??n cuando est+?? disponible.",
+=======
+				"Sin descripcion. Actualice la informacion cuando este disponible.",
+>>>>>>> 57d645684ae6bc75a9532887bae4dc403fad77a5
 			datosExtra: DATOS_EXTRA_PLACEHOLDER.map((item) => ({ ...item })),
 			coordenadas: undefined,
 		};
@@ -144,7 +190,10 @@ export default function Home() {
 				throw new Error("No se pudo guardar el limnigrafo en el archivo.");
 			}
 
-			setExtraLimnigrafos((prev) => [nuevoLimnigrafo, ...prev]);
+			setLimnigrafosData((prev) => [
+				nuevoLimnigrafo,
+				...prev.filter((item) => item.id !== nuevoLimnigrafo.id),
+			]);
 			setMostrarFormulario(false);
 			resetForm();
 		} catch (error) {
@@ -184,6 +233,9 @@ export default function Home() {
 								Gestiona el inventario de limnigrafos, agrega nuevos equipos y
 								revisa su ubicacion y estado general.
 							</p>
+							{storeError ? (
+								<p className="text-sm text-red-500">{storeError}</p>
+							) : null}
 						</header>
 						<Dialog open={mostrarFormulario} onOpenChange={handleDialogOpenChange}>
 							<div className="flex justify-end">
@@ -204,7 +256,7 @@ export default function Home() {
 	              "
 									>
 										<span className="text-[17px] font-semibold">
-											{mostrarFormulario ? "Cerrar formulario" : "Añadir Limnigrafo"}
+											{mostrarFormulario ? "Cerrar formulario" : "Anadir Limnigrafo"}
 										</span>
 									</Boton>
 								</DialogTrigger>
@@ -250,7 +302,11 @@ export default function Home() {
 											/>
 										</label>
 										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+<<<<<<< HEAD
 											Dirección *
+=======
+											Ubicacion *
+>>>>>>> 57d645684ae6bc75a9532887bae4dc403fad77a5
 											<input
 												type="text"
 												value={formValues.ubicacion}
@@ -264,7 +320,7 @@ export default function Home() {
 									</div>
 
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Descripción
+										Descripcion
 										<textarea
 											value={formValues.descripcion}
 											onChange={(event) =>
@@ -306,9 +362,15 @@ export default function Home() {
 							}}
 							showActions
 						/>
+						{isLoadingStore ? (
+							<p className="text-center text-sm text-[#6F6F6F]">
+								Cargando limnigrafos...
+							</p>
+						) : null}
 					</div>
 				</main>
 			</div>
 		</PaginaBase>
 	);
 }
+
