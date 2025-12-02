@@ -2,7 +2,6 @@ from django.db import models
 
 class Ubicacion(models.Model):
     nombre = models.CharField(max_length=100)
-    altitud = models.FloatField(null=True, blank=True)
     latitud = models.FloatField()
     longitud = models.FloatField()
 

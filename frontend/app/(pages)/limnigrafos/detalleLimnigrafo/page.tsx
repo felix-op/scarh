@@ -4,8 +4,17 @@ import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import LimnigrafoDetailsCard from "@componentes/LimnigrafoDetailsCard";
 import Boton from "@componentes/Boton";
-import { Documet, Edit, Map as MapIcon, Ruler } from "@componentes/icons/Icons";
+import { AddIcon, Documet, Edit, Map as MapIcon, Ruler } from "@componentes/icons/Icons";
 import { Nav } from "@componentes/Nav";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@componentes/components/ui/dialog";
 import {
 	EXTRA_LIMNIGRAFOS_STORAGE_KEY,
 	type LimnigrafoDetalleData,
@@ -77,30 +86,9 @@ function DetalleLimnigrafoContent() {
 		status: limnigrafo.estado,
 	};
 
-	function abrirEdicionDescripcion() {
-		setDescripcionTemporal(descripcion);
-		setEstaEditandoDescripcion(true);
-	}
-
-	function cerrarEdicionDescripcion() {
-		setEstaEditandoDescripcion(false);
-	}
-
 	function guardarDescripcion() {
 		setDescripcion(descripcionTemporal);
 		setEstaEditandoDescripcion(false);
-	}
-
-	function abrirEdicionDatos() {
-		setNombreTemporal(nombre);
-		setUltimoMantenimientoTemporal(ultimoMantenimiento);
-		setErrorDatos(null);
-		setEstaEditandoDatos(true);
-	}
-
-	function cerrarEdicionDatos() {
-		setEstaEditandoDatos(false);
-		setErrorDatos(null);
 	}
 
 	function guardarDatos() {
@@ -114,6 +102,31 @@ function DetalleLimnigrafoContent() {
 		setUltimoMantenimiento(ultimoMantenimientoTemporal);
 		setEstaEditandoDatos(false);
 		setErrorDatos(null);
+	}
+
+	function handleDescripcionDialogChange(isOpen: boolean) {
+		if (isOpen) {
+			setDescripcionTemporal(descripcion);
+		}
+		setEstaEditandoDescripcion(isOpen);
+	}
+
+	function handleDatosDialogChange(isOpen: boolean) {
+		if (isOpen) {
+			setNombreTemporal(nombre);
+			setUltimoMantenimientoTemporal(ultimoMantenimiento);
+			setErrorDatos(null);
+		} else {
+			setErrorDatos(null);
+		}
+		setEstaEditandoDatos(isOpen);
+	}
+
+	function irAPaginaImportacion() {
+		const url = `/limnigrafos/importarDatos?id=${encodeURIComponent(
+			String(limnigrafo.id),
+		)}`;
+		router.push(url);
 	}
 
 	return (
@@ -160,9 +173,13 @@ function DetalleLimnigrafoContent() {
 					</div>
 
 					<div className="flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-10 px-12">
-						<Boton
-							onClick={abrirEdicionDatos}
-							className="
+						<Dialog
+							open={estaEditandoDatos}
+							onOpenChange={handleDatosDialogChange}
+						>
+							<DialogTrigger asChild>
+								<Boton
+									className="
                 !mx-0
                 !bg-white
                 !text-[#898989]
@@ -172,9 +189,112 @@ function DetalleLimnigrafoContent() {
                 hover:!bg-[#F6F6F6]
                 gap-2
               "
+								>
+									<Edit size={24} color="#898989" />
+									<span className="text-[16px] font-medium">
+										Editar Limnigrafo
+									</span>
+								</Boton>
+							</DialogTrigger>
+
+							<DialogContent className="w-full max-w-[640px] rounded-2xl border-none bg-white p-6 shadow-[0px_12px_30px_rgba(0,0,0,0.25)]">
+								<DialogHeader className="items-start">
+									<p className="text-[14px] font-medium uppercase tracking-[0.08em] text-[#0982C8]">
+										Datos limnigrafo
+									</p>
+									<DialogTitle className="text-[24px] font-semibold text-[#4B4B4B]">
+										Editar limnigrafo
+									</DialogTitle>
+									<DialogDescription className="text-[15px] text-[#6B6B6B]">
+										Modifica el nombre y la fecha de último mantenimiento.
+									</DialogDescription>
+								</DialogHeader>
+
+								<div className="mt-5 flex flex-col gap-4">
+									<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
+										Limnigrafo
+										<input
+											type="text"
+											value={nombreTemporal}
+											onChange={(event) => setNombreTemporal(event.target.value)}
+											className="
+                      rounded-xl
+                      border
+                      border-[#D3D4D5]
+                      p-3
+                      text-[16px]
+                      text-[#4B4B4B]
+                      outline-none
+                      focus:border-[#0982C8]
+                    "
+											placeholder="Nombre del limnigrafo"
+										/>
+									</label>
+
+									<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
+										Último mantenimiento (DD/MM/AAAA)
+										<input
+											type="text"
+											value={ultimoMantenimientoTemporal}
+											onChange={(event) =>
+												setUltimoMantenimientoTemporal(event.target.value)
+											}
+											className="
+                      rounded-xl
+                      border
+                      border-[#D3D4D5]
+                      p-3
+                      text-[16px]
+                      text-[#4B4B4B]
+                      outline-none
+                      focus:border-[#0982C8]
+                    "
+											placeholder="DD/MM/AAAA"
+										/>
+										{errorDatos ? (
+											<span className="text-[14px] font-normal text-red-500">
+												{errorDatos}
+											</span>
+										) : null}
+									</label>
+								</div>
+
+								<div className="mt-6 flex items-center justify-end gap-4">
+									<DialogClose asChild>
+										<Boton
+											type="button"
+											className="!mx-0 !bg-[#F3F3F3] !text-[#7F7F7F] !h-[44px] !px-7"
+										>
+											Cancelar
+										</Boton>
+									</DialogClose>
+									<Boton
+										type="button"
+										onClick={guardarDatos}
+										className="!mx-0 !h-[44px] !px-7"
+									>
+										Guardar
+									</Boton>
+								</div>
+							</DialogContent>
+						</Dialog>
+
+						<Boton
+							onClick={irAPaginaImportacion}
+							className="
+                !mx-0
+                !bg-white
+                !text-[#898989]
+                !h-[48px]
+                !px-8
+                !rounded-[28px]
+                shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
+                hover:!bg-[#F6F6F6]
+                gap-2
+              "
 						>
-							<Edit size={24} color="#898989" />
-							<span className="text-[16px] font-medium">Editar Limnigrafo</span>
+							<AddIcon size={20} color="#898989" />
+							<span className="text-[16px] font-medium">Importar datos</span>
 						</Boton>
 
 						<Boton
@@ -195,22 +315,83 @@ function DetalleLimnigrafoContent() {
 							</span>
 						</Boton>
 
-						<Boton
-							onClick={abrirEdicionDescripcion}
-							className="
-                !mx-0
-                !bg-white
-                !text-[#898989]
-                !h-[48px]
-                !px-8
-                shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
-                hover:!bg-[#F6F6F6]
-                gap-2
-              "
+						<Dialog
+							open={estaEditandoDescripcion}
+							onOpenChange={handleDescripcionDialogChange}
 						>
-							<Documet size={24} color="#898989" />
-							<span className="text-[16px] font-medium">Editar Descripcion</span>
-						</Boton>
+							<DialogTrigger asChild>
+								<Boton
+									className="
+		                !mx-0
+		                !bg-white
+		                !text-[#898989]
+		                !h-[48px]
+		                !px-8
+		                shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
+		                hover:!bg-[#F6F6F6]
+		                gap-2
+		              "
+								>
+									<Documet size={24} color="#898989" />
+									<span className="text-[16px] font-medium">
+										Editar Descripcion
+									</span>
+								</Boton>
+							</DialogTrigger>
+
+							<DialogContent className="w-full max-w-[640px] rounded-2xl border-none bg-white p-6 shadow-[0px_12px_30px_rgba(0,0,0,0.25)]">
+								<DialogHeader className="items-start">
+									<p className="text-[14px] font-medium uppercase tracking-[0.08em] text-[#0982C8]">
+										Descripcion
+									</p>
+									<DialogTitle className="text-[24px] font-semibold text-[#4B4B4B]">
+										Editar descripcion
+									</DialogTitle>
+								</DialogHeader>
+
+								<div className="mt-5">
+									<label className="mb-2 block text-[16px] font-semibold text-[#4B4B4B]">
+										Nueva descripcion
+									</label>
+									<textarea
+										value={descripcionTemporal}
+										onChange={(event) =>
+											setDescripcionTemporal(event.target.value)
+										}
+										className="
+                      w-full
+                      rounded-xl
+                      border
+                      border-[#D3D4D5]
+                      p-3
+                      text-[16px]
+                      text-[#4B4B4B]
+                      outline-none
+                      focus:border-[#0982C8]
+                    "
+										rows={5}
+									/>
+								</div>
+
+								<div className="mt-6 flex items-center justify-end gap-4">
+									<DialogClose asChild>
+										<Boton
+											type="button"
+											className="!mx-0 !bg-[#F3F3F3] !text-[#7F7F7F] !h-[44px] !px-7"
+										>
+											Cancelar
+										</Boton>
+									</DialogClose>
+									<Boton
+										type="button"
+										onClick={guardarDescripcion}
+										className="!mx-0 !h-[44px] !px-7"
+									>
+										Guardar
+									</Boton>
+								</div>
+							</DialogContent>
+						</Dialog>
 					</div>
 
 					<div className="flex w-full max-w-[520px] flex-col items-center gap-4">
@@ -234,145 +415,6 @@ function DetalleLimnigrafoContent() {
 					</div>
 				</div>
 			</main>
-
-			{estaEditandoDescripcion ? (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B1D2B]/35 backdrop-blur-[3px] px-4 py-8">
-					<div className="w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-[0px_12px_30px_rgba(0,0,0,0.25)]">
-						<div className="flex items-start justify-between gap-3">
-							<div className="flex-1">
-								<p className="text-[14px] font-medium uppercase tracking-[0.08em] text-[#0982C8]">
-									Descripcion
-								</p>
-							</div>
-						</div>
-
-						<div className="mt-5">
-							<label className="mb-2 block text-[16px] font-semibold text-[#4B4B4B]">
-								Nueva descripcion
-							</label>
-							<textarea
-								value={descripcionTemporal}
-								onChange={(event) => setDescripcionTemporal(event.target.value)}
-								className="
-                  w-full
-                  rounded-xl
-                  border
-                  border-[#D3D4D5]
-                  p-3
-                  text-[16px]
-                  text-[#4B4B4B]
-                  outline-none
-                  focus:border-[#0982C8]
-                "
-								rows={5}
-							/>
-						</div>
-
-						<div className="mt-6 flex items-center justify-end gap-4">
-							<Boton
-								type="button"
-								onClick={cerrarEdicionDescripcion}
-								className="!mx-0 !bg-[#F3F3F3] !text-[#7F7F7F] !h-[44px] !px-7"
-							>
-								Cancelar
-							</Boton>
-							<Boton
-								type="button"
-								onClick={guardarDescripcion}
-								className="!mx-0 !h-[44px] !px-7"
-							>
-								Guardar
-							</Boton>
-						</div>
-					</div>
-				</div>
-			) : null}
-
-			{estaEditandoDatos ? (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B1D2B]/35 backdrop-blur-[3px] px-4 py-8">
-					<div className="w-full max-w-[640px] rounded-2xl bg-white p-6 shadow-[0px_12px_30px_rgba(0,0,0,0.25)]">
-						<div className="flex items-start justify-between gap-3">
-							<div className="flex-1">
-								<p className="text-[14px] font-medium uppercase tracking-[0.08em] text-[#0982C8]">
-									Datos limnigrafo
-								</p>
-								<h3 className="mt-1 text-[24px] font-semibold text-[#4B4B4B]">
-									Editar limnigrafo
-								</h3>
-								<p className="text-[15px] text-[#6B6B6B]">
-									Modifica el nombre y la fecha de último mantenimiento.
-								</p>
-							</div>
-						</div>
-
-						<div className="mt-5 flex flex-col gap-4">
-							<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
-								Limnigrafo
-								<input
-									type="text"
-									value={nombreTemporal}
-									onChange={(event) => setNombreTemporal(event.target.value)}
-									className="
-                    rounded-xl
-                    border
-                    border-[#D3D4D5]
-                    p-3
-                    text-[16px]
-                    text-[#4B4B4B]
-                    outline-none
-                    focus:border-[#0982C8]
-                  "
-									placeholder="Nombre del limnigrafo"
-								/>
-							</label>
-
-							<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
-								Último mantenimiento (DD/MM/AAAA)
-								<input
-									type="text"
-									value={ultimoMantenimientoTemporal}
-									onChange={(event) =>
-										setUltimoMantenimientoTemporal(event.target.value)
-									}
-									className="
-                    rounded-xl
-                    border
-                    border-[#D3D4D5]
-                    p-3
-                    text-[16px]
-                    text-[#4B4B4B]
-                    outline-none
-                    focus:border-[#0982C8]
-                  "
-									placeholder="DD/MM/AAAA"
-								/>
-								{errorDatos ? (
-									<span className="text-[14px] font-normal text-red-500">
-										{errorDatos}
-									</span>
-								) : null}
-							</label>
-						</div>
-
-						<div className="mt-6 flex items-center justify-end gap-4">
-							<Boton
-								type="button"
-								onClick={cerrarEdicionDatos}
-								className="!mx-0 !bg-[#F3F3F3] !text-[#7F7F7F] !h-[44px] !px-7"
-							>
-								Cancelar
-							</Boton>
-							<Boton
-								type="button"
-								onClick={guardarDatos}
-								className="!mx-0 !h-[44px] !px-7"
-							>
-								Guardar
-							</Boton>
-						</div>
-					</div>
-				</div>
-			) : null}
 		</div>
 	);
 }
