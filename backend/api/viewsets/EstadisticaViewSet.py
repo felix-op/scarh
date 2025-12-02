@@ -32,7 +32,6 @@ class EstadisticaViewSet(viewsets.GenericViewSet):
                 fecha_hora__range=[fecha_inicio, fecha_fin]
             ).values_list(atributo, flat=True))
             
-            # Filter None values
             clean_values = [v for v in values if v is not None]
             all_values.extend(clean_values)
 

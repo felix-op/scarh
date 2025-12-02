@@ -30,3 +30,17 @@ Sistema de Control y Análisis de Recursos Hídricos.
 # Docker compose comandos
 - Prod:
 docker-compose -f docker compose.yml up --build -d
+
+# Arreglos por las imágenes
+docker system prune
+
+docker compose -f compose.dev.yml down --remove-orphans
+docker rm -f nombre-contendor 2>/dev/null || true
+
+# borra overrides autogenerados de features
+rm -f ~/.config/Code/User/globalStorage/ms-vscode-remote.remote-containers/data/docker-compose/docker-compose.devcontainer.*.yml
+
+# en VS Code: “Dev Containers: Rebuild without cache”
+# o desde CLI:
+docker compose -f compose.dev.yml build --no-cache
+docker compose -f compose.dev.yml up -d
