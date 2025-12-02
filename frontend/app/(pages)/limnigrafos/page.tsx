@@ -241,7 +241,7 @@ export default function Home() {
 										Nuevo Limnigrafo
 									</DialogTitle>
 									<DialogDescription className="text-[16px] text-[#666]">
-										Completa los datos principales y presiona &quot;Importar dato&quot;.
+										Completa los datos principales y presiona &quot;Crear Limnigrafo&quot;.
 									</DialogDescription>
 								</DialogHeader>
 								{formError ? (

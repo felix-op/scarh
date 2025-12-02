@@ -18,6 +18,7 @@ type Usuario = {
 	legajo: string;
 	email: string;
 	telefono: string;
+	password?: string;
 	estadoLabel: string;
 	estadoVariant: EstadoVariant;
 };
@@ -142,6 +143,7 @@ export default function UsersAdminPage() {
 	const [editLegajo, setEditLegajo] = useState("");
 	const [editEmail, setEditEmail] = useState("");
 	const [editTelefono, setEditTelefono] = useState("");
+	const [editPassword, setEditPassword] = useState("");
 
 	// --- Modal eliminar ---
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -155,6 +157,7 @@ export default function UsersAdminPage() {
 		setEditLegajo(selectedUser.legajo);
 		setEditEmail(selectedUser.email);
 		setEditTelefono(selectedUser.telefono);
+		setEditPassword(selectedUser.password ?? "");
 		setIsEditOpen(true);
 	}
 
@@ -170,6 +173,7 @@ export default function UsersAdminPage() {
 						legajo: editLegajo,
 						email: editEmail,
 						telefono: editTelefono,
+						password: editPassword || u.password,
 					}
 					: u,
 			),
@@ -229,6 +233,7 @@ export default function UsersAdminPage() {
 			legajo: data.legajo,
 			email: data.email,
 			telefono: data.telefono,
+			password: data.password,
 			estadoLabel: "Activo",
 			estadoVariant: "activo",
 		};
@@ -262,7 +267,7 @@ export default function UsersAdminPage() {
 								</h1>
 								<p className="text-sm text-[#6B7280]">
 									Seleccioná un usuario de la lista para ver o editar su
-									información, o añadí uno nuevo.
+									información.
 								</p>
 							</div>
 
@@ -286,8 +291,8 @@ export default function UsersAdminPage() {
 						email={selectedUser?.email ?? ""}
 						telefono={selectedUser?.telefono ?? ""}
 						estadoLabel={selectedUser?.estadoLabel ?? ""}
-								estadoVariant={selectedUser?.estadoVariant ?? "activo"}
-								password="******************"
+						estadoVariant={selectedUser?.estadoVariant ?? "activo"}
+						password={selectedUser?.password ?? ""}
 								onEdit={handleOpenEdit}
 								onDelete={handleOpenDelete}
 								className="mx-auto"
@@ -304,32 +309,39 @@ export default function UsersAdminPage() {
 								Editar usuario
 							</h2>
 
-							<div className="mb-6 flex flex-col gap-4">
-								<TextField
-									label="Nombre y apellido"
-									placeholder="Nombre completo"
-									value={editNombre}
-									onChange={setEditNombre}
-								/>
-								<TextField
-									label="Legajo"
-									placeholder="123456/01"
-									value={editLegajo}
-									onChange={setEditLegajo}
-								/>
-								<TextField
-									label="Email"
-									placeholder="usuario@scarh.com"
-									value={editEmail}
-									onChange={setEditEmail}
-								/>
-								<TextField
-									label="Teléfono"
-									placeholder="+549..."
-									value={editTelefono}
-									onChange={setEditTelefono}
-								/>
-							</div>
+					<div className="mb-6 flex flex-col gap-4">
+						<TextField
+							label="Nombre y apellido"
+							placeholder="Nombre completo"
+							value={editNombre}
+							onChange={setEditNombre}
+						/>
+						<TextField
+							label="Legajo"
+							placeholder="123456/01"
+							value={editLegajo}
+							onChange={setEditLegajo}
+						/>
+						<TextField
+							label="Email"
+							placeholder="usuario@scarh.com"
+							value={editEmail}
+							onChange={setEditEmail}
+						/>
+						<TextField
+							label="Teléfono"
+							placeholder="+549..."
+							value={editTelefono}
+							onChange={setEditTelefono}
+						/>
+						<TextField
+							label="Contraseña"
+							placeholder="************"
+							value={editPassword}
+							onChange={setEditPassword}
+							type="password"
+						/>
+					</div>
 
 							<div className="flex flex-wrap justify-center gap-4">
 								<Boton type="button" onClick={handleSaveEdit}>
