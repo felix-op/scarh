@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Boton from "@componentes/Boton";
 import { Nav } from "@componentes/Nav";
-import {
-	EXTRA_LIMNIGRAFOS_STORAGE_KEY,
-	type LimnigrafoDetalleData,
-	LIMNIGRAFOS,
-} from "@data/limnigrafos";
+import { type LimnigrafoDetalleData, LIMNIGRAFOS } from "@data/limnigrafos";
+
+type LimnigrafoStorePayload = {
+	limnigrafos?: LimnigrafoDetalleData[];
+};
 
 type RegistroImportado = {
 	id: string;
@@ -23,37 +23,6 @@ const MANUAL_DEFAULT = {
 	altura: "",
 	temperatura: "",
 };
-
-function useLimnigrafoSeleccionado() {
-	const searchParams = useSearchParams();
-	const selectedId = searchParams.get("id");
-	const [extraLimnigrafos] = useState<LimnigrafoDetalleData[]>(() => {
-		if (typeof window === "undefined") {
-			return [];
-		}
-		const stored = window.localStorage.getItem(EXTRA_LIMNIGRAFOS_STORAGE_KEY);
-		if (!stored) {
-			return [];
-		}
-		try {
-			return JSON.parse(stored) as LimnigrafoDetalleData[];
-		} catch {
-			return [];
-		}
-	});
-
-	const dataset = useMemo(
-		() => [...extraLimnigrafos, ...LIMNIGRAFOS],
-		[extraLimnigrafos],
-	);
-
-	return useMemo(() => {
-		if (!selectedId) {
-			return dataset[0];
-		}
-		return dataset.find((item) => item.id === selectedId) ?? dataset[0];
-	}, [dataset, selectedId]);
-}
 
 function TablaDatos({ registros }: { registros: RegistroImportado[] }) {
 	return (
@@ -133,13 +102,80 @@ function FormularioManual({
 
 function ImportarDatosContent() {
 	const router = useRouter();
-	const limnigrafo = useLimnigrafoSeleccionado();
+	const searchParams = useSearchParams();
+	const [limnigrafosData, setLimnigrafosData] = useState<LimnigrafoDetalleData[]>([]);
+	const [selectedLimnigrafoId, setSelectedLimnigrafoId] = useState("");
+	const [isLoadingStore, setIsLoadingStore] = useState(true);
+	const [storeError, setStoreError] = useState<string | null>(null);
 	const [registros, setRegistros] = useState<RegistroImportado[]>([]);
 	const [manualValues, setManualValues] = useState(MANUAL_DEFAULT);
 	const [mensaje, setMensaje] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [isSaving, setIsSaving] = useState(false);
 	const inputArchivoRef = useRef<HTMLInputElement | null>(null);
+
+	useEffect(() => {
+		let cancelado = false;
+
+		async function cargarStore() {
+			try {
+				const response = await fetch("/api/limnigrafos");
+				if (!response.ok) {
+					throw new Error("No se pudo leer el archivo de limnigrafos.");
+				}
+
+				const data = (await response.json()) as LimnigrafoStorePayload;
+				if (cancelado) {
+					return;
+				}
+
+				if (data.limnigrafos && data.limnigrafos.length > 0) {
+					setLimnigrafosData(data.limnigrafos);
+				} else {
+					setLimnigrafosData(LIMNIGRAFOS);
+				}
+				setStoreError(null);
+			} catch (err) {
+				if (!cancelado) {
+					setStoreError(
+						err instanceof Error
+							? err.message
+							: "No se pudo cargar el archivo de limnigrafos.",
+					);
+					setLimnigrafosData(LIMNIGRAFOS);
+				}
+			} finally {
+				if (!cancelado) {
+					setIsLoadingStore(false);
+				}
+			}
+		}
+
+		void cargarStore();
+
+		return () => {
+			cancelado = true;
+		};
+	}, []);
+
+	useEffect(() => {
+		const paramId = searchParams.get("id");
+		if (paramId && paramId !== selectedLimnigrafoId) {
+			setSelectedLimnigrafoId(paramId);
+		} else if (!paramId && !selectedLimnigrafoId && limnigrafosData[0]) {
+			setSelectedLimnigrafoId(limnigrafosData[0].id);
+		}
+	}, [searchParams, limnigrafosData, selectedLimnigrafoId]);
+
+	const limnigrafo = useMemo(() => {
+		if (!limnigrafosData.length) {
+			return null;
+		}
+		return (
+			limnigrafosData.find((item) => item.id === selectedLimnigrafoId) ??
+			limnigrafosData[0]
+		);
+	}, [limnigrafosData, selectedLimnigrafoId]);
 
 	function handleManualChange(
 		campo: keyof typeof MANUAL_DEFAULT,
@@ -296,6 +332,9 @@ function ImportarDatosContent() {
 							</span>
 						</p>
 					</header>
+					{storeError ? (
+						<p className="text-sm text-red-500">{storeError}</p>
+					) : null}
 
 					<section className="flex flex-col gap-4 rounded-[32px] bg-[#F8F9FB] p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.1)]">
 						<div className="flex items-center justify-between">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import { Nav } from "@componentes/Nav";
 import {
@@ -74,14 +74,13 @@ const MEDICIONES_POR_LIMNIGRAFO: Record<string, MedicionRow[]> = LIMNIGRAFOS.red
 
 export default function MedicionesPage() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const [limnigrafosData, setLimnigrafosData] =
 		useState<LimnigrafoDetalleData[]>(LIMNIGRAFOS);
 	const [medicionesPersistidas, setMedicionesPersistidas] = useState<
 		Record<string, LimnigrafoMedicion[]>
 	>({});
-	const [selectedLimnigrafoId, setSelectedLimnigrafoId] = useState(
-		LIMNIGRAFOS[0]?.id ?? "",
-	);
+	const [selectedLimnigrafoId, setSelectedLimnigrafoId] = useState("");
 	const [isLoadingStore, setIsLoadingStore] = useState(true);
 	const [storeError, setStoreError] = useState<string | null>(null);
 
@@ -129,6 +128,15 @@ export default function MedicionesPage() {
 		};
 	}, []);
 
+	useEffect(() => {
+		const paramId = searchParams?.get("id");
+		if (paramId && paramId !== selectedLimnigrafoId) {
+			setSelectedLimnigrafoId(paramId);
+		} else if (!paramId && !selectedLimnigrafoId && limnigrafosData[0]) {
+			setSelectedLimnigrafoId(limnigrafosData[0].id);
+		}
+	}, [searchParams, limnigrafosData, selectedLimnigrafoId]);
+
 	const selectedLimnigrafo = useMemo(() => {
 		return (
 			limnigrafosData.find((item) => item.id === selectedLimnigrafoId) ??
@@ -144,17 +152,38 @@ export default function MedicionesPage() {
 
 		const persistidas = medicionesPersistidas[selectedLimnigrafo.id];
 		if (persistidas && persistidas.length > 0) {
-			return persistidas.map((item) => ({
-				id: item.id,
-				timestamp: item.timestamp,
-				temperatura: item.temperatura ?? "-",
-				altura: item.altura ?? "-",
-				presion: item.presion ?? "-",
-			}));
+			return [...persistidas]
+				.sort((a, b) => {
+					const fechaA = new Date(a.timestamp ?? "").getTime();
+					const fechaB = new Date(b.timestamp ?? "").getTime();
+					return Number.isNaN(fechaB) ? -1 : fechaB - fechaA;
+				})
+				.map((item) => ({
+					id: item.id,
+					timestamp: item.timestamp,
+					temperatura: item.temperatura ?? "-",
+					altura: item.altura ?? "-",
+					presion: item.presion ?? "-",
+				}));
 		}
 
 		return buildMediciones(selectedLimnigrafo);
 	}, [selectedLimnigrafo, medicionesPersistidas]);
+
+	const latestMedicion = useMemo(() => mediciones[0], [mediciones]);
+
+	const temperaturaActual =
+		latestMedicion?.temperatura?.trim()
+			? latestMedicion.temperatura
+			: selectedLimnigrafo?.temperatura ?? "-";
+	const alturaActual =
+		latestMedicion?.altura?.trim()
+			? latestMedicion.altura
+			: selectedLimnigrafo?.altura ?? "-";
+	const presionActual =
+		latestMedicion?.presion?.trim()
+			? latestMedicion.presion
+			: selectedLimnigrafo?.presion ?? "-";
 
 	return (
 		<PaginaBase>
@@ -209,19 +238,19 @@ export default function MedicionesPage() {
 									<div className="rounded-2xl bg-[#F4F8FF] px-4 py-3">
 										<p className="text-sm text-[#4D5562]">Temperatura actual</p>
 										<p className="text-2xl font-semibold text-[#0D1B2A]">
-											{selectedLimnigrafo.temperatura}
+											{temperaturaActual}
 										</p>
 									</div>
 									<div className="rounded-2xl bg-[#F4F8FF] px-4 py-3">
 										<p className="text-sm text-[#4D5562]">Altura actual</p>
 										<p className="text-2xl font-semibold text-[#0D1B2A]">
-											{selectedLimnigrafo.altura}
+											{alturaActual}
 										</p>
 									</div>
 									<div className="rounded-2xl bg-[#F4F8FF] px-4 py-3">
 										<p className="text-sm text-[#4D5562]">Presion actual</p>
 										<p className="text-2xl font-semibold text-[#0D1B2A]">
-											{selectedLimnigrafo.presion}
+											{presionActual}
 										</p>
 									</div>
 								</div>
