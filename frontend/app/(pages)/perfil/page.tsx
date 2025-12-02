@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Nav } from "@componentes/Nav";
 import UserInfoCard from "@componentes/UserInfoCard";
+import PaginaBase from "@componentes/base/PaginaBase";
 
 const USUARIO_DEMO = {
 	nombre: "Juan",
@@ -19,21 +20,24 @@ export default function ProfilePage() {
 	const router = useRouter();
 
 	return (
-		<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-			<Nav
-				userName="Juan Perez"
-				userEmail="juan.perez@scarh.com"
-				onProfileClick={() => router.push("/perfil")}
-			/>
+		<PaginaBase>
 
-			<main className="flex flex-1 items-start justify-center px-6 py-10">
-				<UserInfoCard
-					{...USUARIO_DEMO}
-					showActions={false}
-					showPassword={false}
-					className="mx-auto"
+			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
+				<Nav
+					userName="Juan Perez"
+					userEmail="juan.perez@scarh.com"
+					onProfileClick={() => router.push("/perfil")}
 				/>
-			</main>
-		</div>
+
+				<main className="flex flex-1 items-start justify-center px-6 py-10">
+					<UserInfoCard
+						{...USUARIO_DEMO}
+						showActions={false}
+						showPassword={false}
+						className="mx-auto"
+					/>
+				</main>
+			</div>
+		</PaginaBase>
 	);
 }

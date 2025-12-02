@@ -11,6 +11,7 @@ import {
 } from "@data/limnigrafos";
 import type { VarianteEstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
 import Boton from "@componentes/Boton";
+import PaginaBase from "@componentes/base/PaginaBase";
 
 const ESTADOS: VarianteEstadoLimnigrafo[] = [
 	"activo",
@@ -139,12 +140,13 @@ export default function Home() {
 	}
 
 	return (
-		<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-			<Nav
-				userName="Juan Perez"
-				userEmail="juan.perez@scarh.com"
-				onProfileClick={() => router.push("/perfil")}
-			/>
+		<PaginaBase>
+			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
+				<Nav
+					userName="Juan Perez"
+					userEmail="juan.perez@scarh.com"
+					onProfileClick={() => router.push("/perfil")}
+				/>
 
 			<main className="flex flex-1 items-start justify-center px-6 py-10">
 				<div className="flex w-full max-w-[1568px] flex-col gap-6">
@@ -163,221 +165,222 @@ export default function Home() {
                 hover:!bg-[#E6F3FB]
               "
 						>
-							{mostrarFormulario ? "Cerrar formulario" : "A+¦adir Limnigrafo"}
+							{mostrarFormulario ? "Cerrar formulario" : "Añadir Limnigrafo"}
 						</Boton>
 					</div>
 
-					{mostrarFormulario ? (
-						<section
-							className="
-                rounded-[24px]
-                bg-white
-                p-6
-                shadow-[0px_4px_12px_rgba(0,0,0,0.15)]
-              "
-						>
-							<h2 className="text-[24px] font-semibold text-[#333]">
-								Nuevo Limnigrafo
-							</h2>
-							<p className="text-[16px] text-[#666]">
-								Completa los datos principales y presiona &quot;Importar dato&quot;.
-							</p>
-							{formError ? (
-								<p className="mt-3 text-[15px] text-red-500">{formError}</p>
-							) : null}
+						{mostrarFormulario ? (
+							<section
+								className="
+					rounded-[24px]
+					bg-white
+					p-6
+					shadow-[0px_4px_12px_rgba(0,0,0,0.15)]
+				"
+							>
+								<h2 className="text-[24px] font-semibold text-[#333]">
+									Nuevo Limnigrafo
+								</h2>
+								<p className="text-[16px] text-[#666]">
+									Completa los datos principales y presiona &quot;Importar dato&quot;.
+								</p>
+								{formError ? (
+									<p className="mt-3 text-[15px] text-red-500">{formError}</p>
+								) : null}
 
-							<form onSubmit={handleSubmit} className="mt-4 grid gap-4">
-								<div className="grid gap-4 md:grid-cols-2">
+								<form onSubmit={handleSubmit} className="mt-4 grid gap-4">
+									<div className="grid gap-4 md:grid-cols-2">
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Identificador
+											<input
+												type="text"
+												value={formValues.id}
+												onChange={(event) => handleChange("id", event.target.value)}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+											/>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Nombre *
+											<input
+												type="text"
+												value={formValues.nombre}
+												onChange={(event) =>
+													handleChange("nombre", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												required
+											/>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Ubicación *
+											<input
+												type="text"
+												value={formValues.ubicacion}
+												onChange={(event) =>
+													handleChange("ubicacion", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												required
+											/>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Latitud (opcional)
+											<input
+												type="number"
+												step="any"
+												value={formValues.latitud}
+												onChange={(event) =>
+													handleChange("latitud", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												placeholder="-54.79"
+											/>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Longitud (opcional)
+											<input
+												type="number"
+												step="any"
+												value={formValues.longitud}
+												onChange={(event) =>
+													handleChange("longitud", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												placeholder="-68.30"
+											/>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Batería
+											<input
+												type="text"
+												value={formValues.bateria}
+												onChange={(event) =>
+													handleChange("bateria", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+											/>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Tiempo Último dato
+											<input
+												type="text"
+												value={formValues.tiempoUltimoDato}
+												onChange={(event) =>
+													handleChange("tiempoUltimoDato", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+											/>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Estado
+											<select
+												value={formValues.estado}
+												onChange={(event) =>
+													handleChange("estado", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+											>
+												{ESTADOS.map((estado) => (
+													<option key={estado} value={estado}>
+														{estado}
+													</option>
+												))}
+											</select>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Temperatura
+											<input
+												type="text"
+												value={formValues.temperatura}
+												onChange={(event) =>
+													handleChange("temperatura", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+											/>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Altura
+											<input
+												type="text"
+												value={formValues.altura}
+												onChange={(event) =>
+													handleChange("altura", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+											/>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Presión
+											<input
+												type="text"
+												value={formValues.presion}
+												onChange={(event) =>
+													handleChange("presion", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+											/>
+										</label>
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Últimmo mantenimiento
+											<input
+												type="text"
+												value={formValues.ultimoMantenimiento}
+												onChange={(event) =>
+													handleChange("ultimoMantenimiento", event.target.value)
+												}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+											/>
+										</label>
+									</div>
+
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Identificador
-										<input
-											type="text"
-											value={formValues.id}
-											onChange={(event) => handleChange("id", event.target.value)}
+										Descripción
+										<textarea
+											value={formValues.descripcion}
+											onChange={(event) =>
+												handleChange("descripcion", event.target.value)
+											}
+											rows={4}
 											className="rounded-xl border border-[#D3D4D5] p-2.5"
 										/>
 									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Nombre *
-										<input
-											type="text"
-											value={formValues.nombre}
-											onChange={(event) =>
-												handleChange("nombre", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
-											required
-										/>
-									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Ubicación *
-										<input
-											type="text"
-											value={formValues.ubicacion}
-											onChange={(event) =>
-												handleChange("ubicacion", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
-											required
-										/>
-									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Latitud (opcional)
-										<input
-											type="number"
-											step="any"
-											value={formValues.latitud}
-											onChange={(event) =>
-												handleChange("latitud", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
-											placeholder="-54.79"
-										/>
-									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Longitud (opcional)
-										<input
-											type="number"
-											step="any"
-											value={formValues.longitud}
-											onChange={(event) =>
-												handleChange("longitud", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
-											placeholder="-68.30"
-										/>
-									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Batería
-										<input
-											type="text"
-											value={formValues.bateria}
-											onChange={(event) =>
-												handleChange("bateria", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
-										/>
-									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Tiempo Último dato
-										<input
-											type="text"
-											value={formValues.tiempoUltimoDato}
-											onChange={(event) =>
-												handleChange("tiempoUltimoDato", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
-										/>
-									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Estado
-										<select
-											value={formValues.estado}
-											onChange={(event) =>
-												handleChange("estado", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
+
+									<div className="mt-4 flex flex-wrap items-center justify-end gap-4">
+										<Boton
+											type="button"
+											onClick={() => {
+												setMostrarFormulario(false);
+												resetForm();
+											}}
+											className="!mx-0 !bg-[#F6F6F6] !text-[#7F7F7F] !h-[44px] !px-8"
 										>
-											{ESTADOS.map((estado) => (
-												<option key={estado} value={estado}>
-													{estado}
-												</option>
-											))}
-										</select>
-									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Temperatura
-										<input
-											type="text"
-											value={formValues.temperatura}
-											onChange={(event) =>
-												handleChange("temperatura", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
-										/>
-									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Altura
-										<input
-											type="text"
-											value={formValues.altura}
-											onChange={(event) =>
-												handleChange("altura", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
-										/>
-									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Presión
-										<input
-											type="text"
-											value={formValues.presion}
-											onChange={(event) =>
-												handleChange("presion", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
-										/>
-									</label>
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Últimmo mantenimiento
-										<input
-											type="text"
-											value={formValues.ultimoMantenimiento}
-											onChange={(event) =>
-												handleChange("ultimoMantenimiento", event.target.value)
-											}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
-										/>
-									</label>
-								</div>
+											Cancelar
+										</Boton>
 
-								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Descripción
-									<textarea
-										value={formValues.descripcion}
-										onChange={(event) =>
-											handleChange("descripcion", event.target.value)
-										}
-										rows={4}
-										className="rounded-xl border border-[#D3D4D5] p-2.5"
-									/>
-								</label>
+										<Boton
+											type="submit"
+											className="!mx-0 !h-[44px] !px-8"
+										>
+											Importar dato
+										</Boton>
+									</div>
+								</form>
+							</section>
+						) : null}
 
-								<div className="mt-4 flex flex-wrap items-center justify-end gap-4">
-									<Boton
-										type="button"
-										onClick={() => {
-											setMostrarFormulario(false);
-											resetForm();
-										}}
-										className="!mx-0 !bg-[#F6F6F6] !text-[#7F7F7F] !h-[44px] !px-8"
-									>
-										Cancelar
-									</Boton>
-
-									<Boton
-										type="submit"
-										className="!mx-0 !h-[44px] !px-8"
-									>
-										Importar dato
-									</Boton>
-								</div>
-							</form>
-						</section>
-					) : null}
-
-					<LimnigrafoTable
-						data={filteredData}
-						searchValue={searchValue}
-						onSearchChange={setSearchValue}
-						onFilterClick={() => {
-							console.log("Filtro por aplicar");
-						}}
-						showActions
-					/>
-				</div>
-			</main>
-		</div>
+						<LimnigrafoTable
+							data={filteredData}
+							searchValue={searchValue}
+							onSearchChange={setSearchValue}
+							onFilterClick={() => {
+								console.log("Filtro por aplicar");
+							}}
+							showActions
+						/>
+					</div>
+				</main>
+			</div>
+		</PaginaBase>
 	);
 }
 

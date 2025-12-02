@@ -25,6 +25,7 @@
       "@servicios/*": ["./shared/servicios/*"],
       "@utilidades/*": ["./shared/utilidades/*"],
       "@data/*": ["./shared/data/*"],
+      "@shadcn": ["./shared/shadcn/*"]
     }
   },
   "include": [

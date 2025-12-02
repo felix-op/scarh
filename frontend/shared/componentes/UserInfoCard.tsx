@@ -1,6 +1,7 @@
 "use client";
 
 import { DeleteButton, EditButton } from "./UserActionButtons";
+import { signOut } from 'next-auth/react';
 
 type EstadoVariant = "activo" | "inactivo" | "pendiente" | "suspendido";
 
@@ -134,6 +135,13 @@ export function UserInfoCard({
 	const passwordDisplay = maskPassword(password);
 	const initials = getInitials(nombre, apellido);
 
+	const handleLogout = () => {
+		signOut({
+			callbackUrl: '/', 
+			redirect: true, 
+		});
+	}
+
 	const infoColumns = [
 		[
 			{ label: "Nombre", value: nombre },
@@ -172,7 +180,12 @@ export function UserInfoCard({
 			</h2>
 
 			<div className="h-px w-full bg-neutral-200" />
-
+			<button 
+				onClick={handleLogout} 
+				className="text-white bg-red-600 hover:bg-red-700 font-bold py-2 px-4 rounded"
+			>
+				Cerrar Sesión
+			</button>
 			<div className="grid gap-6 lg:grid-cols-[320px_1fr]">
 				<div className="flex flex-col items-center gap-6">
 					<div
