@@ -40,12 +40,12 @@ const FORM_STATE = {
 export default function Home() {
 	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
-		const [extraLimnigrafos, setExtraLimnigrafos] = useState<
-			LimnigrafoDetalleData[]
-		>(() => {
-			if (typeof window === "undefined") {
-				return [];
-			}
+	const [extraLimnigrafos, setExtraLimnigrafos] = useState<
+		LimnigrafoDetalleData[]
+	>(() => {
+		if (typeof window === "undefined") {
+			return [];
+		}
 		const stored = window.localStorage.getItem(EXTRA_LIMNIGRAFOS_STORAGE_KEY);
 		if (!stored) {
 			return [];
@@ -55,12 +55,12 @@ export default function Home() {
 		} catch {
 			return [];
 		}
-		});
-		const [mostrarFormulario, setMostrarFormulario] = useState(false);
-		const [formValues, setFormValues] = useState(FORM_STATE);
-		const [formError, setFormError] = useState<string | null>(null);
-		const [persistError, setPersistError] = useState<string | null>(null);
-		const [isPersisting, setIsPersisting] = useState(false);
+	});
+	const [mostrarFormulario, setMostrarFormulario] = useState(false);
+	const [formValues, setFormValues] = useState(FORM_STATE);
+	const [formError, setFormError] = useState<string | null>(null);
+	const [persistError, setPersistError] = useState<string | null>(null);
+	const [isPersisting, setIsPersisting] = useState(false);
 
 	useEffect(() => {
 		if (typeof window === "undefined") {
@@ -106,7 +106,7 @@ export default function Home() {
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		if (!formValues.nombre || !formValues.ubicacion) {
-			setFormError("Nombre y ubicaci+??n son obligatorios.");
+			setFormError("Nombre y dirección son obligatorios.");
 			return;
 		}
 
@@ -122,8 +122,8 @@ export default function Home() {
 			presion: "0 bar",
 			ultimoMantenimiento: "Sin datos",
 			descripcion:
-        formValues.descripcion ||
-        "Sin descripci+??n. Actualice la informaci+??n cuando est+?? disponible.",
+				formValues.descripcion ||
+				"Sin descripci+??n. Actualice la informaci+??n cuando est+?? disponible.",
 			datosExtra: DATOS_EXTRA_PLACEHOLDER.map((item) => ({ ...item })),
 			coordenadas: undefined,
 		};
@@ -157,6 +157,7 @@ export default function Home() {
 			setIsPersisting(false);
 		}
 	}
+
 	function handleDialogOpenChange(isOpen: boolean) {
 		if (!isOpen) {
 			resetForm();
@@ -249,7 +250,7 @@ export default function Home() {
 											/>
 										</label>
 										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Ubicación *
+											Dirección *
 											<input
 												type="text"
 												value={formValues.ubicacion}
