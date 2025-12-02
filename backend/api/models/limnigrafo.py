@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 import secrets, hashlib
-from simple_history.models import HistoricalRecords
+from simple_history.models import HistoricalRecords # type: ignore
 class Limnigrafo(models.Model):
     history = HistoricalRecords()
     COMUNICACIONES_CHOICES = [
