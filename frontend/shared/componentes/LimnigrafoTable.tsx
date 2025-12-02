@@ -40,15 +40,7 @@ const ACCION_COLUMN_TITLE = "Acciones";
 const columnasTablaBase = "200px repeat(4, minmax(0, 1fr))";
 const columnasTablaConAccion = `${columnasTablaBase} 150px`;
 
-export default function LimnigrafoTable({
-											data,
-											className = "",
-											// props que ya no usamos, pero las dejamos para no romper a quien las pasa
-											searchValue: _searchValue,
-											onSearchChange: _onSearchChange,
-											onFilterClick: _onFilterClick,
-											showActions = false,
-										}: LimnigrafoTableProps) {
+export default function LimnigrafoTable({data,className = "",searchValue: _searchValue, onSearchChange: _onSearchChange, onFilterClick: _onFilterClick, showActions = false,}: LimnigrafoTableProps) {
 	const columnTitles = showActions
 		? [...baseColumnTitles, ACCION_COLUMN_TITLE]
 		: baseColumnTitles;
