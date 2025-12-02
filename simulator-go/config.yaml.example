@@ -1,0 +1,57 @@
+backend_url: "http://localhost:8000/api/"
+interval_seconds: 5
+
+limnigrafos:
+  - id: 1
+    token: "LMG_TU_API_KEY_ACA"
+    altura_min: 0.5
+    altura_max: 3.5
+    temperatura_min: -5
+    temperatura_max: 25
+    presion_min: 950
+    presion_max: 1050
+    bateria_inicial: 100
+    bateria_min: 10
+
+  - id: 2
+    token: "LMG_OTRA_API_KEY"
+    altura_min: 1.0
+    altura_max: 4.0
+    temperatura_min: -2
+    temperatura_max: 20
+    presion_min: 960
+    presion_max: 1040
+    bateria_inicial: 90
+    bateria_min: 5
+
+interval: 2s
+duration: 1m
+
+sensors:
+  - id: "temp-001"
+    name: "Temperatura Sala Principal"
+    type: "temperature"
+    unit: "°C"
+    min_value: 18.0
+    max_value: 26.0
+
+  - id: "hum-001"
+    name: "Humedad Sala Principal"
+    type: "humidity"
+    unit: "%"
+    min_value: 40.0
+    max_value: 70.0
+
+  - id: "press-001"
+    name: "Presión Atmosférica"
+    type: "pressure"
+    unit: "hPa"
+    min_value: 1000.0
+    max_value: 1020.0
+
+  - id: "co2-001"
+    name: "CO2 Ambiente"
+    type: "co2"
+    unit: "ppm"
+    min_value: 400.0
+    max_value: 1000.0
