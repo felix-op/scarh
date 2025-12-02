@@ -128,6 +128,14 @@ export default function UsersAdminPage() {
 		[usuarios, selectedId],
 	);
 
+	const nombreParts = useMemo(() => {
+		const parts = (selectedUser?.nombre ?? "").trim().split(/\s+/);
+		return {
+			nombre: parts[0] ?? "",
+			apellido: parts.slice(1).join(" "),
+		};
+	}, [selectedUser?.nombre]);
+
 	// --- Modal edición ---
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [editNombre, setEditNombre] = useState("");
@@ -264,22 +272,20 @@ export default function UsersAdminPage() {
 						</header>
 
 						<div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)]">
-							<UserListCard
-								usuarios={usuarios}
-								selectedId={selectedId}
-								onSelect={(usuario) => setSelectedId(usuario.id)}
-								className="mx-auto"
-							/>
+					<UserListCard
+						usuarios={usuarios}
+						selectedId={selectedId}
+						onSelect={(usuario) => setSelectedId(usuario.id)}
+						className="mx-auto"
+					/>
 
-							<UserInfoCard
-								nombre={selectedUser?.nombre ?? ""}
-								apellido={
-									selectedUser?.nombre?.split(" ").slice(1).join(" ") || ""
-								}
-								legajo={selectedUser?.legajo ?? ""}
-								email={selectedUser?.email ?? ""}
-								telefono={selectedUser?.telefono ?? ""}
-								estadoLabel={selectedUser?.estadoLabel ?? ""}
+					<UserInfoCard
+						nombre={nombreParts.nombre}
+						apellido={nombreParts.apellido}
+						legajo={selectedUser?.legajo ?? ""}
+						email={selectedUser?.email ?? ""}
+						telefono={selectedUser?.telefono ?? ""}
+						estadoLabel={selectedUser?.estadoLabel ?? ""}
 								estadoVariant={selectedUser?.estadoVariant ?? "activo"}
 								password="******************"
 								onEdit={handleOpenEdit}

@@ -229,7 +229,7 @@ export default function Home() {
 	              "
 									>
 										<span className="text-[17px] font-semibold">
-											{mostrarFormulario ? "Cerrar formulario" : "Anadir Limnigrafo"}
+											{mostrarFormulario ? "Cerrar formulario" : "Añadir Limnígrafo"}
 										</span>
 									</Boton>
 								</DialogTrigger>
