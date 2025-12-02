@@ -1,31 +1,31 @@
 "use client";
 
 import { DeleteButton, EditButton } from "./UserActionButtons";
-import { signOut } from 'next-auth/react';
+import { signOut } from "next-auth/react";
 
 type EstadoVariant = "activo" | "inactivo" | "pendiente" | "suspendido";
 
 type UserInfoCardProps = {
-  nombre: string;
-  apellido: string;
-  legajo: string;
-  email: string;
-  telefono: string;
-  password?: string;
-  estadoLabel?: string;
-  estadoVariant?: EstadoVariant;
-  avatarUrl?: string;
-  className?: string;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  titulo?: string;
-  showActions?: boolean;
-  showPassword?: boolean;
+	nombre: string;
+	apellido: string;
+	legajo: string;
+	email: string;
+	telefono: string;
+	password?: string;
+	estadoLabel?: string;
+	estadoVariant?: EstadoVariant;
+	avatarUrl?: string;
+	className?: string;
+	onEdit?: () => void;
+	onDelete?: () => void;
+	titulo?: string;
+	showActions?: boolean;
+	showPassword?: boolean;
 };
 
 const estadoStyles: Record<
-  EstadoVariant,
-  { dot: string; text: string; badgeBg: string }
+	EstadoVariant,
+	{ dot: string; text: string; badgeBg: string }
 > = {
 	activo: {
 		dot: "bg-emerald-500 border-emerald-800/40",
@@ -60,7 +60,6 @@ function maskPassword(password?: string) {
 	if (!password) {
 		return "******************";
 	}
-
 	const safeLength = Math.min(Math.max(password.length, 12), 18);
 	return "•".repeat(safeLength);
 }
@@ -116,31 +115,31 @@ function StatusBadge({ label, variant }: { label: string; variant: EstadoVariant
 }
 
 export function UserInfoCard({
-	nombre,
-	apellido,
-	legajo,
-	email,
-	telefono,
-	password,
-	estadoLabel = "Activo",
-	estadoVariant = "activo",
-	avatarUrl,
-	className = "",
-	onEdit,
-	onDelete,
-	titulo = "Información de Usuario",
-	showActions = true,
-	showPassword = true,
-}: UserInfoCardProps) {
+								 nombre,
+								 apellido,
+								 legajo,
+								 email,
+								 telefono,
+								 password,
+								 estadoLabel = "Activo",
+								 estadoVariant = "activo",
+								 avatarUrl,
+								 className = "",
+								 onEdit,
+								 onDelete,
+								 titulo = "Información de Usuario",
+								 showActions = true,
+								 showPassword = true,
+							 }: UserInfoCardProps) {
 	const passwordDisplay = maskPassword(password);
 	const initials = getInitials(nombre, apellido);
 
 	const handleLogout = () => {
 		signOut({
-			callbackUrl: '/', 
-			redirect: true, 
+			callbackUrl: "/",
+			redirect: true,
 		});
-	}
+	};
 
 	const infoColumns = [
 		[
@@ -160,6 +159,7 @@ export function UserInfoCard({
 	return (
 		<section
 			className={`
+        relative
         w-full max-w-[1025px]
         rounded-[38px] bg-white
         shadow-[0_4px_8px_rgba(0,0,0,0.18)]
@@ -169,6 +169,26 @@ export function UserInfoCard({
         ${className}
       `}
 		>
+			{/* BOTÓN DE CERRAR SESIÓN */}
+			<button
+				onClick={handleLogout}
+				className="
+					absolute
+					top-6
+					right-6
+					text-white
+					bg-black
+					hover:bg-zinc-900
+					font-semibold
+					py-3 px-6           /* ← más grande */
+					rounded-lg          /* ← más estético */
+					text-base           /* ← texto más grande */
+					shadow-md
+				"
+			>
+				Cerrar sesión
+			</button>
+
 			<h2
 				className="
           text-center text-3xl md:text-4xl
@@ -180,12 +200,7 @@ export function UserInfoCard({
 			</h2>
 
 			<div className="h-px w-full bg-neutral-200" />
-			<button 
-				onClick={handleLogout} 
-				className="text-white bg-red-600 hover:bg-red-700 font-bold py-2 px-4 rounded"
-			>
-				Cerrar Sesión
-			</button>
+
 			<div className="grid gap-6 lg:grid-cols-[320px_1fr]">
 				<div className="flex flex-col items-center gap-6">
 					<div
@@ -198,10 +213,15 @@ export function UserInfoCard({
             "
 					>
 						{avatarUrl ? (
-						// eslint-disable-next-line @next/next/no-img-element
-							<img src={avatarUrl} alt={`${nombre} ${apellido}`} className="h-full w-full object-cover" />
+							<img
+								src={avatarUrl}
+								alt={`${nombre} ${apellido}`}
+								className="h-full w-full object-cover"
+							/>
 						) : (
-							<span className="text-6xl font-semibold text-sky-950">{initials}</span>
+							<span className="text-6xl font-semibold text-sky-950">
+								{initials}
+							</span>
 						)}
 					</div>
 
@@ -212,7 +232,9 @@ export function UserInfoCard({
               shadow-[0px_6px_16px_rgba(0,0,0,0.15)]
             "
 					>
-						<p className="text-center text-2xl font-semibold text-sky-950">Estado</p>
+						<p className="text-center text-2xl font-semibold text-sky-950">
+							Estado
+						</p>
 						<StatusBadge label={estadoLabel} variant={estadoVariant} />
 					</div>
 				</div>

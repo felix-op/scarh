@@ -1,13 +1,17 @@
+/* eslint-disable indent */
+/* eslint-disable react/jsx-indent */
+/* eslint-disable react/jsx-indent-props */
 "use client";
 
 import { useRouter } from "next/navigation";
+import BarraBusqueda from "./BarraBusqueda";
 import Boton from "./Boton";
 import RenglonDatos, { type CeldaRenglonDatos } from "./RenglonDatos";
 import {
 	BotonEstadoLimnigrafo,
 	type EstadoLimnigrafo,
 } from "./BotonEstadoLimnigrafo";
-import { ChevronRightIcon } from "./icons/Icons";
+import { ChevronRightIcon, FiltroDeslizadores } from "./icons/Icons";
 
 export type LimnigrafoRowData = {
 	id: string;
@@ -40,7 +44,18 @@ const ACCION_COLUMN_TITLE = "Acciones";
 const columnasTablaBase = "200px repeat(4, minmax(0, 1fr))";
 const columnasTablaConAccion = `${columnasTablaBase} 150px`;
 
-export default function LimnigrafoTable({data,className = "",searchValue: _searchValue, onSearchChange: _onSearchChange, onFilterClick: _onFilterClick, showActions = false,}: LimnigrafoTableProps) {
+export default function LimnigrafoTable({
+											data,
+											className = "",
+											searchValue = "",
+											onSearchChange,
+											onFilterClick,
+											showActions = false,
+										}: LimnigrafoTableProps) {
+	function handleSearchChange(valor: string) {
+		onSearchChange?.(valor);
+	}
+
 	const columnTitles = showActions
 		? [...baseColumnTitles, ACCION_COLUMN_TITLE]
 		: baseColumnTitles;
@@ -75,7 +90,35 @@ export default function LimnigrafoTable({data,className = "",searchValue: _searc
 				))}
 			</header>
 
-			{/* Ya no hay barra de búsqueda ni botón Filtro */}
+			<div className="flex items-center gap-2 border-b border-[#D3D4D5] px-3 py-1">
+				<BarraBusqueda
+					valor={searchValue}
+					onChange={handleSearchChange}
+					className="max-w-[320px]"
+				/>
+
+				<div className="flex-1" />
+
+				<Boton
+					type="button"
+					onClick={onFilterClick}
+					className="
+            !mx-0
+            gap-2
+            !bg-[#F3F3F3]
+            !text-[#7F7F7F]
+            !rounded-[24px]
+            !h-[34px]
+            !px-[14px]
+            shadow-[0px_2px_6px_rgba(0,0,0,0.12)]
+            border
+            border-[#E0E0E0]
+          "
+				>
+					<FiltroDeslizadores size={18} color="#7F7F7F" />
+					<span className="text-[15px] font-medium">Filtro</span>
+				</Boton>
+			</div>
 
 			<div className="flex flex-col divide-y divide-[#F0F0F0]">
 				{data.map((row) => (

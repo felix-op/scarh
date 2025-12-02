@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import LimnigrafoTable from "@componentes/LimnigrafoTable";
+import TablaHome from "@componentes/TablaHome";
 import { Nav } from "@componentes/Nav";
 import { LIMNIGRAFOS, toLimnigrafoRowData } from "@data/limnigrafos";
 import PaginaBase from "@componentes/base/PaginaBase";
@@ -15,36 +14,22 @@ const estadoPriority: Record<string, number> = {
 	activo: 3,
 };
 
+// Datos que se muestran en el HOME:
+// solo estados "advertencia" y "fuera", ordenados por prioridad
+const HOME_LIMNIGRAFOS = [...BASE_LIMNIGRAFOS]
+	.filter(
+		(item) =>
+			item.estado.variante === "advertencia" ||
+			item.estado.variante === "fuera",
+	)
+	.sort((a, b) => {
+		const priorityA = estadoPriority[a.estado.variante ?? ""] ?? 4;
+		const priorityB = estadoPriority[b.estado.variante ?? ""] ?? 4;
+		return priorityA - priorityB;
+	});
+
 export default function Home() {
 	const router = useRouter();
-	const [searchValue, setSearchValue] = useState("");
-
-	const filteredData = useMemo(() => {
-		const normalizedSearch = searchValue.trim().toLowerCase();
-
-		// 1) Filtro por texto si hubiera búsqueda (hoy no hay input, pero dejamos la lógica)
-		const baseListado = normalizedSearch
-			? BASE_LIMNIGRAFOS.filter((item) =>
-				[item.nombre, item.ubicacion].some((field) =>
-					field.toLowerCase().includes(normalizedSearch)
-				)
-			)
-			: BASE_LIMNIGRAFOS;
-
-		// 2) Solo mostrar estados "advertencia" y "fuera"
-		const soloCriticos = baseListado.filter(
-			(item) =>
-				item.estado.variante === "advertencia" ||
-				item.estado.variante === "fuera"
-		);
-
-		// 3) Ordenar por prioridad de estado (fuera primero, luego advertencia)
-		return [...soloCriticos].sort((a, b) => {
-			const priorityA = estadoPriority[a.estado.variante ?? ""] ?? 4;
-			const priorityB = estadoPriority[b.estado.variante ?? ""] ?? 4;
-			return priorityA - priorityB;
-		});
-	}, [searchValue]);
 
 	return (
 		<PaginaBase>
@@ -56,13 +41,8 @@ export default function Home() {
 				/>
 
 				<main className="flex flex-1 items-start justify-center px-6 py-10">
-					<LimnigrafoTable
-						data={filteredData}
-						searchValue={searchValue}
-						onSearchChange={setSearchValue}
-						onFilterClick={() => {
-							console.log("Filtro por aplicar");
-						}}
+					<TablaHome
+						data={HOME_LIMNIGRAFOS}
 						className="max-h-[50vh] overflow-y-auto"
 					/>
 				</main>
