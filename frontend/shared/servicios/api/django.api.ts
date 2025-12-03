@@ -1,6 +1,6 @@
 "use client";
 
-import useGet, { useDelete, usePatch, usePost } from "./queryHooks";
+import useGet, { useDelete, usePatch, usePost, usePut } from "./queryHooks";
 import { MutationConfig, ParamsBase, UseGetConfig } from "./types";
 
 const NEXT_PROXY_URL = "/api/proxy";
@@ -126,7 +126,7 @@ export function usePutLimnigrafo({ params, configuracion }: UsePutLimngrafoOptio
 	}
 	const defaultConfig = {};
 	
-	return usePost({
+	return usePut({
 		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
 		configuracion: configuracion ?? defaultConfig,
 		params: params ?? defaultParams,

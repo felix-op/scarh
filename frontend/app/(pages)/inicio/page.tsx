@@ -36,10 +36,10 @@ export default function Home() {
 	const { data: limnigrafos } = useGetLimnigrafos({});
 	const { mutate: crearLimnigrafo } = usePostLimnigrafo({});
 	const { mutate: editarLimnigrafo } = usePutLimnigrafo({
-		params: { id: "1" },
+		params: { id: "3" },
 	});
 	const { mutate: eliminarLimnigrafo } = useDeleteLimnigrafo({
-		params: { id: "2" },
+		params: { id: "3" },
 	});
 
 	useEffect(() => {
@@ -89,10 +89,12 @@ export default function Home() {
 					onProfileClick={() => router.push("/perfil")}
 				/>
 
-				<main className="flex flex-1 items-start justify-center px-6 py-10">
-					<BotonFeo onClick={onPost}>Probando POST</BotonFeo>
-					<BotonFeo onClick={onPut}>Probando PUT</BotonFeo>
-					<BotonFeo onClick={onDelete}>Probando DELETE</BotonFeo>
+				<main className="flex flex-col flex-1 items-start justify-center px-6 py-10">
+					<div className="flex gap-2">
+						<BotonFeo onClick={onPost}>Probando POST</BotonFeo>
+						<BotonFeo onClick={onPut}>Probando PUT</BotonFeo>
+						<BotonFeo onClick={onDelete}>Probando DELETE</BotonFeo>
+					</div>
 					<TablaHome
 						data={HOME_LIMNIGRAFOS}
 						className="max-h-[50vh] overflow-y-auto"
