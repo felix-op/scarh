@@ -3,6 +3,7 @@
 import { ThemeProvider } from "next-themes";
 import { ReactNode } from "react";
 import AuthProvider from "./AuthProvider";
+import QueryProvider from "./QueryProvider";
 
 type ProvidersProps = {
     children: ReactNode;
@@ -11,9 +12,11 @@ type ProvidersProps = {
 export function Providers({ children }: ProvidersProps) {
 	return (
 		<AuthProvider>
-			<ThemeProvider attribute="class" defaultTheme="system">
-				{children}
-			</ThemeProvider>
+			<QueryProvider>
+				<ThemeProvider attribute="class" defaultTheme="system">
+					{children}
+				</ThemeProvider>
+			</QueryProvider>
 		</AuthProvider>
 	);
 }
