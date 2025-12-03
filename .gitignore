@@ -4,6 +4,7 @@ __pycache__
 .env
 db.sqlite3
 # Frontend
+.vscode/
 
 # dependencies
 node_modules
@@ -37,6 +38,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env
+.env.local
+.editorconfig
 
 # vercel
 .vercel
