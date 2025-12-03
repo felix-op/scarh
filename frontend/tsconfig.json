@@ -22,31 +22,17 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@componentes/*": [
-        "./shared/componentes/*"
-      ],
-      "@hooks/*": [
-        "./shared/hooks/*"
-      ],
-      "@tipos/*": [
-        "./shared/tipos/*"
-      ],
-      "@servicios/*": [
-        "./shared/servicios/*"
-      ],
-      "@utilidades/*": [
-        "./shared/utilidades/*"
-      ],
-      "@data/*": [
-        "./shared/data/*"
-      ],
-      "@lib/*": [
-        "./shared/lib/*"
-      ],
-      "@shadcn": [
-        "./shared/shadcn/*"
-      ]
+      "@componentes/*": ["./shared/componentes/*"],
+      "@hooks/*": ["./shared/hooks/*"],
+      "@tipos/*": ["./shared/tipos/*"],
+      "@servicios/*": ["./shared/servicios/*"],
+      "@auth/*": ["./app/api/auth/[...nextauth]/*"],
+      "@utilidades/*": ["./shared/utilidades/*"],
+      "@data/*": ["./shared/data/*"],
+      "@lib/*": ["./shared/lib/*"],
+      "@shadcn/*": ["./shared/shadcn/*"],
     }
   },
   "include": [
