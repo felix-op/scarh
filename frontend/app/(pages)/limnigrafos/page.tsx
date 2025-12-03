@@ -40,28 +40,9 @@ type LimnigrafoStorePayload = {
 export default function Home() {
 	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
-<<<<<<< HEAD
-	const [extraLimnigrafos, setExtraLimnigrafos] = useState<
-		LimnigrafoDetalleData[]
-	>(() => {
-		if (typeof window === "undefined") {
-			return [];
-		}
-		const stored = window.localStorage.getItem(EXTRA_LIMNIGRAFOS_STORAGE_KEY);
-		if (!stored) {
-			return [];
-		}
-		try {
-			return JSON.parse(stored) as LimnigrafoDetalleData[];
-		} catch {
-			return [];
-		}
-	});
-=======
 	const [limnigrafosData, setLimnigrafosData] = useState<LimnigrafoDetalleData[]>([]);
 	const [isLoadingStore, setIsLoadingStore] = useState(true);
 	const [storeError, setStoreError] = useState<string | null>(null);
->>>>>>> 57d645684ae6bc75a9532887bae4dc403fad77a5
 	const [mostrarFormulario, setMostrarFormulario] = useState(false);
 	const [formValues, setFormValues] = useState(FORM_STATE);
 	const [formError, setFormError] = useState<string | null>(null);
@@ -144,11 +125,7 @@ export default function Home() {
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		if (!formValues.nombre || !formValues.ubicacion) {
-<<<<<<< HEAD
-			setFormError("Nombre y dirección son obligatorios.");
-=======
 			setFormError("Nombre y ubicacion son obligatorios.");
->>>>>>> 57d645684ae6bc75a9532887bae4dc403fad77a5
 			return;
 		}
 
@@ -165,11 +142,7 @@ export default function Home() {
 			ultimoMantenimiento: "Sin datos",
 			descripcion:
 				formValues.descripcion ||
-<<<<<<< HEAD
-				"Sin descripci+??n. Actualice la informaci+??n cuando est+?? disponible.",
-=======
 				"Sin descripcion. Actualice la informacion cuando este disponible.",
->>>>>>> 57d645684ae6bc75a9532887bae4dc403fad77a5
 			datosExtra: DATOS_EXTRA_PLACEHOLDER.map((item) => ({ ...item })),
 			coordenadas: undefined,
 		};
@@ -302,11 +275,7 @@ export default function Home() {
 											/>
 										</label>
 										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-<<<<<<< HEAD
-											Dirección *
-=======
 											Ubicacion *
->>>>>>> 57d645684ae6bc75a9532887bae4dc403fad77a5
 											<input
 												type="text"
 												value={formValues.ubicacion}
@@ -373,4 +342,3 @@ export default function Home() {
 		</PaginaBase>
 	);
 }
-
