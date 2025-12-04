@@ -3,13 +3,17 @@
 import { useRouter } from "next/navigation";
 import TablaHome from "@componentes/TablaHome";
 import { Nav } from "@componentes/Nav";
-import { LIMNIGRAFOS, toLimnigrafoRowData } from "@data/limnigrafos";
 import PaginaBase from "@componentes/base/PaginaBase";
-import { useDeleteLimnigrafo, useGetLimnigrafos, usePostLimnigrafo, usePutLimnigrafo } from "@servicios/api/django.api";
-import BotonFeo from "./componentes/BotonFeo";
-import { useEffect } from "react";
+import { 
+	useGetLimnigrafos, 
+	useGetMediciones,
+	type LimnigrafoPaginatedResponse,
+	type MedicionPaginatedResponse 
+} from "@servicios/api/django.api";
+import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
+import { useMemo } from "react";
 
-const BASE_LIMNIGRAFOS = toLimnigrafoRowData(LIMNIGRAFOS);
+// Prioridad de estados para ordenamiento (menor = más urgente)
 const estadoPriority: Record<string, number> = {
 	fuera: 0,
 	advertencia: 1,
@@ -17,68 +21,44 @@ const estadoPriority: Record<string, number> = {
 	activo: 3,
 };
 
-// Datos que se muestran en el HOME:
-// solo estados "advertencia" y "fuera", ordenados por prioridad
-const HOME_LIMNIGRAFOS = [...BASE_LIMNIGRAFOS]
-	.filter(
-		(item) =>
-			item.estado.variante === "advertencia" ||
-			item.estado.variante === "fuera",
-	)
-	.sort((a, b) => {
-		const priorityA = estadoPriority[a.estado.variante ?? ""] ?? 4;
-		const priorityB = estadoPriority[b.estado.variante ?? ""] ?? 4;
-		return priorityA - priorityB;
-	});
-
 export default function Home() {
 	const router = useRouter();
-	const { data: limnigrafos } = useGetLimnigrafos({});
-	const { mutate: crearLimnigrafo } = usePostLimnigrafo({});
-	const { mutate: editarLimnigrafo } = usePutLimnigrafo({
-		params: { id: "3" },
-	});
-	const { mutate: eliminarLimnigrafo } = useDeleteLimnigrafo({
-		params: { id: "3" },
-	});
+	
+	// Consultar datos reales del backend
+	const { data: limnigrafosData, isLoading: loadingLimnigrafos } = useGetLimnigrafos({});
+	const { data: medicionesData, isLoading: loadingMediciones } = useGetMediciones({});
 
-	useEffect(() => {
-		if (limnigrafos) {
-			console.log("Limnigrafos: ", limnigrafos);
-		}
-	}, [limnigrafos]);
+	// Cast explícito para TypeScript
+	const limnigrafos = limnigrafosData as LimnigrafoPaginatedResponse | undefined;
+	const mediciones = medicionesData as MedicionPaginatedResponse | undefined;
 
-	const onPost = () => {
-		crearLimnigrafo({ data: {
-			codigo: 'uncodigo',
-			descripcion: 'Una descripcion',
-			bateria_max: 29039,
-			bateria_min: 10837,
-			memoria: 2000,
-			tiempo_advertencia: "12:01:01.009Z",
-			tiempo_peligro: "12:01:01.009Z",
-			ultimo_mantenimiento: "2025-12-03",
-			tipo_comunicacion: ["fisico-usb"],
-		}});
-	}
+	// Transformar y filtrar datos para el HOME
+	// Solo mostramos estados "advertencia" y "fuera", ordenados por prioridad
+	const homeLimnigrafos = useMemo(() => {
+		if (!limnigrafos?.results || !mediciones?.results) return [];
 
-	const onPut = () => {
-		editarLimnigrafo({ data: {
-			codigo: 'Un codigo Editado',
-			descripcion: 'Una descripcion editada',
-			bateria_max: 29039,
-			bateria_min: 10837,
-			memoria: 2000,
-			tiempo_advertencia: "12:01:01.009Z",
-			tiempo_peligro: "12:01:01.009Z",
-			ultimo_mantenimiento: "2025-12-03",
-			tipo_comunicacion: ["fisico-usb"],
-		}});
-	}
+		// Convertir array de mediciones a Map para búsqueda eficiente
+		const medicionesMap = new Map(
+			mediciones.results.map(m => [m.limnigrafo, m])
+		);
 
-	const onDelete = () => {
-		eliminarLimnigrafo({});
-	}
+		const transformados = transformarLimnigrafos(
+			limnigrafos.results,
+			medicionesMap
+		);
+
+		return transformados
+			.filter(
+				(item) =>
+					item.estado.variante === "advertencia" ||
+					item.estado.variante === "fuera"
+			)
+			.sort((a, b) => {
+				const priorityA = estadoPriority[a.estado.variante ?? ""] ?? 4;
+				const priorityB = estadoPriority[b.estado.variante ?? ""] ?? 4;
+				return priorityA - priorityB;
+			});
+	}, [limnigrafos, mediciones]);
 
 	return (
 		<PaginaBase>
@@ -90,13 +70,8 @@ export default function Home() {
 				/>
 
 				<main className="flex flex-col flex-1 items-start justify-center px-6 py-10">
-					<div className="flex gap-2">
-						<BotonFeo onClick={onPost}>Probando POST</BotonFeo>
-						<BotonFeo onClick={onPut}>Probando PUT</BotonFeo>
-						<BotonFeo onClick={onDelete}>Probando DELETE</BotonFeo>
-					</div>
 					<TablaHome
-						data={HOME_LIMNIGRAFOS}
+						data={homeLimnigrafos}
 						className="max-h-[50vh] overflow-y-auto"
 					/>
 				</main>

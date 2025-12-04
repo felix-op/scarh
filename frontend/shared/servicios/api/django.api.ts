@@ -35,6 +35,14 @@ export type LimnigrafoResponse = {
 	}
 };
 
+// Respuesta paginada del backend para limnígrafos
+export type LimnigrafoPaginatedResponse = {
+	count: number,
+	next: string | null,
+	previous: string | null,
+	results: LimnigrafoResponse[],
+};
+
 export type LimnigrafoPostRequest = {
 	codigo: string,
 	descripcion: string,
@@ -78,7 +86,7 @@ type UseGetLimnigrafosOptions = {
 }
 
 export function useGetLimnigrafos({ config }: UseGetLimnigrafosOptions) {
-	return useGet({
+	return useGet<ParamsBase, LimnigrafoPaginatedResponse>({
 		key: "useGetLimnigrafos",
 		url: `${NEXT_PROXY_URL}/limnigrafos/`,
 		params: {},
@@ -230,7 +238,7 @@ type UseGetMedicionesOptions = {
 // Uso: const { data } = useGetMediciones({ params: { limnigrafo: "1", limit: "10" } })
 // La respuesta será de tipo MedicionPaginatedResponse
 export function useGetMediciones({ params, config }: UseGetMedicionesOptions = {}) {
-	return useGet({
+	return useGet<UseGetMedicionesParams, MedicionPaginatedResponse>({
 		key: "useGetMediciones",
 		url: `${NEXT_PROXY_URL}/medicion/`,
 		params: params ?? {},

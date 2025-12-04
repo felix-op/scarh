@@ -111,7 +111,7 @@ export type UseGetOptions<TParams extends ParamsBase> = {
 	config: UseGetConfig,
 };
 
-export default function useGet<TParams extends ParamsBase>({
+export default function useGet<TParams extends ParamsBase, TResponse = unknown>({
 	key,
 	url,
 	params,
@@ -120,7 +120,7 @@ export default function useGet<TParams extends ParamsBase>({
 
 	const { configAxios = {}, ...otherConfig } = config;
 
-	return useQuery({
+	return useQuery<TResponse>({
 		queryKey: generarQueryKey(key, params),
 		queryFn: () => Request({
 			params,
