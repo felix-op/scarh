@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Limnigrafo
+from ..models import Limnigrafo, Ubicacion
 from .ubicacionSerializer import UbicacionSerializer
 
     
@@ -12,6 +12,11 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
     ubicacion = UbicacionSerializer(read_only=True)
     estado = serializers.CharField(read_only=True)
     ultima_conexion = serializers.TimeField(read_only=True)
+    ubicacion_id = serializers.PrimaryKeyRelatedField(
+        queryset=Ubicacion.objects.all(),
+        source='ubicacion',
+        write_only=True
+    )
     class Meta:
         model = Limnigrafo
         fields = [
@@ -29,4 +34,5 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
             'ultima_conexion',
             'estado',
             'ubicacion',
+            'ubicacion_id',
         ]
