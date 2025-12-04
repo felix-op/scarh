@@ -42,17 +42,20 @@ export default function Home() {
 			mediciones.results.map(m => [m.limnigrafo, m])
 		);
 
+		// Transformar formato backend a formato frontend
 		const transformados = transformarLimnigrafos(
 			limnigrafos.results,
 			medicionesMap
 		);
 
+		// Filtrar solo estados problemáticos (advertencia o fuera de línea)
 		return transformados
 			.filter(
 				(item) =>
 					item.estado.variante === "advertencia" ||
 					item.estado.variante === "fuera"
 			)
+			// Ordenar por prioridad (fuera=0 más urgente, activo=3 menos urgente)
 			.sort((a, b) => {
 				const priorityA = estadoPriority[a.estado.variante ?? ""] ?? 4;
 				const priorityB = estadoPriority[b.estado.variante ?? ""] ?? 4;

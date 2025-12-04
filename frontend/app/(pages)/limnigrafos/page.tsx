@@ -1,13 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import LimnigrafoTable from "@componentes/LimnigrafoTable";
 import { Nav } from "@componentes/Nav";
-import { type LimnigrafoDetalleData, LIMNIGRAFOS } from "@data/limnigrafos";
+import type { LimnigrafoDetalleData } from "@data/limnigrafos";
 import type { VarianteEstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
 import Boton from "@componentes/Boton";
 import PaginaBase from "@componentes/base/PaginaBase";
+import {
+	useGetLimnigrafos,
+	useGetMediciones,
+	type LimnigrafoPaginatedResponse,
+	type MedicionPaginatedResponse
+} from "@servicios/api/django.api";
+import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
 import {
 	Dialog,
 	DialogClose,
@@ -40,64 +47,35 @@ type LimnigrafoStorePayload = {
 export default function Home() {
 	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
-	const [limnigrafosData, setLimnigrafosData] = useState<LimnigrafoDetalleData[]>([]);
-	const [isLoadingStore, setIsLoadingStore] = useState(true);
-	const [storeError, setStoreError] = useState<string | null>(null);
 	const [mostrarFormulario, setMostrarFormulario] = useState(false);
 	const [formValues, setFormValues] = useState(FORM_STATE);
 	const [formError, setFormError] = useState<string | null>(null);
 	const [persistError, setPersistError] = useState<string | null>(null);
 	const [isPersisting, setIsPersisting] = useState(false);
 
-	useEffect(() => {
-		let cancelado = false;
+	// Consultar datos reales del backend
+	const { data: limnigrafosData, isLoading: isLoadingLimnigrafos } = useGetLimnigrafos({});
+	const { data: medicionesData, isLoading: isLoadingMediciones } = useGetMediciones({});
 
-		async function cargarStore() {
-			setIsLoadingStore(true);
-			try {
-				const response = await fetch("/api/limnigrafos");
-				if (!response.ok) {
-					throw new Error("No se pudo leer el archivo de limnigrafos.");
-				}
+	// Cast explícito para TypeScript
+	const limnigrafos = limnigrafosData as LimnigrafoPaginatedResponse | undefined;
+	const mediciones = medicionesData as MedicionPaginatedResponse | undefined;
 
-				const data = (await response.json()) as LimnigrafoStorePayload;
-				if (cancelado) {
-					return;
-				}
+	// Transformar datos del backend a formato frontend
+	const todosLimnigrafos = useMemo(() => {
+		if (!limnigrafos?.results || !mediciones?.results) return [];
 
-				if (data.limnigrafos && data.limnigrafos.length > 0) {
-					setLimnigrafosData(data.limnigrafos);
-				} else {
-					setLimnigrafosData(LIMNIGRAFOS);
-				}
-				setStoreError(null);
-			} catch (error) {
-				if (!cancelado) {
-					setStoreError(
-						error instanceof Error
-							? error.message
-							: "No se pudo cargar la lista de limnigrafos.",
-					);
-					setLimnigrafosData(LIMNIGRAFOS);
-				}
-			} finally {
-				if (!cancelado) {
-					setIsLoadingStore(false);
-				}
-			}
-		}
+		// Convertir array de mediciones a Map para búsqueda eficiente
+		const medicionesMap = new Map(
+			mediciones.results.map(m => [m.limnigrafo, m])
+		);
 
-		void cargarStore();
-
-		return () => {
-			cancelado = true;
-		};
-	}, []);
-
-	const todosLimnigrafos = useMemo(
-		() => limnigrafosData,
-		[limnigrafosData],
-	);
+		// Transformar formato backend a formato frontend
+		return transformarLimnigrafos(
+			limnigrafos.results,
+			medicionesMap
+		);
+	}, [limnigrafos, mediciones]);
 
 	const filteredData = useMemo(() => {
 		if (!searchValue) {
@@ -151,24 +129,18 @@ export default function Home() {
 		setPersistError(null);
 
 		try {
-			const response = await fetch("/api/limnigrafos", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ limnigrafo: nuevoLimnigrafo }),
-			});
-
-			if (!response.ok) {
-				throw new Error("No se pudo guardar el limnigrafo en el archivo.");
-			}
-
-			setLimnigrafosData((prev) => [
-				nuevoLimnigrafo,
-				...prev.filter((item) => item.id !== nuevoLimnigrafo.id),
-			]);
-			setMostrarFormulario(false);
-			resetForm();
+			// TODO: Integrar con backend Django usando usePostLimnigrafo()
+			// Por ahora solo mostramos un mensaje
+			throw new Error("Funcionalidad de creación pendiente de integración con backend Django");
+			
+			// Código comentado hasta integrar con Django:
+			// const response = await fetch("/api/limnigrafos", {
+			//   method: "POST",
+			//   headers: { "Content-Type": "application/json" },
+			//   body: JSON.stringify({ limnigrafo: nuevoLimnigrafo }),
+			// });
+			// setMostrarFormulario(false);
+			// resetForm();
 		} catch (error) {
 			setPersistError(
 				error instanceof Error
@@ -206,9 +178,6 @@ export default function Home() {
 								Gestiona el inventario de limnigrafos, agrega nuevos equipos y
 								revisa su ubicacion y estado general.
 							</p>
-							{storeError ? (
-								<p className="text-sm text-red-500">{storeError}</p>
-							) : null}
 						</header>
 						<Dialog open={mostrarFormulario} onOpenChange={handleDialogOpenChange}>
 							<div className="flex justify-end">
@@ -331,9 +300,9 @@ export default function Home() {
 							}}
 							showActions
 						/>
-						{isLoadingStore ? (
+						{(isLoadingLimnigrafos || isLoadingMediciones) ? (
 							<p className="text-center text-sm text-[#6F6F6F]">
-								Cargando limnigrafos...
+								Cargando limnigrafos desde el backend...
 							</p>
 						) : null}
 					</div>
