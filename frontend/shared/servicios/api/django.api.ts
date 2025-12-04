@@ -184,3 +184,55 @@ export function useDeleteLimnigrafo({ params, configuracion }: UseDeleteLimngraf
 		params: params ?? defaultParams,
 	});
 }
+
+/*
+************************
+	MEDICIONES
+************************
+*/
+
+// TIPOS
+// Representa una medición individual enviada por un limnígrafo
+export type MedicionResponse = {
+	id: number,
+	fecha_hora: string, // ISO 8601: "2025-12-04T18:14:03.142454Z"
+	altura: number | null, // Nivel del agua en metros
+	presion: number | null, // Presión atmosférica en hPa
+	temperatura: number | null, // Temperatura en grados Celsius
+	nivel_de_bateria: number | null, // Nivel de batería en porcentaje (0-100)
+	fuente: "automatico" | "manual", // Origen de la medición
+	limnigrafo: number, // ID del limnígrafo que envió la medición
+};
+
+// Respuesta paginada del backend (50 mediciones por página)
+export type MedicionPaginatedResponse = {
+	count: number, // Total de mediciones
+	next: string | null, // URL de la siguiente página
+	previous: string | null, // URL de la página anterior
+	results: MedicionResponse[], // Array de mediciones
+};
+
+// ENDPOINT: GET-MEDICIONES
+
+type UseGetMedicionesParams = {
+	limnigrafo?: string, // ID del limnígrafo (debe ser string para query params)
+	limit?: string, // Cantidad de resultados por página
+	page?: string, // Número de página
+}
+
+type UseGetMedicionesOptions = {
+	params?: UseGetMedicionesParams,
+	config?: UseGetConfig,
+}
+
+// Hook para obtener mediciones del backend
+// Uso: const { data } = useGetMediciones({ params: { limnigrafo: "1", limit: "10" } })
+// La respuesta será de tipo MedicionPaginatedResponse
+export function useGetMediciones({ params, config }: UseGetMedicionesOptions = {}) {
+	return useGet({
+		key: "useGetMediciones",
+		url: `${NEXT_PROXY_URL}/medicion/`,
+		params: params ?? {},
+		config: config ?? {},
+	});
+}
