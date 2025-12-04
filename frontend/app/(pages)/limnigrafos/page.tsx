@@ -53,9 +53,17 @@ export default function Home() {
 	const [persistError, setPersistError] = useState<string | null>(null);
 	const [isPersisting, setIsPersisting] = useState(false);
 
-	// Consultar datos reales del backend
-	const { data: limnigrafosData, isLoading: isLoadingLimnigrafos } = useGetLimnigrafos({});
-	const { data: medicionesData, isLoading: isLoadingMediciones } = useGetMediciones({});
+	// Consultar datos reales del backend con auto-refresh cada 5 minutos
+	const { data: limnigrafosData, isLoading: isLoadingLimnigrafos } = useGetLimnigrafos({
+		config: {
+			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
+		}
+	});
+	const { data: medicionesData, isLoading: isLoadingMediciones } = useGetMediciones({
+		config: {
+			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
+		}
+	});
 
 	// Cast explícito para TypeScript
 	const limnigrafos = limnigrafosData as LimnigrafoPaginatedResponse | undefined;

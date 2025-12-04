@@ -24,9 +24,17 @@ const estadoPriority: Record<string, number> = {
 export default function Home() {
 	const router = useRouter();
 	
-	// Consultar datos reales del backend
-	const { data: limnigrafosData, isLoading: loadingLimnigrafos } = useGetLimnigrafos({});
-	const { data: medicionesData, isLoading: loadingMediciones } = useGetMediciones({});
+	// Consultar datos reales del backend con auto-refresh cada 5 minutos
+	const { data: limnigrafosData, isLoading: loadingLimnigrafos } = useGetLimnigrafos({
+		config: {
+			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
+		}
+	});
+	const { data: medicionesData, isLoading: loadingMediciones } = useGetMediciones({
+		config: {
+			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
+		}
+	});
 
 	// Cast explícito para TypeScript
 	const limnigrafos = limnigrafosData as LimnigrafoPaginatedResponse | undefined;
