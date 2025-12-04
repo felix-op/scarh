@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import { Nav } from "@componentes/Nav";
 import {
-	LIMNIGRAFOS,
-	type LimnigrafoDetalleData,
-	type LimnigrafoMedicion,
-} from "@data/limnigrafos";
+	useGetLimnigrafos,
+	useGetMediciones,
+	type LimnigrafoPaginatedResponse,
+	type MedicionPaginatedResponse
+} from "@servicios/api/django.api";
+import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
 
 type MedicionRow = {
 	id: string;
@@ -16,11 +18,6 @@ type MedicionRow = {
 	temperatura: string;
 	altura: string;
 	presion: string;
-};
-
-type LimnigrafoStorePayload = {
-	limnigrafos: LimnigrafoDetalleData[];
-	mediciones: Record<string, LimnigrafoMedicion[]>;
 };
 
 function formatTimestamp(timestamp: string) {
@@ -39,151 +36,89 @@ function formatTimestamp(timestamp: string) {
 	})}`;
 }
 
-function buildMediciones(limnigrafo: LimnigrafoDetalleData): MedicionRow[] {
-	const baseTemperatura = Number.parseFloat(limnigrafo.temperatura) || 0;
-	const baseAltura = Number.parseFloat(limnigrafo.altura) || 0;
-	const basePresion = Number.parseFloat(limnigrafo.presion) || 0;
-	const totalRegistros = 8;
-
-	return Array.from({ length: totalRegistros }, (_, index) => {
-		const fecha = new Date();
-		fecha.setDate(fecha.getDate() - index);
-		fecha.setHours(6 + (index % 4) * 3, (index * 11) % 60, 0, 0);
-
-		const temperatura = `${(baseTemperatura + (index - 2) * 0.3).toFixed(1)} C`;
-		const altura = `${(baseAltura + ((index % 3) - 1) * 0.4).toFixed(1)} mts`;
-		const presion = `${(basePresion + ((index % 4) - 1.5) * 0.05).toFixed(2)} bar`;
-
-		return {
-			id: `${limnigrafo.id}-med-${index}`,
-			timestamp: fecha.toISOString(),
-			temperatura,
-			altura,
-			presion,
-		};
-	});
-}
-
-const MEDICIONES_POR_LIMNIGRAFO: Record<string, MedicionRow[]> = LIMNIGRAFOS.reduce(
-	(acc, limnigrafo) => {
-		acc[limnigrafo.id] = buildMediciones(limnigrafo);
-		return acc;
-	},
-	{} as Record<string, MedicionRow[]>,
-);
-
 export default function MedicionesPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const [limnigrafosData, setLimnigrafosData] =
-		useState<LimnigrafoDetalleData[]>(LIMNIGRAFOS);
-	const [medicionesPersistidas, setMedicionesPersistidas] = useState<
-		Record<string, LimnigrafoMedicion[]>
-	>({});
 	const [selectedLimnigrafoId, setSelectedLimnigrafoId] = useState("");
-	const [isLoadingStore, setIsLoadingStore] = useState(true);
-	const [storeError, setStoreError] = useState<string | null>(null);
 
-	useEffect(() => {
-		let cancelado = false;
+	// Consultar datos reales del backend
+	const { data: limnigrafosData, isLoading: isLoadingLimnigrafos } = useGetLimnigrafos({});
+	const { data: medicionesData, isLoading: isLoadingMediciones } = useGetMediciones({});
 
-		async function cargarStore() {
-			try {
-				const response = await fetch("/api/limnigrafos");
-				if (!response.ok) {
-					throw new Error("No se pudo leer el archivo de limnigrafos.");
-				}
+	// Cast explícito para TypeScript
+	const limnigrafos = limnigrafosData as LimnigrafoPaginatedResponse | undefined;
+	const mediciones = medicionesData as MedicionPaginatedResponse | undefined;
 
-				const data = (await response.json()) as LimnigrafoStorePayload;
-				if (cancelado) {
-					return;
-				}
+	// Transformar datos del backend a formato frontend
+	const limnigrafosTransformados = useMemo(() => {
+		if (!limnigrafos?.results || !mediciones?.results) return [];
 
-				const dataset =
-					data.limnigrafos && data.limnigrafos.length
-						? data.limnigrafos
-						: LIMNIGRAFOS;
-				setLimnigrafosData(dataset);
-				setMedicionesPersistidas(data.mediciones ?? {});
-				setStoreError(null);
-			} catch (error) {
-				if (!cancelado) {
-					setStoreError(
-						error instanceof Error
-							? error.message
-							: "No se pudo cargar el archivo de limnigrafos.",
-					);
-				}
-			} finally {
-				if (!cancelado) {
-					setIsLoadingStore(false);
-				}
-			}
-		}
+		// Convertir array de mediciones a Map para búsqueda eficiente
+		const medicionesMap = new Map(
+			mediciones.results.map(m => [m.limnigrafo, m])
+		);
 
-		void cargarStore();
+		// Transformar formato backend a formato frontend
+		return transformarLimnigrafos(
+			limnigrafos.results,
+			medicionesMap
+		);
+	}, [limnigrafos, mediciones]);
 
-		return () => {
-			cancelado = true;
-		};
-	}, []);
-
+	// Seleccionar limnímgrafo automáticamente desde URL o primero de la lista
 	useEffect(() => {
 		const paramId = searchParams?.get("id");
 		if (paramId && paramId !== selectedLimnigrafoId) {
 			setSelectedLimnigrafoId(paramId);
-		} else if (!paramId && !selectedLimnigrafoId && limnigrafosData[0]) {
-			setSelectedLimnigrafoId(limnigrafosData[0].id);
+		} else if (!paramId && !selectedLimnigrafoId && limnigrafosTransformados[0]) {
+			setSelectedLimnigrafoId(limnigrafosTransformados[0].id);
 		}
-	}, [searchParams, limnigrafosData, selectedLimnigrafoId]);
+	}, [searchParams, limnigrafosTransformados, selectedLimnigrafoId]);
 
 	const selectedLimnigrafo = useMemo(() => {
 		return (
-			limnigrafosData.find((item) => item.id === selectedLimnigrafoId) ??
-			limnigrafosData[0] ??
+			limnigrafosTransformados.find((item) => item.id === selectedLimnigrafoId) ??
+			limnigrafosTransformados[0] ??
 			null
 		);
-	}, [limnigrafosData, selectedLimnigrafoId]);
+	}, [limnigrafosTransformados, selectedLimnigrafoId]);
 
-	const mediciones = useMemo(() => {
-		if (!selectedLimnigrafo) {
+	// Filtrar mediciones del limnímgrafo seleccionado y formatearlas para la tabla
+	const medicionesFiltered = useMemo(() => {
+		if (!selectedLimnigrafo || !mediciones?.results) {
 			return [];
 		}
 
-		const persistidas = medicionesPersistidas[selectedLimnigrafo.id];
-		if (persistidas && persistidas.length > 0) {
-			return [...persistidas]
-				.sort((a, b) => {
-					const fechaA = new Date(a.timestamp ?? "").getTime();
-					const fechaB = new Date(b.timestamp ?? "").getTime();
-					return Number.isNaN(fechaB) ? -1 : fechaB - fechaA;
-				})
-				.map((item) => ({
-					id: item.id,
-					timestamp: item.timestamp,
-					temperatura: item.temperatura ?? "-",
-					altura: item.altura ?? "-",
-					presion: item.presion ?? "-",
-				}));
-		}
+		// Obtener ID numérico del limnímgrafo seleccionado
+		const limnigrafoIdNum = Number(selectedLimnigrafo.id);
 
-		return buildMediciones(selectedLimnigrafo);
-	}, [selectedLimnigrafo, medicionesPersistidas]);
+		// Filtrar mediciones de este limnímgrafo
+		return mediciones.results
+			.filter(m => m.limnigrafo === limnigrafoIdNum)
+			.sort((a, b) => {
+				// Ordenar por fecha descendente (más reciente primero)
+				const fechaA = new Date(a.fecha_hora).getTime();
+				const fechaB = new Date(b.fecha_hora).getTime();
+				return fechaB - fechaA;
+			})
+			.map(m => ({
+				id: m.id.toString(),
+				timestamp: m.fecha_hora,
+				temperatura: `${m.temperatura.toFixed(1)} C`,
+				altura: `${m.altura_agua.toFixed(2)} mts`,
+				presion: `${m.presion.toFixed(2)} bar`,
+			}));
+	}, [selectedLimnigrafo, mediciones]);
 
-	const latestMedicion = useMemo(() => mediciones[0], [mediciones]);
+	// Obtener la medición más reciente para mostrar valores actuales
+	const latestMedicion = useMemo(() => medicionesFiltered[0], [medicionesFiltered]);
 
 	const temperaturaActual =
-		latestMedicion?.temperatura?.trim()
-			? latestMedicion.temperatura
-			: selectedLimnigrafo?.temperatura ?? "-";
+		latestMedicion?.temperatura ?? selectedLimnigrafo?.temperatura ?? "-";
 	const alturaActual =
-		latestMedicion?.altura?.trim()
-			? latestMedicion.altura
-			: selectedLimnigrafo?.altura ?? "-";
+		latestMedicion?.altura ?? selectedLimnigrafo?.altura ?? "-";
 	const presionActual =
-		latestMedicion?.presion?.trim()
-			? latestMedicion.presion
-			: selectedLimnigrafo?.presion ?? "-";
+		latestMedicion?.presion ?? selectedLimnigrafo?.presion ?? "-";
 
 	return (
 		<PaginaBase>
@@ -202,16 +137,11 @@ export default function MedicionesPage() {
 									<h1 className="text-3xl font-semibold text-[#0D1B2A]">
 										Mediciones
 									</h1>
-									<p className="text-base text-[#4D5562]">
-										Consulta la temperatura, altura y presion reportada por cada
-										limnigrafo segun la fecha del registro.
-									</p>
-									{storeError ? (
-										<p className="text-sm text-red-500">{storeError}</p>
-									) : null}
-								</div>
-
-								<div className="flex w-full max-w-sm flex-col gap-2">
+								<p className="text-base text-[#4D5562]">
+									Consulta la temperatura, altura y presion reportada por cada
+									limnigrafo segun la fecha del registro.
+								</p>
+							</div>								<div className="flex w-full max-w-sm flex-col gap-2">
 									<label
 										htmlFor="limnigrafo-selector"
 										className="text-sm font-semibold text-[#4D5562]"
@@ -224,7 +154,7 @@ export default function MedicionesPage() {
 										value={selectedLimnigrafoId}
 										onChange={(event) => setSelectedLimnigrafoId(event.target.value)}
 									>
-										{limnigrafosData.map((limnigrafo) => (
+										{limnigrafosTransformados.map((limnigrafo) => (
 											<option key={limnigrafo.id} value={limnigrafo.id}>
 												{limnigrafo.nombre}
 											</option>
@@ -264,7 +194,7 @@ export default function MedicionesPage() {
 								</h2>
 								<p className="text-sm text-[#64748B]">
 									{selectedLimnigrafo
-										? `${mediciones.length} registros`
+										? `${medicionesFiltered.length} registros`
 										: "Sin limnigrafo seleccionado"}
 								</p>
 							</div>
@@ -284,7 +214,7 @@ export default function MedicionesPage() {
 										</tr>
 									</thead>
 									<tbody>
-										{mediciones.map((medicion) => (
+										{medicionesFiltered.map((medicion) => (
 											<tr
 												key={medicion.id}
 												className="text-base text-[#0F172A]"
@@ -311,13 +241,15 @@ export default function MedicionesPage() {
 									</tbody>
 								</table>
 
-								{isLoadingStore ? (
+								{(isLoadingLimnigrafos || isLoadingMediciones) ? (
 									<p className="py-8 text-center text-sm text-[#6F6F6F]">
-										Cargando mediciones guardadas...
+										Cargando mediciones desde el backend...
 									</p>
-								) : mediciones.length === 0 ? (
+								) : medicionesFiltered.length === 0 ? (
 									<p className="py-8 text-center text-sm text-[#6F6F6F]">
-										Selecciona un limnigrafo para ver sus mediciones.
+										{selectedLimnigrafo
+											? "No hay mediciones registradas para este limnígrafo."
+											: "Selecciona un limnigrafo para ver sus mediciones."}
 									</p>
 								) : null}
 							</div>
