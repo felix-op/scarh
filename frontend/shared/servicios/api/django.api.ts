@@ -256,18 +256,18 @@ type UseGetMedicionesParams = {
 
 type UseGetMedicionesOptions = {
 	params?: UseGetMedicionesParams,
-	config?: UseGetConfig<MedicionPaginatedResponse>,
+	configuracion?: UseGetConfig<MedicionPaginatedResponse>,
 }
 
 // Hook para obtener mediciones del backend
 // Uso: const { data } = useGetMediciones({ params: { limnigrafo: "1", limit: "10" } })
 // La respuesta será de tipo MedicionPaginatedResponse
-export function useGetMediciones({ params, config }: UseGetMedicionesOptions = {}) {
+export function useGetMediciones({ params, configuracion }: UseGetMedicionesOptions = {}) {
 	return useGet<UseGetMedicionesParams, MedicionPaginatedResponse>({
 		key: "useGetMediciones",
 		url: `${NEXT_PROXY_URL}/medicion/`,
 		params: params ?? {},
-		config: config ?? {},
+		config: configuracion ?? {},
 	});
 }
 
