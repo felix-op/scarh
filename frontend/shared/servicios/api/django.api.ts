@@ -82,18 +82,18 @@ export type LimnigrafoPatchRequest = {
 
 type UseGetLimnigrafosOptions = {
 	params?: ParamsBase,
-	configuracion?: UseGetConfig,
+	config?: UseGetConfig<LimnigrafoPaginatedResponse>,
 }
 
-export function useGetLimnigrafos({ params, configuracion }: UseGetLimnigrafosOptions) {
+export function useGetLimnigrafos({ params, config }: UseGetLimnigrafosOptions = {}) {
 	const defaultParams = {};
 	const defaultConfig = {};
 
-	return useGet({
+	return useGet<ParamsBase, LimnigrafoPaginatedResponse>({
 		key: "useGetLimnigrafos",
 		url: `${NEXT_PROXY_URL}/limnigrafos/`,
 		params: params ?? defaultParams,
-		config: configuracion ?? defaultConfig,
+		config: config ?? defaultConfig,
 	});
 }
 
@@ -256,18 +256,18 @@ type UseGetMedicionesParams = {
 
 type UseGetMedicionesOptions = {
 	params?: UseGetMedicionesParams,
-	configuracion?: UseGetConfig<MedicionPaginatedResponse>,
+	config?: UseGetConfig<MedicionPaginatedResponse>,
 }
 
 // Hook para obtener mediciones del backend
 // Uso: const { data } = useGetMediciones({ params: { limnigrafo: "1", limit: "10" } })
 // La respuesta será de tipo MedicionPaginatedResponse
-export function useGetMediciones({ params, configuracion }: UseGetMedicionesOptions = {}) {
+export function useGetMediciones({ params, config }: UseGetMedicionesOptions = {}) {
 	return useGet<UseGetMedicionesParams, MedicionPaginatedResponse>({
 		key: "useGetMediciones",
 		url: `${NEXT_PROXY_URL}/medicion/`,
 		params: params ?? {},
-		config: configuracion ?? {},
+		config: config ?? {},
 	});
 }
 

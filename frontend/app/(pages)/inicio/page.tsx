@@ -26,12 +26,12 @@ export default function Home() {
 	
 	// Consultar datos reales del backend con auto-refresh cada 5 minutos
 	const { data: limnigrafosData, isLoading: loadingLimnigrafos } = useGetLimnigrafos({
-		configuracion: {
+		config: {
 			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
 		}
 	});
 	const { data: medicionesData, isLoading: loadingMediciones } = useGetMediciones({
-		configuracion: {
+		config: {
 			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
 		}
 	});
