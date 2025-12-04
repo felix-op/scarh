@@ -1,5 +1,3 @@
-"use client";
-
 import type { LimnigrafoRowData } from "@componentes/LimnigrafoTable";
 
 export type LimnigrafoCoordenadas = {
@@ -15,6 +13,14 @@ export type LimnigrafoDetalleData = LimnigrafoRowData & {
 	descripcion: string;
 	datosExtra: { label: string; value: string }[];
 	coordenadas?: LimnigrafoCoordenadas;
+};
+
+export type LimnigrafoMedicion = {
+	id: string;
+	timestamp: string;
+	temperatura?: string;
+	altura?: string;
+	presion?: string;
 };
 
 export function toLimnigrafoRowData(

@@ -6,7 +6,6 @@ import "leaflet/dist/leaflet.css";
 import { MapMarker } from "@componentes/MapMarker";
 import { LimnigrafoMapInfoPanel } from "@componentes/LimnigrafoMapInfoPanel";
 import {
-	EXTRA_LIMNIGRAFOS_STORAGE_KEY,
 	type LimnigrafoDetalleData,
 	LIMNIGRAFOS,
 } from "@data/limnigrafos";
@@ -45,31 +44,53 @@ function AutoResizeMap({ resizeToken = 0 }: { resizeToken: number }) {
 }
 
 const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
-	const [extraLimnigrafos] = useState<LimnigrafoDetalleData[]>(() => {
-		if (typeof window === "undefined") {
-			return [];
+	const [limnigrafos, setLimnigrafos] =
+		useState<LimnigrafoDetalleData[]>(LIMNIGRAFOS);
+
+	useEffect(() => {
+		let cancelado = false;
+
+		async function cargarStore() {
+			try {
+				const response = await fetch("/api/limnigrafos");
+				if (!response.ok) {
+					throw new Error("No se pudo leer el archivo de limnigrafos.");
+				}
+
+				const data = (await response.json()) as {
+					limnigrafos?: LimnigrafoDetalleData[];
+				};
+				if (cancelado) {
+					return;
+				}
+
+				if (data.limnigrafos && data.limnigrafos.length > 0) {
+					setLimnigrafos(data.limnigrafos);
+				} else {
+					setLimnigrafos(LIMNIGRAFOS);
+				}
+			} catch {
+				if (!cancelado) {
+					setLimnigrafos(LIMNIGRAFOS);
+				}
+			}
 		}
 
-		const stored = window.localStorage.getItem(EXTRA_LIMNIGRAFOS_STORAGE_KEY);
-		if (!stored) {
-			return [];
-		}
+		void cargarStore();
 
-		try {
-			return JSON.parse(stored) as LimnigrafoDetalleData[];
-		} catch {
-			return [];
-		}
-	});
+		return () => {
+			cancelado = true;
+		};
+	}, []);
 
 	const markers = useMemo(
 		() =>
-			[...extraLimnigrafos, ...LIMNIGRAFOS].filter(
+			limnigrafos.filter(
 				(limnigrafo): limnigrafo is LimnigrafoDetalleData & {
 					coordenadas: { lat: number; lng: number };
 				} => Boolean(limnigrafo.coordenadas)
 			),
-		[extraLimnigrafos]
+		[limnigrafos]
 	);
 
 	const mapCenter = markers[0]?.coordenadas ?? DEFAULT_CENTER;

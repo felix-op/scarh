@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import LimnigrafoTable from "@componentes/LimnigrafoTable";
 import { Nav } from "@componentes/Nav";
-import {
-	EXTRA_LIMNIGRAFOS_STORAGE_KEY,
-	type LimnigrafoDetalleData,
-	LIMNIGRAFOS,
-} from "@data/limnigrafos";
+import type { LimnigrafoDetalleData } from "@data/limnigrafos";
 import type { VarianteEstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
 import Boton from "@componentes/Boton";
 import PaginaBase from "@componentes/base/PaginaBase";
+import {
+	useGetLimnigrafos,
+	useGetMediciones,
+	type LimnigrafoPaginatedResponse,
+	type MedicionPaginatedResponse
+} from "@servicios/api/django.api";
+import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
 import {
 	Dialog,
 	DialogClose,
@@ -37,43 +40,61 @@ const FORM_STATE = {
 	descripcion: "",
 };
 
+type LimnigrafoStorePayload = {
+	limnigrafos?: LimnigrafoDetalleData[];
+};
+
 export default function Home() {
 	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
-		const [extraLimnigrafos, setExtraLimnigrafos] = useState<
-			LimnigrafoDetalleData[]
-		>(() => {
-			if (typeof window === "undefined") {
-				return [];
-			}
-		const stored = window.localStorage.getItem(EXTRA_LIMNIGRAFOS_STORAGE_KEY);
-		if (!stored) {
-			return [];
-		}
-		try {
-			return JSON.parse(stored) as LimnigrafoDetalleData[];
-		} catch {
-			return [];
-		}
-		});
-		const [mostrarFormulario, setMostrarFormulario] = useState(false);
-		const [formValues, setFormValues] = useState(FORM_STATE);
-		const [formError, setFormError] = useState<string | null>(null);
+	const [mostrarFormulario, setMostrarFormulario] = useState(false);
+	const [formValues, setFormValues] = useState(FORM_STATE);
+	const [formError, setFormError] = useState<string | null>(null);
+	const [persistError, setPersistError] = useState<string | null>(null);
+	const [isPersisting, setIsPersisting] = useState(false);
 
-	useEffect(() => {
-		if (typeof window === "undefined") {
-			return;
+	// Consultar datos reales del backend con auto-refresh cada 5 minutos
+	const { data: limnigrafosData, isLoading: isLoadingLimnigrafos } = useGetLimnigrafos({
+		config: {
+			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
 		}
-		window.localStorage.setItem(
-			EXTRA_LIMNIGRAFOS_STORAGE_KEY,
-			JSON.stringify(extraLimnigrafos),
+	});
+	const { data: medicionesData, isLoading: isLoadingMediciones } = useGetMediciones({
+		config: {
+			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
+		}
+	});
+
+	// Cast explícito para TypeScript
+	const limnigrafos = limnigrafosData as LimnigrafoPaginatedResponse | undefined;
+	const mediciones = medicionesData as MedicionPaginatedResponse | undefined;
+
+	// Transformar datos del backend a formato frontend
+	const todosLimnigrafos = useMemo(() => {
+		// Manejar tanto respuesta paginada como array directo
+		const limnigrafosArray = Array.isArray(limnigrafos) 
+			? limnigrafos 
+			: limnigrafos?.results;
+			
+		const medicionesArray = mediciones?.results || [];
+		
+		if (!limnigrafosArray || limnigrafosArray.length === 0) {
+			return [];
+		}
+
+		// Convertir array de mediciones a Map para búsqueda eficiente
+		const medicionesMap = new Map(
+			medicionesArray.map(m => [m.limnigrafo, m])
 		);
-	}, [extraLimnigrafos]);
 
-	const todosLimnigrafos = useMemo(
-		() => [...extraLimnigrafos, ...LIMNIGRAFOS],
-		[extraLimnigrafos],
-	);
+		// Transformar formato backend a formato frontend
+		const transformados = transformarLimnigrafos(
+			limnigrafosArray,
+			medicionesMap
+		);
+		
+		return transformados;
+	}, [limnigrafos, mediciones]);
 
 	const filteredData = useMemo(() => {
 		if (!searchValue) {
@@ -89,10 +110,7 @@ export default function Home() {
 		);
 	}, [searchValue, todosLimnigrafos]);
 
-	function handleChange(
-		field: keyof typeof FORM_STATE,
-		value: string,
-	): void {
+	function handleChange(field: keyof typeof FORM_STATE, value: string): void {
 		setFormValues((prev) => ({ ...prev, [field]: value }));
 	}
 
@@ -101,10 +119,10 @@ export default function Home() {
 		setFormError(null);
 	}
 
-	function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		if (!formValues.nombre || !formValues.ubicacion) {
-			setFormError("Nombre y ubicaci+¦n son obligatorios.");
+			setFormError("Nombre y ubicacion son obligatorios.");
 			return;
 		}
 
@@ -115,20 +133,42 @@ export default function Home() {
 			bateria: "Bateria 100%",
 			tiempoUltimoDato: "Hace instantes",
 			estado: { variante: DEFAULT_ESTADO_VARIANTE },
-			temperatura: "0°",
+			temperatura: "0??",
 			altura: "0 mts",
 			presion: "0 bar",
 			ultimoMantenimiento: "Sin datos",
 			descripcion:
-        formValues.descripcion ||
-        "Sin descripci+¦n. Actualice la informaci+¦n cuando est+® disponible.",
+				formValues.descripcion ||
+				"Sin descripcion. Actualice la informacion cuando este disponible.",
 			datosExtra: DATOS_EXTRA_PLACEHOLDER.map((item) => ({ ...item })),
 			coordenadas: undefined,
 		};
 
-		setExtraLimnigrafos((prev) => [nuevoLimnigrafo, ...prev]);
-		setMostrarFormulario(false);
-		resetForm();
+		setIsPersisting(true);
+		setPersistError(null);
+
+		try {
+			// TODO: Integrar con backend Django usando usePostLimnigrafo()
+			// Por ahora solo mostramos un mensaje
+			throw new Error("Funcionalidad de creación pendiente de integración con backend Django");
+			
+			// Código comentado hasta integrar con Django:
+			// const response = await fetch("/api/limnigrafos", {
+			//   method: "POST",
+			//   headers: { "Content-Type": "application/json" },
+			//   body: JSON.stringify({ limnigrafo: nuevoLimnigrafo }),
+			// });
+			// setMostrarFormulario(false);
+			// resetForm();
+		} catch (error) {
+			setPersistError(
+				error instanceof Error
+					? error.message
+					: "Error desconocido al guardar.",
+			);
+		} finally {
+			setIsPersisting(false);
+		}
 	}
 
 	function handleDialogOpenChange(isOpen: boolean) {
@@ -147,8 +187,17 @@ export default function Home() {
 					onProfileClick={() => router.push("/perfil")}
 				/>
 
-			<main className="flex flex-1 items-start justify-center px-6 py-10">
-				<div className="flex w-full max-w-[1568px] flex-col gap-6">
+				<main className="flex flex-1 items-start justify-center px-6 py-10">
+					<div className="flex w-full max-w-[1568px] flex-col gap-6">
+						<header className="flex flex-col gap-1">
+							<h1 className="text-[34px] font-semibold text-[#011018]">
+								Limnigrafos
+							</h1>
+							<p className="text-base text-[#4D5562]">
+								Gestiona el inventario de limnigrafos, agrega nuevos equipos y
+								revisa su ubicacion y estado general.
+							</p>
+						</header>
 						<Dialog open={mostrarFormulario} onOpenChange={handleDialogOpenChange}>
 							<div className="flex justify-end">
 								<DialogTrigger asChild>
@@ -168,7 +217,7 @@ export default function Home() {
 	              "
 									>
 										<span className="text-[17px] font-semibold">
-											{mostrarFormulario ? "Cerrar formulario" : "Añadir Limnigrafo"}
+											{mostrarFormulario ? "Cerrar formulario" : "Añadir Limnígrafo"}
 										</span>
 									</Boton>
 								</DialogTrigger>
@@ -180,11 +229,14 @@ export default function Home() {
 										Nuevo Limnigrafo
 									</DialogTitle>
 									<DialogDescription className="text-[16px] text-[#666]">
-										Completa los datos principales y presiona &quot;Importar dato&quot;.
+										Completa los datos principales y presiona &quot;Crear Limnigrafo&quot;.
 									</DialogDescription>
 								</DialogHeader>
 								{formError ? (
 									<p className="mt-1 text-[15px] text-red-500">{formError}</p>
+								) : null}
+								{persistError ? (
+									<p className="text-[15px] text-red-500">{persistError}</p>
 								) : null}
 
 								<form onSubmit={handleSubmit} className="mt-4 grid gap-4">
@@ -211,7 +263,7 @@ export default function Home() {
 											/>
 										</label>
 										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Ubicación *
+											Ubicacion *
 											<input
 												type="text"
 												value={formValues.ubicacion}
@@ -225,7 +277,7 @@ export default function Home() {
 									</div>
 
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Descripción
+										Descripcion
 										<textarea
 											value={formValues.descripcion}
 											onChange={(event) =>
@@ -248,9 +300,10 @@ export default function Home() {
 
 										<Boton
 											type="submit"
-											className="!mx-0 !h-[44px] !px-8"
+											disabled={isPersisting}
+											className="!mx-0 !h-[44px] !px-8 disabled:opacity-60"
 										>
-											Crear Limnigrafo
+											{isPersisting ? "Guardando..." : "Crear Limnigrafo"}
 										</Boton>
 									</div>
 								</form>
@@ -266,6 +319,11 @@ export default function Home() {
 							}}
 							showActions
 						/>
+						{(isLoadingLimnigrafos || isLoadingMediciones) ? (
+							<p className="text-center text-sm text-[#6F6F6F]">
+								Cargando limnigrafos desde el backend...
+							</p>
+						) : null}
 					</div>
 				</main>
 			</div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { Nav } from "@componentes/Nav";
 import UserInfoCard from "@componentes/UserInfoCard";
 import PaginaBase from "@componentes/base/PaginaBase";
@@ -19,9 +20,17 @@ const USUARIO_DEMO = {
 export default function ProfilePage() {
 	const router = useRouter();
 
+	function handleLogout() {
+		// Mismo comportamiento que el botón rojo viejo:
+		// cierra sesión con next-auth y redirige al home.
+		signOut({
+			callbackUrl: "/",
+			redirect: true,
+		});
+	}
+
 	return (
 		<PaginaBase>
-
 			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
 				<Nav
 					userName="Juan Perez"
@@ -29,13 +38,18 @@ export default function ProfilePage() {
 					onProfileClick={() => router.push("/perfil")}
 				/>
 
-				<main className="flex flex-1 items-start justify-center px-6 py-10">
-					<UserInfoCard
-						{...USUARIO_DEMO}
-						showActions={false}
-						showPassword={false}
-						className="mx-auto"
-					/>
+				<main className="flex flex-1 flex-col items-stretch px-6 py-10">
+
+
+					{/* Contenido principal: tarjeta de usuario centrada */}
+					<div className="mt-6 flex flex-1 items-start justify-center">
+						<UserInfoCard
+							{...USUARIO_DEMO}
+							showActions={false}
+							showPassword={false}
+							className="mx-auto"
+						/>
+					</div>
 				</main>
 			</div>
 		</PaginaBase>

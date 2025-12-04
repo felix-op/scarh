@@ -1,0 +1,529 @@
+"use client";
+
+import useGet, { useDelete, usePatch, usePost, usePut } from "./queryHooks";
+import { MutationConfig, ParamsBase, UseGetConfig } from "./types";
+
+const NEXT_PROXY_URL = "/api/proxy";
+
+/*
+************************
+	LIMNIGRAFOS
+************************
+*/
+
+// TIPOS
+export type LimnigrafoResponse = {
+	id: number,
+	codigo: string,
+	descripcion: string,
+	ultimo_mantenimiento: string,
+	tipo_comunicacion: string,
+	bateria_max: number,
+	bateria_min: number,
+	bateria: number | null, // Nivel actual de batería (bateria_actual del backend) - puede ser null
+	memoria: number,
+	tiempo_advertencia: number,
+	tiempo_peligro: number,
+	ultima_conexion: string, // Formato "HH:MM:SS"
+	estado: string,
+	ubicacion: {
+		id: number,
+		longitud: number,
+		latitud: number,
+		nombre: string,
+	} | null // Puede ser null si no tiene ubicación asignada
+};
+
+// Respuesta paginada del backend para limnígrafos
+export type LimnigrafoPaginatedResponse = {
+	count: number,
+	next: string | null,
+	previous: string | null,
+	results: LimnigrafoResponse[],
+};
+
+export type LimnigrafoPostRequest = {
+	codigo: string,
+	descripcion: string,
+	ultimo_mantenimiento: string,
+	tipo_comunicacion: string[],
+	bateria_max: number,
+	bateria_min: number,
+	memoria: number,
+	tiempo_advertencia: string,
+	tiempo_peligro: string,
+};
+
+export type LimnigrafoPutRequest = {
+	codigo: string,
+	descripcion: string,
+	ultimo_mantenimiento: string,
+	tipo_comunicacion: string,
+	bateria_max: number,
+	bateria_min: number,
+	memoria: number,
+	tiempo_advertencia: number,
+	tiempo_peligro: number,
+};
+
+export type LimnigrafoPatchRequest = {
+	codigo?: string,
+	descripcion?: string,
+	ultimo_mantenimiento?: string,
+	tipo_comunicacion?: string,
+	bateria_max?: number,
+	bateria_min?: number,
+	memoria?: number,
+	tiempo_advertencia?: number,
+	tiempo_peligro?: number,
+};
+
+// ENDPOINT: GET-LIMNIGRAFOS
+
+type UseGetLimnigrafosOptions = {
+	params?: ParamsBase,
+	configuracion?: UseGetConfig,
+}
+
+export function useGetLimnigrafos({ params, configuracion }: UseGetLimnigrafosOptions) {
+	const defaultParams = {};
+	const defaultConfig = {};
+
+	return useGet({
+		key: "useGetLimnigrafos",
+		url: `${NEXT_PROXY_URL}/limnigrafos/`,
+		params: params ?? defaultParams,
+		config: configuracion ?? defaultConfig,
+	});
+}
+
+// ENDPOINT: GET-LIMNIGRAFO
+
+type UseGetLimnigrafoOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: UseGetConfig,
+}
+
+export function useGetLimnigrafo({ params, configuracion }: UseGetLimnigrafoOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+
+	return useGet({
+		key: "useGetLimnigrafo",
+		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
+		params: params ?? defaultParams,
+		config: configuracion ?? defaultConfig,
+	});
+}
+
+// ENDPOINT: POST-LIMNIGRAFOS
+
+type UsePostLimngrafoOptions = {
+	params?: ParamsBase,
+	configuracion?: MutationConfig<
+		LimnigrafoPostRequest,
+		LimnigrafoResponse,
+		ParamsBase
+	>
+};
+
+export function usePostLimnigrafo({ params, configuracion }: UsePostLimngrafoOptions) {
+	const defaultParams = {};
+	const defaultConfig = {};
+
+	return usePost<LimnigrafoPostRequest, LimnigrafoResponse, ParamsBase>({
+		url: `${NEXT_PROXY_URL}/limnigrafos/`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+// ENDPOINT: PUT-LIMNIGRAFOS
+
+type UsePutLimngrafoOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: MutationConfig<
+		LimnigrafoPutRequest,
+		LimnigrafoResponse,
+		ParamsBase
+	>
+};
+
+export function usePutLimnigrafo({ params, configuracion }: UsePutLimngrafoOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+	
+	return usePut({
+		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+// ENDPOINT: PATCH-LIMNIGRAFOS
+
+type UsePachtLimngrafoOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: MutationConfig<
+		LimnigrafoPutRequest,
+		LimnigrafoResponse,
+		ParamsBase
+	>
+};
+
+export function usePachtLimnigrafo({ params, configuracion }: UsePachtLimngrafoOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+	
+	return usePatch({
+		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+// ENDPOINT: PATCH-LIMNIGRAFOS
+
+type UseDeleteLimngrafoOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: MutationConfig<
+		LimnigrafoPutRequest,
+		LimnigrafoResponse,
+		ParamsBase
+	>
+};
+
+export function useDeleteLimnigrafo({ params, configuracion }: UseDeleteLimngrafoOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+	
+	return useDelete({
+		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+/*
+************************
+	MEDICIONES
+************************
+*/
+
+// Representa una medición individual enviada por un limnígrafo
+export type MedicionResponse = {
+	id: number,
+	fecha_hora: string, // ISO 8601: "2025-12-04T18:14:03.142454Z"
+	altura: number | null, // Nivel del agua en metros
+	presion: number | null, // Presión atmosférica en hPa
+	temperatura: number | null, // Temperatura en grados Celsius
+	nivel_de_bateria: number | null, // Nivel de batería en porcentaje (0-100)
+	fuente: "automatico" | "manual", // Origen de la medición
+	limnigrafo: number, // ID del limnígrafo que envió la medición
+};
+
+// Respuesta paginada del backend (50 mediciones por página)
+export type MedicionPaginatedResponse = {
+	count: number, // Total de mediciones
+	next: string | null, // URL de la siguiente página
+	previous: string | null, // URL de la página anterior
+	results: MedicionResponse[], // Array de mediciones
+};
+
+// ENDPOINT: GET-MEDICIONES
+
+type UseGetMedicionesParams = {
+	limnigrafo?: string, // ID del limnígrafo (debe ser string para query params)
+	limit?: string, // Cantidad de resultados por página
+	page?: string, // Número de página
+}
+
+type UseGetMedicionesOptions = {
+	params?: UseGetMedicionesParams,
+	configuracion?: UseGetConfig<MedicionPaginatedResponse>,
+}
+
+// Hook para obtener mediciones del backend
+// Uso: const { data } = useGetMediciones({ params: { limnigrafo: "1", limit: "10" } })
+// La respuesta será de tipo MedicionPaginatedResponse
+export function useGetMediciones({ params, configuracion }: UseGetMedicionesOptions = {}) {
+	return useGet<UseGetMedicionesParams, MedicionPaginatedResponse>({
+		key: "useGetMediciones",
+		url: `${NEXT_PROXY_URL}/medicion/`,
+		params: params ?? {},
+		config: configuracion ?? {},
+	});
+}
+
+/*
+************************
+	USUARIOS
+************************
+*/
+
+// TIPOS
+export type UsuarioResponse = {
+	id: number,
+	nombre_usuario: string,
+	email: string,
+	first_name: string,
+	last_name: string,
+	estado: boolean,
+};
+
+export type UsuarioPostRequest = {
+	nombre_usuario: string,
+	email: string,
+	first_name: string,
+	last_name: string,
+	estado: boolean,
+	contraseña: string,
+};
+
+export type UsuarioPutRequest = {
+	nombre_usuario: string,
+	email: string,
+	first_name: string,
+	last_name: string,
+	estado: boolean,
+	contraseña: string,
+};
+
+export type UsuarioPatchRequest = {
+	nombre_usuario?: string,
+	email?: string,
+	first_name?: string,
+	last_name?: string,
+	estado?: boolean,
+	contraseña?: string,
+};
+
+// ENDPOINT: GET-USUARIOS
+
+type UseGetUsuariosOptions = {
+	params?: ParamsBase,
+	configuracion?: UseGetConfig,
+}
+
+export function useGetUsuarios({ params, configuracion }: UseGetUsuariosOptions) {
+	const defaultParams = {};
+	const defaultConfig = {};
+
+	return useGet({
+		key: "useGetUsuarios",
+		url: `${NEXT_PROXY_URL}/usuarios/`,
+		params: params ?? defaultParams,
+		config: configuracion ?? defaultConfig,
+	});
+}
+
+// ENDPOINT: GET-USUARIO
+
+type UseGetUsuarioOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: UseGetConfig,
+}
+
+export function useGetUsuario({ params, configuracion }: UseGetUsuarioOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+
+	return useGet({
+		key: "useGetUsuario",
+		url: `${NEXT_PROXY_URL}/usuarios/{id}`,
+		params: params ?? defaultParams,
+		config: configuracion ?? defaultConfig,
+	});
+}
+
+// ENDPOINT: POST-USUARIO
+
+type UsePostUsuarioOptions = {
+	params?: ParamsBase,
+	configuracion?: MutationConfig<
+		UsuarioPostRequest,
+		UsuarioResponse,
+		ParamsBase
+	>
+};
+
+export function usePostUsuario({ params, configuracion }: UsePostUsuarioOptions) {
+	const defaultParams = {};
+	const defaultConfig = {};
+
+	return usePost<UsuarioPostRequest, UsuarioResponse, ParamsBase>({
+		url: `${NEXT_PROXY_URL}/usuarios/`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+// ENDPOINT: PUT-USUARIO
+
+type UsePutUsuarioOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: MutationConfig<
+		UsuarioPutRequest,
+		UsuarioResponse,
+		ParamsBase
+	>
+};
+
+export function usePutUsuario({ params, configuracion }: UsePutUsuarioOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+	
+	return usePut({
+		url: `${NEXT_PROXY_URL}/usuarios/{id}`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+// ENDPOINT: PATCH-USUARIO
+
+type UsePachtUsuarioOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: MutationConfig<
+		UsuarioPutRequest,
+		UsuarioResponse,
+		ParamsBase
+	>
+};
+
+export function usePachtUsuario({ params, configuracion }: UsePachtUsuarioOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+	
+	return usePatch({
+		url: `${NEXT_PROXY_URL}/usuarios/{id}`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+// ENDPOINT: DELETE-USUARIO
+
+type UseDeleteUsuarioOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: MutationConfig<
+		UsuarioPutRequest,
+		UsuarioResponse,
+		ParamsBase
+	>
+};
+
+export function useDeleteUsuario({ params, configuracion }: UseDeleteUsuarioOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+	
+	return useDelete({
+		url: `${NEXT_PROXY_URL}/usuarios/{id}`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+/*
+************************
+	Historial
+************************
+*/
+
+// TIPOS
+
+export type HistorialItem = {
+	id: number,
+	date: string,
+	type: string,
+	object_id: number,
+	model_name: string,
+	username: string,
+	object_repr: string,
+}
+
+export type HistorialResponse = {
+	count: number,
+	next: string,
+	previous: string,
+	results: HistorialItem[]
+};
+
+// ENDPOINT: GET-HISTORIALES
+
+type UseGetHistorialesOptions = {
+	params?: {
+		queryParams?: {
+			limit?: number,
+			page?: number,
+		}
+	},
+	configuracion?: UseGetConfig,
+}
+
+export function useGetHistoriales({ params, configuracion }: UseGetHistorialesOptions) {
+	const defaultParams = {};
+	const defaultConfig = {};
+
+	return useGet({
+		key: "useGetHistoriales",
+		url: `${NEXT_PROXY_URL}/historial/?limit={limit}&page={page}`,
+		params: params ?? defaultParams,
+		config: configuracion ?? defaultConfig,
+	});
+}
+
+// ENDPOINT: GET-HISTORIAL
+
+type UseGetHistorialOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: UseGetConfig,
+}
+
+export function useGetHistorial({ params, configuracion }: UseGetHistorialOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+
+	return useGet({
+		key: "useGetHistorial",
+		url: `${NEXT_PROXY_URL}/historial/{id}`,
+		params: params ?? defaultParams,
+		config: configuracion ?? defaultConfig,
+	});
+}

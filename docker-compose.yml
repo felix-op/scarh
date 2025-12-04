@@ -45,5 +45,18 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DJANGO_SETTINGS_MODULE: core.settings
 
+  simulator:
+    build:
+      context: ./simulator-go
+      dockerfile: Dockerfile
+    container_name: scarh_simulator
+    depends_on:
+      - backend
+    restart: always
+    environment:
+      - BACKEND_URL=http://backend:8000/
+    networks:
+      - default
+
 volumes:
   postgres_dev_data:
