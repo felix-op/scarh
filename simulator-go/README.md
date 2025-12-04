@@ -67,9 +67,9 @@ El simulador utiliza **tokens API únicos** generados por el backend para autent
 
 ### ¿Por qué no está en Git?
 
-**🔒 Seguridad:** `config.yaml` contiene tokens secretos y **NUNCA debe subirse a GitHub**.
+**Seguridad:** `config.yaml` contiene tokens secretos y **NUNCA debe subirse a GitHub**.
 
-**📝 Solución:** Cada desarrollador ejecuta `setup_tokens.go` en su máquina local para generar su propio `config.yaml`:
+**Solución:** Cada desarrollador ejecuta `setup_tokens.go` en su máquina local para generar su propio `config.yaml`:
 
 ```bash
 go run setup_tokens.go
@@ -90,7 +90,7 @@ Archivo generado automáticamente (ejemplo):
 
 ```yaml
 backend_url: http://localhost:8000/
-interval_seconds: 5
+interval_seconds: 300  # 5 minutos (recomendado para producción)
 
 limnigrafos:
   - id: 1
@@ -105,7 +105,11 @@ limnigrafos:
     bateria_min: 10.0
 ```
 
-**⚠️ IMPORTANTE:**
+**Intervalo recomendado:**
+- **Desarrollo/Testing**: 5-10 segundos (para ver resultados rápidos)
+- **Producción**: 300 segundos (5 minutos) - Balance entre datos actualizados y carga del servidor
+
+**IMPORTANTE:**
 - **NO editar manualmente** este archivo
 - **NO commitear** a Git (ya está en `.gitignore`)
 - **Regenerar** con `go run setup_tokens.go` si los tokens expiran o se corrompen
@@ -186,14 +190,14 @@ backend_url: http://localhost:8000/
 
 ### Gestión de Tokens
 
-**🔐 Tokens son secretos:** `config.yaml` contiene tokens API que funcionan como contraseñas.
+**Tokens son secretos:** `config.yaml` contiene tokens API que funcionan como contraseñas.
 
-**❌ NO hacer:**
+**NO hacer:**
 - ~~Commitear `config.yaml` a Git~~
 - ~~Compartir tokens por Slack/email~~
 - ~~Hardcodear tokens en el código~~
 
-**✅ SÍ hacer:**
+**SI hacer:**
 - Cada desarrollador ejecuta `go run setup_tokens.go` localmente
 - Tokens permanecen en tu máquina (archivo ignorado por Git)
 - Regenerar tokens si se comprometen con `/limnigrafos/{id}/generate_key/`
