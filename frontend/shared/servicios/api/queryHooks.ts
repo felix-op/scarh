@@ -104,11 +104,11 @@ export async function Request<TParams extends ParamsBase>({
 	}
 }
 
-export type UseGetOptions<TParams extends ParamsBase> = {
+export type UseGetOptions<TParams extends ParamsBase, TResponse = unknown> = {
 	key: string,
 	url: string,
 	params: TParams,
-	config: UseGetConfig,
+	config: UseGetConfig<TResponse>,
 };
 
 export default function useGet<TParams extends ParamsBase, TResponse = unknown>({
@@ -116,21 +116,20 @@ export default function useGet<TParams extends ParamsBase, TResponse = unknown>(
 	url,
 	params,
 	config,
-}: UseGetOptions<TParams>) {
+}: UseGetOptions<TParams, TResponse>) {
 
-	const { configAxios = {}, ...otherConfig } = config;
+	const { configAxios = {}, ...restConfig } = config;
 
-	return useQuery<TResponse>({
+	return useQuery<TResponse, Error>({
 		queryKey: generarQueryKey(key, params),
-		queryFn: () => Request({
+		queryFn: (): Promise<TResponse> => Request({
 			params,
 			token: "",
 			url,
 			configAxios,
-		}),
+		}) as Promise<TResponse>,
 		gcTime: 1000 * 60 * 60,
-		refetchOnWindowFocus: false,
-		...otherConfig,
+		...restConfig,
 	});
 }
 

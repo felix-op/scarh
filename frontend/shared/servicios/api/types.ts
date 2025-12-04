@@ -5,7 +5,7 @@ export type ParamsBase = Record<string, string> & {
 	queryParams?: Record<string, string>,
 };
 
-export type UseGetConfig = Omit<UseQueryOptions, 'queryKey' | 'queryFn'> & {
+export type UseGetConfig<TResponse = unknown> = Omit<UseQueryOptions<TResponse, Error, TResponse, readonly unknown[]>, 'queryKey' | 'queryFn'> & {
     configAxios?: AxiosRequestConfig,
 };
 

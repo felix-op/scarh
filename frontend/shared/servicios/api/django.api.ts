@@ -82,7 +82,7 @@ export type LimnigrafoPatchRequest = {
 // ENDPOINT: GET-LIMNIGRAFOS
 
 type UseGetLimnigrafosOptions = {
-	config?: UseGetConfig,
+	config?: UseGetConfig<LimnigrafoPaginatedResponse>,
 }
 
 export function useGetLimnigrafos({ config }: UseGetLimnigrafosOptions = {}) {
@@ -231,7 +231,7 @@ type UseGetMedicionesParams = {
 
 type UseGetMedicionesOptions = {
 	params?: UseGetMedicionesParams,
-	config?: UseGetConfig,
+	config?: UseGetConfig<MedicionPaginatedResponse>,
 }
 
 // Hook para obtener mediciones del backend
