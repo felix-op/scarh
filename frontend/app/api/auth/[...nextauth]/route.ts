@@ -7,8 +7,9 @@ const LOGIN_URL = `${URL}/auth/login/`;
 const REFRESH_URL = `${URL}/auth/refresh/`;
 // const LOGOUT_URL = `${URL}/auth/logout`;
 
-const ACCESS_TOKEN_EXPIRY = 3 * 60 * 1000; // 3 minutos
-const EXPIRATION_THRESHOLD = 30 * 1000; // 30 segundos antes
+// Sincronizado con backend: 60 minutos
+const ACCESS_TOKEN_EXPIRY = 60 * 60 * 1000; // 60 minutos
+const EXPIRATION_THRESHOLD = 30 * 1000; // Refrescar 30 segundos antes de expirar
 
 const POST_CONFIG = {
 	method: "POST",
