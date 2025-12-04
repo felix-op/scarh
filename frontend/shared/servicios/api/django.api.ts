@@ -21,7 +21,7 @@ export type LimnigrafoResponse = {
 	tipo_comunicacion: string,
 	bateria_max: number,
 	bateria_min: number,
-	bateria: number, // Nivel actual de batería (bateria_actual del backend)
+	bateria: number | null, // Nivel actual de batería (bateria_actual del backend) - puede ser null
 	memoria: number,
 	tiempo_advertencia: number,
 	tiempo_peligro: number,
@@ -32,7 +32,7 @@ export type LimnigrafoResponse = {
 		longitud: number,
 		latitud: number,
 		nombre: string,
-	}
+	} | null // Puede ser null si no tiene ubicación asignada
 };
 
 // Respuesta paginada del backend para limnígrafos
@@ -85,7 +85,7 @@ type UseGetLimnigrafosOptions = {
 	config?: UseGetConfig,
 }
 
-export function useGetLimnigrafos({ config }: UseGetLimnigrafosOptions) {
+export function useGetLimnigrafos({ config }: UseGetLimnigrafosOptions = {}) {
 	return useGet<ParamsBase, LimnigrafoPaginatedResponse>({
 		key: "useGetLimnigrafos",
 		url: `${NEXT_PROXY_URL}/limnigrafos/`,

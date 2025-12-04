@@ -15,11 +15,11 @@ interface ApiMethods {
 }
 
 export const api: ApiMethods = {
-	get: (url: string, config: AxiosRequestConfig) => axios.get(url, config),
-	post: (url: string, config: AxiosRequestConfig) => axios.post(url, config),
-	put: (url: string, config: AxiosRequestConfig) => axios.put(url, config),
-	patch: (url: string, config: AxiosRequestConfig) => axios.patch(url, config),
-	delete: (url: string, config: AxiosRequestConfig) => axios.delete(url, config),
+	get: (url: string, config: AxiosRequestConfig) => axios.get(url, { ...config, withCredentials: true }),
+	post: (url: string, config: AxiosRequestConfig) => axios.post(url, { ...config, withCredentials: true }),
+	put: (url: string, config: AxiosRequestConfig) => axios.put(url, { ...config, withCredentials: true }),
+	patch: (url: string, config: AxiosRequestConfig) => axios.patch(url, { ...config, withCredentials: true }),
+	delete: (url: string, config: AxiosRequestConfig) => axios.delete(url, { ...config, withCredentials: true }),
 }
 
 export function urlConParametros<TParams extends ParamsBase>(baseUrl: string, parametros: TParams) {

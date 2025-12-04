@@ -59,16 +59,23 @@ export default function MedicionesPage() {
 
 	// Transformar datos del backend a formato frontend
 	const limnigrafosTransformados = useMemo(() => {
-		if (!limnigrafos?.results || !mediciones?.results) return [];
+		// Manejar tanto respuesta paginada como array directo
+		const limnigrafosArray = Array.isArray(limnigrafos) 
+			? limnigrafos 
+			: limnigrafos?.results;
+			
+		const medicionesArray = mediciones?.results || [];
+		
+		if (!limnigrafosArray || limnigrafosArray.length === 0) return [];
 
 		// Convertir array de mediciones a Map para búsqueda eficiente
 		const medicionesMap = new Map(
-			mediciones.results.map(m => [m.limnigrafo, m])
+			medicionesArray.map(m => [m.limnigrafo, m])
 		);
 
 		// Transformar formato backend a formato frontend
 		return transformarLimnigrafos(
-			limnigrafos.results,
+			limnigrafosArray,
 			medicionesMap
 		);
 	}, [limnigrafos, mediciones]);
@@ -112,9 +119,9 @@ export default function MedicionesPage() {
 			.map(m => ({
 				id: m.id.toString(),
 				timestamp: m.fecha_hora,
-				temperatura: `${m.temperatura.toFixed(1)} C`,
-				altura: `${m.altura_agua.toFixed(2)} mts`,
-				presion: `${m.presion.toFixed(2)} bar`,
+				temperatura: m.temperatura != null ? `${m.temperatura.toFixed(1)} C` : '-',
+				altura: m.altura_agua != null ? `${m.altura_agua.toFixed(2)} mts` : '-',
+				presion: m.presion != null ? `${m.presion.toFixed(2)} bar` : '-',
 			}));
 	}, [selectedLimnigrafo, mediciones]);
 

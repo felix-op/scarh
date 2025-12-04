@@ -71,18 +71,29 @@ export default function Home() {
 
 	// Transformar datos del backend a formato frontend
 	const todosLimnigrafos = useMemo(() => {
-		if (!limnigrafos?.results || !mediciones?.results) return [];
+		// Manejar tanto respuesta paginada como array directo
+		const limnigrafosArray = Array.isArray(limnigrafos) 
+			? limnigrafos 
+			: limnigrafos?.results;
+			
+		const medicionesArray = mediciones?.results || [];
+		
+		if (!limnigrafosArray || limnigrafosArray.length === 0) {
+			return [];
+		}
 
 		// Convertir array de mediciones a Map para búsqueda eficiente
 		const medicionesMap = new Map(
-			mediciones.results.map(m => [m.limnigrafo, m])
+			medicionesArray.map(m => [m.limnigrafo, m])
 		);
 
 		// Transformar formato backend a formato frontend
-		return transformarLimnigrafos(
-			limnigrafos.results,
+		const transformados = transformarLimnigrafos(
+			limnigrafosArray,
 			medicionesMap
 		);
+		
+		return transformados;
 	}, [limnigrafos, mediciones]);
 
 	const filteredData = useMemo(() => {
