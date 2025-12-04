@@ -54,9 +54,39 @@ go build -o simulator
 ./simulator
 ```
 
-## Configuración
+## Autenticación con Tokens
 
-El archivo `config.yaml` se genera automáticamente con `setup_tokens.go`:
+### ¿Cómo funciona?
+
+El simulador utiliza **tokens API únicos** generados por el backend para autenticar cada limnígrafo:
+
+1. **Backend genera tokens**: Cada limnígrafo tiene un token único (como una contraseña)
+2. **Script obtiene tokens**: `setup_tokens.go` se conecta al backend y solicita tokens
+3. **Simulador usa tokens**: Lee `config.yaml` y envía mediciones con `Authorization: Api-Key <token>`
+4. **Backend valida**: Solo acepta mediciones con tokens válidos
+
+### ¿Por qué no está en Git?
+
+**🔒 Seguridad:** `config.yaml` contiene tokens secretos y **NUNCA debe subirse a GitHub**.
+
+**📝 Solución:** Cada desarrollador ejecuta `setup_tokens.go` en su máquina local para generar su propio `config.yaml`:
+
+```bash
+go run setup_tokens.go
+# Ingresar URL del backend: http://localhost:8000
+# Ingresar usuario: admin
+# Ingresar contraseña: ****
+```
+
+Este comando:
+- Se conecta al backend con tus credenciales
+- Obtiene lista de limnígrafos desde `/limnigrafos/`
+- Genera un token API único para cada uno
+- Guarda todo en `config.yaml` (archivo local, NO en Git)
+
+### Estructura de `config.yaml`
+
+Archivo generado automáticamente (ejemplo):
 
 ```yaml
 backend_url: http://localhost:8000/
@@ -64,7 +94,7 @@ interval_seconds: 5
 
 limnigrafos:
   - id: 1
-    token: "API_TOKEN_HERE"
+    token: "p1Zt8cyH.YSSrMa2GhpHGKMku2tJNGjKiEAl6BChj"
     altura_min: 0.5
     altura_max: 5.0
     temperatura_min: 15.0
@@ -75,7 +105,10 @@ limnigrafos:
     bateria_min: 10.0
 ```
 
-**No editar manualmente.** Regenerar con `go run setup_tokens.go` si es necesario.
+**⚠️ IMPORTANTE:**
+- **NO editar manualmente** este archivo
+- **NO commitear** a Git (ya está en `.gitignore`)
+- **Regenerar** con `go run setup_tokens.go` si los tokens expiran o se corrompen
 
 ## Arquitectura
 
@@ -151,11 +184,38 @@ backend_url: http://localhost:8000/
 
 ## Seguridad
 
-- `config.yaml` contiene tokens sensibles (excluido de git)
-- No commitear tokens al repositorio
-- Regenerar tokens si se comprometen
-- Autenticación JWT para setup
-- API Keys para envío de mediciones
+### Gestión de Tokens
+
+**🔐 Tokens son secretos:** `config.yaml` contiene tokens API que funcionan como contraseñas.
+
+**❌ NO hacer:**
+- ~~Commitear `config.yaml` a Git~~
+- ~~Compartir tokens por Slack/email~~
+- ~~Hardcodear tokens en el código~~
+
+**✅ SÍ hacer:**
+- Cada desarrollador ejecuta `go run setup_tokens.go` localmente
+- Tokens permanecen en tu máquina (archivo ignorado por Git)
+- Regenerar tokens si se comprometen con `/limnigrafos/{id}/generate_key/`
+
+### Autenticación en Endpoints
+
+- **Setup (`setup_tokens.go`)**: Usa JWT (Bearer token) con credenciales de usuario
+- **Simulador (`main.go`)**: Usa API Keys con header `Authorization: Api-Key <token>`
+- **Backend valida**: Permisos configurados en `api/permissions.py`
+
+### Rotación de Tokens
+
+Si un token se compromete:
+
+```bash
+# Opción 1: Regenerar todos los tokens
+go run setup_tokens.go
+
+# Opción 2: Regenerar manualmente desde backend
+curl -X POST http://localhost:8000/limnigrafos/1/generate_key/ \
+  -H "Authorization: Bearer <jwt_token>"
+```
 
 ## Desarrollo
 
