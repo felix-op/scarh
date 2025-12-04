@@ -1,0 +1,34 @@
+# Configuración con tokens reales (NO commitear - seguridad crítica)
+config.yaml
+
+# Backups de configuración
+config.yaml.backup_*
+*.backup
+
+# Documentación interna (no subir a repositorio)
+estructura.md
+LOGGING.md
+logging.md
+
+# Binarios compilados
+*.exe
+simulator
+simulator.exe
+
+# Archivos de Go
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db

@@ -1,3 +1,27 @@
+// ============================================================================
+// CONFIG.GO - CARGA Y PARSEO DE CONFIGURACIÓN
+// ============================================================================
+// Este archivo maneja la lectura del archivo config.yaml.
+//
+// PROPÓSITO:
+//   - Leer config.yaml desde el disco
+//   - Parsear YAML a estructuras Go
+//   - Validar que la configuración sea válida
+//
+//   LimnigrafoConfig: Configuración de un limnígrafo
+//     - id: ID del limnígrafo en la base de datos
+//     - token: API Key para autenticación
+//     - altura_min/max: Rangos para sensor de altura
+//     - temperatura_min/max: Rangos para sensor de temperatura
+//     - presion_min/max: Rangos para sensor de presión
+//     - bateria_inicial: Nivel inicial de batería (%)
+//     - bateria_min: Nivel mínimo antes de resetear
+//
+// NOTAS:
+//   - config.yaml se genera automáticamente con setup_tokens.go
+//   - No editar config.yaml manualmente, usar setup_tokens.go
+// ============================================================================
+
 package main
 
 import (
@@ -28,7 +52,7 @@ type LimnigrafoConfig struct {
 func LoadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("no se pudo leer config.yaml: %w", err)
+		return nil, fmt.Errorf("error leyendo config.yaml: %w", err)
 	}
 
 	var cfg Config

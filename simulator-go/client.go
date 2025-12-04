@@ -1,3 +1,14 @@
+// ============================================================================
+// CLIENT.GO - CLIENTE HTTP PARA COMUNICACIÓN CON BACKEND
+// ============================================================================
+// Este archivo maneja toda la comunicacion HTTP con el backend de SCARH.
+//
+// PROPÓSITO:
+//   - Enviar mediciones al endpoint /medicion/ del backend
+//   - Autenticar usando API Keys (header: Authorization: Api-Key <token>)
+//   - Manejar errores de red y respuestas HTTP
+// ============================================================================
+
 package main
 
 import (
@@ -9,52 +20,53 @@ import (
 	"time"
 )
 
-type Client struct {
-	BaseURL    string
-	HTTPClient *http.Client
-}
+// SendMeasurement envía una medición al backend SCARH
+func SendMeasurement(backendURL string, token string, m Medicion) error {
+	// Construir URL completa
+	url := backendURL + "medicion/"
 
-func NewClient(baseURL string) *Client {
-	return &Client{
-		BaseURL: baseURL,
-		HTTPClient: &http.Client{
-			Timeout: 10 * time.Second,
-		},
-	}
-}
-
-func (c *Client) SendMeasurement(medicion Medicion, token string) error {
-	// Convertir medición a JSON
-	jsonData, err := json.Marshal(medicion)
+	// Serializar medición a JSON
+	jsonData, err := json.Marshal(m)
 	if err != nil {
-		return fmt.Errorf("error al serializar medición: %w", err)
+		return fmt.Errorf("error serializando medición a JSON: %w", err)
 	}
 
-	// Crear request
-	url := c.BaseURL + "medicion/"
+	Debug(fmt.Sprintf("Enviando JSON: %s", string(jsonData)))
+
+	// Crear request HTTP
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return fmt.Errorf("error al crear request: %w", err)
+		return fmt.Errorf("error creando request HTTP: %w", err)
 	}
 
 	// Agregar headers
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Api-Key "+token)
 
+	// Crear cliente HTTP con timeout
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
 	// Enviar request
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error al enviar request: %w", err)
+		return fmt.Errorf("error enviando request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Leer respuesta
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("error leyendo respuesta: %w", err)
+	}
 
 	// Verificar status code
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("error HTTP %d: %s", resp.StatusCode, string(body))
 	}
+
+	Debug(fmt.Sprintf("Respuesta del servidor [%d]: %s", resp.StatusCode, string(body)))
 
 	return nil
 }
