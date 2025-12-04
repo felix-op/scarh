@@ -5,6 +5,8 @@ type TextFieldProps = {
   placeholder?: string;
   value: string;
   onChange: (value: string) => void;
+  type?: "text" | "password" | "email" | "tel";
+  className?: string;
 };
 
 export function TextField({
@@ -12,30 +14,31 @@ export function TextField({
 	placeholder = "Placeholder",
 	value,
 	onChange,
+	type = "text",
+	className = "",
 }: TextFieldProps) {
 	return (
 		<div
+			className={className}
 			style={{
-				width: 283,
-				height: 81,
+				width: "100%",
+				minHeight: 81,
 				paddingLeft: 11,
 				paddingRight: 11,
 				paddingTop: 10,
 				paddingBottom: 10,
 				background: "white",
 				boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-				overflow: "hidden",
 				borderRadius: 20,
-				display: "inline-flex",
+				display: "flex",
 				flexDirection: "column",
-				justifyContent: "space-between",
-				alignItems: "flex-start",
+				gap: 6,
 			}}
 		>
 			{/* Label */}
 			<label
 				style={{
-					textAlign: "center",
+					textAlign: "left",
 					color: "#838383",
 					fontSize: 20,
 					fontFamily: "Outfit, sans-serif",
@@ -48,7 +51,7 @@ export function TextField({
 
 			{/* Campo editable */}
 			<input
-				type="text"
+				type={type}
 				value={value}
 				onChange={(e) => onChange(e.target.value)}
 				placeholder={placeholder}

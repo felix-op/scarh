@@ -4,74 +4,99 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import LimnigrafoTable from "@componentes/LimnigrafoTable";
 import { Nav } from "@componentes/Nav";
-import {
-	EXTRA_LIMNIGRAFOS_STORAGE_KEY,
-	type LimnigrafoDetalleData,
-	LIMNIGRAFOS,
-} from "@data/limnigrafos";
+import { type LimnigrafoDetalleData, LIMNIGRAFOS } from "@data/limnigrafos";
 import type { VarianteEstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
 import Boton from "@componentes/Boton";
 import PaginaBase from "@componentes/base/PaginaBase";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@componentes/components/ui/dialog";
 
-const ESTADOS: VarianteEstadoLimnigrafo[] = [
-	"activo",
-	"prueba",
-	"advertencia",
-	"fuera",
+const DATOS_EXTRA_PLACEHOLDER = [
+	{ label: "Dato 1", value: "N/A" },
+	{ label: "Dato 2", value: "N/A" },
+	{ label: "Dato 3", value: "N/A" },
 ];
+
+const DEFAULT_ESTADO_VARIANTE: VarianteEstadoLimnigrafo = "activo";
 
 const FORM_STATE = {
 	id: "",
 	nombre: "",
 	ubicacion: "",
-	bateria: "",
-	tiempoUltimoDato: "",
-	estado: "activo" as VarianteEstadoLimnigrafo,
-	temperatura: "",
-	altura: "",
-	presion: "",
-	ultimoMantenimiento: "",
 	descripcion: "",
-	latitud: "",
-	longitud: "",
+};
+
+type LimnigrafoStorePayload = {
+	limnigrafos?: LimnigrafoDetalleData[];
 };
 
 export default function Home() {
 	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
-	const [extraLimnigrafos, setExtraLimnigrafos] = useState<
-		LimnigrafoDetalleData[]
-	>(() => {
-		if (typeof window === "undefined") {
-			return [];
-		}
-		const stored = window.localStorage.getItem(EXTRA_LIMNIGRAFOS_STORAGE_KEY);
-		if (!stored) {
-			return [];
-		}
-		try {
-			return JSON.parse(stored) as LimnigrafoDetalleData[];
-		} catch {
-			return [];
-		}
-	});
+	const [limnigrafosData, setLimnigrafosData] = useState<LimnigrafoDetalleData[]>([]);
+	const [isLoadingStore, setIsLoadingStore] = useState(true);
+	const [storeError, setStoreError] = useState<string | null>(null);
 	const [mostrarFormulario, setMostrarFormulario] = useState(false);
 	const [formValues, setFormValues] = useState(FORM_STATE);
 	const [formError, setFormError] = useState<string | null>(null);
+	const [persistError, setPersistError] = useState<string | null>(null);
+	const [isPersisting, setIsPersisting] = useState(false);
 
 	useEffect(() => {
-		if (typeof window === "undefined") {
-			return;
+		let cancelado = false;
+
+		async function cargarStore() {
+			setIsLoadingStore(true);
+			try {
+				const response = await fetch("/api/limnigrafos");
+				if (!response.ok) {
+					throw new Error("No se pudo leer el archivo de limnigrafos.");
+				}
+
+				const data = (await response.json()) as LimnigrafoStorePayload;
+				if (cancelado) {
+					return;
+				}
+
+				if (data.limnigrafos && data.limnigrafos.length > 0) {
+					setLimnigrafosData(data.limnigrafos);
+				} else {
+					setLimnigrafosData(LIMNIGRAFOS);
+				}
+				setStoreError(null);
+			} catch (error) {
+				if (!cancelado) {
+					setStoreError(
+						error instanceof Error
+							? error.message
+							: "No se pudo cargar la lista de limnigrafos.",
+					);
+					setLimnigrafosData(LIMNIGRAFOS);
+				}
+			} finally {
+				if (!cancelado) {
+					setIsLoadingStore(false);
+				}
+			}
 		}
-		window.localStorage.setItem(
-			EXTRA_LIMNIGRAFOS_STORAGE_KEY,
-			JSON.stringify(extraLimnigrafos),
-		);
-	}, [extraLimnigrafos]);
+
+		void cargarStore();
+
+		return () => {
+			cancelado = true;
+		};
+	}, []);
 
 	const todosLimnigrafos = useMemo(
-		() => [...extraLimnigrafos, ...LIMNIGRAFOS],
-		[extraLimnigrafos],
+		() => limnigrafosData,
+		[limnigrafosData],
 	);
 
 	const filteredData = useMemo(() => {
@@ -88,10 +113,7 @@ export default function Home() {
 		);
 	}, [searchValue, todosLimnigrafos]);
 
-	function handleChange(
-		field: keyof typeof FORM_STATE,
-		value: string,
-	): void {
+	function handleChange(field: keyof typeof FORM_STATE, value: string): void {
 		setFormValues((prev) => ({ ...prev, [field]: value }));
 	}
 
@@ -100,43 +122,69 @@ export default function Home() {
 		setFormError(null);
 	}
 
-	function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		if (!formValues.nombre || !formValues.ubicacion) {
-			setFormError("Nombre y ubicaci+¦n son obligatorios.");
+			setFormError("Nombre y ubicacion son obligatorios.");
 			return;
 		}
 
-		const lat = Number.parseFloat(formValues.latitud);
-		const lng = Number.parseFloat(formValues.longitud);
 		const nuevoLimnigrafo: LimnigrafoDetalleData = {
 			id: formValues.id || `lim-extra-${Date.now()}`,
 			nombre: formValues.nombre,
 			ubicacion: formValues.ubicacion,
-			bateria: formValues.bateria || "Bateria 100%",
-			tiempoUltimoDato: formValues.tiempoUltimoDato || "Hace instantes",
-			estado: { variante: formValues.estado },
-			temperatura: formValues.temperatura || "0-¦",
-			altura: formValues.altura || "0 mts",
-			presion: formValues.presion || "0 bar",
-			ultimoMantenimiento: formValues.ultimoMantenimiento || "Sin datos",
+			bateria: "Bateria 100%",
+			tiempoUltimoDato: "Hace instantes",
+			estado: { variante: DEFAULT_ESTADO_VARIANTE },
+			temperatura: "0??",
+			altura: "0 mts",
+			presion: "0 bar",
+			ultimoMantenimiento: "Sin datos",
 			descripcion:
-        formValues.descripcion ||
-        "Sin descripci+¦n. Actualice la informaci+¦n cuando est+® disponible.",
-			datosExtra: [
-				{ label: "Dato 1", value: "N/A" },
-				{ label: "Dato 2", value: "N/A" },
-				{ label: "Dato 3", value: "N/A" },
-			],
-			coordenadas:
-			Number.isFinite(lat) && Number.isFinite(lng)
-				? { lat, lng }
-				: undefined,
+				formValues.descripcion ||
+				"Sin descripcion. Actualice la informacion cuando este disponible.",
+			datosExtra: DATOS_EXTRA_PLACEHOLDER.map((item) => ({ ...item })),
+			coordenadas: undefined,
 		};
 
-		setExtraLimnigrafos((prev) => [nuevoLimnigrafo, ...prev]);
-		setMostrarFormulario(false);
-		resetForm();
+		setIsPersisting(true);
+		setPersistError(null);
+
+		try {
+			const response = await fetch("/api/limnigrafos", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ limnigrafo: nuevoLimnigrafo }),
+			});
+
+			if (!response.ok) {
+				throw new Error("No se pudo guardar el limnigrafo en el archivo.");
+			}
+
+			setLimnigrafosData((prev) => [
+				nuevoLimnigrafo,
+				...prev.filter((item) => item.id !== nuevoLimnigrafo.id),
+			]);
+			setMostrarFormulario(false);
+			resetForm();
+		} catch (error) {
+			setPersistError(
+				error instanceof Error
+					? error.message
+					: "Error desconocido al guardar.",
+			);
+		} finally {
+			setIsPersisting(false);
+		}
+	}
+
+	function handleDialogOpenChange(isOpen: boolean) {
+		if (!isOpen) {
+			resetForm();
+		}
+		setMostrarFormulario(isOpen);
 	}
 
 	return (
@@ -148,44 +196,59 @@ export default function Home() {
 					onProfileClick={() => router.push("/perfil")}
 				/>
 
-			<main className="flex flex-1 items-start justify-center px-6 py-10">
-				<div className="flex w-full max-w-[1568px] flex-col gap-6">
-					<div className="flex justify-end">
-						<Boton
-							type="button"
-							onClick={() => setMostrarFormulario((prev) => !prev)}
-							className="
-                !mx-0
-                !bg-[#F4F4F4]
-                !text-[#0982C8]
-                !h-[48px]
-                !px-8
-                border border-[#0982C8]
-                shadow-[0px_2px_6px_rgba(9,130,200,0.25)]
-                hover:!bg-[#E6F3FB]
-              "
-						>
-							{mostrarFormulario ? "Cerrar formulario" : "Añadir Limnigrafo"}
-						</Boton>
-					</div>
+				<main className="flex flex-1 items-start justify-center px-6 py-10">
+					<div className="flex w-full max-w-[1568px] flex-col gap-6">
+						<header className="flex flex-col gap-1">
+							<h1 className="text-[34px] font-semibold text-[#011018]">
+								Limnigrafos
+							</h1>
+							<p className="text-base text-[#4D5562]">
+								Gestiona el inventario de limnigrafos, agrega nuevos equipos y
+								revisa su ubicacion y estado general.
+							</p>
+							{storeError ? (
+								<p className="text-sm text-red-500">{storeError}</p>
+							) : null}
+						</header>
+						<Dialog open={mostrarFormulario} onOpenChange={handleDialogOpenChange}>
+							<div className="flex justify-end">
+								<DialogTrigger asChild>
+									<Boton
+										type="button"
+										className="
+	                !mx-0
+	                !bg-[#F4F4F4]
+	                !text-[#6F6F6F]
+	                !h-[48px]
+	                !rounded-[28px]
+	                !px-8
+	                gap-3
+	                border border-[#E0E0E0]
+	                shadow-[0px_3px_12px_rgba(0,0,0,0.12)]
+	                hover:!bg-[#EAEAEA]
+	              "
+									>
+										<span className="text-[17px] font-semibold">
+											{mostrarFormulario ? "Cerrar formulario" : "Añadir Limnígrafo"}
+										</span>
+									</Boton>
+								</DialogTrigger>
+							</div>
 
-						{mostrarFormulario ? (
-							<section
-								className="
-					rounded-[24px]
-					bg-white
-					p-6
-					shadow-[0px_4px_12px_rgba(0,0,0,0.15)]
-				"
-							>
-								<h2 className="text-[24px] font-semibold text-[#333]">
-									Nuevo Limnigrafo
-								</h2>
-								<p className="text-[16px] text-[#666]">
-									Completa los datos principales y presiona &quot;Importar dato&quot;.
-								</p>
+							<DialogContent className="max-w-4xl rounded-[24px] border-none bg-white shadow-[0px_4px_12px_rgba(0,0,0,0.15)]">
+								<DialogHeader className="text-left">
+									<DialogTitle className="text-[24px] text-[#333]">
+										Nuevo Limnigrafo
+									</DialogTitle>
+									<DialogDescription className="text-[16px] text-[#666]">
+										Completa los datos principales y presiona &quot;Crear Limnigrafo&quot;.
+									</DialogDescription>
+								</DialogHeader>
 								{formError ? (
-									<p className="mt-3 text-[15px] text-red-500">{formError}</p>
+									<p className="mt-1 text-[15px] text-red-500">{formError}</p>
+								) : null}
+								{persistError ? (
+									<p className="text-[15px] text-red-500">{persistError}</p>
 								) : null}
 
 								<form onSubmit={handleSubmit} className="mt-4 grid gap-4">
@@ -212,7 +275,7 @@ export default function Home() {
 											/>
 										</label>
 										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Ubicación *
+											Ubicacion *
 											<input
 												type="text"
 												value={formValues.ubicacion}
@@ -223,118 +286,10 @@ export default function Home() {
 												required
 											/>
 										</label>
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Latitud (opcional)
-											<input
-												type="number"
-												step="any"
-												value={formValues.latitud}
-												onChange={(event) =>
-													handleChange("latitud", event.target.value)
-												}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
-												placeholder="-54.79"
-											/>
-										</label>
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Longitud (opcional)
-											<input
-												type="number"
-												step="any"
-												value={formValues.longitud}
-												onChange={(event) =>
-													handleChange("longitud", event.target.value)
-												}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
-												placeholder="-68.30"
-											/>
-										</label>
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Batería
-											<input
-												type="text"
-												value={formValues.bateria}
-												onChange={(event) =>
-													handleChange("bateria", event.target.value)
-												}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
-											/>
-										</label>
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Tiempo Último dato
-											<input
-												type="text"
-												value={formValues.tiempoUltimoDato}
-												onChange={(event) =>
-													handleChange("tiempoUltimoDato", event.target.value)
-												}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
-											/>
-										</label>
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Estado
-											<select
-												value={formValues.estado}
-												onChange={(event) =>
-													handleChange("estado", event.target.value)
-												}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
-											>
-												{ESTADOS.map((estado) => (
-													<option key={estado} value={estado}>
-														{estado}
-													</option>
-												))}
-											</select>
-										</label>
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Temperatura
-											<input
-												type="text"
-												value={formValues.temperatura}
-												onChange={(event) =>
-													handleChange("temperatura", event.target.value)
-												}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
-											/>
-										</label>
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Altura
-											<input
-												type="text"
-												value={formValues.altura}
-												onChange={(event) =>
-													handleChange("altura", event.target.value)
-												}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
-											/>
-										</label>
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Presión
-											<input
-												type="text"
-												value={formValues.presion}
-												onChange={(event) =>
-													handleChange("presion", event.target.value)
-												}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
-											/>
-										</label>
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-											Últimmo mantenimiento
-											<input
-												type="text"
-												value={formValues.ultimoMantenimiento}
-												onChange={(event) =>
-													handleChange("ultimoMantenimiento", event.target.value)
-												}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
-											/>
-										</label>
 									</div>
 
 									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-										Descripción
+										Descripcion
 										<textarea
 											value={formValues.descripcion}
 											onChange={(event) =>
@@ -346,27 +301,26 @@ export default function Home() {
 									</label>
 
 									<div className="mt-4 flex flex-wrap items-center justify-end gap-4">
-										<Boton
-											type="button"
-											onClick={() => {
-												setMostrarFormulario(false);
-												resetForm();
-											}}
-											className="!mx-0 !bg-[#F6F6F6] !text-[#7F7F7F] !h-[44px] !px-8"
-										>
-											Cancelar
-										</Boton>
+										<DialogClose asChild>
+											<Boton
+												type="button"
+												className="!mx-0 !bg-[#F6F6F6] !text-[#7F7F7F] !h-[44px] !px-8"
+											>
+												Cancelar
+											</Boton>
+										</DialogClose>
 
 										<Boton
 											type="submit"
-											className="!mx-0 !h-[44px] !px-8"
+											disabled={isPersisting}
+											className="!mx-0 !h-[44px] !px-8 disabled:opacity-60"
 										>
-											Importar dato
+											{isPersisting ? "Guardando..." : "Crear Limnigrafo"}
 										</Boton>
 									</div>
 								</form>
-							</section>
-						) : null}
+							</DialogContent>
+						</Dialog>
 
 						<LimnigrafoTable
 							data={filteredData}
@@ -377,13 +331,14 @@ export default function Home() {
 							}}
 							showActions
 						/>
+						{isLoadingStore ? (
+							<p className="text-center text-sm text-[#6F6F6F]">
+								Cargando limnigrafos...
+							</p>
+						) : null}
 					</div>
 				</main>
 			</div>
 		</PaginaBase>
 	);
 }
-
-
-
-

@@ -7,6 +7,7 @@ import {
 	Map as MapIcon,
 	Chip as LimnigraphIcon,
 	Ruler as MeasuresIcon,
+	Documet as MeasurementsIcon,
 	Funcion as StatisticsIcon,
 	User as UserIcon,
 	HistoryIcon,
@@ -24,6 +25,7 @@ type NavItem = { label: string; Icon: IconComponent; href?: string };
 const NAV_ITEMS: NavItem[] = [
 	{ label: "Mapa", Icon: MapIcon, href: "/mapa" },
 	{ label: "Limnigrafo", Icon: LimnigraphIcon, href: "/limnigrafos" },
+	{ label: "Mediciones", Icon: MeasurementsIcon, href: "/mediciones" },
 	{ label: "Metricas", Icon: MeasuresIcon, href: "/metricas" },
 	{ label: "Estadisticas", Icon: StatisticsIcon, href: "/estadisticas" },
 	{ label: "Usuarios", Icon: UserIcon, href: "/usuarios" },
@@ -37,22 +39,22 @@ const dividerStyle: CSSProperties = {
 };
 
 type NavButtonProps = {
-  label: string;
-  Icon: IconComponent;
-  collapsed: boolean;
-  href?: string;
-  isActive?: boolean;
-  onNavigate?: (href: string) => void;
+	label: string;
+	Icon: IconComponent;
+	collapsed: boolean;
+	href?: string;
+	isActive?: boolean;
+	onNavigate?: (href: string) => void;
 };
 
 function NavButton({
-	label,
-	Icon,
-	collapsed,
-	href,
-	isActive = false,
-	onNavigate,
-}: NavButtonProps) {
+					   label,
+					   Icon,
+					   collapsed,
+					   href,
+					   isActive = false,
+					   onNavigate,
+				   }: NavButtonProps) {
 	const content = (
 		<div
 			className="flex w-full items-center justify-center rounded-[10px]"
@@ -93,20 +95,20 @@ function NavButton({
 }
 
 type ProfileCardProps = {
-  collapsed: boolean;
-  userName: string;
-  userEmail: string;
-  onClick?: () => void;
-  isActive?: boolean;
+	collapsed: boolean;
+	userName: string;
+	userEmail: string;
+	onClick?: () => void;
+	isActive?: boolean;
 };
 
 function ProfileCard({
-	collapsed,
-	userName,
-	userEmail,
-	onClick,
-	isActive = false,
-}: ProfileCardProps) {
+						 collapsed,
+						 userName,
+						 userEmail,
+						 onClick,
+						 isActive = false,
+					 }: ProfileCardProps) {
 	const background = isActive ? "#011018" : "#F0F0F0";
 	const primaryText = isActive ? "#F9FBFF" : "#121212";
 	const secondaryText = isActive ? "#E0E7FF" : "#999999";
@@ -232,10 +234,10 @@ function ProfileCard({
 }
 
 type NavProps = {
-  userName: string;
-  userEmail: string;
-  onCollapseChange?: (collapsed: boolean) => void;
-  onProfileClick?: () => void;
+	userName: string;
+	userEmail: string;
+	onCollapseChange?: (collapsed: boolean) => void;
+	onProfileClick?: () => void;
 };
 
 const NAV_COLLAPSE_STORAGE_KEY = "scarh-nav-collapsed";
@@ -251,7 +253,7 @@ export function Nav({ userName, userEmail, onCollapseChange, onProfileClick }: N
 		}
 
 		const stored =
-        window.sessionStorage.getItem(NAV_COLLAPSE_STORAGE_KEY) === "true";
+			window.sessionStorage.getItem(NAV_COLLAPSE_STORAGE_KEY) === "true";
 		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setIsCollapsed(stored);
 	}, []);
@@ -338,7 +340,17 @@ export function Nav({ userName, userEmail, onCollapseChange, onProfileClick }: N
 						style={{ cursor: "pointer" }}
 						aria-label="Ir al home"
 					>
-						<WaterIcon size={isCollapsed ? 72 : 108} color="#38BDF8" />
+						<span
+							style={{
+								fontSize: isCollapsed ? 22 : 30,
+								fontWeight: 800,
+								color: "#0D76B3",
+								letterSpacing: 1,
+								textTransform: "uppercase",
+							}}
+						>
+							Inicio
+						</span>
 					</button>
 				</div>
 
@@ -349,7 +361,8 @@ export function Nav({ userName, userEmail, onCollapseChange, onProfileClick }: N
 					userName={userName}
 					userEmail={userEmail}
 					onClick={
-						onProfileClick ?? (() => {
+						onProfileClick ??
+						(() => {
 							try {
 								router.push("/perfil");
 							} catch {

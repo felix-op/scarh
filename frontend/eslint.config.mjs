@@ -18,6 +18,11 @@ const eslintConfig = defineConfig([
 			indent: ["error", "tab"],
 			"react/jsx-indent": ["error", "tab"],
 			"react/jsx-indent-props": ["error", "tab"],
+			"@typescript-eslint/no-unused-vars": ["error", {
+				"argsIgnorePattern": "^_",
+				"varsIgnorePattern": "^_",
+				"caughtErrorsIgnorePattern": "^_"
+			}]
 		},
 	},
 ]);

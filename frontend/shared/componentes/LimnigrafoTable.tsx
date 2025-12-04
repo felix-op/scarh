@@ -1,3 +1,6 @@
+/* eslint-disable indent */
+/* eslint-disable react/jsx-indent */
+/* eslint-disable react/jsx-indent-props */
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -42,13 +45,13 @@ const columnasTablaBase = "200px repeat(4, minmax(0, 1fr))";
 const columnasTablaConAccion = `${columnasTablaBase} 150px`;
 
 export default function LimnigrafoTable({
-	data,
-	className = "",
-	searchValue = "",
-	onSearchChange,
-	onFilterClick,
-	showActions = false,
-}: LimnigrafoTableProps) {
+											data,
+											className = "",
+											searchValue = "",
+											onSearchChange,
+											onFilterClick,
+											showActions = false,
+										}: LimnigrafoTableProps) {
 	function handleSearchChange(valor: string) {
 		onSearchChange?.(valor);
 	}
@@ -136,14 +139,14 @@ type LimnigrafoTableRowProps = {
 };
 
 export function LimnigrafoTableRow({
-	data,
-	showActions = false,
-}: LimnigrafoTableRowProps) {
+									   data,
+									   showActions = false,
+								   }: LimnigrafoTableRowProps) {
 	const router = useRouter();
 
 	function handleViewMore() {
 		router.push(
-			`/limnigrafos/detalleLimnigrafo?id=${encodeURIComponent(data.id)}`
+			`/limnigrafos/detalleLimnigrafo?id=${encodeURIComponent(data.id)}`,
 		);
 	}
 

@@ -1,5 +1,5 @@
 import LoginResponse from "@tipos/LoginResponse";
-import NextAuth, { JWT } from "next-auth";
+import NextAuth, { AuthOptions, JWT } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
@@ -7,8 +7,8 @@ const LOGIN_URL = `${URL}/auth/login/`;
 const REFRESH_URL = `${URL}/auth/refresh/`;
 // const LOGOUT_URL = `${URL}/auth/logout`;
 
-const ACCESS_TOKEN_EXPIRY = 30 * 1000; // 30 segundos
-const EXPIRATION_THRESHOLD = 10 * 1000; // 10 segundos antes
+const ACCESS_TOKEN_EXPIRY = 3 * 60 * 1000; // 3 minutos
+const EXPIRATION_THRESHOLD = 30 * 1000; // 30 segundos antes
 
 const POST_CONFIG = {
 	method: "POST",
@@ -45,7 +45,7 @@ async function refreshAccessToken(token: JWT) {
 	}
 }
 
-const handler = NextAuth({
+export const authOptions: AuthOptions = {
 	providers: [
 		CredentialsProvider({
 			name: "credentials",
@@ -137,6 +137,8 @@ const handler = NextAuth({
 			return session;
 		},
 	},
-});
+}
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

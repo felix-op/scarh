@@ -5,9 +5,10 @@ import { signIn } from 'next-auth/react';
 import FormularioLogin from "./componentes/FormularioLogin";
 import LoginCredentials from "@tipos/LoginCredentials";
 import { useState } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
+	const router = useRouter();
 	const [error, setError] = useState<Error | null>(null);
 
 	const onSubmit = async (credentials: LoginCredentials) => {
@@ -24,7 +25,7 @@ export default function Page() {
 
 		if (result?.ok) {
 			setError(null);
-			redirect('/inicio');
+			router.push('/inicio');
 		}
 	};
 
