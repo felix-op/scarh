@@ -68,10 +68,8 @@ func main() {
 func runLimnigrafo(wg *sync.WaitGroup, cfg LimnigrafoConfig, globalCfg *Config) {
 	defer wg.Done()
 
-	// Inicializar estado del limnígrafo
-	state := LimnigrafoState{
-		BateriaActual: cfg.BateriaInicial,
-	}
+	// Inicializar estado del limnígrafo (sin uso actualmente, preparado para futuro)
+	state := LimnigrafoState{}
 
 	Info(fmt.Sprintf("Limnígrafo #%d iniciado", cfg.ID))
 

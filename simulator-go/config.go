@@ -45,8 +45,8 @@ type LimnigrafoConfig struct {
 	TemperaturaMax float64 `yaml:"temperatura_max"`
 	PresionMin     float64 `yaml:"presion_min"`
 	PresionMax     float64 `yaml:"presion_max"`
-	BateriaInicial float64 `yaml:"bateria_inicial"`
 	BateriaMin     float64 `yaml:"bateria_min"`
+	BateriaMax     float64 `yaml:"bateria_max"`
 }
 
 func LoadConfig(path string) (*Config, error) {
