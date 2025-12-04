@@ -3,11 +3,11 @@
 /* eslint-disable react/jsx-indent-props */
 "use client";
 
-import RenglonDatos, { type CeldaRenglonDatos } from "./RenglonDatos";
 import {
     BotonEstadoLimnigrafo,
     type EstadoLimnigrafo,
 } from "./BotonEstadoLimnigrafo";
+import RenglonDatos, { type CeldaRenglonDatos } from "./RenglonDatos";
 
 type TablaHomeRow = {
     id: string;

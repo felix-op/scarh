@@ -1,17 +1,19 @@
 "use client";
 
-import Image from "next/image";
-import { signIn } from 'next-auth/react';
-import FormularioLogin from "./componentes/FormularioLogin";
 import LoginCredentials from "@tipos/LoginCredentials";
-import { useState } from "react";
+import { signIn } from 'next-auth/react';
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import FormularioLogin from "./componentes/FormularioLogin";
 
 export default function Page() {
 	const router = useRouter();
+	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 
 	const onSubmit = async (credentials: LoginCredentials) => {
+		setLoading(true);
 
 		const result = await signIn('credentials', {
 			username: credentials.username,
@@ -27,6 +29,8 @@ export default function Page() {
 			setError(null);
 			router.push('/inicio');
 		}
+
+		setLoading(false);
 	};
 
 	return (
@@ -43,7 +47,7 @@ export default function Page() {
 
 			<div className="absolute inset-0 z-1 pointer-events-none backdrop-blur-sm bg-linear-to-br from-azul-marino-oscuro to-azul-marino" />
 
-			<FormularioLogin onSubmit={onSubmit} loading={false} error={error} />
+			<FormularioLogin onSubmit={onSubmit} loading={loading} error={error} />
 		</main>
 	);
 }

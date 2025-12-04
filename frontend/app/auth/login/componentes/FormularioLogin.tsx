@@ -1,7 +1,8 @@
 "use client";
 
-import Boton from "@componentes/Boton";
+import BotonBase from "@componentes/botones/BotonBase";
 import CampoInput from "@componentes/campos/CampoInput";
+import Seccion from "@componentes/secciones/Seccion";
 import LoginCredentials from "@tipos/LoginCredentials";
 import { useState } from "react";
 
@@ -15,36 +16,47 @@ export default function FormularioLogin({onSubmit, loading, error}: FormularioLo
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 
+	const [showPassword, setShowPassword] = useState(false);
+
 	return (
-		<div className="
-			flex flex-col gap-6 w-full max-w-[720px]
-			p-6 rounded-lg bg-white/80 backdrop-blur-lg
-			border border-border relative z-2
-		">
+		<Seccion className="max-w-2xl sm:h-auto justify-end">
+			<h2 className="text-4xl font-bold text-[#0982C8]">SCARH</h2>
 			<CampoInput
 				label="Nombre de usuario"
 				name="username"
 				type="text"
-				placeholder="example"
+				placeholder="Ingrese su nombre de usuario"
+				icon="icon-[mdi--user] text-gray-600"
 				value={username}
 				onChange={(e) => setUsername(e.target.value)}
+				disabled={loading}
 			/>
 
 			<CampoInput
 				label="Contraseña"
 				name="password"
-				type="password"
-				placeholder="******"
+				type={showPassword ? "text" : "password"}
+				placeholder="Ingrese su contraseña"
+				icon="icon-[mdi--lock] text-gray-600"
 				value={password}
 				onChange={(e) => setPassword(e.target.value)}
+				disabled={loading}
+				endDecorations={[
+					{
+						className: `${showPassword ? 'icon-[mdi--eye-off]' : 'icon-[mdi--eye]'} text-gray-600 hover:text-gray-800 cursor-pointer`,
+						onClick: () => setShowPassword((prev) => !prev)
+					}
+				]}
 			/>
 
 			{error && <p className="text-red-500">{error.message}</p>}
 
-			<Boton type="button" onClick={() => onSubmit({username, password})} className="w-full gap-2" disabled={loading}>
-				{loading && <span className="icon-[line-md--loading-twotone-loop]" />}
-				Iniciar Sesión
-			</Boton>
-		</div>
+			<BotonBase
+				onClick={() => onSubmit({username, password})}
+				disabled={loading}
+				variant="login"
+				icon={loading ? "loading": "none"}
+			/>
+		</Seccion>
 	);
 }
