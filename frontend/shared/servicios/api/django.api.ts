@@ -44,14 +44,15 @@ export type LimnigrafoPaginatedResponse = {
 
 export type LimnigrafoPostRequest = {
 	codigo: string,
-	descripcion: string,
-	ultimo_mantenimiento: string,
+	descripcion?: string,
+	ultimo_mantenimiento?: string,
 	tipo_comunicacion: string[],
 	bateria_max: number,
 	bateria_min: number,
 	memoria: number,
 	tiempo_advertencia: string,
 	tiempo_peligro: string,
+	ubicacion_id?: number,
 };
 
 export type LimnigrafoPutRequest = {

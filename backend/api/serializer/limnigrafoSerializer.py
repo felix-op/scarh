@@ -15,7 +15,9 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
     ubicacion_id = serializers.PrimaryKeyRelatedField(
         queryset=Ubicacion.objects.all(),
         source='ubicacion',
-        write_only=True
+        write_only=True,
+        required=False,
+        allow_null=True
     )
     class Meta:
         model = Limnigrafo
