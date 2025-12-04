@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Nav } from "@componentes/Nav";
 import UserInfoCard from "@componentes/UserInfoCard";
 import UserListCard from "@componentes/UserListCard";
@@ -9,6 +9,8 @@ import { TextField } from "@componentes/TextField";
 import Boton from "@componentes/Boton";
 import AddUserModal, { NewUserData } from "@componentes/AddUserModal";
 import PaginaBase from "@componentes/base/PaginaBase";
+import { useDeleteUsuario, useGetUsuario, useGetUsuarios, usePostUsuario, usePutUsuario } from "@servicios/api/django.api";
+import BotonFeo from "../inicio/componentes/BotonFeo";
 
 type EstadoVariant = "activo" | "inactivo" | "pendiente" | "suspendido";
 
@@ -117,6 +119,68 @@ const USUARIOS_LISTA: Usuario[] = [
 ];
 
 export default function UsersAdminPage() {
+	const { data: users } = useGetUsuarios({});
+	const { data: user } = useGetUsuario({
+		params: {
+			id: "1",
+		},
+		configuracion: {
+			enabled: true,
+		}
+	});
+	const { mutate: postUser } = usePostUsuario({});
+	const { mutate: putUser } = usePutUsuario({
+		params: {
+			id: "2",
+		}
+	});
+	const { mutate: deleteUser } = useDeleteUsuario({
+		params: {
+			id: "3",
+		}
+	});
+
+	useEffect(() => {
+		if (users) {
+			console.log("Usuarios: ", users);
+		}
+	}, [users]);
+
+	useEffect(() => {
+		if (user) {
+			console.log("Usuario: ", user);
+		}
+	}, [user]);
+
+	const onPost = () => {
+		postUser({
+			data: {
+				email: "unEjemplo@example.com",
+				first_name: "Juan",
+				last_name: "Perez",
+				contraseña: "123456",
+				estado: true,
+				nombre_usuario: "juan.perez",
+			}
+		});
+	}
+
+	const onPut = () => {
+		putUser({
+			data: {
+				email: "unCambio@example.com",
+				first_name: "Juan",
+				last_name: "Perez",
+				contraseña: "123456",
+				nombre_usuario: "juan.perez",
+			}
+		});
+	}
+
+	const onDelete = () => {
+		deleteUser({});
+	}
+
 	const router = useRouter();
 
 	const [usuarios, setUsuarios] = useState<Usuario[]>(USUARIOS_LISTA);
@@ -275,6 +339,12 @@ export default function UsersAdminPage() {
 								Añadir usuario
 							</Boton>
 						</header>
+
+						<div>
+							<BotonFeo onClick={onPost}>Añadir usuario</BotonFeo>
+							<BotonFeo onClick={onPut}>Editar usuario</BotonFeo>
+							<BotonFeo onClick={onDelete}>Eliminar usuario</BotonFeo>
+						</div>
 
 						<div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)]">
 					<UserListCard

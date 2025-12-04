@@ -5,7 +5,9 @@ import FilterBar from "@componentes/FilterBar";
 import HistorialCard from "@componentes/HistorialCard";
 import HistorialTable from "@componentes/HistorialTable";
 import { Nav } from "@componentes/Nav";
+import { useGetHistorial, useGetHistoriales } from "@servicios/api/django.api";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const FILTER_USERS = [
 	"Todos",
@@ -111,6 +113,27 @@ const HISTORIAL_FILAS = [
 
 export default function HistorialPage() {
 	const router = useRouter();
+
+	const { data: historiales } = useGetHistoriales({
+		params: {
+			queryParams: {
+				limit: 10,
+				page: 1,
+			}
+		}
+	});
+
+
+	const { data: historial } = useGetHistorial({
+		params: {
+			id: "1",
+		}
+	});
+
+	useEffect(() => {
+		console.log("historiales: ", historiales);
+		console.log("historial: ", historial);
+	}, [historiales, historial]);
 
 	return (
 		<PaginaBase>
