@@ -21,10 +21,11 @@ export type LimnigrafoResponse = {
 	tipo_comunicacion: string,
 	bateria_max: number,
 	bateria_min: number,
+	bateria: number, // Nivel actual de batería (bateria_actual del backend)
 	memoria: number,
 	tiempo_advertencia: number,
 	tiempo_peligro: number,
-	ultima_conexion: number,
+	ultima_conexion: string, // Formato "HH:MM:SS"
 	estado: string,
 	ubicacion: {
 		id: number,
