@@ -1,8 +1,8 @@
 backend_url: http://backend:8000/
-interval_seconds: 300
+interval_seconds: 60
 limnigrafos:
 - id: 5
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6IjQzY2I1NGVjYTk3NDRlOThhNjBmM2U3YzNhNDkxYTAwIiwidXNlcl9pZCI6IjcifQ.2WH8kXD7jgzQTgSSV8K3Wp0kqzWlNpuDmW4n6bfU-zo
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTE0NzkyLCJpYXQiOjE3NjQ5MDc1OTIsImp0aSI6ImE4MmFhZjI2MTRiMDQ4YjE4ZDU5NGFhMzFjMTBkNWFmIiwidXNlcl9pZCI6IjcifQ.itjYU3vac9ytslEfkxW40p1N9qlWo8ic4G_fS7SuBZ8
   altura_min: 0.5
   altura_max: 3.5
   temperatura_min: -5
@@ -14,7 +14,7 @@ limnigrafos:
   probabilidad_falla: 0.1
   duracion_falla_min: 20
 - id: 2
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6IjA0OWFhZTA3NjM3NjRkYmZiZTQzMzZiZjQ3YWJkOGIyIiwidXNlcl9pZCI6IjgifQ.9hId8ssKmBulxW1IkhoUKpmh6yvthPG-OURH3VuBPPA
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTE0NzkyLCJpYXQiOjE3NjQ5MDc1OTIsImp0aSI6ImVlMmY2Njk3ZWE5OTQxZDk4N2QzZThlYjMxMTk2ZGE4IiwidXNlcl9pZCI6IjgifQ.HRQ2kXfTbRbFtqzz8grUzT6hEaqhV4RTiY4fV2qphbE
   altura_min: 0.5
   altura_max: 3.5
   temperatura_min: -5
@@ -26,7 +26,7 @@ limnigrafos:
   probabilidad_falla: 0.1
   duracion_falla_min: 20
 - id: 6
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6IjI5MzhhYzE0MDJlMDQ0YzI4NWRmNjhjZDkxMzFhYTZmIiwidXNlcl9pZCI6IjkifQ.ocVPlUhrZi46HMLxPv9ADMvLTdROALsalGyopa1WqMQ
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTE0NzkyLCJpYXQiOjE3NjQ5MDc1OTIsImp0aSI6ImYwZDQ5NGJkZjc0YzQxZmFhOGYwN2FkOTc3MGIzZGJlIiwidXNlcl9pZCI6IjkifQ.tf3dSyXzfoLzZAz_ppKsKkyUveW2pAlwRYS00b0IFcs
   altura_min: 0.5
   altura_max: 3.5
   temperatura_min: -5
@@ -38,7 +38,7 @@ limnigrafos:
   probabilidad_falla: 0.1
   duracion_falla_min: 20
 - id: 4
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6IjhhNmM1MDBlN2ZjZTQ5OWI5OWY4M2E4NzZiNWIzNmVjIiwidXNlcl9pZCI6IjUifQ.rI6mXE5Eyk0jVySKfBbzH9t-vh8DiZEv5b-IFfb7dUU
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTE0NzkyLCJpYXQiOjE3NjQ5MDc1OTIsImp0aSI6ImQwYzYxNjRmM2QyMjRlMTFhNWIyYjc0MTc3MjhmZTQ1IiwidXNlcl9pZCI6IjUifQ.n3Ley9Ik3B38zKBVtaF7rBsm3qVlz4h57bHGvhwtvq0
   altura_min: 0.5
   altura_max: 3.5
   temperatura_min: -5
@@ -50,7 +50,7 @@ limnigrafos:
   probabilidad_falla: 0.1
   duracion_falla_min: 20
 - id: 3
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6ImM2ODNjNjA3ZDNkZDQ2NDA4ZGZkZDE0NzNlMTc0YzBlIiwidXNlcl9pZCI6IjMifQ.Q69Q2oPmSqeMBqfEZmpDOpAx6_2dmA9EmtIEStq4RdQ
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTE0NzkyLCJpYXQiOjE3NjQ5MDc1OTIsImp0aSI6IjAyOWE0NDUzYTYyNDQ2MGY4NjIxYTdjYzg1MTYxZWEwIiwidXNlcl9pZCI6IjMifQ.Kkk3Uj8QM6SfE3Yobwo8cP99eiIiG6DRpZQV-swGwaE
   altura_min: 0.5
   altura_max: 3.5
   temperatura_min: -5
@@ -62,7 +62,7 @@ limnigrafos:
   probabilidad_falla: 0.1
   duracion_falla_min: 20
 - id: 1
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6Ijc4OTYxYjg2OTViMzQ5Nzg5MjZlOTE4YjVmNDQ3MGNiIiwidXNlcl9pZCI6IjYifQ.2t8aZXaX8k6KGB5kUHVz0OJl93ZErVY9umYcG1pGf5o
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTE0NzkyLCJpYXQiOjE3NjQ5MDc1OTIsImp0aSI6ImI2NDgyNDFlY2QxZTQyYTVhMmE2YmFmY2RmNDEzNDcxIiwidXNlcl9pZCI6IjYifQ.t6_864m2BqDEiAWxGD2e9NHCrA080Ax5F2SAtx0C5eA
   altura_min: 0.5
   altura_max: 3.5
   temperatura_min: -5
@@ -74,7 +74,7 @@ limnigrafos:
   probabilidad_falla: 0.1
   duracion_falla_min: 20
 - id: 7
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6IjQ5NzJkYmVkODIwMTQ5ZTZhMzIzNGExZTUxN2VjNDU5IiwidXNlcl9pZCI6IjEwIn0.gAOgkM6A8h3WGULPjwHSIGLsoIK0PA8se8Z_E_c7y80
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTE0NzkyLCJpYXQiOjE3NjQ5MDc1OTIsImp0aSI6IjZjODI2NTI5NDY1YjRmZTVhMDU0MDIzZDhhYjFmM2U5IiwidXNlcl9pZCI6IjEwIn0.obtjtFpyNn_Dkran0Wh6zxAC3UErDSMaRA3VWWLYikk
   altura_min: 0.5
   altura_max: 3.5
   temperatura_min: -5

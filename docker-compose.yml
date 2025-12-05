@@ -27,6 +27,7 @@ services:
        python manage.py migrate;
        python manage.py loaddata api/fixtures/limnigrafos.json;
        python manage.py createsuperuser_from_env;
+       python manage.py sincronizar_simulador;
        python manage.py runserver 0.0.0.0:8000;"
     volumes:
       - .:/app

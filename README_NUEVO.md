@@ -42,7 +42,12 @@ Esto iniciará:
 
 4. **Importar datos de ejemplo**
 ```bash
+# Opción A: Usando fixtures (recomendado)
 docker exec scarh_backend_dev python manage.py loaddata datos_limnigrafos.json
+
+# Opción B: Si falla, copiar primero al contenedor
+docker cp datos_limnigrafos.json scarh_backend_dev:/app/datos_limnigrafos.json
+docker exec scarh_backend_dev python manage.py loaddata /app/datos_limnigrafos.json
 ```
 
 O usando el script:

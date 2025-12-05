@@ -29,10 +29,21 @@ docker-compose up -d
 
 ### Paso 2: Importar los datos
 
-Desde la raíz del proyecto, ejecuta:
+**Opción A: Usando la carpeta fixtures (RECOMENDADO)**
+
+El archivo ya está en `backend/api/fixtures/datos_limnigrafos.json`. Ejecuta:
 
 ```bash
 docker exec scarh_backend_dev python manage.py loaddata datos_limnigrafos.json
+```
+
+**Opción B: Usando ruta absoluta desde el contenedor**
+
+Si el comando anterior falla, copia primero el archivo al contenedor:
+
+```bash
+docker cp datos_limnigrafos.json scarh_backend_dev:/app/datos_limnigrafos.json
+docker exec scarh_backend_dev python manage.py loaddata /app/datos_limnigrafos.json
 ```
 
 Este comando importará:
