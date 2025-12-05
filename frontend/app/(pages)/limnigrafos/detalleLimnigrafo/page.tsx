@@ -101,20 +101,33 @@ function DetalleLimnigrafoContent() {
 	const detalles = limnigrafo
 		? {
 				identification: [
-					{ label: "ID", value: limnigrafo.id },
-					{ label: "Limnigrafo", value: nombre },
-					{ label: "Bateria", value: limnigrafo.bateria },
+					{ label: "ID", value: limnigrafo.id, editable: false },
+					{ 
+						label: "Limnigrafo", 
+						value: nombre,
+						editable: true,
+						onEdit: () => {
+							setNombreTemporal(nombre);
+							setEstaEditandoDatos(true);
+						}
+					},
+					{ label: "Bateria", value: limnigrafo.bateria, editable: false },
 					{
 						label: "Ultimo Mantenimiento",
-						value: ultimoMantenimiento,
+						value: ultimoMantenimiento || "Sin información",
+						editable: true,
+						onEdit: () => {
+							setUltimoMantenimientoTemporal(ultimoMantenimiento);
+							setEstaEditandoDatos(true);
+						}
 					},
 				],
 				measurements: [
-					{ label: "Temperatura", value: limnigrafo.temperatura },
-					{ label: "Altura", value: limnigrafo.altura },
-					{ label: "Presion", value: limnigrafo.presion },
+					{ label: "Temperatura", value: limnigrafo.temperatura, editable: false },
+					{ label: "Altura", value: limnigrafo.altura, editable: false },
+					{ label: "Presion", value: limnigrafo.presion, editable: false },
 				],
-				extraData: limnigrafo.datosExtra,
+				extraData: limnigrafo.datosExtra.map(item => ({ ...item, editable: false })),
 				description: descripcion,
 				status: limnigrafo.estado,
 			}
@@ -124,12 +137,18 @@ function DetalleLimnigrafoContent() {
 		const data = limnigrafoData as any;
 		if (!data?.id) return;
 		
+		// Actualizar estado local inmediatamente
+		setDescripcion(descripcionTemporal);
+		
 		// Actualizar en backend
 		patchLimnigrafo.mutate({
 			data: {
 				descripcion: descripcionTemporal.trim()
 			}
 		});
+		
+		// Cerrar modal
+		setEstaEditandoDescripcion(false);
 	}
 
 	function guardarDatos() {
@@ -149,6 +168,10 @@ function DetalleLimnigrafoContent() {
 			fechaBackend = `${año}-${mes}-${dia}`;
 		}
 
+		// Actualizar estados locales inmediatamente
+		setNombre(nombreTemporal);
+		setUltimoMantenimiento(ultimoMantenimientoTemporal);
+		
 		// Actualizar en backend
 		patchLimnigrafo.mutate({
 			data: {
@@ -158,6 +181,8 @@ function DetalleLimnigrafoContent() {
 		});
 		
 		setErrorDatos(null);
+		// Cerrar modal
+		setEstaEditandoDatos(false);
 	}
 
 	function handleDescripcionDialogChange(isOpen: boolean) {
@@ -242,6 +267,46 @@ function DetalleLimnigrafoContent() {
 					{detalles ? (
 						<>
 							<div className="relative flex w-full justify-center">
+								{estaEditando && (
+									<div className="absolute -top-16 right-8 flex gap-3">
+										<Boton
+											onClick={() => {
+												setEstaEditandoDatos(false);
+												setEstaEditandoDescripcion(false);
+												setNombreTemporal(nombre);
+												setUltimoMantenimientoTemporal(ultimoMantenimiento);
+												setDescripcionTemporal(descripcion);
+											}}
+											className="
+												!mx-0
+												!bg-[#F3F3F3]
+												!text-[#7F7F7F]
+												!h-[40px]
+												!px-5
+												text-[14px]
+												shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
+												hover:!bg-[#e8e8e8]
+											"
+										>
+											Cancelar
+										</Boton>
+										<Boton
+											onClick={() => {
+												if (estaEditandoDatos) guardarDatos();
+												if (estaEditandoDescripcion) guardarDescripcion();
+											}}
+											className="
+												!mx-0
+												!h-[40px]
+												!px-5
+												text-[14px]
+												shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
+											"
+										>
+											Guardar
+										</Boton>
+									</div>
+								)}
 								<LimnigrafoDetailsCard
 									title="Datos Limnigrafo"
 									identification={detalles.identification}
@@ -249,25 +314,31 @@ function DetalleLimnigrafoContent() {
 									extraData={detalles.extraData}
 									description={detalles.description}
 									status={detalles.status}
+									onEditDescription={() => {
+										setDescripcionTemporal(descripcion);
+										setEstaEditandoDescripcion(true);
+									}}
 								/>
 								<Boton
 									onClick={handleDelete}
 									disabled={isDeleting}
-									className="
-	                !mx-0
-	                !bg-[#FDECEC]
-	                !text-[#B42318]
-	                !h-[40px]
-	                !px-5
-	                text-[14px]
-	                shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
-	                hover:!bg-[#f8dede]
-	                gap-2
-	                disabled:opacity-60
-	                absolute
-	                right-8
-	                top-6
-	              "
+									className={`
+										!mx-0
+										!bg-[#FDECEC]
+										!text-[#B42318]
+										!h-[40px]
+										!px-5
+										text-[14px]
+										shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
+										hover:!bg-[#f8dede]
+										gap-2
+										disabled:opacity-60
+										absolute
+										top-6
+										transition-all
+										duration-200
+										${estaEditando ? 'right-[calc(100%+2rem)]' : 'right-8'}
+									`}
 								>
 									{isDeleting ? "Eliminando..." : "Eliminar limnigrafo"}
 								</Boton>
@@ -276,262 +347,182 @@ function DetalleLimnigrafoContent() {
 								<p className="text-sm text-red-500">{deleteError}</p>
 							) : null}
 
-							<div className="flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-10 px-12">
-						<Dialog
-							open={estaEditandoDatos}
-							onOpenChange={handleDatosDialogChange}
-						>
-							<DialogTrigger asChild>
+							<div className="flex w-full max-w-[1200px] flex-wrap items-center justify-center gap-4">
+								<Boton
+									onClick={irAPaginaImportacion}
+									className="
+										!mx-0
+										!bg-white
+										!text-[#898989]
+										!h-[48px]
+										!px-8
+										!rounded-[28px]
+										shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
+										hover:!bg-[#F6F6F6]
+										gap-2
+									"
+								>
+									<AddIcon size={20} color="#898989" />
+									<span className="text-[16px] font-medium">Importar datos</span>
+								</Boton>
+
 								<Boton
 									className="
-                !mx-0
-                !bg-white
-                !text-[#898989]
-                !h-[48px]
-                !px-8
-                shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
-                hover:!bg-[#F6F6F6]
-                gap-2
-              "
+										!mx-0
+										!bg-white
+										!text-[#898989]
+										!h-[48px]
+										!px-8
+										shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
+										hover:!bg-[#F6F6F6]
+										gap-2
+									"
 								>
-									<Edit size={24} color="#898989" />
+									<Ruler size={24} color="#898989" />
 									<span className="text-[16px] font-medium">
-										Editar Limnigrafo
+										Estadisticas Del Limnigrafo
 									</span>
 								</Boton>
-							</DialogTrigger>
+								
+								<Boton
+									onClick={irAPaginaMediciones}
+									className="
+										!mx-0
+										!bg-white
+										!text-[#898989]
+										!h-[48px]
+										!px-8
+										shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
+										hover:!bg-[#F6F6F6]
+										gap-2
+									"
+								>
+									<Ruler size={24} color="#898989" />
+									<span className="text-[16px] font-medium">
+										Ver mediciones
+									</span>
+								</Boton>
 
-							<DialogContent className="w-full max-w-[640px] rounded-2xl border-none bg-white p-6 shadow-[0px_12px_30px_rgba(0,0,0,0.25)]">
-								<DialogHeader className="items-start">
-									<p className="text-[14px] font-medium uppercase tracking-[0.08em] text-[#0982C8]">
-										Datos limnigrafo
-									</p>
-									<DialogTitle className="text-[24px] font-semibold text-[#4B4B4B]">
-										Editar limnigrafo
-									</DialogTitle>
-									<DialogDescription className="text-[15px] text-[#6B6B6B]">
-										Modifica el nombre y la fecha de último mantenimiento.
-									</DialogDescription>
-								</DialogHeader>
+								<Boton
+									className="
+										!mx-0
+										!bg-white
+										!text-[#898989]
+										!h-[48px]
+										!px-8
+										shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
+										hover:!bg-[#F6F6F6]
+										gap-2
+									"
+								>
+									<MapIcon size={24} color="#7F7F7F" />
+									<span className="text-[16px] font-medium">Agregar ubicacion</span>
+								</Boton>
+							</div>
 
-								<div className="mt-5 flex flex-col gap-4">
-									<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
-										Limnigrafo
-										<input
-											type="text"
-											value={nombreTemporal}
-											onChange={(event) => setNombreTemporal(event.target.value)}
-											className="
-                      rounded-xl
-                      border
-                      border-[#D3D4D5]
-                      p-3
-                      text-[16px]
-                      text-[#4B4B4B]
-                      outline-none
-                      focus:border-[#0982C8]
-                    "
-											placeholder="Nombre del limnigrafo"
-										/>
-									</label>
+							{/* Modal para editar datos del limnígrafo */}
+							<Dialog open={estaEditandoDatos} onOpenChange={setEstaEditandoDatos}>
+								<DialogContent className="w-full max-w-[640px] rounded-2xl border-none bg-white p-6 shadow-[0px_12px_30px_rgba(0,0,0,0.25)]">
+									<DialogHeader className="items-start">
+										<p className="text-[14px] font-medium uppercase tracking-[0.08em] text-[#0982C8]">
+											Datos limnigrafo
+										</p>
+										<DialogTitle className="text-[24px] font-semibold text-[#4B4B4B]">
+											Editar limnigrafo
+										</DialogTitle>
+										<DialogDescription className="text-[15px] text-[#6B6B6B]">
+											Modifica el nombre y la fecha de último mantenimiento.
+										</DialogDescription>
+									</DialogHeader>
 
-									<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
-										Último mantenimiento (DD/MM/AAAA)
-										<input
-											type="text"
-											value={ultimoMantenimientoTemporal}
+									<div className="mt-5 flex flex-col gap-4">
+										<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
+											Limnigrafo
+											<input
+												type="text"
+												value={nombreTemporal}
+												onChange={(event) => setNombreTemporal(event.target.value)}
+												className="
+													rounded-xl
+													border
+													border-[#D3D4D5]
+													p-3
+													text-[16px]
+													text-[#4B4B4B]
+													outline-none
+													focus:border-[#0982C8]
+												"
+												placeholder="Nombre del limnigrafo"
+											/>
+										</label>
+
+										<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
+											Último mantenimiento (DD/MM/AAAA)
+											<input
+												type="text"
+												value={ultimoMantenimientoTemporal}
+												onChange={(event) =>
+													setUltimoMantenimientoTemporal(event.target.value)
+												}
+												className="
+													rounded-xl
+													border
+													border-[#D3D4D5]
+													p-3
+													text-[16px]
+													text-[#4B4B4B]
+													outline-none
+													focus:border-[#0982C8]
+												"
+												placeholder="DD/MM/AAAA"
+											/>
+											{errorDatos ? (
+												<span className="text-[14px] font-normal text-red-500">
+													{errorDatos}
+												</span>
+											) : null}
+										</label>
+									</div>
+								</DialogContent>
+							</Dialog>
+
+							{/* Modal para editar descripción */}
+							<Dialog open={estaEditandoDescripcion} onOpenChange={setEstaEditandoDescripcion}>
+								<DialogContent className="w-full max-w-[640px] rounded-2xl border-none bg-white p-6 shadow-[0px_12px_30px_rgba(0,0,0,0.25)]">
+									<DialogHeader className="items-start">
+										<p className="text-[14px] font-medium uppercase tracking-[0.08em] text-[#0982C8]">
+											Descripcion
+										</p>
+										<DialogTitle className="text-[24px] font-semibold text-[#4B4B4B]">
+											Editar descripcion
+										</DialogTitle>
+									</DialogHeader>
+
+									<div className="mt-5">
+										<label className="mb-2 block text-[16px] font-semibold text-[#4B4B4B]">
+											Nueva descripcion
+										</label>
+										<textarea
+											value={descripcionTemporal}
 											onChange={(event) =>
-												setUltimoMantenimientoTemporal(event.target.value)
+												setDescripcionTemporal(event.target.value)
 											}
 											className="
-                      rounded-xl
-                      border
-                      border-[#D3D4D5]
-                      p-3
-                      text-[16px]
-                      text-[#4B4B4B]
-                      outline-none
-                      focus:border-[#0982C8]
-                    "
-											placeholder="DD/MM/AAAA"
+												w-full
+												rounded-xl
+												border
+												border-[#D3D4D5]
+												p-3
+												text-[16px]
+												text-[#4B4B4B]
+												outline-none
+												focus:border-[#0982C8]
+											"
+											rows={5}
 										/>
-										{errorDatos ? (
-											<span className="text-[14px] font-normal text-red-500">
-												{errorDatos}
-											</span>
-										) : null}
-									</label>
-								</div>
-
-								<div className="mt-6 flex items-center justify-end gap-4">
-									<DialogClose asChild>
-										<Boton
-											type="button"
-											className="!mx-0 !bg-[#F3F3F3] !text-[#7F7F7F] !h-[44px] !px-7"
-										>
-											Cancelar
-										</Boton>
-									</DialogClose>
-									<Boton
-										type="button"
-										onClick={guardarDatos}
-										className="!mx-0 !h-[44px] !px-7"
-									>
-										Guardar
-									</Boton>
-								</div>
-							</DialogContent>
-						</Dialog>
-
-						<Boton
-							onClick={irAPaginaImportacion}
-							className="
-                !mx-0
-                !bg-white
-                !text-[#898989]
-                !h-[48px]
-                !px-8
-                !rounded-[28px]
-                shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
-                hover:!bg-[#F6F6F6]
-                gap-2
-              "
-						>
-							<AddIcon size={20} color="#898989" />
-							<span className="text-[16px] font-medium">Importar datos</span>
-						</Boton>
-
-						<Boton
-							className="
-                !mx-0
-                !bg-white
-                !text-[#898989]
-                !h-[48px]
-                !px-8
-                shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
-                hover:!bg-[#F6F6F6]
-                gap-2
-              "
-						>
-							<Ruler size={24} color="#898989" />
-							<span className="text-[16px] font-medium">
-								Estadisticas Del Limnigrafo
-							</span>
-						</Boton>
-						<Boton
-							onClick={irAPaginaMediciones}
-							className="
-                !mx-0
-                !bg-white
-                !text-[#898989]
-                !h-[48px]
-                !px-8
-                shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
-                hover:!bg-[#F6F6F6]
-                gap-2
-              "
-						>
-							<Ruler size={24} color="#898989" />
-							<span className="text-[16px] font-medium">
-								Ver mediciones
-							</span>
-						</Boton>
-
-						<Dialog
-							open={estaEditandoDescripcion}
-							onOpenChange={handleDescripcionDialogChange}
-						>
-							<DialogTrigger asChild>
-								<Boton
-									className="
-		                !mx-0
-		                !bg-white
-		                !text-[#898989]
-		                !h-[48px]
-		                !px-8
-		                shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
-		                hover:!bg-[#F6F6F6]
-		                gap-2
-		              "
-								>
-									<Documet size={24} color="#898989" />
-									<span className="text-[16px] font-medium">
-										Editar Descripcion
-									</span>
-								</Boton>
-							</DialogTrigger>
-
-							<DialogContent className="w-full max-w-[640px] rounded-2xl border-none bg-white p-6 shadow-[0px_12px_30px_rgba(0,0,0,0.25)]">
-								<DialogHeader className="items-start">
-									<p className="text-[14px] font-medium uppercase tracking-[0.08em] text-[#0982C8]">
-										Descripcion
-									</p>
-									<DialogTitle className="text-[24px] font-semibold text-[#4B4B4B]">
-										Editar descripcion
-									</DialogTitle>
-								</DialogHeader>
-
-								<div className="mt-5">
-									<label className="mb-2 block text-[16px] font-semibold text-[#4B4B4B]">
-										Nueva descripcion
-									</label>
-									<textarea
-										value={descripcionTemporal}
-										onChange={(event) =>
-											setDescripcionTemporal(event.target.value)
-										}
-										className="
-                      w-full
-                      rounded-xl
-                      border
-                      border-[#D3D4D5]
-                      p-3
-                      text-[16px]
-                      text-[#4B4B4B]
-                      outline-none
-                      focus:border-[#0982C8]
-                    "
-										rows={5}
-									/>
-								</div>
-
-								<div className="mt-6 flex items-center justify-end gap-4">
-									<DialogClose asChild>
-										<Boton
-											type="button"
-											className="!mx-0 !bg-[#F3F3F3] !text-[#7F7F7F] !h-[44px] !px-7"
-										>
-											Cancelar
-										</Boton>
-									</DialogClose>
-									<Boton
-										type="button"
-										onClick={guardarDescripcion}
-										className="!mx-0 !h-[44px] !px-7"
-									>
-										Guardar
-									</Boton>
-								</div>
-							</DialogContent>
-						</Dialog>
-
-						<Boton
-							className="
-                		!mx-0
-		                !bg-white
-		                !text-[#898989]
-		                !h-[48px]
-		                !px-8
-		                shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
-		                hover:!bg-[#F6F6F6]
-		                gap-2
-		              "
-						>
-							<MapIcon size={24} color="#7F7F7F" />
-							<span className="text-[16px] font-medium">Agregar ubicacion</span>
-						</Boton>
-
-							</div>
+									</div>
+								</DialogContent>
+							</Dialog>
 						</>
 					) : (
 						<div className="w-full rounded-3xl bg-white p-10 text-center text-[#4B4B4B]">
