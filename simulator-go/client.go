@@ -5,7 +5,7 @@
 //
 // PROPÓSITO:
 //   - Enviar mediciones al endpoint /medicion/ del backend
-//   - Autenticar usando API Keys (header: Authorization: Api-Key <token>)
+//   - Autenticar usando JWT Tokens (header: Authorization: Bearer <token>)
 //   - Manejar errores de red y respuestas HTTP
 // ============================================================================
 
@@ -41,7 +41,7 @@ func SendMeasurement(backendURL string, token string, m Medicion) error {
 
 	// Agregar headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Api-Key "+token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	// Crear cliente HTTP con timeout
 	client := &http.Client{

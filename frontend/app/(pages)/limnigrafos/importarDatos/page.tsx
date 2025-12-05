@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Boton from "@componentes/Boton";
-import { Nav } from "@componentes/Nav";
 import { type LimnigrafoDetalleData, LIMNIGRAFOS } from "@data/limnigrafos";
 
 type LimnigrafoStorePayload = {
@@ -312,14 +311,8 @@ function ImportarDatosContent() {
 
 
 	return (
-		<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-			<Nav
-				userName="Juan Perez"
-				userEmail="juan.perez@scarh.com"
-				onProfileClick={() => router.push("/perfil")}
-			/>
-
-			<main className="flex flex-1 justify-center px-6 py-10">
+		<div className="flex flex-col w-full h-full">
+			<main className="flex flex-1 justify-center px-6 py-10 bg-[#EEF4FB]">
 				<div className="flex w-full max-w-[1400px] flex-col gap-8">
 					<header className="flex items-center justify-between">
 						<h1 className="text-[32px] font-semibold text-[#1F2937]">

@@ -24,14 +24,21 @@ export type LimnigrafoResponse = {
 	memoria: number,
 	tiempo_advertencia: number,
 	tiempo_peligro: number,
-	ultima_conexion: string, // Formato "HH:MM:SS"
+	ultima_conexion: string | null, // Timestamp ISO 8601: "2025-12-05T01:23:28.002536+00:00" o null si nunca se conectó
 	estado: string,
 	ubicacion: {
 		id: number,
 		longitud: number,
 		latitud: number,
 		nombre: string,
-	} | null // Puede ser null si no tiene ubicación asignada
+	} | null, // Puede ser null si no tiene ubicación asignada
+	ultima_medicion: {
+		id: number,
+		fecha_hora: string,
+		altura_agua: number | null,
+		temperatura: number | null,
+		presion: number | null,
+	} | null, // Puede ser null si no tiene mediciones
 };
 
 // Respuesta paginada del backend para limnígrafos
@@ -176,7 +183,7 @@ type UsePachtLimngrafoOptions = {
 		id: string,
 	}
 	configuracion?: MutationConfig<
-		LimnigrafoPutRequest,
+		LimnigrafoPatchRequest,
 		LimnigrafoResponse,
 		ParamsBase
 	>
@@ -231,7 +238,7 @@ export function useDeleteLimnigrafo({ params, configuracion }: UseDeleteLimngraf
 export type MedicionResponse = {
 	id: number,
 	fecha_hora: string, // ISO 8601: "2025-12-04T18:14:03.142454Z"
-	altura: number | null, // Nivel del agua en metros
+	altura_agua: number | null, // Nivel del agua en metros
 	presion: number | null, // Presión atmosférica en hPa
 	temperatura: number | null, // Temperatura en grados Celsius
 	nivel_de_bateria: number | null, // Nivel de batería en porcentaje (0-100)

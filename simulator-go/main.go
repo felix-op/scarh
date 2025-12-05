@@ -127,24 +127,24 @@ func runLimnigrafo(wg *sync.WaitGroup, cfg LimnigrafoConfig, globalCfg *Config) 
 				}
 
 				if medicion.Presion != nil {
-					msg += fmt.Sprintf("│  Presión:     %6.0f hPa                               │\n", *medicion.Presion)
-				} else {
-					msg += fmt.Sprintf("│  Presión:        N/A                                   │\n")
-				}
+				msg += fmt.Sprintf("│  Presión:     %6.0f hPa                               │\n", *medicion.Presion)
+			} else {
+				msg += fmt.Sprintf("│  Presión:        N/A                                   │\n")
+			}
 
-				if medicion.NivelDeBateria != nil {
-					msg += fmt.Sprintf("│  Batería:     %6.1f %%                                 │\n", *medicion.NivelDeBateria)
-				} else {
-					msg += fmt.Sprintf("│  Batería:        N/A                                   │\n")
-				}
-				
-				msg += fmt.Sprintf("└─────────────────────────────────────────────────────────┘")
+			if medicion.NivelDeBateria != nil {
+				msg += fmt.Sprintf("│  Batería:     %6.2f V                                  │\n", *medicion.NivelDeBateria)
+			} else {
+				msg += fmt.Sprintf("│  Batería:        N/A                                   │\n")
+			}
+			
+			msg += fmt.Sprintf("└─────────────────────────────────────────────────────────┘")
 
-				// Verificar si hay valores faltantes (error simulado)
-				if medicion.Temperatura == nil || medicion.Presion == nil || medicion.NivelDeBateria == nil {
-					Warning(msg + " [MEDICIÓN CON ERRORES]")
-				} else {
-					Success(msg)
+			// Verificar si hay valores faltantes (error simulado)
+			if medicion.Temperatura == nil || medicion.Presion == nil || medicion.NivelDeBateria == nil {
+				Warning(msg + " [MEDICIÓN CON ERRORES]")
+			} else {
+				Success(msg)
 				}
 			}
 		}

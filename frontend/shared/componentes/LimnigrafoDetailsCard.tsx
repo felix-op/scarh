@@ -4,10 +4,13 @@ import {
 	BotonEstadoLimnigrafo,
 	type EstadoLimnigrafo,
 } from "./BotonEstadoLimnigrafo";
+import { Edit } from "./icons/Icons";
 
 type InfoItem = {
   label: string;
   value: string;
+  editable?: boolean;
+  onEdit?: () => void;
 };
 
 type LimnigrafoDetailsCardProps = {
@@ -18,6 +21,7 @@ type LimnigrafoDetailsCardProps = {
   description: string;
   status: EstadoLimnigrafo;
   statusLabel?: string;
+  onEditDescription?: () => void;
 };
 
 function InfoColumn({ items }: { items: InfoItem[] }) {
@@ -28,9 +32,20 @@ function InfoColumn({ items }: { items: InfoItem[] }) {
 					<p className="text-center text-[20px] font-normal text-[#838383]">
 						{item.label}
 					</p>
-					<p className="text-center text-[24px] font-semibold text-black">
-						{item.value}
-					</p>
+					<div className="flex items-center gap-2">
+						<p className="text-center text-[24px] font-semibold text-black">
+							{item.value}
+						</p>
+						{item.editable && item.onEdit && (
+							<button
+								onClick={item.onEdit}
+								className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+								title="Editar"
+							>
+								<Edit size={18} color="#898989" />
+							</button>
+						)}
+					</div>
 					<div className="h-px w-full max-w-[360px] bg-[#D8D8D8]" />
 				</div>
 			))}
@@ -46,6 +61,7 @@ export default function LimnigrafoDetailsCard({
 	description,
 	status,
 	statusLabel = "Estado",
+	onEditDescription,
 }: LimnigrafoDetailsCardProps) {
 	return (
 		<section
@@ -95,9 +111,20 @@ export default function LimnigrafoDetailsCard({
 
 			<footer className="pt-6 text-center">
 				<p className="text-[20px] font-normal text-[#838383]">Descripción</p>
-				<p className="mt-2 text-[24px] font-semibold text-black">
-					{description}
-				</p>
+				<div className="flex items-center justify-center gap-2 mt-2">
+					<p className="text-[24px] font-semibold text-black">
+						{description || "Sin descripción"}
+					</p>
+					{onEditDescription && (
+						<button
+							onClick={onEditDescription}
+							className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+							title="Editar descripción"
+						>
+							<Edit size={18} color="#898989" />
+						</button>
+					)}
+				</div>
 			</footer>
 
 		</section>

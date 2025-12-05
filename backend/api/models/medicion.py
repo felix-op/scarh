@@ -2,7 +2,7 @@ from django.db import models
 
 class Medicion(models.Model):
     fecha_hora = models.DateTimeField()#por ahora diria que no se calcula automaticamente
-    altura = models.FloatField()
+    altura_agua = models.FloatField()
     presion = models.FloatField(null=True, blank=True)
     temperatura = models.FloatField(null=True, blank=True)
     nivel_de_bateria = models.FloatField(null=True, blank=True)
