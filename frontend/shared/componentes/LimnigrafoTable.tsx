@@ -27,6 +27,7 @@ type LimnigrafoTableProps = {
 	searchValue?: string;
 	onSearchChange?: (value: string) => void;
 	onFilterClick?: () => void;
+	onEditClick?: (limnigrafo: LimnigrafoRowData) => void;
 	className?: string;
 	showActions?: boolean;
 };
@@ -42,7 +43,7 @@ const baseColumnTitles = [
 const ACCION_COLUMN_TITLE = "Acciones";
 
 const columnasTablaBase = "200px repeat(4, minmax(0, 1fr))";
-const columnasTablaConAccion = `${columnasTablaBase} 150px`;
+const columnasTablaConAccion = `${columnasTablaBase} 240px`;
 
 export default function LimnigrafoTable({
 											data,
@@ -50,6 +51,7 @@ export default function LimnigrafoTable({
 											searchValue = "",
 											onSearchChange,
 											onFilterClick,
+											onEditClick,
 											showActions = false,
 										}: LimnigrafoTableProps) {
 	function handleSearchChange(valor: string) {
@@ -126,6 +128,7 @@ export default function LimnigrafoTable({
 						key={row.id}
 						data={row}
 						showActions={showActions}
+						onEditClick={onEditClick}
 					/>
 				))}
 			</div>
@@ -136,11 +139,13 @@ export default function LimnigrafoTable({
 type LimnigrafoTableRowProps = {
 	data: LimnigrafoRowData;
 	showActions?: boolean;
+	onEditClick?: (limnigrafo: LimnigrafoRowData) => void;
 };
 
 export function LimnigrafoTableRow({
 									   data,
 									   showActions = false,
+									   onEditClick,
 								   }: LimnigrafoTableRowProps) {
 	const router = useRouter();
 
@@ -148,6 +153,10 @@ export function LimnigrafoTableRow({
 		router.push(
 			`/limnigrafos/detalleLimnigrafo?id=${encodeURIComponent(data.id)}`,
 		);
+	}
+
+	function handleEdit() {
+		onEditClick?.(data);
 	}
 
 	const celdas: CeldaRenglonDatos[] = [
@@ -161,10 +170,30 @@ export function LimnigrafoTableRow({
 	if (showActions) {
 		celdas.push({
 			contenido: (
-				<Boton
-					type="button"
-					onClick={handleViewMore}
-					className="
+				<div className="flex gap-2 justify-end">
+					<Boton
+						type="button"
+						onClick={handleEdit}
+						className="
+            !mx-0
+            !h-[42px]
+            !rounded-[24px]
+            !px-[18px]
+            !bg-[#E8F4FB]
+            !text-[#0982C8]
+            gap-2
+            border
+            border-[#0982C8]/20
+            shadow-[0px_2px_6px_rgba(0,0,0,0.12)]
+            hover:!bg-[#D0E9F7]
+          "
+					>
+						<span className="text-[16px] font-medium">Editar</span>
+					</Boton>
+					<Boton
+						type="button"
+						onClick={handleViewMore}
+						className="
             !mx-0
             !h-[42px]
             !rounded-[24px]
@@ -177,10 +206,11 @@ export function LimnigrafoTableRow({
             shadow-[0px_2px_6px_rgba(0,0,0,0.12)]
             hover:!bg-[#E8E8E8]
           "
-				>
-					<ChevronRightIcon size={18} color="#7F7F7F" />
-					<span className="text-[16px] font-medium">Ver más</span>
-				</Boton>
+					>
+						<ChevronRightIcon size={18} color="#7F7F7F" />
+						<span className="text-[16px] font-medium">Ver más</span>
+					</Boton>
+				</div>
 			),
 			clase: "!justify-end",
 		});

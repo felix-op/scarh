@@ -12,6 +12,7 @@ import {
 	useGetLimnigrafos,
 	useGetMediciones,
 	usePostLimnigrafo,
+	usePutLimnigrafo,
 	type LimnigrafoPaginatedResponse,
 	type MedicionPaginatedResponse
 } from "@servicios/api/django.api";
@@ -55,6 +56,8 @@ export default function Home() {
 	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
 	const [mostrarFormulario, setMostrarFormulario] = useState(false);
+	const [modoEdicion, setModoEdicion] = useState(false);
+	const [limnigrafoEditando, setLimnigrafoEditando] = useState<string | null>(null);
 	const [formValues, setFormValues] = useState(FORM_STATE);
 	const [formError, setFormError] = useState<string | null>(null);
 	const [persistError, setPersistError] = useState<string | null>(null);
@@ -79,11 +82,25 @@ export default function Home() {
 			onSuccess: () => {
 				setMostrarFormulario(false);
 				resetForm();
-				// Recargar la lista de limnígrafos
 				refetchLimnigrafos();
 			},
 			onError: (error: Error) => {
 				setPersistError(error.message || "Error al crear el limnígrafo");
+			},
+		}
+	});
+
+	// Hook para editar limnígrafos existentes
+	const putLimnigrafo = usePutLimnigrafo({
+		params: { id: limnigrafoEditando || "" },
+		configuracion: {
+			onSuccess: () => {
+				setMostrarFormulario(false);
+				resetForm();
+				refetchLimnigrafos();
+			},
+			onError: (error: Error) => {
+				setPersistError(error.message || "Error al actualizar el limnígrafo");
 			},
 		}
 	});
@@ -140,6 +157,42 @@ export default function Home() {
 	function resetForm() {
 		setFormValues(FORM_STATE);
 		setFormError(null);
+		setModoEdicion(false);
+		setLimnigrafoEditando(null);
+	}
+
+	function abrirFormularioCrear() {
+		resetForm();
+		setMostrarFormulario(true);
+	}
+
+	function abrirFormularioEditar(limnigrafoRow: { id: string; nombre: string }) {
+		// Buscar el limnígrafo original del backend usando el ID
+		const limnigrafosArray = Array.isArray(limnigrafos) 
+			? limnigrafos 
+			: limnigrafos?.results;
+		
+		// Extraer el número del ID (ej: "lim-1" -> 1)
+		const idNumerico = parseInt(limnigrafoRow.id.replace(/\D/g, ''));
+		const limnigrafoBackend = limnigrafosArray?.find(l => l.id === idNumerico);
+		
+		if (limnigrafoBackend) {
+			setFormValues({
+				codigo: limnigrafoBackend.codigo,
+				descripcion: limnigrafoBackend.descripcion || "",
+				memoria: limnigrafoBackend.memoria.toString(),
+				tipo_comunicacion: [],
+				bateria_max: limnigrafoBackend.bateria_max.toString(),
+				bateria_min: limnigrafoBackend.bateria_min.toString(),
+				tiempo_advertencia: limnigrafoBackend.tiempo_advertencia.toString(),
+				tiempo_peligro: limnigrafoBackend.tiempo_peligro.toString(),
+				ultimo_mantenimiento: limnigrafoBackend.ultimo_mantenimiento || "",
+				ubicacion_id: limnigrafoBackend.ubicacion?.id?.toString() || "",
+			});
+			setLimnigrafoEditando(limnigrafoBackend.id.toString());
+			setModoEdicion(true);
+			setMostrarFormulario(true);
+		}
 	}
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -201,7 +254,11 @@ export default function Home() {
 		console.log("Payload a enviar:", payload);
 
 		try {
-			await postLimnigrafo.mutateAsync({ data: payload });
+			if (modoEdicion) {
+				await putLimnigrafo.mutateAsync({ data: payload });
+			} else {
+				await postLimnigrafo.mutateAsync({ data: payload });
+			}
 			// onSuccess del hook se encargará de cerrar el modal y resetear el form
 		} catch (error: any) {
 			// onError del hook se encargará de mostrar el error
@@ -250,6 +307,7 @@ export default function Home() {
 								<DialogTrigger asChild>
 									<Boton
 										type="button"
+										onClick={abrirFormularioCrear}
 										className="
 	                !mx-0
 	                !bg-[#F4F4F4]
@@ -264,7 +322,7 @@ export default function Home() {
 	              "
 									>
 										<span className="text-[17px] font-semibold">
-											{mostrarFormulario ? "Cerrar formulario" : "Añadir Limnígrafo"}
+											Añadir Limnígrafo
 										</span>
 									</Boton>
 								</DialogTrigger>
@@ -273,12 +331,15 @@ export default function Home() {
 					<DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto rounded-[24px] border-none bg-white shadow-[0px_4px_12px_rgba(0,0,0,0.15)]">
 						<DialogHeader className="text-left">
 							<DialogTitle className="text-[24px] text-[#333]">
-								Nuevo Limnigrafo
+								{modoEdicion ? "Editar Limnigrafo" : "Nuevo Limnigrafo"}
 							</DialogTitle>
 							<DialogDescription className="text-[16px] text-[#666]">
-										Completa los datos principales y presiona &quot;Crear Limnigrafo&quot;.
-									</DialogDescription>
-								</DialogHeader>
+								{modoEdicion 
+									? "Modifica los datos y presiona \"Actualizar Limnigrafo\"."
+									: "Completa los datos principales y presiona \"Crear Limnigrafo\"."
+								}
+							</DialogDescription>
+						</DialogHeader>
 								{formError ? (
 									<p className="mt-1 text-[15px] text-red-500">{formError}</p>
 								) : null}
@@ -419,7 +480,10 @@ export default function Home() {
 											disabled={isPersisting}
 											className="!mx-0 !h-[44px] !px-8 disabled:opacity-60"
 										>
-											{isPersisting ? "Guardando..." : "Crear Limnigrafo"}
+											{isPersisting 
+												? (modoEdicion ? "Actualizando..." : "Guardando...") 
+												: (modoEdicion ? "Actualizar Limnigrafo" : "Crear Limnigrafo")
+											}
 										</Boton>
 									</div>
 								</form>
@@ -433,6 +497,7 @@ export default function Home() {
 							onFilterClick={() => {
 								console.log("Filtro por aplicar");
 							}}
+							onEditClick={abrirFormularioEditar}
 							showActions
 						/>
 						{(isLoadingLimnigrafos || isLoadingMediciones) ? (
