@@ -172,8 +172,6 @@ export function transformarLimnigrafoConMedicion(
 		
 		// Datos extra (pueden agregarse más según necesidad)
 		datosExtra: [
-			{ label: "Código", value: limnigrafo.codigo },
-			{ label: "Estado", value: limnigrafo.estado },
 			{ label: "Batería máx", value: `${limnigrafo.bateria_max}V` },
 			{ label: "Batería mín", value: `${limnigrafo.bateria_min}V` },
 		],

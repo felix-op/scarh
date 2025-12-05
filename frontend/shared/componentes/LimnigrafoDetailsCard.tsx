@@ -10,6 +10,9 @@ type InfoItem = {
   label: string;
   value: string;
   editable?: boolean;
+  isEditing?: boolean;
+  onChange?: (value: string) => void;
+  placeholder?: string;
   onEdit?: () => void;
 };
 
@@ -19,6 +22,8 @@ type LimnigrafoDetailsCardProps = {
   measurements: InfoItem[];
   extraData: InfoItem[];
   description: string;
+  isEditingDescription?: boolean;
+  onDescriptionChange?: (value: string) => void;
   status: EstadoLimnigrafo;
   statusLabel?: string;
   onEditDescription?: () => void;
@@ -33,10 +38,21 @@ function InfoColumn({ items }: { items: InfoItem[] }) {
 						{item.label}
 					</p>
 					<div className="flex items-center gap-2">
-						<p className="text-center text-[24px] font-semibold text-black">
-							{item.value}
-						</p>
-						{item.editable && item.onEdit && (
+						{item.isEditing && item.onChange ? (
+							<input
+								type="text"
+								value={item.value}
+								onChange={(e) => item.onChange?.(e.target.value)}
+								placeholder={item.placeholder}
+								className="text-center text-[24px] font-semibold text-black border-2 border-blue-400 rounded-lg px-3 py-1 focus:outline-none focus:border-blue-600 bg-blue-50"
+								autoFocus
+							/>
+						) : (
+							<p className="text-center text-[24px] font-semibold text-black">
+								{item.value}
+							</p>
+						)}
+						{item.editable && item.onEdit && !item.isEditing && (
 							<button
 								onClick={item.onEdit}
 								className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
@@ -59,6 +75,8 @@ export default function LimnigrafoDetailsCard({
 	measurements,
 	extraData,
 	description,
+	isEditingDescription,
+	onDescriptionChange,
 	status,
 	statusLabel = "Estado",
 	onEditDescription,
@@ -112,10 +130,20 @@ export default function LimnigrafoDetailsCard({
 			<footer className="pt-6 text-center">
 				<p className="text-[20px] font-normal text-[#838383]">Descripción</p>
 				<div className="flex items-center justify-center gap-2 mt-2">
-					<p className="text-[24px] font-semibold text-black">
-						{description || "Sin descripción"}
-					</p>
-					{onEditDescription && (
+					{isEditingDescription && onDescriptionChange ? (
+						<textarea
+							value={description}
+							onChange={(e) => onDescriptionChange(e.target.value)}
+							className="text-center text-[24px] font-semibold text-black border-2 border-blue-400 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-600 bg-blue-50 min-h-[100px] w-full max-w-[800px] resize-y"
+							placeholder="Ingrese una descripción"
+							autoFocus
+						/>
+					) : (
+						<p className="text-[24px] font-semibold text-black">
+							{description || "Sin descripción"}
+						</p>
+					)}
+					{onEditDescription && !isEditingDescription && (
 						<button
 							onClick={onEditDescription}
 							className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
