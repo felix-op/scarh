@@ -29,7 +29,9 @@ from rest_framework import serializers
                         'is_superuser': serializers.BooleanField(),
                         'is_staff': serializers.BooleanField(),
                     }
-                )
+                ),
+                'access_token_lifetime': serializers.IntegerField(),
+                'refresh_token_lifetime': serializers.IntegerField()
             }
         )
     }
