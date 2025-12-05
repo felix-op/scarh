@@ -16,75 +16,45 @@ import {
 	DialogTrigger,
 } from "@componentes/components/ui/dialog";
 import {
-	type LimnigrafoDetalleData,
-	LIMNIGRAFOS,
-} from "@data/limnigrafos";
-
-type LimnigrafoStorePayload = {
-	limnigrafos?: LimnigrafoDetalleData[];
-};
+	useGetLimnigrafo,
+	useDeleteLimnigrafo,
+	usePachtLimnigrafo,
+} from "@servicios/api/django.api";
+import { transformarLimnigrafoConMedicion } from "@lib/transformers/limnigrafoTransformer";
 
 function DetalleLimnigrafoContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const selectedId = searchParams.get("id");
-	const [limnigrafosData, setLimnigrafosData] = useState<LimnigrafoDetalleData[]>([]);
-	const [isLoadingStore, setIsLoadingStore] = useState(true);
-	const [storeError, setStoreError] = useState<string | null>(null);
-
-	useEffect(() => {
-		let cancelado = false;
-
-		async function cargarStore() {
-			try {
-				const response = await fetch("/api/limnigrafos");
-				if (!response.ok) {
-					throw new Error("No se pudo leer el archivo de limnigrafos.");
-				}
-
-				const data = (await response.json()) as LimnigrafoStorePayload;
-				if (cancelado) {
-					return;
-				}
-
-				if (data.limnigrafos && data.limnigrafos.length > 0) {
-					setLimnigrafosData(data.limnigrafos);
-				} else {
-					setLimnigrafosData(LIMNIGRAFOS);
-				}
-				setStoreError(null);
-			} catch (error) {
-				if (!cancelado) {
-					setStoreError(
-						error instanceof Error
-							? error.message
-							: "No se pudo cargar el archivo de limnigrafos.",
-					);
-					setLimnigrafosData(LIMNIGRAFOS);
-				}
-			} finally {
-				if (!cancelado) {
-					setIsLoadingStore(false);
-				}
-			}
+	
+	// Obtener limnígrafo del backend
+	const { data: limnigrafoData, isLoading, refetch } = useGetLimnigrafo({
+		params: { id: selectedId || "" },
+		configuracion: {
+			enabled: !!selectedId, // Solo hacer fetch si hay ID
 		}
+	});
+	
+	// Hook para eliminar limnígrafo
+	const deleteLimnigrafo = useDeleteLimnigrafo({
+		params: { id: selectedId || "" },
+		configuracion: {
+			onSuccess: () => {
+				router.push("/limnigrafos");
+			},
+			onError: (error: Error) => {
+				setDeleteError(error.message || "Error al eliminar el limnígrafo");
+				setIsDeleting(false);
+			},
+		}
+	});
 
-		void cargarStore();
-
-		return () => {
-			cancelado = true;
-		};
-	}, []);
-
+	// Transformar datos del backend a formato frontend
 	const limnigrafo = useMemo(() => {
-		if (!limnigrafosData.length) {
-			return null;
-		}
-		if (!selectedId) {
-			return limnigrafosData[0];
-		}
-		return limnigrafosData.find((item) => item.id === selectedId) ?? limnigrafosData[0];
-	}, [selectedId, limnigrafosData]);
+		if (!limnigrafoData || Object.keys(limnigrafoData).length === 0) return null;
+		// Cast para asegurar el tipo correcto
+		return transformarLimnigrafoConMedicion(limnigrafoData as any);
+	}, [limnigrafoData]);
 
 	const [descripcion, setDescripcion] = useState("");
 	const [estaEditandoDescripcion, setEstaEditandoDescripcion] = useState(false);
@@ -196,24 +166,7 @@ function DetalleLimnigrafoContent() {
 
 		setIsDeleting(true);
 		setDeleteError(null);
-		try {
-			const response = await fetch("/api/limnigrafos", {
-				method: "DELETE",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ id: limnigrafo.id }),
-			});
-
-			if (!response.ok) {
-				throw new Error("No se pudo eliminar el limnigrafo.");
-			}
-
-			router.push("/limnigrafos");
-		} catch (error) {
-			setDeleteError(
-				error instanceof Error ? error.message : "Error desconocido al eliminar.",
-			);
-			setIsDeleting(false);
-		}
+		deleteLimnigrafo.mutate({});
 	}
 
 	return (
@@ -248,9 +201,6 @@ function DetalleLimnigrafoContent() {
 							</Boton>
 						</a>
 					</div>
-					{storeError ? (
-						<p className="text-sm text-red-500">{storeError}</p>
-					) : null}
 
 					{detalles ? (
 						<>
@@ -548,7 +498,7 @@ function DetalleLimnigrafoContent() {
 						</>
 					) : (
 						<div className="w-full rounded-3xl bg-white p-10 text-center text-[#4B4B4B]">
-							{isLoadingStore
+							{isLoading
 								? "Cargando datos del limnigrafo..."
 								: "No hay limnigrafos disponibles para mostrar."}
 						</div>
