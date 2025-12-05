@@ -35,7 +35,7 @@ import "time"
 
 type Medicion struct {
 	FechaHora      time.Time `json:"fecha_hora"`
-	Altura         float64   `json:"altura"`
+	Altura         float64   `json:"altura_agua"`
 	Presion        *float64  `json:"presion,omitempty"`
 	Temperatura    *float64  `json:"temperatura,omitempty"`
 	NivelDeBateria *float64  `json:"nivel_de_bateria,omitempty"`

@@ -29,9 +29,11 @@ function formatTimestamp(timestamp: string) {
 		day: "2-digit",
 		month: "2-digit",
 		year: "numeric",
+		timeZone: "America/Argentina/Buenos_Aires",
 	})} ${fecha.toLocaleTimeString("es-AR", {
 		hour: "2-digit",
 		minute: "2-digit",
+		timeZone: "America/Argentina/Buenos_Aires",
 	})}`;
 }
 
