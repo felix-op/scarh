@@ -128,10 +128,8 @@ export function transformarLimnigrafoConMedicion(
 		// ID como string (frontend lo espera así)
 		id: String(limnigrafo.id),
 		
-		// Nombre: combinar código + descripción
-		nombre: limnigrafo.descripcion 
-			? `${limnigrafo.codigo} - ${limnigrafo.descripcion}`
-			: limnigrafo.codigo,
+		// Nombre: solo el código del limnígrafo
+		nombre: limnigrafo.codigo,
 		
 		// Ubicación: nombre de la ubicación
 		ubicacion: limnigrafo.ubicacion?.nombre || "Sin ubicación",
