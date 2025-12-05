@@ -1,5 +1,5 @@
 # Configuración con tokens reales (NO commitear - seguridad crítica)
-config.yaml
+
 
 # Backups de configuración
 config.yaml.backup_*

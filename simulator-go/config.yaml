@@ -9,8 +9,8 @@ limnigrafos:
       temperatura_max: 25
       presion_min: 950
       presion_max: 1050
-      bateria_min: 10
-      bateria_max: 100
+      bateria_min: 10.0
+      bateria_max: 13.0
       probabilidad_falla: 0.15
       duracion_falla_min: 25
     - id: 4
@@ -21,8 +21,8 @@ limnigrafos:
       temperatura_max: 25
       presion_min: 950
       presion_max: 1050
-      bateria_min: 10
-      bateria_max: 100
+      bateria_min: 10.0
+      bateria_max: 13.0
       probabilidad_falla: 0.10
       duracion_falla_min: 20
     - id: 3
@@ -33,8 +33,8 @@ limnigrafos:
       temperatura_max: 25
       presion_min: 950
       presion_max: 1050
-      bateria_min: 10
-      bateria_max: 100
+      bateria_min: 10.0
+      bateria_max: 13.0
       probabilidad_falla: 0.20
       duracion_falla_min: 30
     - id: 1
@@ -45,8 +45,8 @@ limnigrafos:
       temperatura_max: 25
       presion_min: 950
       presion_max: 1050
-      bateria_min: 10
-      bateria_max: 100
+      bateria_min: 10.0
+      bateria_max: 13.0
       probabilidad_falla: 0.05
       duracion_falla_min: 15
     - id: 2
@@ -57,7 +57,7 @@ limnigrafos:
       temperatura_max: 25
       presion_min: 950
       presion_max: 1050
-      bateria_min: 10
-      bateria_max: 100
+      bateria_min: 10.0
+      bateria_max: 13.0
       probabilidad_falla: 0.12
       duracion_falla_min: 20
