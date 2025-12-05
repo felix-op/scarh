@@ -9,6 +9,13 @@ import {
 	type LimnigrafoDetalleData,
 	LIMNIGRAFOS,
 } from "@data/limnigrafos";
+import {
+	useGetLimnigrafos,
+	useGetMediciones,
+	type LimnigrafoPaginatedResponse,
+	type MedicionPaginatedResponse,
+} from "@servicios/api/django.api";
+import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
 
 export type MapViewProps = {
 	resizeToken?: number;
@@ -44,44 +51,73 @@ function AutoResizeMap({ resizeToken = 0 }: { resizeToken: number }) {
 }
 
 const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
-	const [limnigrafos, setLimnigrafos] =
-		useState<LimnigrafoDetalleData[]>(LIMNIGRAFOS);
+	const {
+		data: limnigrafosData,
+		isLoading: isLoadingLimnigrafos,
+	} = useGetLimnigrafos({
+		config: {
+			refetchInterval: 300000,
+		},
+	});
+	const {
+		data: medicionesData,
+		isLoading: isLoadingMediciones,
+	} = useGetMediciones({
+		config: {
+			refetchInterval: 300000,
+		},
+	});
 
-	useEffect(() => {
-		let cancelado = false;
+	const limnigrafosResponse =
+		limnigrafosData as LimnigrafoPaginatedResponse | undefined;
+	const medicionesResponse =
+		medicionesData as MedicionPaginatedResponse | undefined;
 
-		async function cargarStore() {
-			try {
-				const response = await fetch("/api/limnigrafos");
-				if (!response.ok) {
-					throw new Error("No se pudo leer el archivo de limnigrafos.");
-				}
+	const limnigrafosTransformados = useMemo(() => {
+		const limnigrafosArray = Array.isArray(limnigrafosResponse)
+			? limnigrafosResponse
+			: limnigrafosResponse?.results;
 
-				const data = (await response.json()) as {
-					limnigrafos?: LimnigrafoDetalleData[];
-				};
-				if (cancelado) {
-					return;
-				}
-
-				if (data.limnigrafos && data.limnigrafos.length > 0) {
-					setLimnigrafos(data.limnigrafos);
-				} else {
-					setLimnigrafos(LIMNIGRAFOS);
-				}
-			} catch {
-				if (!cancelado) {
-					setLimnigrafos(LIMNIGRAFOS);
-				}
-			}
+		if (!limnigrafosArray || limnigrafosArray.length === 0) {
+			return [];
 		}
 
-		void cargarStore();
+		const medicionesArray = medicionesResponse?.results ?? [];
+		const medicionesMap = new Map(
+			medicionesArray.map((medicion) => [medicion.limnigrafo, medicion]),
+		);
 
-		return () => {
-			cancelado = true;
-		};
-	}, []);
+		return transformarLimnigrafos(limnigrafosArray, medicionesMap);
+	}, [limnigrafosResponse, medicionesResponse]);
+
+	const limnigrafos =
+		limnigrafosTransformados.length > 0 ? limnigrafosTransformados : LIMNIGRAFOS;
+	const [selectedLimnigrafo, setSelectedLimnigrafo] =
+		useState<LimnigrafoDetalleData | null>(null);
+
+	useEffect(() => {
+		if (!limnigrafos.length) {
+			if (selectedLimnigrafo !== null) {
+				setSelectedLimnigrafo(null);
+			}
+			return;
+		}
+
+		if (!selectedLimnigrafo) {
+			setSelectedLimnigrafo(limnigrafos[0]);
+			return;
+		}
+
+		const actualizado = limnigrafos.find(
+			(item) => item.id === selectedLimnigrafo.id,
+		);
+
+		if (!actualizado) {
+			setSelectedLimnigrafo(limnigrafos[0]);
+		} else if (actualizado !== selectedLimnigrafo) {
+			setSelectedLimnigrafo(actualizado);
+		}
+	}, [limnigrafos, selectedLimnigrafo]);
 
 	const markers = useMemo(
 		() =>
@@ -94,8 +130,8 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 	);
 
 	const mapCenter = markers[0]?.coordenadas ?? DEFAULT_CENTER;
-	const [selectedLimnigrafo, setSelectedLimnigrafo] =
-		useState<LimnigrafoDetalleData | null>(null);
+	const estaCargando = isLoadingLimnigrafos || isLoadingMediciones;
+	const usandoDatosSimulados = limnigrafosTransformados.length === 0;
 
 	return (
 		<div className="relative h-full w-full">
@@ -130,6 +166,16 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 				limnigrafo={selectedLimnigrafo}
 				onClose={() => setSelectedLimnigrafo(null)}
 			/>
+			{estaCargando ? (
+				<div className="absolute left-1/2 top-4 z-[1000] -translate-x-1/2 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-slate-600 shadow">
+					Cargando limnígrafos desde el backend...
+				</div>
+			) : null}
+			{!estaCargando && usandoDatosSimulados ? (
+				<div className="absolute left-1/2 top-4 z-[900] -translate-x-1/2 rounded-full bg-amber-100 px-4 py-2 text-xs font-semibold text-amber-900 shadow">
+					Mostrando datos simulados (sin respuesta del backend)
+				</div>
+			) : null}
 		</div>
 	);
 };

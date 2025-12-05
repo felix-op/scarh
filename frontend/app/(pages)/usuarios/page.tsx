@@ -331,11 +331,11 @@ export default function UsersAdminPage() {
 							</Boton>
 						</header>
 
-						<div>
+						{/*<div>
 							<BotonFeo onClick={onPost}>Añadir usuario</BotonFeo>
 							<BotonFeo onClick={onPut}>Editar usuario</BotonFeo>
 							<BotonFeo onClick={onDelete}>Eliminar usuario</BotonFeo>
-						</div>
+						</div>*/}
 
 						<div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)]">
 					<UserListCard

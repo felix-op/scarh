@@ -1,7 +1,6 @@
 "use client";
 
 import { DeleteButton, EditButton } from "./UserActionButtons";
-import { signOut } from "next-auth/react";
 
 type EstadoVariant = "activo" | "inactivo" | "pendiente" | "suspendido";
 
@@ -134,13 +133,6 @@ export function UserInfoCard({
 	const passwordDisplay = maskPassword(password);
 	const initials = getInitials(nombre, apellido);
 
-	const handleLogout = () => {
-		signOut({
-			callbackUrl: "/",
-			redirect: true,
-		});
-	};
-
 	const infoColumns = [
 		[
 			{ label: "Nombre", value: nombre },
@@ -169,26 +161,6 @@ export function UserInfoCard({
         ${className}
       `}
 		>
-			{/* BOTÓN DE CERRAR SESIÓN */}
-			<button
-				onClick={handleLogout}
-				className="
-					absolute
-					top-6
-					right-6
-					text-white
-					bg-black
-					hover:bg-zinc-900
-					font-semibold
-					py-3 px-6           /* ← más grande */
-					rounded-lg          /* ← más estético */
-					text-base           /* ← texto más grande */
-					shadow-md
-				"
-			>
-				Cerrar sesión
-			</button>
-
 			<h2
 				className="
           text-center text-3xl md:text-4xl

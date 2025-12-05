@@ -3,11 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Boton from "@componentes/Boton";
-import { type LimnigrafoDetalleData, LIMNIGRAFOS } from "@data/limnigrafos";
-
-type LimnigrafoStorePayload = {
-	limnigrafos?: LimnigrafoDetalleData[];
-};
+import { LIMNIGRAFOS } from "@data/limnigrafos";
+import {
+	useGetLimnigrafos,
+	useGetMediciones,
+	type LimnigrafoPaginatedResponse,
+	type MedicionPaginatedResponse,
+} from "@servicios/api/django.api";
+import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
 
 type RegistroImportado = {
 	id: string;
@@ -22,6 +25,20 @@ const MANUAL_DEFAULT = {
 	altura: "",
 	temperatura: "",
 };
+
+function parseDatoNumerico(valor: string): number | null {
+	if (!valor) {
+		return null;
+	}
+
+	const normalizado = valor.replace(/[^\d.,-]/g, "").replace(",", ".");
+	if (!normalizado) {
+		return null;
+	}
+
+	const numero = Number.parseFloat(normalizado);
+	return Number.isFinite(numero) ? numero : null;
+}
 
 function TablaDatos({ registros }: { registros: RegistroImportado[] }) {
 	return (
@@ -102,79 +119,75 @@ function FormularioManual({
 function ImportarDatosContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const [limnigrafosData, setLimnigrafosData] = useState<LimnigrafoDetalleData[]>([]);
+	const {
+		data: limnigrafosData,
+		isLoading: isLoadingLimnigrafos,
+		error: errorLimnigrafos,
+	} = useGetLimnigrafos({
+		config: {
+			refetchInterval: 300000,
+		},
+	});
+	const {
+		data: medicionesData,
+		isLoading: isLoadingMediciones,
+		error: errorMediciones,
+	} = useGetMediciones({
+		config: {
+			refetchInterval: 300000,
+		},
+	});
+	const limnigrafosResponse =
+		limnigrafosData as LimnigrafoPaginatedResponse | undefined;
+	const medicionesResponse =
+		medicionesData as MedicionPaginatedResponse | undefined;
+	const limnigrafosTransformados = useMemo(() => {
+		const limnigrafosArray = Array.isArray(limnigrafosResponse)
+			? limnigrafosResponse
+			: limnigrafosResponse?.results;
+
+		if (!limnigrafosArray || limnigrafosArray.length === 0) {
+			return [];
+		}
+
+		const medicionesArray = medicionesResponse?.results ?? [];
+		const medicionesMap = new Map(
+			medicionesArray.map((medicion) => [medicion.limnigrafo, medicion]),
+		);
+
+		return transformarLimnigrafos(limnigrafosArray, medicionesMap);
+	}, [limnigrafosResponse, medicionesResponse]);
+	const limnigrafosDisponibles =
+		limnigrafosTransformados.length > 0 ? limnigrafosTransformados : LIMNIGRAFOS;
 	const [selectedLimnigrafoId, setSelectedLimnigrafoId] = useState("");
-	const [isLoadingStore, setIsLoadingStore] = useState(true);
-	const [storeError, setStoreError] = useState<string | null>(null);
 	const [registros, setRegistros] = useState<RegistroImportado[]>([]);
 	const [manualValues, setManualValues] = useState(MANUAL_DEFAULT);
 	const [mensaje, setMensaje] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [isSaving, setIsSaving] = useState(false);
 	const inputArchivoRef = useRef<HTMLInputElement | null>(null);
-
-	useEffect(() => {
-		let cancelado = false;
-
-		async function cargarStore() {
-			try {
-				const response = await fetch("/api/limnigrafos");
-				if (!response.ok) {
-					throw new Error("No se pudo leer el archivo de limnigrafos.");
-				}
-
-				const data = (await response.json()) as LimnigrafoStorePayload;
-				if (cancelado) {
-					return;
-				}
-
-				if (data.limnigrafos && data.limnigrafos.length > 0) {
-					setLimnigrafosData(data.limnigrafos);
-				} else {
-					setLimnigrafosData(LIMNIGRAFOS);
-				}
-				setStoreError(null);
-			} catch (err) {
-				if (!cancelado) {
-					setStoreError(
-						err instanceof Error
-							? err.message
-							: "No se pudo cargar el archivo de limnigrafos.",
-					);
-					setLimnigrafosData(LIMNIGRAFOS);
-				}
-			} finally {
-				if (!cancelado) {
-					setIsLoadingStore(false);
-				}
-			}
-		}
-
-		void cargarStore();
-
-		return () => {
-			cancelado = true;
-		};
-	}, []);
+	const backendError =
+		errorLimnigrafos?.message ?? errorMediciones?.message ?? null;
+	const isLoadingStore = isLoadingLimnigrafos || isLoadingMediciones;
 
 	useEffect(() => {
 		const paramId = searchParams.get("id");
 		if (paramId && paramId !== selectedLimnigrafoId) {
 			setSelectedLimnigrafoId(paramId);
-		} else if (!paramId && !selectedLimnigrafoId && limnigrafosData[0]) {
-			setSelectedLimnigrafoId(limnigrafosData[0].id);
+		} else if (!paramId && !selectedLimnigrafoId && limnigrafosDisponibles[0]) {
+			setSelectedLimnigrafoId(limnigrafosDisponibles[0].id);
 		}
-	}, [searchParams, limnigrafosData, selectedLimnigrafoId]);
+	}, [searchParams, limnigrafosDisponibles, selectedLimnigrafoId]);
 
 	const limnigrafo = useMemo(() => {
-		if (!limnigrafosData.length) {
+		if (!limnigrafosDisponibles.length) {
 			return null;
 		}
 		return (
-			limnigrafosData.find((item) => item.id === selectedLimnigrafoId) ??
-			limnigrafosData[0]
+			limnigrafosDisponibles.find((item) => item.id === selectedLimnigrafoId) ??
+			limnigrafosDisponibles[0]
 		);
-	}, [limnigrafosData, selectedLimnigrafoId]);
+	}, [limnigrafosDisponibles, selectedLimnigrafoId]);
 
 	function handleManualChange(
 		campo: keyof typeof MANUAL_DEFAULT,
@@ -265,7 +278,7 @@ function ImportarDatosContent() {
 
 	async function guardarCambios() {
 		if (!limnigrafo) {
-			setError("No se encontro un limnigrafo seleccionado.");
+			setError("No se encontró un limnígrafo seleccionado.");
 			return;
 		}
 
@@ -274,12 +287,21 @@ function ImportarDatosContent() {
 			return;
 		}
 
-		const payload = registros.map((registro, index) => ({
-			id: registro.id || `registro-${Date.now()}-${index}`,
-			temperatura: registro.temperatura,
-			altura: registro.altura,
-			presion: registro.presion,
-			timestamp: registro.fecha ?? new Date().toISOString(),
+		const limnigrafoIdNumero = Number.parseInt(limnigrafo.id, 10);
+		if (Number.isNaN(limnigrafoIdNumero)) {
+			setError(
+				"El limnígrafo seleccionado no tiene un identificador válido del backend.",
+			);
+			return;
+		}
+
+		const payload = registros.map((registro) => ({
+			limnigrafo: limnigrafoIdNumero,
+			fecha_hora: registro.fecha ?? new Date().toISOString(),
+			temperatura: parseDatoNumerico(registro.temperatura),
+			altura_agua: parseDatoNumerico(registro.altura),
+			presion: parseDatoNumerico(registro.presion),
+			nivel_de_bateria: null,
 		}));
 
 		setIsSaving(true);
@@ -287,17 +309,27 @@ function ImportarDatosContent() {
 		setMensaje(null);
 
 		try {
-			const response = await fetch(`/api/limnigrafos/${limnigrafo.id}/mediciones`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ mediciones: payload }),
-			});
+			for (const medicion of payload) {
+				const response = await fetch("/api/proxy/medicion/", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(medicion),
+				});
 
-			if (!response.ok) {
-				throw new Error("No se pudieron almacenar las mediciones.");
+				if (!response.ok) {
+					const detail = await response.json().catch(() => ({}));
+					const detalleMensaje =
+						typeof detail === "string"
+							? detail
+							: detail?.detail ?? detail?.error ?? null;
+					throw new Error(
+						detalleMensaje ?? "No se pudieron almacenar las mediciones.",
+					);
+				}
 			}
 
-			setMensaje("Las mediciones se guardaron en el archivo correctamente.");
+			setMensaje("Las mediciones se enviaron al backend correctamente.");
+			setRegistros([]);
 		} catch (err) {
 			setError(
 				err instanceof Error
@@ -325,8 +357,18 @@ function ImportarDatosContent() {
 							</span>
 						</p>
 					</header>
-					{storeError ? (
-						<p className="text-sm text-red-500">{storeError}</p>
+					{backendError ? (
+						<p className="text-sm text-red-500">{backendError}</p>
+					) : null}
+					{isLoadingStore ? (
+						<p className="text-sm text-[#6B7280]">
+							Cargando limnígrafos desde el backend...
+						</p>
+					) : null}
+					{!isLoadingStore && limnigrafosTransformados.length === 0 ? (
+						<p className="text-sm text-amber-700">
+							Mostrando datos simulados mientras el backend no responde.
+						</p>
 					) : null}
 
 					<section className="flex flex-col gap-4 rounded-[32px] bg-[#F8F9FB] p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.1)]">
