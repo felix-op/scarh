@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth";
-import { authOptions } from '@auth/route';
+import { authOptions } from '../../auth/[...nextauth]/auth-options';
 
 const DJANGO_API_URL = process.env.NEXT_PUBLIC_API_URL;
 

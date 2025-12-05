@@ -6,15 +6,6 @@ import LimnigrafoDetailsCard from "@componentes/LimnigrafoDetailsCard";
 import Boton from "@componentes/Boton";
 import { AddIcon, Documet, Edit, Map as MapIcon, Ruler } from "@componentes/icons/Icons";
 import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@componentes/components/ui/dialog";
-import {
 	useGetLimnigrafo,
 	useDeleteLimnigrafo,
 	usePachtLimnigrafo,
@@ -54,8 +45,6 @@ function DetalleLimnigrafoContent() {
 		configuracion: {
 			onSuccess: () => {
 				refetch(); // Recargar datos actualizados
-				setEstaEditandoDatos(false);
-				setEstaEditandoDescripcion(false);
 			},
 			onError: (error: Error) => {
 				setErrorDatos(error.message || "Error al actualizar el limnígrafo");
@@ -82,6 +71,7 @@ function DetalleLimnigrafoContent() {
 	const [errorDatos, setErrorDatos] = useState<string | null>(null);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [mostrarConfirmacionEliminar, setMostrarConfirmacionEliminar] = useState(false);
 	const estaEditando = estaEditandoDescripcion || estaEditandoDatos;
 
 	useEffect(() => {
@@ -100,11 +90,13 @@ function DetalleLimnigrafoContent() {
 	const detalles = limnigrafo
 		? {
 				identification: [
-					{ label: "ID", value: limnigrafo.id, editable: false },
+					{ label: "ID de Limnígrafo", value: limnigrafo.id, editable: false },
 					{ 
 						label: "Limnigrafo", 
-						value: nombre,
+						value: estaEditandoDatos ? nombreTemporal : nombre,
 						editable: true,
+						isEditing: estaEditandoDatos,
+						onChange: (value: string) => setNombreTemporal(value),
 						onEdit: () => {
 							setNombreTemporal(nombre);
 							setEstaEditandoDatos(true);
@@ -113,10 +105,13 @@ function DetalleLimnigrafoContent() {
 					{ label: "Bateria", value: limnigrafo.bateria, editable: false },
 					{
 						label: "Ultimo Mantenimiento",
-						value: ultimoMantenimiento || "Sin información",
+						value: estaEditandoDatos ? ultimoMantenimientoTemporal : (ultimoMantenimiento || "Sin información"),
 						editable: true,
+						isEditing: estaEditandoDatos,
+						onChange: (value: string) => setUltimoMantenimientoTemporal(value),
+						placeholder: "DD/MM/AAAA",
 						onEdit: () => {
-							setUltimoMantenimientoTemporal(ultimoMantenimiento);
+							setUltimoMantenimientoTemporal(ultimoMantenimiento || "");
 							setEstaEditandoDatos(true);
 						}
 					},
@@ -127,7 +122,9 @@ function DetalleLimnigrafoContent() {
 					{ label: "Presion", value: limnigrafo.presion, editable: false },
 				],
 				extraData: limnigrafo.datosExtra.map(item => ({ ...item, editable: false })),
-				description: descripcion,
+				description: estaEditandoDescripcion ? descripcionTemporal : descripcion,
+				isEditingDescription: estaEditandoDescripcion,
+				onDescriptionChange: (value: string) => setDescripcionTemporal(value),
 				status: limnigrafo.estado,
 			}
 		: null;
@@ -146,7 +143,7 @@ function DetalleLimnigrafoContent() {
 			}
 		});
 		
-		// Cerrar modal
+		// Salir del modo edición
 		setEstaEditandoDescripcion(false);
 	}
 
@@ -155,15 +152,21 @@ function DetalleLimnigrafoContent() {
 		if (!data?.id) return;
 		
 		const regexFecha = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
-		if (ultimoMantenimientoTemporal && !regexFecha.test(ultimoMantenimientoTemporal)) {
+		
+		// Limpiar el valor (considerar "Sin información" como vacío)
+		const fechaLimpia = ultimoMantenimientoTemporal && ultimoMantenimientoTemporal.trim() !== "" && ultimoMantenimientoTemporal !== "Sin información" 
+			? ultimoMantenimientoTemporal.trim() 
+			: "";
+		
+		if (fechaLimpia && !regexFecha.test(fechaLimpia)) {
 			setErrorDatos("El formato debe ser DD/MM/AAAA");
 			return;
 		}
 
 		// Convertir DD/MM/AAAA a YYYY-MM-DD para el backend
 		let fechaBackend: string | null = null;
-		if (ultimoMantenimientoTemporal) {
-			const [dia, mes, año] = ultimoMantenimientoTemporal.split('/');
+		if (fechaLimpia) {
+			const [dia, mes, año] = fechaLimpia.split('/');
 			fechaBackend = `${año}-${mes}-${dia}`;
 		}
 
@@ -180,26 +183,19 @@ function DetalleLimnigrafoContent() {
 		});
 		
 		setErrorDatos(null);
-		// Cerrar modal
+		// Salir del modo edición
 		setEstaEditandoDatos(false);
 	}
 
-	function handleDescripcionDialogChange(isOpen: boolean) {
-		if (isOpen) {
-			setDescripcionTemporal(descripcion);
-		}
-		setEstaEditandoDescripcion(isOpen);
-	}
-
-	function handleDatosDialogChange(isOpen: boolean) {
-		if (isOpen) {
-			setNombreTemporal(nombre);
-			setUltimoMantenimientoTemporal(ultimoMantenimiento);
-			setErrorDatos(null);
-		} else {
-			setErrorDatos(null);
-		}
-		setEstaEditandoDatos(isOpen);
+	function cancelarEdicion() {
+		// Restaurar valores originales
+		setNombreTemporal(nombre);
+		setUltimoMantenimientoTemporal(ultimoMantenimiento || "");
+		setDescripcionTemporal(descripcion);
+		// Cerrar modo edición
+		setEstaEditandoDatos(false);
+		setEstaEditandoDescripcion(false);
+		setErrorDatos(null);
 	}
 
 	function irAPaginaImportacion() {
@@ -220,14 +216,23 @@ function DetalleLimnigrafoContent() {
 		router.push(url);
 	}
 
-	async function handleDelete() {
+	function handleDelete() {
+		setMostrarConfirmacionEliminar(true);
+	}
+
+	async function confirmarEliminar() {
 		if (!limnigrafo?.id || isDeleting) {
 			return;
 		}
 
 		setIsDeleting(true);
 		setDeleteError(null);
+		setMostrarConfirmacionEliminar(false);
 		deleteLimnigrafo.mutate({});
+	}
+
+	function cancelarEliminar() {
+		setMostrarConfirmacionEliminar(false);
 	}
 
 	return (
@@ -255,86 +260,135 @@ function DetalleLimnigrafoContent() {
 
 					{detalles ? (
 						<>
-							<div className="relative flex w-full justify-center">
-								{estaEditando && (
-									<div className="absolute -top-16 right-8 flex gap-3">
-										<Boton
-											onClick={() => {
-												setEstaEditandoDatos(false);
-												setEstaEditandoDescripcion(false);
-												setNombreTemporal(nombre);
-												setUltimoMantenimientoTemporal(ultimoMantenimiento);
-												setDescripcionTemporal(descripcion);
-											}}
-											className="
-												!mx-0
-												!bg-[#F3F3F3]
-												!text-[#7F7F7F]
-												!h-[40px]
-												!px-5
-												text-[14px]
-												shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
-												hover:!bg-[#e8e8e8]
-											"
-										>
-											Cancelar
-										</Boton>
-										<Boton
-											onClick={() => {
-												if (estaEditandoDatos) guardarDatos();
-												if (estaEditandoDescripcion) guardarDescripcion();
-											}}
-											className="
-												!mx-0
-												!h-[40px]
-												!px-5
-												text-[14px]
-												shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
-											"
-										>
-											Guardar
-										</Boton>
-									</div>
-								)}
-								<LimnigrafoDetailsCard
+					<div className="relative flex w-full justify-center">
+						{estaEditando && (
+							<Boton
+								onClick={cancelarEdicion}
+								className="
+									!mx-0
+									!bg-[#F3F3F3]
+									!text-[#7F7F7F]
+									!h-[40px]
+									!px-5
+									text-[14px]
+									shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
+									hover:!bg-[#e8e8e8]
+									absolute
+									top-6
+									left-8
+								"
+							>
+								Cancelar
+							</Boton>
+						)}
+						
+						{/* Botón Eliminar - solo visible cuando NO está editando */}
+						{!estaEditando && (
+							<Boton
+								onClick={handleDelete}
+								disabled={isDeleting}
+								className="
+									!mx-0
+									!bg-[#FDECEC]
+									!text-[#B42318]
+									!h-[40px]
+									!px-5
+									text-[14px]
+									shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
+									hover:!bg-[#f8dede]
+									gap-2
+									disabled:opacity-60
+									absolute
+									top-6
+									left-8
+								"
+							>
+								{isDeleting ? "Eliminando..." : "Eliminar limnigrafo"}
+							</Boton>
+						)}								<LimnigrafoDetailsCard
 									title="Datos Limnigrafo"
 									identification={detalles.identification}
 									measurements={detalles.measurements}
 									extraData={detalles.extraData}
 									description={detalles.description}
+									isEditingDescription={detalles.isEditingDescription}
+									onDescriptionChange={detalles.onDescriptionChange}
 									status={detalles.status}
 									onEditDescription={() => {
 										setDescripcionTemporal(descripcion);
 										setEstaEditandoDescripcion(true);
 									}}
 								/>
-								<Boton
-									onClick={handleDelete}
-									disabled={isDeleting}
-									className={`
-										!mx-0
-										!bg-[#FDECEC]
-										!text-[#B42318]
-										!h-[40px]
-										!px-5
-										text-[14px]
-										shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
-										hover:!bg-[#f8dede]
-										gap-2
-										disabled:opacity-60
-										absolute
-										top-6
-										transition-all
-										duration-200
-										${estaEditando ? 'right-[calc(100%+2rem)]' : 'right-8'}
-									`}
-								>
-									{isDeleting ? "Eliminando..." : "Eliminar limnigrafo"}
-								</Boton>
+								
+								{/* Botón Guardar - lado derecho (solo cuando está editando) */}
+								{estaEditando && (
+									<Boton
+										onClick={() => {
+											if (estaEditandoDatos) guardarDatos();
+											if (estaEditandoDescripcion) guardarDescripcion();
+										}}
+										className="
+											!mx-0
+											!h-[40px]
+											!px-5
+											text-[14px]
+											shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
+											absolute
+											top-6
+											right-8
+										"
+									>
+										Guardar
+									</Boton>
+								)}
 							</div>
 							{deleteError ? (
 								<p className="text-sm text-red-500">{deleteError}</p>
 							) : null}
+
+							{/* Modal de confirmación de eliminación */}
+							{mostrarConfirmacionEliminar && (
+								<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+									<div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+										<h3 className="text-2xl font-bold text-[#4B4B4B] mb-4">
+											¿Eliminar limnígrafo?
+										</h3>
+										<p className="text-[#6B6B6B] mb-6">
+											Esta acción no se puede deshacer. El limnígrafo <span className="font-semibold">{limnigrafo?.nombre}</span> será eliminado permanentemente.
+										</p>
+										<div className="flex gap-3 justify-end">
+											<Boton
+												onClick={cancelarEliminar}
+												className="
+													!mx-0
+													!bg-[#F3F3F3]
+													!text-[#7F7F7F]
+													!h-[44px]
+													!px-6
+													hover:!bg-[#e8e8e8]
+												"
+											>
+												Cancelar
+											</Boton>
+											<Boton
+												onClick={confirmarEliminar}
+												disabled={isDeleting}
+												className="
+													!mx-0
+													!bg-[#B42318]
+													!text-white
+													!h-[44px]
+													!px-6
+													hover:!bg-[#9a1e13]
+													disabled:opacity-60
+												"
+											>
+												{isDeleting ? "Eliminando..." : "Eliminar"}
+											</Boton>
+										</div>
+									</div>
+								</div>
+							)}
 
 							<div className="flex w-full max-w-[1200px] flex-wrap items-center justify-center gap-4">
 								<Boton
@@ -408,110 +462,6 @@ function DetalleLimnigrafoContent() {
 									<span className="text-[16px] font-medium">Agregar ubicacion</span>
 								</Boton>
 							</div>
-
-							{/* Modal para editar datos del limnígrafo */}
-							<Dialog open={estaEditandoDatos} onOpenChange={setEstaEditandoDatos}>
-								<DialogContent className="w-full max-w-[640px] rounded-2xl border-none bg-white p-6 shadow-[0px_12px_30px_rgba(0,0,0,0.25)]">
-									<DialogHeader className="items-start">
-										<p className="text-[14px] font-medium uppercase tracking-[0.08em] text-[#0982C8]">
-											Datos limnigrafo
-										</p>
-										<DialogTitle className="text-[24px] font-semibold text-[#4B4B4B]">
-											Editar limnigrafo
-										</DialogTitle>
-										<DialogDescription className="text-[15px] text-[#6B6B6B]">
-											Modifica el nombre y la fecha de último mantenimiento.
-										</DialogDescription>
-									</DialogHeader>
-
-									<div className="mt-5 flex flex-col gap-4">
-										<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
-											Limnigrafo
-											<input
-												type="text"
-												value={nombreTemporal}
-												onChange={(event) => setNombreTemporal(event.target.value)}
-												className="
-													rounded-xl
-													border
-													border-[#D3D4D5]
-													p-3
-													text-[16px]
-													text-[#4B4B4B]
-													outline-none
-													focus:border-[#0982C8]
-												"
-												placeholder="Nombre del limnigrafo"
-											/>
-										</label>
-
-										<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
-											Último mantenimiento (DD/MM/AAAA)
-											<input
-												type="text"
-												value={ultimoMantenimientoTemporal}
-												onChange={(event) =>
-													setUltimoMantenimientoTemporal(event.target.value)
-												}
-												className="
-													rounded-xl
-													border
-													border-[#D3D4D5]
-													p-3
-													text-[16px]
-													text-[#4B4B4B]
-													outline-none
-													focus:border-[#0982C8]
-												"
-												placeholder="DD/MM/AAAA"
-											/>
-											{errorDatos ? (
-												<span className="text-[14px] font-normal text-red-500">
-													{errorDatos}
-												</span>
-											) : null}
-										</label>
-									</div>
-								</DialogContent>
-							</Dialog>
-
-							{/* Modal para editar descripción */}
-							<Dialog open={estaEditandoDescripcion} onOpenChange={setEstaEditandoDescripcion}>
-								<DialogContent className="w-full max-w-[640px] rounded-2xl border-none bg-white p-6 shadow-[0px_12px_30px_rgba(0,0,0,0.25)]">
-									<DialogHeader className="items-start">
-										<p className="text-[14px] font-medium uppercase tracking-[0.08em] text-[#0982C8]">
-											Descripcion
-										</p>
-										<DialogTitle className="text-[24px] font-semibold text-[#4B4B4B]">
-											Editar descripcion
-										</DialogTitle>
-									</DialogHeader>
-
-									<div className="mt-5">
-										<label className="mb-2 block text-[16px] font-semibold text-[#4B4B4B]">
-											Nueva descripcion
-										</label>
-										<textarea
-											value={descripcionTemporal}
-											onChange={(event) =>
-												setDescripcionTemporal(event.target.value)
-											}
-											className="
-												w-full
-												rounded-xl
-												border
-												border-[#D3D4D5]
-												p-3
-												text-[16px]
-												text-[#4B4B4B]
-												outline-none
-												focus:border-[#0982C8]
-											"
-											rows={5}
-										/>
-									</div>
-								</DialogContent>
-							</Dialog>
 						</>
 					) : (
 						<div className="w-full rounded-3xl bg-white p-10 text-center text-[#4B4B4B]">
