@@ -31,7 +31,14 @@ export type LimnigrafoResponse = {
 		longitud: number,
 		latitud: number,
 		nombre: string,
-	} | null // Puede ser null si no tiene ubicación asignada
+	} | null, // Puede ser null si no tiene ubicación asignada
+	ultima_medicion: {
+		id: number,
+		fecha_hora: string,
+		altura: number | null,
+		temperatura: number | null,
+		presion: number | null,
+	} | null, // Puede ser null si no tiene mediciones
 };
 
 // Respuesta paginada del backend para limnígrafos

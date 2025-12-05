@@ -109,7 +109,7 @@ export function formatearMedicion(valor: number | null, unidad: string): string 
  * 
  * Esta función es el núcleo del transformador. Toma:
  * - Datos del limnígrafo (del endpoint /limnigrafos/)
- * - Última medición (del endpoint /medicion/?limnigrafo={id}&limit=1)
+ * - El limnígrafo ya incluye ultima_medicion en su respuesta
  * 
  * Y devuelve el formato exacto que esperan los componentes del frontend.
  */
@@ -117,6 +117,9 @@ export function transformarLimnigrafoConMedicion(
 	limnigrafo: LimnigrafoResponse,
 	ultimaMedicion?: MedicionResponse
 ) {
+	// Usar ultima_medicion del propio limnígrafo o el parámetro opcional
+	const medicion = ultimaMedicion || limnigrafo.ultima_medicion;
+	
 	// El backend ahora devuelve ultima_conexion como timestamp completo ISO 8601
 	// Ejemplo: "2025-12-05T01:23:28.002536+00:00"
 	const timestampCompleto = limnigrafo.ultima_conexion || null;
@@ -147,16 +150,16 @@ export function transformarLimnigrafoConMedicion(
 		estado: mapearEstado(limnigrafo.estado),
 		
 		// Datos de la última medición (si existe)
-		temperatura: ultimaMedicion 
-			? formatearMedicion(ultimaMedicion.temperatura, "°")
+		temperatura: medicion 
+			? formatearMedicion(medicion.temperatura, "°")
 			: "N/A",
 		
-		altura: ultimaMedicion 
-			? formatearMedicion(ultimaMedicion.altura, " mts")
+		altura: medicion 
+			? formatearMedicion(medicion.altura, " mts")
 			: "N/A",
 		
-		presion: ultimaMedicion 
-			? formatearMedicion(ultimaMedicion.presion, " bar")
+		presion: medicion 
+			? formatearMedicion(medicion.presion, " bar")
 			: "N/A",
 		
 		// Datos adicionales (para página de detalle)

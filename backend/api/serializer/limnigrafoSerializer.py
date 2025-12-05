@@ -12,6 +12,7 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
     ubicacion = UbicacionSerializer(read_only=True)
     estado = serializers.CharField(read_only=True)
     ultima_conexion = serializers.DateTimeField(read_only=True)
+    ultima_medicion = serializers.SerializerMethodField()
     ubicacion_id = serializers.PrimaryKeyRelatedField(
         queryset=Ubicacion.objects.all(),
         source='ubicacion',
@@ -19,6 +20,19 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    
+    def get_ultima_medicion(self, obj):
+        """Retorna la última medición del limnígrafo con altura, temperatura y presión"""
+        ultima = obj.mediciones.order_by('-fecha_hora').first()
+        if ultima:
+            return {
+                'id': ultima.id,
+                'fecha_hora': ultima.fecha_hora,
+                'altura': ultima.altura,
+                'temperatura': ultima.temperatura,
+                'presion': ultima.presion,
+            }
+        return None
     class Meta:
         model = Limnigrafo
         fields = [
@@ -37,4 +51,5 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
             'estado',
             'ubicacion',
             'ubicacion_id',
+            'ultima_medicion',
         ]
