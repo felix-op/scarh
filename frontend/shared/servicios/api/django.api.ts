@@ -238,7 +238,7 @@ export function useDeleteLimnigrafo({ params, configuracion }: UseDeleteLimngraf
 export type MedicionResponse = {
 	id: number,
 	fecha_hora: string, // ISO 8601: "2025-12-04T18:14:03.142454Z"
-	altura: number | null, // Nivel del agua en metros
+	altura_agua: number | null, // Nivel del agua en metros
 	presion: number | null, // Presión atmosférica en hPa
 	temperatura: number | null, // Temperatura en grados Celsius
 	nivel_de_bateria: number | null, // Nivel de batería en porcentaje (0-100)
