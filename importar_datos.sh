@@ -16,7 +16,7 @@ echo ""
 read -p "¿Deseas importar los datos de limnígrafos? (s/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Ss]$ ]]; then
-    echo "📥 Importando datos..."
+    echo "📥 Importando datos desde backend/api/fixtures/datos_limnigrafos.json..."
     docker exec scarh_backend_dev python manage.py loaddata datos_limnigrafos.json
     echo ""
     echo "✅ Importación completada"
