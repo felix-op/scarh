@@ -1,9 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import LimnigrafoTable from "@componentes/LimnigrafoTable";
-import { Nav } from "@componentes/Nav";
 import type { LimnigrafoDetalleData } from "@data/limnigrafos";
 import type { VarianteEstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
 import Boton from "@componentes/Boton";
@@ -53,7 +51,6 @@ type LimnigrafoStorePayload = {
 };
 
 export default function Home() {
-	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
 	const [mostrarFormulario, setMostrarFormulario] = useState(false);
 	const [modoEdicion, setModoEdicion] = useState(false);
@@ -285,11 +282,6 @@ export default function Home() {
 	return (
 		<PaginaBase>
 			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-				<Nav
-					userName="Juan Perez"
-					userEmail="juan.perez@scarh.com"
-					onProfileClick={() => router.push("/perfil")}
-				/>
 
 				<main className="flex flex-1 items-start justify-center px-6 py-10">
 					<div className="flex w-full max-w-[1568px] flex-col gap-6">

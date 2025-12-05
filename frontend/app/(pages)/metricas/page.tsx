@@ -2,8 +2,6 @@
 
 import PaginaBase from "@componentes/base/PaginaBase";
 import MetricaCard from "@componentes/MetricaCard";
-import { Nav } from "@componentes/Nav";
-import { useRouter } from "next/navigation";
 
 function GraphPlaceholder({
 	title,
@@ -100,16 +98,10 @@ const METEORO_METRICAS = [
 ];
 
 export default function MetricasPage() {
-	const router = useRouter();
 
 	return (
 		<PaginaBase>
 			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-				<Nav
-					userName="Juan Perez"
-					userEmail="juan.perez@scarh.com"
-					onProfileClick={() => router.push("/perfil")}
-				/>
 
 				<main className="flex flex-1 justify-center px-6 py-10">
 					<div className="flex w-full max-w-[1568px] flex-col gap-8">

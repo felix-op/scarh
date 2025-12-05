@@ -1,8 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Nav } from "@componentes/Nav";
 import UserInfoCard from "@componentes/UserInfoCard";
 import UserListCard from "@componentes/UserListCard";
 import { TextField } from "@componentes/TextField";
@@ -181,8 +179,6 @@ export default function UsersAdminPage() {
 		deleteUser({});
 	}
 
-	const router = useRouter();
-
 	const [usuarios, setUsuarios] = useState<Usuario[]>(USUARIOS_LISTA);
 	const [selectedId, setSelectedId] = useState<string | undefined>(
 		USUARIOS_LISTA[0]?.id,
@@ -316,11 +312,6 @@ export default function UsersAdminPage() {
 	return (
 		<PaginaBase>
 			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-				<Nav
-					userName="Juan Perez"
-					userEmail="juan.perez@scarh.com"
-					onProfileClick={() => router.push("/perfil")}
-				/>
 
 				<main className="flex flex-1 justify-center px-6 py-10">
 					<div className="flex w-full max-w-[1350px] flex-col gap-8">
