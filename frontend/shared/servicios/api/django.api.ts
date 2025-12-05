@@ -35,7 +35,7 @@ export type LimnigrafoResponse = {
 	ultima_medicion: {
 		id: number,
 		fecha_hora: string,
-		altura: number | null,
+		altura_agua: number | null,
 		temperatura: number | null,
 		presion: number | null,
 	} | null, // Puede ser null si no tiene mediciones

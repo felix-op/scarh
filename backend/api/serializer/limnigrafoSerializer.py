@@ -28,7 +28,7 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
             return {
                 'id': ultima.id,
                 'fecha_hora': ultima.fecha_hora,
-                'altura': ultima.altura,
+                'altura_agua': ultima.altura_agua,
                 'temperatura': ultima.temperatura,
                 'presion': ultima.presion,
             }

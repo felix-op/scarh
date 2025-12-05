@@ -9,7 +9,7 @@ class MedicionSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'fecha_hora',
-            'altura',
+            'altura_agua',
             'presion',
             'temperatura',
             'nivel_de_bateria',

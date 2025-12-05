@@ -155,7 +155,7 @@ export function transformarLimnigrafoConMedicion(
 			: "N/A",
 		
 		altura: medicion 
-			? formatearMedicion(medicion.altura, " mts")
+			? formatearMedicion(medicion.altura_agua, " mts")
 			: "N/A",
 		
 		presion: medicion 
