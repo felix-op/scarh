@@ -47,6 +47,10 @@ type LimnigrafoConfig struct {
 	PresionMax     float64 `yaml:"presion_max"`
 	BateriaMin     float64 `yaml:"bateria_min"`
 	BateriaMax     float64 `yaml:"bateria_max"`
+	// Probabilidad de falla (0.0 = nunca falla, 1.0 = siempre falla)
+	ProbabilidadFalla float64 `yaml:"probabilidad_falla"`
+	// Duración de la falla en minutos (cuánto tiempo sin enviar datos)
+	DuracionFallaMin int `yaml:"duracion_falla_min"`
 }
 
 func LoadConfig(path string) (*Config, error) {

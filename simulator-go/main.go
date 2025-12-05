@@ -68,10 +68,13 @@ func main() {
 func runLimnigrafo(wg *sync.WaitGroup, cfg LimnigrafoConfig, globalCfg *Config) {
 	defer wg.Done()
 
-	// Inicializar estado del limnígrafo (sin uso actualmente, preparado para futuro)
+	// Inicializar estado del limnígrafo
 	state := LimnigrafoState{}
+	enFalla := false
+	tiempoFinFalla := time.Now()
 
-	Info(fmt.Sprintf("Limnígrafo #%d iniciado", cfg.ID))
+	Info(fmt.Sprintf("Limnígrafo #%d iniciado (prob. falla: %.1f%%, duración: %dmin)", 
+		cfg.ID, cfg.ProbabilidadFalla*100, cfg.DuracionFallaMin))
 
 	// Ticker para generar mediciones periódicamente
 	ticker := time.NewTicker(time.Duration(globalCfg.IntervalSeconds) * time.Second)
@@ -80,6 +83,28 @@ func runLimnigrafo(wg *sync.WaitGroup, cfg LimnigrafoConfig, globalCfg *Config) 
 	for {
 		select {
 		case <-ticker.C:
+			// Verificar si está en periodo de falla
+			if enFalla {
+				if time.Now().Before(tiempoFinFalla) {
+					Warning(fmt.Sprintf("Limnígrafo #%d - En falla, no enviando datos (termina en %s)", 
+						cfg.ID, time.Until(tiempoFinFalla).Round(time.Second)))
+					continue
+				} else {
+					// Fin de la falla
+					enFalla = false
+					Success(fmt.Sprintf("Limnígrafo #%d - Recuperado de falla, reanudando envíos", cfg.ID))
+				}
+			}
+
+			// Probabilidad de entrar en falla
+			if !enFalla && rand.Float64() < cfg.ProbabilidadFalla {
+				enFalla = true
+				duracion := time.Duration(cfg.DuracionFallaMin) * time.Minute
+				tiempoFinFalla = time.Now().Add(duracion)
+				Warning(fmt.Sprintf("Limnígrafo #%d - INICIANDO FALLA por %d minutos", cfg.ID, cfg.DuracionFallaMin))
+				continue
+			}
+
 			// Generar medición
 			medicion := GenerateMeasurement(cfg, &state)
 
