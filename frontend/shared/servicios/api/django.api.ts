@@ -183,7 +183,7 @@ type UsePachtLimngrafoOptions = {
 		id: string,
 	}
 	configuracion?: MutationConfig<
-		LimnigrafoPutRequest,
+		LimnigrafoPatchRequest,
 		LimnigrafoResponse,
 		ParamsBase
 	>

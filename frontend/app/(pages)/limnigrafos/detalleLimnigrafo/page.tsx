@@ -48,6 +48,21 @@ function DetalleLimnigrafoContent() {
 			},
 		}
 	});
+	
+	// Hook para actualizar limnígrafo (PATCH)
+	const patchLimnigrafo = usePachtLimnigrafo({
+		params: { id: selectedId || "" },
+		configuracion: {
+			onSuccess: () => {
+				refetch(); // Recargar datos actualizados
+				setEstaEditandoDatos(false);
+				setEstaEditandoDescripcion(false);
+			},
+			onError: (error: Error) => {
+				setErrorDatos(error.message || "Error al actualizar el limnígrafo");
+			},
+		}
+	});
 
 	// Transformar datos del backend a formato frontend
 	const limnigrafo = useMemo(() => {
@@ -106,20 +121,42 @@ function DetalleLimnigrafoContent() {
 		: null;
 
 	function guardarDescripcion() {
-		setDescripcion(descripcionTemporal);
-		setEstaEditandoDescripcion(false);
+		const data = limnigrafoData as any;
+		if (!data?.id) return;
+		
+		// Actualizar en backend
+		patchLimnigrafo.mutate({
+			data: {
+				descripcion: descripcionTemporal.trim()
+			}
+		});
 	}
 
 	function guardarDatos() {
+		const data = limnigrafoData as any;
+		if (!data?.id) return;
+		
 		const regexFecha = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
-		if (!regexFecha.test(ultimoMantenimientoTemporal)) {
+		if (ultimoMantenimientoTemporal && !regexFecha.test(ultimoMantenimientoTemporal)) {
 			setErrorDatos("El formato debe ser DD/MM/AAAA");
 			return;
 		}
 
-		setNombre(nombreTemporal.trim() || nombre);
-		setUltimoMantenimiento(ultimoMantenimientoTemporal);
-		setEstaEditandoDatos(false);
+		// Convertir DD/MM/AAAA a YYYY-MM-DD para el backend
+		let fechaBackend: string | null = null;
+		if (ultimoMantenimientoTemporal) {
+			const [dia, mes, año] = ultimoMantenimientoTemporal.split('/');
+			fechaBackend = `${año}-${mes}-${dia}`;
+		}
+
+		// Actualizar en backend
+		patchLimnigrafo.mutate({
+			data: {
+				codigo: nombreTemporal.trim() || data.codigo,
+				ultimo_mantenimiento: fechaBackend || undefined
+			}
+		});
+		
 		setErrorDatos(null);
 	}
 
