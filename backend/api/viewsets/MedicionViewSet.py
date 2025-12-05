@@ -50,8 +50,12 @@ class MedicionViewSet(
         medicion_instance = serializer.save()
         limnigrafo = medicion_instance.limnigrafo
         
-        # Actualizar batería actual (valor enviado por el limnígrafo)
-        limnigrafo.bateria_actual = medicion_instance.nivel_de_bateria
+        # Actualizar batería actual solo si el sensor de batería funcionó
+        # Si nivel_de_bateria es None (falla del sensor), mantener el último valor conocido
+        if medicion_instance.nivel_de_bateria is not None:
+            limnigrafo.bateria_actual = medicion_instance.nivel_de_bateria
+        
+        # Siempre actualizar última conexión
         limnigrafo.ultima_conexion = medicion_instance.fecha_hora
         
         # Calcular estado del limnígrafo
