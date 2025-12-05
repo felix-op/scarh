@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import LimnigrafoDetailsCard from "@componentes/LimnigrafoDetailsCard";
 import Boton from "@componentes/Boton";
 import { AddIcon, Documet, Edit, Map as MapIcon, Ruler } from "@componentes/icons/Icons";
-import { Nav } from "@componentes/Nav";
 import {
 	Dialog,
 	DialogClose,
@@ -232,18 +231,8 @@ function DetalleLimnigrafoContent() {
 	}
 
 	return (
-		<div
-			className={`relative flex min-h-screen w-full bg-[#EEF4FB] ${
-				estaEditando ? "overflow-hidden" : ""
-			}`}
-		>
-			<Nav
-				userName="Juan Perez"
-				userEmail="juan.perez@scarh.com"
-				onProfileClick={() => router.push("/perfil")}
-			/>
-
-			<main className="flex flex-1 justify-center px-6 py-10">
+		<div className="flex flex-col w-full h-full">
+			<main className="flex flex-1 justify-center px-6 py-10 bg-[#EEF4FB]">
 				<div className="flex w-full max-w-[1350px] flex-col items-center gap-12">
 					<div className="flex w-full max-w-[1350px] justify-start">
 						<a href="/limnigrafos" className="inline-flex">
