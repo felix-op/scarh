@@ -29,16 +29,24 @@ export function mapearEstado(estadoBackend: string): EstadoLimnigrafo {
 /**
  * Formatea el nivel de batería como string
  * 
- * Entrada: 92.5 (número)
- * Salida: "Bateria 92%" (string)
+ * Calcula el porcentaje basado en bateria_actual, bateria_min y bateria_max
+ * Entrada: bateria=11.5V, min=10.5V, max=13.0V
+ * Salida: "Bateria 40%" (string)
  */
-export function formatearBateria(nivelBateria: number | null): string {
-	if (nivelBateria === null || nivelBateria === undefined) {
+export function formatearBateria(
+	bateriaActual: number | null,
+	bateriaMin: number,
+	bateriaMax: number
+): string {
+	if (bateriaActual === null || bateriaActual === undefined) {
 		return "Bateria N/A";
 	}
 	
-	// Redondear a entero
-	const nivel = Math.round(nivelBateria);
+	// Calcular porcentaje: (actual - min) / (max - min) * 100
+	const porcentaje = ((bateriaActual - bateriaMin) / (bateriaMax - bateriaMin)) * 100;
+	
+	// Redondear a entero y limitar entre 0-100
+	const nivel = Math.max(0, Math.min(100, Math.round(porcentaje)));
 	return `Bateria ${nivel}%`;
 }
 
@@ -101,7 +109,7 @@ export function formatearMedicion(valor: number | null, unidad: string): string 
  * 
  * Esta función es el núcleo del transformador. Toma:
  * - Datos del limnígrafo (del endpoint /limnigrafos/)
- * - Última medición (del endpoint /medicion/?limnigrafo={id}&limit=1)
+ * - El limnígrafo ya incluye ultima_medicion en su respuesta
  * 
  * Y devuelve el formato exacto que esperan los componentes del frontend.
  */
@@ -109,12 +117,12 @@ export function transformarLimnigrafoConMedicion(
 	limnigrafo: LimnigrafoResponse,
 	ultimaMedicion?: MedicionResponse
 ) {
-	// Construir timestamp completo desde ultima_conexion
-	// El backend devuelve solo "HH:MM:SS", necesitamos agregar la fecha
-	const fechaHoy = new Date().toISOString().split('T')[0]; // "2025-12-04"
-	const timestampCompleto = limnigrafo.ultima_conexion 
-		? `${fechaHoy}T${limnigrafo.ultima_conexion}Z`
-		: null;
+	// Usar ultima_medicion del propio limnígrafo o el parámetro opcional
+	const medicion = ultimaMedicion || limnigrafo.ultima_medicion;
+	
+	// El backend ahora devuelve ultima_conexion como timestamp completo ISO 8601
+	// Ejemplo: "2025-12-05T01:23:28.002536+00:00"
+	const timestampCompleto = limnigrafo.ultima_conexion || null;
 
 	return {
 		// ID como string (frontend lo espera así)
@@ -128,8 +136,12 @@ export function transformarLimnigrafoConMedicion(
 		// Ubicación: nombre de la ubicación
 		ubicacion: limnigrafo.ubicacion?.nombre || "Sin ubicación",
 		
-		// Batería: formatear desde número a string
-		bateria: formatearBateria(limnigrafo.bateria),
+		// Batería: formatear con cálculo de porcentaje
+		bateria: formatearBateria(
+			limnigrafo.bateria,
+			limnigrafo.bateria_min,
+			limnigrafo.bateria_max
+		),
 		
 		// Tiempo del último dato: calcular desde última conexión
 		tiempoUltimoDato: calcularTiempoUltimoDato(timestampCompleto),
@@ -138,16 +150,16 @@ export function transformarLimnigrafoConMedicion(
 		estado: mapearEstado(limnigrafo.estado),
 		
 		// Datos de la última medición (si existe)
-		temperatura: ultimaMedicion 
-			? formatearMedicion(ultimaMedicion.temperatura, "°")
+		temperatura: medicion 
+			? formatearMedicion(medicion.temperatura, "°")
 			: "N/A",
 		
-		altura: ultimaMedicion 
-			? formatearMedicion(ultimaMedicion.altura, " mts")
+		altura: medicion 
+			? formatearMedicion(medicion.altura_agua, " mts")
 			: "N/A",
 		
-		presion: ultimaMedicion 
-			? formatearMedicion(ultimaMedicion.presion, " bar")
+		presion: medicion 
+			? formatearMedicion(medicion.presion, " bar")
 			: "N/A",
 		
 		// Datos adicionales (para página de detalle)
@@ -164,8 +176,8 @@ export function transformarLimnigrafoConMedicion(
 		datosExtra: [
 			{ label: "Código", value: limnigrafo.codigo },
 			{ label: "Estado", value: limnigrafo.estado },
-			{ label: "Batería máx", value: `${limnigrafo.bateria_max}%` },
-			{ label: "Batería mín", value: `${limnigrafo.bateria_min}%` },
+			{ label: "Batería máx", value: `${limnigrafo.bateria_max}V` },
+			{ label: "Batería mín", value: `${limnigrafo.bateria_min}V` },
 		],
 	};
 }

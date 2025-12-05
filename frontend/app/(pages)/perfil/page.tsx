@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Nav } from "@componentes/Nav";
 import UserInfoCard from "@componentes/UserInfoCard";
 import PaginaBase from "@componentes/base/PaginaBase";
 
@@ -18,8 +17,6 @@ const USUARIO_DEMO = {
 };
 
 export default function ProfilePage() {
-	const router = useRouter();
-
 	function handleLogout() {
 		// Mismo comportamiento que el botón rojo viejo:
 		// cierra sesión con next-auth y redirige al home.
@@ -32,11 +29,6 @@ export default function ProfilePage() {
 	return (
 		<PaginaBase>
 			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-				<Nav
-					userName="Juan Perez"
-					userEmail="juan.perez@scarh.com"
-					onProfileClick={() => router.push("/perfil")}
-				/>
 
 				<main className="flex flex-1 flex-col items-stretch px-6 py-10">
 

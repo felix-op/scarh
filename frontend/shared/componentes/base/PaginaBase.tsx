@@ -11,7 +11,7 @@ export default function PaginaBase({
 }: PaginaBaseProps) {
 
 	return (
-		<div>
+		<div className="flex">
 			{children}
 		</div>
 	);
