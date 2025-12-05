@@ -24,7 +24,7 @@ export type LimnigrafoResponse = {
 	memoria: number,
 	tiempo_advertencia: number,
 	tiempo_peligro: number,
-	ultima_conexion: string, // Formato "HH:MM:SS"
+	ultima_conexion: string | null, // Timestamp ISO 8601: "2025-12-05T01:23:28.002536+00:00" o null si nunca se conectó
 	estado: string,
 	ubicacion: {
 		id: number,
