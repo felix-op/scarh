@@ -8,6 +8,19 @@ La base de datos es **LOCAL** (cada desarrollador tiene su propia BD en Docker).
 
 ## Solución: Importar datos compartidos
 
+### Paso 0: Configurar variables de entorno
+
+**Backend:**
+```bash
+cp .env.sample .env
+```
+
+**Frontend:**
+```bash
+cd frontend
+cp .env.local.sample .env.local
+```
+
 ### Paso 1: Asegúrate de tener el proyecto corriendo
 
 ```bash
