@@ -21,7 +21,7 @@ class Limnigrafo(models.Model):
     bateria_max = models.FloatField()
     bateria_min = models.FloatField()
     bateria_actual = models.FloatField(null=True)
-    ultima_conexion= models.TimeField(null=True)
+    ultima_conexion = models.DateTimeField(null=True)
     tiempo_advertencia = models.TimeField()
     tiempo_peligro = models.TimeField()
     token_hash = models.CharField(max_length=64, null=True, blank=True)
