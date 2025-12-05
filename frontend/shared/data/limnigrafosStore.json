@@ -430,5 +430,22 @@
       }
     }
   ],
-  "mediciones": {}
+  "mediciones": {
+    "lim-2": [
+      {
+        "id": "manual-1764900459216",
+        "temperatura": "23",
+        "altura": "23",
+        "presion": "13",
+        "timestamp": "2025-12-05T02:07:39.216Z"
+      },
+      {
+        "id": "manual-1764900456136",
+        "temperatura": "23",
+        "altura": "23",
+        "presion": "12",
+        "timestamp": "2025-12-05T02:07:36.136Z"
+      }
+    ]
+  }
 }

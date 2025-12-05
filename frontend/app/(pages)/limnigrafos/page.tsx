@@ -328,18 +328,18 @@ export default function Home() {
 								</DialogTrigger>
 							</div>
 
-					<DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto rounded-[24px] border-none bg-white shadow-[0px_4px_12px_rgba(0,0,0,0.15)]">
-						<DialogHeader className="text-left">
-							<DialogTitle className="text-[24px] text-[#333]">
-								{modoEdicion ? "Editar Limnigrafo" : "Nuevo Limnigrafo"}
-							</DialogTitle>
-							<DialogDescription className="text-[16px] text-[#666]">
-								{modoEdicion 
-									? "Modifica los datos y presiona \"Actualizar Limnigrafo\"."
-									: "Completa los datos principales y presiona \"Crear Limnigrafo\"."
-								}
-							</DialogDescription>
-						</DialogHeader>
+							<DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto rounded-[24px] border-none bg-white shadow-[0px_4px_12px_rgba(0,0,0,0.15)]">
+								<DialogHeader className="text-left">
+									<DialogTitle className="text-[24px] text-[#333]">
+										{modoEdicion ? "Editar Limnigrafo" : "Nuevo Limnigrafo"}
+									</DialogTitle>
+									<DialogDescription className="text-[16px] text-[#666]">
+										{modoEdicion 
+											? "Modifica los datos y presiona \"Actualizar Limnigrafo\"."
+											: "Completa los datos principales y presiona \"Crear Limnigrafo\"."
+										}
+									</DialogDescription>
+								</DialogHeader>
 								{formError ? (
 									<p className="mt-1 text-[15px] text-red-500">{formError}</p>
 								) : null}
@@ -348,124 +348,125 @@ export default function Home() {
 								) : null}
 
 								<form onSubmit={handleSubmit} className="mt-4 grid gap-4">
-							{/* Código (requerido, único) */}
-							<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-								Código *
-								<input
-									type="text"
-									placeholder="Ej: LIM-001"
-									value={formValues.codigo}
-									onChange={(event) => handleChange("codigo", event.target.value)}
-									className="rounded-xl border border-[#D3D4D5] p-2.5"
-									required
-								/>
-							</label>
+									{/* Código (requerido, único) */}
+									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										Código *
+										<input
+											type="text"
+											placeholder="Ej: LIM-001"
+											value={formValues.codigo}
+											onChange={(event) => handleChange("codigo", event.target.value)}
+											className="rounded-xl border border-[#D3D4D5] p-2.5"
+											required
+										/>
+									</label>
 
-							<div className="grid gap-4 md:grid-cols-2">
-								{/* Memoria (requerido) */}
-								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Memoria (MB) *
-									<input
-										type="number"
-										placeholder="Ej: 512"
-										value={formValues.memoria}
-										onChange={(event) => handleChange("memoria", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-2.5"
-										min="1"
-										required
-									/>
-								</label>
+									<div className="grid gap-4 md:grid-cols-2">
+										{/* Memoria (requerido) */}
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Memoria (MB) *
+											<input
+												type="number"
+												placeholder="Ej: 512"
+												value={formValues.memoria}
+												onChange={(event) => handleChange("memoria", event.target.value)}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												min="1"
+												required
+											/>
+										</label>
 
-								{/* Batería Máxima (requerido) */}
-								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Batería Máxima (V) *
-									<input
-										type="number"
-										step="0.01"
-										placeholder="Ej: 12.6"
-										value={formValues.bateria_max}
-										onChange={(event) => handleChange("bateria_max", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-2.5"
-										min="0.01"
-										required
-									/>
-								</label>
+										{/* Batería Máxima (requerido) */}
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Batería Máxima (V) *
+											<input
+												type="number"
+												step="0.01"
+												placeholder="Ej: 12.6"
+												value={formValues.bateria_max}
+												onChange={(event) => handleChange("bateria_max", event.target.value)}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												min="0.01"
+												required
+											/>
+										</label>
 
-								{/* Batería Mínima (requerido) */}
-								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Batería Mínima (V) *
-									<input
-										type="number"
-										step="0.01"
-										placeholder="Ej: 10.5"
-										value={formValues.bateria_min}
-										onChange={(event) => handleChange("bateria_min", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-2.5"
-										min="0.01"
-										required
-									/>
-								</label>								{/* Último Mantenimiento (opcional) */}
-								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Último Mantenimiento
-									<input
-										type="date"
-										value={formValues.ultimo_mantenimiento}
-										onChange={(event) => handleChange("ultimo_mantenimiento", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-2.5"
-									/>
-								</label>
+										{/* Batería Mínima (requerido) */}
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Batería Mínima (V) *
+											<input
+												type="number"
+												step="0.01"
+												placeholder="Ej: 10.5"
+												value={formValues.bateria_min}
+												onChange={(event) => handleChange("bateria_min", event.target.value)}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												min="0.01"
+												required
+											/>
+										</label>								{/* Último Mantenimiento (opcional) */}
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Último Mantenimiento
+											<input
+												type="date"
+												value={formValues.ultimo_mantenimiento}
+												onChange={(event) => handleChange("ultimo_mantenimiento", event.target.value)}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+											/>
+										</label>
 
-								{/* Ubicación ID (opcional) */}
-								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Ubicación (ID)
-									<input
-										type="number"
-										placeholder="ID ubicación (opcional)"
-										value={formValues.ubicacion_id}
-										onChange={(event) => handleChange("ubicacion_id", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-2.5"
-										min="1"
-									/>
-								</label>
+										{/* Ubicación ID (opcional) */}
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Ubicación (ID)
+											<input
+												type="number"
+												placeholder="ID ubicación (opcional)"
+												value={formValues.ubicacion_id}
+												onChange={(event) => handleChange("ubicacion_id", event.target.value)}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												min="1"
+											/>
+										</label>
 
-								{/* Tiempo Advertencia (requerido) */}
-								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Tiempo Advertencia (HH:MM:SS) *
-									<input
-										type="text"
-										placeholder="00:30:00"
-										value={formValues.tiempo_advertencia}
-										onChange={(event) => handleChange("tiempo_advertencia", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-2.5"
-										pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
-										required
-									/>
-								</label>
+										{/* Tiempo Advertencia (requerido) */}
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Tiempo Advertencia (HH:MM:SS) *
+											<input
+												type="text"
+												placeholder="00:30:00"
+												value={formValues.tiempo_advertencia}
+												onChange={(event) => handleChange("tiempo_advertencia", event.target.value)}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
+												required
+											/>
+										</label>
 
-								{/* Tiempo Peligro (requerido) */}
-								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Tiempo Peligro (HH:MM:SS) *
-									<input
-										type="text"
-										placeholder="01:00:00"
-										value={formValues.tiempo_peligro}
-										onChange={(event) => handleChange("tiempo_peligro", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-2.5"
-										pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
-										required
-									/>
-								</label>
-							</div>								{/* Descripción (opcional) - AL FINAL */}
-								<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
-									Descripción
-									<textarea
-										value={formValues.descripcion}
-										onChange={(event) => handleChange("descripcion", event.target.value)}
-										rows={3}
-										className="rounded-xl border border-[#D3D4D5] p-2.5"
-										placeholder="Descripción del limnígrafo..."
-									/>
-								</label>									<div className="mt-4 flex flex-wrap items-center justify-end gap-4">
+										{/* Tiempo Peligro (requerido) */}
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+											Tiempo Peligro (HH:MM:SS) *
+											<input
+												type="text"
+												placeholder="01:00:00"
+												value={formValues.tiempo_peligro}
+												onChange={(event) => handleChange("tiempo_peligro", event.target.value)}
+												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
+												required
+											/>
+										</label>
+									</div>								{/* Descripción (opcional) - AL FINAL */}
+									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										Descripción
+										<textarea
+											value={formValues.descripcion}
+											onChange={(event) => handleChange("descripcion", event.target.value)}
+											rows={3}
+											className="rounded-xl border border-[#D3D4D5] p-2.5"
+											placeholder="Descripción del limnígrafo..."
+										/>
+									</label>									
+									<div className="mt-4 flex flex-wrap items-center justify-end gap-4">
 										<DialogClose asChild>
 											<Boton
 												type="button"
