@@ -1,44 +1,8 @@
 backend_url: http://backend:8000/
 interval_seconds: 300
 limnigrafos:
-- id: 4
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA0Mzk4LCJpYXQiOjE3NjQ4OTcxOTgsImp0aSI6ImRlZGZlZTZkZjVmNTRiNzQ4NTI0NGRiM2FjZGI0NzRkIiwidXNlcl9pZCI6IjUifQ.9bSyI7q8DXwOGV_mY69TH1h-XlJna4Y3vbmAzJMEhqs
-  altura_min: 0.5
-  altura_max: 3.5
-  temperatura_min: -5
-  temperatura_max: 25
-  presion_min: 950
-  presion_max: 1050
-  bateria_min: 10.5
-  bateria_max: 13.0
-  probabilidad_falla: 0.1
-  duracion_falla_min: 20
-- id: 1
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA0Mzk4LCJpYXQiOjE3NjQ4OTcxOTgsImp0aSI6IjcwNGExZjRhMzc2NjQ0Y2U4NGQyMGU4ZjYyODNjOTE3IiwidXNlcl9pZCI6IjYifQ.p5RX1fJaa-ZByTz7fVBEuxd30sl6C_Ae3Bw0ZKxPMag
-  altura_min: 0.5
-  altura_max: 3.5
-  temperatura_min: -5
-  temperatura_max: 25
-  presion_min: 950
-  presion_max: 1050
-  bateria_min: 10.5
-  bateria_max: 13.0
-  probabilidad_falla: 0.1
-  duracion_falla_min: 20
-- id: 3
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA0Mzk4LCJpYXQiOjE3NjQ4OTcxOTgsImp0aSI6ImJjMDAyNmM3NjU5NjRhZTc5M2MzOWU2ZTNiNTRjNjViIiwidXNlcl9pZCI6IjMifQ.uC9w26tLpPmLPGn4S3hgVxgoMMameGBz8bpoccQbNEE
-  altura_min: 0.5
-  altura_max: 3.5
-  temperatura_min: -5
-  temperatura_max: 25
-  presion_min: 950
-  presion_max: 1050
-  bateria_min: 10.5
-  bateria_max: 13.0
-  probabilidad_falla: 0.1
-  duracion_falla_min: 20
 - id: 5
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA0Mzk4LCJpYXQiOjE3NjQ4OTcxOTgsImp0aSI6IjM0MmEwNjJhNjdjNjRjNDE4YmU0YjNmMDEyN2RmM2Q5IiwidXNlcl9pZCI6IjcifQ.goSg0hc11lJEh4rasvCA-Ebh_YIJnbqZIyteZ4JVc6M
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6IjQzY2I1NGVjYTk3NDRlOThhNjBmM2U3YzNhNDkxYTAwIiwidXNlcl9pZCI6IjcifQ.2WH8kXD7jgzQTgSSV8K3Wp0kqzWlNpuDmW4n6bfU-zo
   altura_min: 0.5
   altura_max: 3.5
   temperatura_min: -5
@@ -50,7 +14,7 @@ limnigrafos:
   probabilidad_falla: 0.1
   duracion_falla_min: 20
 - id: 2
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA0Mzk4LCJpYXQiOjE3NjQ4OTcxOTgsImp0aSI6ImM4NGU3NzllMDJlNTRkNThhMDQyZTM5MWFjYTljY2RlIiwidXNlcl9pZCI6IjgifQ.9GHWDSMKLxpPcDKx2ZuoVUe9NBjKR1UiyoaMO7cMZCg
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6IjA0OWFhZTA3NjM3NjRkYmZiZTQzMzZiZjQ3YWJkOGIyIiwidXNlcl9pZCI6IjgifQ.9hId8ssKmBulxW1IkhoUKpmh6yvthPG-OURH3VuBPPA
   altura_min: 0.5
   altura_max: 3.5
   temperatura_min: -5
@@ -62,7 +26,55 @@ limnigrafos:
   probabilidad_falla: 0.1
   duracion_falla_min: 20
 - id: 6
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA0Mzk4LCJpYXQiOjE3NjQ4OTcxOTgsImp0aSI6ImZiODJmMWQ4MWQ3YzRjYjdiYzg5Yzc1ZDRlYWVhMzAxIiwidXNlcl9pZCI6IjkifQ.ahRdwiYjPY_B-PuWmB_AZZtZrqdMPnvsaBM3Zh8lhUw
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6IjI5MzhhYzE0MDJlMDQ0YzI4NWRmNjhjZDkxMzFhYTZmIiwidXNlcl9pZCI6IjkifQ.ocVPlUhrZi46HMLxPv9ADMvLTdROALsalGyopa1WqMQ
+  altura_min: 0.5
+  altura_max: 3.5
+  temperatura_min: -5
+  temperatura_max: 25
+  presion_min: 950
+  presion_max: 1050
+  bateria_min: 10.0
+  bateria_max: 13.0
+  probabilidad_falla: 0.1
+  duracion_falla_min: 20
+- id: 4
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6IjhhNmM1MDBlN2ZjZTQ5OWI5OWY4M2E4NzZiNWIzNmVjIiwidXNlcl9pZCI6IjUifQ.rI6mXE5Eyk0jVySKfBbzH9t-vh8DiZEv5b-IFfb7dUU
+  altura_min: 0.5
+  altura_max: 3.5
+  temperatura_min: -5
+  temperatura_max: 25
+  presion_min: 950
+  presion_max: 1050
+  bateria_min: 10.5
+  bateria_max: 13.0
+  probabilidad_falla: 0.1
+  duracion_falla_min: 20
+- id: 3
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6ImM2ODNjNjA3ZDNkZDQ2NDA4ZGZkZDE0NzNlMTc0YzBlIiwidXNlcl9pZCI6IjMifQ.Q69Q2oPmSqeMBqfEZmpDOpAx6_2dmA9EmtIEStq4RdQ
+  altura_min: 0.5
+  altura_max: 3.5
+  temperatura_min: -5
+  temperatura_max: 25
+  presion_min: 950
+  presion_max: 1050
+  bateria_min: 10.5
+  bateria_max: 13.0
+  probabilidad_falla: 0.1
+  duracion_falla_min: 20
+- id: 1
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6Ijc4OTYxYjg2OTViMzQ5Nzg5MjZlOTE4YjVmNDQ3MGNiIiwidXNlcl9pZCI6IjYifQ.2t8aZXaX8k6KGB5kUHVz0OJl93ZErVY9umYcG1pGf5o
+  altura_min: 0.5
+  altura_max: 3.5
+  temperatura_min: -5
+  temperatura_max: 25
+  presion_min: 950
+  presion_max: 1050
+  bateria_min: 10.5
+  bateria_max: 13.0
+  probabilidad_falla: 0.1
+  duracion_falla_min: 20
+- id: 7
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY0OTA1OTA5LCJpYXQiOjE3NjQ4OTg3MDksImp0aSI6IjQ5NzJkYmVkODIwMTQ5ZTZhMzIzNGExZTUxN2VjNDU5IiwidXNlcl9pZCI6IjEwIn0.gAOgkM6A8h3WGULPjwHSIGLsoIK0PA8se8Z_E_c7y80
   altura_min: 0.5
   altura_max: 3.5
   temperatura_min: -5
