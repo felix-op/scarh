@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import { Providers } from "@componentes/providers/Providers";
+import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 
@@ -20,9 +20,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 	return (
-		<html lang="es" suppressHydrationWarning>
+		<html lang="es" suppressHydrationWarning className="w-full h-full">
 			<body
-				className={`${outfit.variable} font-outfit antialiased`}
+				className={`${outfit.variable} font-outfit antialiased w-full h-full`}
 			>
 				<Providers>
 					{children}

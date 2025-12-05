@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import TablaHome from "@componentes/TablaHome";
-import { Nav } from "@componentes/Nav";
 import PaginaBase from "@componentes/base/PaginaBase";
 import { 
 	useGetLimnigrafos, 
@@ -22,8 +21,6 @@ const estadoPriority: Record<string, number> = {
 };
 
 export default function Home() {
-	const router = useRouter();
-	
 	// Consultar datos reales del backend con auto-refresh cada 5 minutos
 	const { data: limnigrafosData, isLoading: loadingLimnigrafos } = useGetLimnigrafos({
 		config: {
@@ -73,20 +70,12 @@ export default function Home() {
 
 	return (
 		<PaginaBase>
-			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-				<Nav
-					userName="Juan Perez"
-					userEmail="juan.perez@scarh.com"
-					onProfileClick={() => router.push("/perfil")}
+			<main className="flex flex-col flex-1 items-start justify-center px-6 py-10">
+				<TablaHome
+					data={homeLimnigrafos}
+					className="max-h-[50vh] overflow-y-auto"
 				/>
-
-				<main className="flex flex-col flex-1 items-start justify-center px-6 py-10">
-					<TablaHome
-						data={homeLimnigrafos}
-						className="max-h-[50vh] overflow-y-auto"
-					/>
-				</main>
-			</div>
+			</main>
 		</PaginaBase>
 	);
 }
