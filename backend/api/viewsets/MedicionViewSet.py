@@ -93,8 +93,8 @@ class MedicionViewSet(
         tiempo_advertencia_excedido = False
         
         if limnigrafo.ultima_conexion:
-            # Convertir tiempo_advertencia y tiempo_peligro a timedelta
-            tiempo_transcurrido = timezone.now() - fecha_hora_medicion
+            # Calcular tiempo transcurrido desde la última conexión
+            tiempo_transcurrido = timezone.now() - limnigrafo.ultima_conexion
             
             # Convertir TimeField a timedelta
             advertencia_delta = timedelta(
