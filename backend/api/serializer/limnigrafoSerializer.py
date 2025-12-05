@@ -11,7 +11,7 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
     bateria = serializers.FloatField(source='bateria_actual', read_only=True)
     ubicacion = UbicacionSerializer(read_only=True)
     estado = serializers.CharField(read_only=True)
-    ultima_conexion = serializers.TimeField(read_only=True)
+    ultima_conexion = serializers.DateTimeField(read_only=True)
     ubicacion_id = serializers.PrimaryKeyRelatedField(
         queryset=Ubicacion.objects.all(),
         source='ubicacion',
