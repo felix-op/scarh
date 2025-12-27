@@ -4,6 +4,7 @@ from .historialListSerializer import HistorialListSerializer, HistorialDetailSer
 from .medicionSerializer import MedicionSerializer
 from .ubicacionSerializer import UbicacionSerializer, UbicacionOutputSerializer
 from .estadisticaSerializer import EstadisticaInputSerializer, EstadisticaOutputSerializer
+from .customTokenRefreshView import CustomTokenRefreshSerializer
 __all__ = [
     "UsuarioSerializer",
     "LimnigrafoSerializer",
@@ -14,4 +15,5 @@ __all__ = [
     "UbicacionOutputSerializer",
     "EstadisticaInputSerializer",
     "EstadisticaOutputSerializer",
+    "CustomTokenRefreshSerializer",
 ]

@@ -5,9 +5,9 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .serializer.customTokenObtainPairSerializer import CustomTokenObtainPairSerializer
-
+from .serializer.customTokenRefreshView import CustomTokenRefreshSerializer
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 
@@ -55,3 +55,20 @@ class LogoutView(APIView):
 @api_view(['GET'])
 def hola_api(request):
     return Response({'mensaje': 'Hola desde Django REST Framework con estructura core!'})
+
+
+@extend_schema(
+    responses={
+        200: inline_serializer(
+            name='RefreshTokenResponse',
+            fields={
+                'access': serializers.CharField(),
+                'refresh': serializers.CharField(),
+                'access_token_lifetime': serializers.IntegerField(),
+                'refresh_token_lifetime': serializers.IntegerField()
+            }
+        )
+    }
+)
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer
