@@ -1,7 +1,8 @@
 export type IconVariants =
 	"none" | "user1" | "rightArrow" | "newNotification" |
 	"mapa" | "chip" | "documento" | "funcion" | "regla" |
-	"menu_izquierda" | "menu_derecha" | "historial";
+	"menu_izquierda" | "menu_derecha" | "historial" | "documentacion" |
+	"luna" | "sol";
 
 type IconProps = {
     className?: string;
@@ -22,6 +23,9 @@ export default function Icon({ className = "", variant = "none" }: IconProps) {
 		regla: "icon-[raphael--ruler]",
 		menu_izquierda: "icon-[stash--burger-arrow-left]",
 		menu_derecha: "icon-[stash--burger-arrow-right]",
+		documentacion: "icon-[fluent--document-code-16-regular]",
+		luna: "icon-[solar--moon-broken]",
+		sol: "icon-[solar--sun-broken]",
 	};
 
 	return (
