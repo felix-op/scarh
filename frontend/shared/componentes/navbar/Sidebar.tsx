@@ -1,10 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import ProfileCard from "./ProfileCard";
 import Icon, { IconVariants } from "@componentes/icons/Icon";
 import SidebarButton from "./SidebarButton";
 import Divider from "./Divider";
+import { useTheme } from "next-themes";
+import usePersistedState from "@hooks/usePersistedState";
+import useIsMounted from "@hooks/useIsMounted";
 
 type SidebarItem = {
 	label: string;
@@ -20,47 +22,40 @@ const rutas: SidebarItem[] = [
 	{ label: "Estadisticas", icono: "funcion", href: "/estadisticas" },
 	{ label: "Usuarios", icono: "user1", href: "/usuarios" },
 	{ label: "Historial", icono: "historial", href: "/historial" },
+	{ label: "Documentacion", icono: "documentacion", href: "/documentacion" },
 ];
 
-const sidebarKey = "scarh-nav-collapsed";
-
 export default function Sidebar() {
-	const userName="Juan Perez"
-
-	const router = useRouter();
+	const mounted = useIsMounted();
 	
-	const [isCollapsed, setIsCollapsed] = useState(false);
+	const userName="Juan Perez"
+	const router = useRouter();
+	const { theme, setTheme } = useTheme();
+	
+	const [isCollapsed, setIsCollapsed] = usePersistedState("scarh-nav-collapsed", false);
 
-	useEffect(() => {
-		if (typeof window === "undefined") {
-			return;
-		}
-
-		const stored =
-			window.sessionStorage.getItem(sidebarKey) === "true";
-		// eslint-disable-next-line react-hooks/set-state-in-effect
-		setIsCollapsed(stored);
-	}, []);
-
-	useEffect(() => {
-		if (typeof window !== "undefined") {
-			window.sessionStorage.setItem(
-				sidebarKey,
-				isCollapsed ? "true" : "false",
-			);
-		}
-	}, [isCollapsed]);
-
-	function toggleSidebar() {
+	const toggleSidebar = () => {
 		setIsCollapsed((prev) => !prev);
 	}
 
+	const toggleTheme = () => {
+		if (theme?.includes("dark")) {
+			setTheme("light");
+		} else {
+			setTheme("dark");
+		}
+	};
+
+	if (!mounted) {
+		return <div className="flex bg-sidebar font-outfit w-70 h-screen" />;
+	}
+
 	return (
-		<div className="flex bg-white font-outfit">
+		<div className="flex bg-sidebar font-outfit">
 			<div
 				className={`
-					flex flex-col gap-[12px] transition-all duration-300 ease-in-out
-					${isCollapsed ? "w-28 items-center p-[20px_8px]" : "w-70 items-stretch p-[20px_10px]"}
+					flex flex-col gap-3 transition-all duration-300 ease-in-out
+					${isCollapsed ? "w-30 items-center p-4" : "w-70 items-stretch p-4"}
 				`}
 			>
 				<div
@@ -71,11 +66,19 @@ export default function Sidebar() {
 				>
 					<button
 						type="button"
+						onClick={toggleTheme}
+						className="border-0 bg-transparent p-[4px] rounded-[8px] cursor-pointer"
+						aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+					>
+						<Icon variant={theme?.includes("dark") ? "sol" : "luna"} className="text-2xl text-sidebar-secondary" />
+					</button>
+					<button
+						type="button"
 						onClick={toggleSidebar}
 						className="border-0 bg-transparent p-[4px] rounded-[8px] cursor-pointer"
 						aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
 					>
-						<Icon variant={isCollapsed ? "menu_derecha" : "menu_izquierda"} className="text-2xl text-[#6B6B6B]" />
+						<Icon variant={isCollapsed ? "menu_derecha" : "menu_izquierda"} className="text-2xl text-sidebar-secondary" />
 					</button>
 				</div>
 
@@ -89,19 +92,19 @@ export default function Sidebar() {
 						<span
 							className={`
 								${isCollapsed ? "text-[22px]" : "text-[30px]"}
-								font-bold text-[#0D76B3] letter-spacing-[1px] text-uppercase
+								font-bold text-logo letter-spacing-[1px] text-uppercase
 							`}
 						>
 							Inicio
 						</span>
 					</button>
 				</div>
-				<Divider />
+				<Divider direccion="horizontal" />
 				<ProfileCard
 					collapsed={isCollapsed}
 					userName={userName}
 				/>
-				<Divider />
+				<Divider direccion="horizontal" />
 				<div className="flex flex-col gap-[12px] w-full">
 					{rutas.map(({ label, icono, href }) => (
 						<SidebarButton
@@ -116,13 +119,10 @@ export default function Sidebar() {
 			</div>
 			<div
 				className={`
-					flex flex-col items-center relative gap-[20px]
-					pb-[40px] w-[18px] ${isCollapsed ? "pt-[60px]" : "pt-[90px]"}
+					flex flex-col items-center py-20 w-[18px] 
 				`}
 			>
-				<div
-					className={`absolute bottom-[40px] w-px bg-[#D3D4D5] ${isCollapsed ? "top-[60px]" : "top-[90px]"}`}
-				/>
+				<Divider direccion="vertical" />
 			</div>
 		</div>
 	);

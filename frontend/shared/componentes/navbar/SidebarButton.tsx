@@ -32,7 +32,7 @@ export default function SidebarButton({
 					className={`
 						flex w-full items-center justify-center rounded-[10px]
 						${collapsed ? "gap-0 h-[48px] p-[6px] justify-center" : "gap-6 h-[56px] p-[14px_20px] justify-start"}
-						${isActive ? "bg-sidebar-background-active text-sidebar-primary-text-active" : "bg-sidebar-background hover:bg-sidebar-background-hover text-sidebar-primary-text"}
+						${isActive ? "bg-sidebar-link-active text-sidebar-foreground-active" : "bg-sidebar-link hover:bg-sidebar-link-hover text-sidebar-foreground"}
 					`}
 				>
 					<div style={{ marginLeft: collapsed ? 0 : 12 }}>
@@ -40,7 +40,7 @@ export default function SidebarButton({
 							variant={icono}
 							className={`
 								${collapsed ? "w-[28px] h-[28px]" : "w-[32px] h-[32px]"}
-								${isActive ? "text-sidebar-primary-text-active" : "text-sidebar-primary-text"}
+								${isActive ? "text-sidebar-foreground-active" : "text-sidebar-foreground"}
 							`}
 						/>
 					</div>
@@ -48,7 +48,7 @@ export default function SidebarButton({
 						<span
 							className={`
 								text-[20px] font-bold
-								${isActive ? "text-sidebar-primary-text-active" : "text-sidebar-primary-text"}
+								${isActive ? "text-sidebar-foreground-active" : "text-sidebar-foreground"}
 							`}
 						>
 							{label}

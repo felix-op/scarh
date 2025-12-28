@@ -29,7 +29,7 @@ export default function ProfileCard({
 				className={`
 					w-full flex items-center  gap-[6px]
 					rounded-[12px] p-[6px_4px] h-16 group
-					${isActive ? "bg-sidebar-background-active text-sidebar-primary-text-active" : "bg-sidebar-background hover:bg-sidebar-background-hover text-sidebar-primary-text"}
+					${isActive ? "bg-sidebar-link-active text-sidebar-foreground-active" : "bg-sidebar-link hover:bg-sidebar-link-hover text-sidebar-foreground"}
 					${collapsed ? "justify-center" : "pl-4 justify-between"}
 				`}
 			>
@@ -39,7 +39,7 @@ export default function ProfileCard({
 						transition-all duration-300 ease-in-out
 						${collapsed ? "max-w-0 opacity-0" : "max-w-xs opacity-100"} 
 					`}>
-						<span className={`${isActive ? "text-sidebar-primary-text-active" : "text-sidebar-primary-text"} text-[18px] font-bold whitespace-nowrap`}>
+						<span className={`${isActive ? "text-sidebar-foreground-active" : "text-sidebar-foreground"} text-[18px] font-bold whitespace-nowrap`}>
 							{userName}
 						</span>
 					</div>
