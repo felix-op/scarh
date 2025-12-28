@@ -10,7 +10,7 @@ const MapView = dynamic<MapViewProps>(() => import("@componentes/MapView"), {
 
 export default function MapPage() {
 	return (
-		<PaginaBase>
+		<PaginaBase noPadding>
 			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
 
 				<main className="flex flex-1">
