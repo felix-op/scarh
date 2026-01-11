@@ -3,9 +3,9 @@ import IndiceCard from "./componentes/IndiceCard";
 import TituloDoc from "./componentes/TituloDoc";
 import IndiceItem from "./componentes/IndiceItem";
 import { ReactElement } from "react";
-import DocumentoBotonBase from "./documentos/DocumentoBotonBase";
 import DocumentoPersistedState from "./documentos/DocumentoPersistedState";
 import DocumentoIsMounted from "./documentos/DocumentoIsMounted";
+import DocumentoBotonVariante from "./documentos/DocumentoBotonVariante";
 
 type TIndiceCard = {
 	href: string,
@@ -45,7 +45,7 @@ export default function Documentacion() {
 			{href: "https://ui.shadcn.com/docs/components", icon: "icon-[simple-icons--shadcnui]", label: "Shadcn", newPage: true},
 		],
 		componentes: [
-			{href: "componente-botonbase", label: "BotonBase", documento: DocumentoBotonBase},
+			{href: "componente-botonvariante", label: "BotonVariante", documento: DocumentoBotonVariante},
 		],
 		hooks: [
 			{href: "hook-persistedstate", label: "usePersistedState", documento: DocumentoPersistedState},
