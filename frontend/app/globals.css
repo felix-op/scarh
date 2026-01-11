@@ -28,13 +28,29 @@
 
 	--font-sans: var(--font-geist-sans);
 	--font-mono: var(--font-geist-mono);
-  --color-sidebar-background: #F0F0F0;
-  --color-sidebar-background-hover: #D0D0D0;
-  --color-sidebar-background-active: #011018;
-  --color-sidebar-primary-text: #121212;
-  --color-sidebar-primary-text-active: #F9FBFF;
-  --color-sidebar-secondary-text: #999999;
-  --color-sidebar-secondary-text-active: #E0E7FF;
+
+  --color-principal: var(--principal);
+  --color-principal-claro: var(--principal-claro);
+  --color-principal-oscuro: var(--principal-oscuro);
+
+  --color-exito: var(--exito);
+  --color-exito-claro: var(--exito-claro);
+  --color-exito-oscuro: var(--exito-oscuro);
+
+  --color-nuevo: var(--nuevo);
+  --color-nuevo-claro: var(--nuevo-claro);
+  --color-nuevo-oscuro: var(--nuevo-oscuro);
+
+  --color-default: var(--default);
+  --color-default-claro: var(--default-claro);
+  --color-default-oscuro: var(--default-oscuro);
+
+  --color-error: var(--error);
+  --color-error-claro: var(--error-claro);
+  --color-error-oscuro: var(--error-oscuro);
+
+  --color-hover: var(--hover);
+  --color-active: var(--active);
 }
 
 :root {
@@ -60,6 +76,29 @@
   --sidebar-link: #f0f0f0;
   --sidebar-link-hover: #d0d0d0;
   --sidebar-link-active: #011018;
+
+  --principal: #0982C8;
+  --principal-claro: #3e99ce;
+  --principal-oscuro: #096092;
+  
+  --exito: #6BA66F;
+  --exito-claro: #E6FFEC;
+  --exito-oscuro: #E6FFEC;
+  
+  --nuevo: #3199E3;
+  --nuevo-claro: #E3F0FF;
+  --nuevo-oscuro: #a85f5f;
+  
+  --error: #FF5757;
+  --error-claro: #FFE8E8;
+  --error-oscuro: #a85f5f;
+  
+  --default: #898989;
+  --default-claro: #F4F4F4;
+  --default-oscuro: #F4F4F4;
+
+  --hover: #ddd;
+  --active: #fafafa;
 
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
@@ -112,6 +151,29 @@
   --sidebar-link: rgb(41, 44, 49);
   --sidebar-link-hover: rgb(52, 56, 62);
   --sidebar-link-active: #EEF4FB;
+
+  --principal: #0da2f8;
+  --principal-claro: rgba(13, 162, 248, 0.15);
+  --principal-oscuro: #096092;
+
+  --exito: #82d987;
+  --exito-claro: #253d27;
+  --exito-oscuro: #2d4f30;
+
+  --nuevo: #60b5f5;
+  --nuevo-claro: #1d3242;
+  --nuevo-oscuro: #2a4a63;
+
+  --error: #d65757;
+  --error-claro: #533131;
+  --error-oscuro: #632a2a;
+
+  --default: #a0a0a0;
+  --default-claro: rgb(27, 31, 37);
+  --default-oscuro: #3a3a3a;
+
+  --hover: #444;
+  --active: #222;
 
   --card: 16151a;
   --card-foreground: oklch(0.984 0.003 247.858);
