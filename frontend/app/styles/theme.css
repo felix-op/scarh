@@ -1,0 +1,60 @@
+@theme inline {
+    --color-background: var(--background);
+    --color-background-muted: var(--background-muted);
+    --color-foreground: var(--foreground);
+    --color-foreground-title: var(--foreground-title);
+    --color-border: var(--border);
+    --color-card: var(--card);
+    --color-azul-marino-oscuro: rgba(7, 28, 48, 0.65);
+    --color-azul-marino: rgba(9, 130, 200, 0.35);
+    --color-accent-blue: var(--accent-blue);
+
+    --color-logo: var(--logo);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-secondary: var(--sidebar-secondary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-foreground-hover: var(--sidebar-foreground-hover);
+    --color-sidebar-foreground-active: var(--sidebar-foreground-active);
+    --color-sidebar-link: var(--sidebar-link);
+    --color-sidebar-link-hover: var(--sidebar-link-hover);
+    --color-sidebar-link-active: var(--sidebar-link-active);
+
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+
+    --color-table: var(--table);
+    --color-table-header: var(--table-header);
+    --color-table-hover: var(--table-hover);
+
+    --color-sidebar-background: #F0F0F0;
+    --color-sidebar-background-hover: #D0D0D0;
+    --color-sidebar-background-active: #011018;
+    --color-sidebar-primary-text: #121212;
+    --color-sidebar-primary-text-active: #F9FBFF;
+    --color-sidebar-secondary-text: #999999;
+    --color-sidebar-secondary-text-active: #E0E7FF;
+
+    --animate-shine: shine 0.6s ease-in-out;
+    --animate-fade-in-up: fade-in-up 0.3s ease-out forwards;
+    
+    @keyframes shine {
+        from {
+            left: -100%;
+        }
+        to {
+            left: 125%;
+        }
+    }
+
+
+    @keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
