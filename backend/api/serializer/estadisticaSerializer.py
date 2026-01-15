@@ -6,8 +6,8 @@ class EstadisticaInputSerializer(serializers.Serializer):
         allow_empty=False
     )
     atributo = serializers.ChoiceField(
-        choices=['altura', 'presion', 'temperatura'],
-        help_text="Opciones disponibles: altura, presion, temperatura"
+        choices=['altura_agua', 'presion', 'temperatura'],
+        help_text="Opciones disponibles: altura_agua, presion, temperatura"
     )
     fecha_inicio = serializers.DateTimeField()
     fecha_fin = serializers.DateTimeField()

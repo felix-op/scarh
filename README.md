@@ -44,3 +44,7 @@ rm -f ~/.config/Code/User/globalStorage/ms-vscode-remote.remote-containers/data/
 # o desde CLI:
 docker compose -f compose.dev.yml build --no-cache
 docker compose -f compose.dev.yml up -d
+
+# comando para correr los test
+docker compose exec backend python manage.py test
+
