@@ -16,7 +16,8 @@ class MedicionPagination(PageNumberPagination):
 
 class MedicionViewSet(
     mixins.ListModelMixin,
-    mixins.CreateModelMixin, 
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin, 
     viewsets.GenericViewSet
 ):
     queryset = Medicion.objects.all().order_by('-fecha_hora')
