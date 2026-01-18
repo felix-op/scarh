@@ -419,7 +419,7 @@ type UsePachtUsuarioOptions = {
 		id: string,
 	}
 	configuracion?: MutationConfig<
-		UsuarioPutRequest,
+		UsuarioPatchRequest,
 		UsuarioResponse,
 		ParamsBase
 	>

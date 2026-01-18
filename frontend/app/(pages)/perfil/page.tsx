@@ -16,10 +16,6 @@ export default function ProfilePage() {
 		});
 	};
 
-	const handleEditProfile = () => {
-		router.push("/perfil/editar");
-	};
-
 	const handleChangePassword = () => {
 		router.push("/perfil/cambiar-contrasena");
 	};
@@ -47,7 +43,6 @@ export default function ProfilePage() {
 						<ProfileCard
 							variant="detail"
 							{...userData}
-							onEditProfile={handleEditProfile}
 							onChangePassword={handleChangePassword}
 							onLogout={handleLogout}
 						/>
