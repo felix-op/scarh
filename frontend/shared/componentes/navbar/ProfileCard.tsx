@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import SwapContainer from "@componentes/animaciones/SwapContainer";
 import Icon from "@componentes/icons/Icon";
+import BotonVariante from "@componentes/botones/BotonVariante";
 
 type EstadoVariant = "activo" | "inactivo" | "pendiente" | "suspendido";
 
@@ -174,44 +175,6 @@ function StatusBadge({ label, variant }: { label: string; variant: EstadoVariant
 	);
 }
 
-function ProfileActionButton({
-	label,
-	iconClass,
-	onClick,
-	variant = "primary",
-	widthClass,
-}: {
-	label: string;
-	iconClass: string;
-	onClick: () => void;
-	variant?: "primary" | "danger";
-	widthClass?: string;
-}) {
-	const styles =
-		variant === "danger"
-			? "bg-[var(--error-claro)] text-[var(--error)] border border-[var(--error)]"
-			: "bg-[var(--nuevo-claro)] text-[var(--principal)] border border-[var(--principal)]";
-
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			className={`
-        h-12 px-6 rounded-[20px]
-        shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]
-        flex justify-center items-center gap-2.5
-        font-outfit text-2xl font-normal whitespace-nowrap
-        transition hover:brightness-95 active:scale-[0.99]
-        ${styles}
-        ${widthClass ?? "min-w-[12rem]"}
-      `}
-		>
-			<span className={`flex items-center justify-center ${iconClass} text-[28px]`} aria-hidden />
-			<span>{label}</span>
-		</button>
-	);
-}
-
 export default function ProfileCard({
 	variant = "detail",
 	collapsed = false,
@@ -358,24 +321,20 @@ export default function ProfileCard({
 				</div>
 
 				<div className="flex w-full flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-5 px-1 sm:px-5">
-					<ProfileActionButton
-						label="Editar mis datos"
-						iconClass="icon-[mdi--pencil] text-[var(--principal)]"
+					<BotonVariante
+						variant="perfilEditar"
 						onClick={handleEditProfile}
-						widthClass="w-64"
+						className="w-64"
 					/>
-					<ProfileActionButton
-						label="Cambiar contraseña"
-						iconClass="icon-[solar--lock-password-bold] text-[var(--principal)]"
+					<BotonVariante
+						variant="perfilPassword"
 						onClick={handleChangePassword}
-						widthClass="w-72"
+						className="w-72"
 					/>
-					<ProfileActionButton
-						label="Cerrar sesión"
-						iconClass="icon-[fluent--arrow-exit-20-regular] text-[var(--error)]"
+					<BotonVariante
+						variant="perfilLogout"
 						onClick={handleLogout}
-						variant="danger"
-						widthClass="w-56"
+						className="w-56"
 					/>
 				</div>
 			</div>
