@@ -1,45 +1,55 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-import UserInfoCard from "@componentes/UserInfoCard";
+import { signOut, useSession } from "next-auth/react";
+import ProfileCard from "@componentes/navbar/ProfileCard";
 import PaginaBase from "@componentes/base/PaginaBase";
 
-const USUARIO_DEMO = {
-	nombre: "Juan",
-	apellido: "Perez",
-	legajo: "12345678/123",
-	email: "juanp123@gmail.com",
-	telefono: "+5492901123456",
-	password: "juancito123",
-	estadoLabel: "Activo",
-	estadoVariant: "activo" as const,
-};
-
 export default function ProfilePage() {
-	function handleLogout() {
-		// Mismo comportamiento que el botón rojo viejo:
-		// cierra sesión con next-auth y redirige al home.
+	const router = useRouter();
+	const { data: session } = useSession();
+
+	const handleLogout = () => {
 		signOut({
 			callbackUrl: "/",
 			redirect: true,
 		});
-	}
+	};
+
+	const handleEditProfile = () => {
+		router.push("/perfil/editar");
+	};
+
+	const handleChangePassword = () => {
+		router.push("/perfil/cambiar-contrasena");
+	};
+
+	const userData = {
+		username: session?.user?.username ?? session?.user?.email ?? "Usuario",
+		firstName: (session?.user as { first_name?: string } | undefined)?.first_name,
+		lastName: (session?.user as { last_name?: string } | undefined)?.last_name,
+		email: session?.user?.email,
+		legajo: (session?.user as { id?: string } | undefined)?.id,
+		avatarUrl: session?.user?.image,
+		statusLabel: "Activo",
+		statusVariant: "activo" as const,
+	};
 
 	return (
 		<PaginaBase>
-			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
+			<div className="flex min-h-screen w-full bg-[#EEF4FB] dark:bg-[rgb(35,39,47)]">
 
-				<main className="flex flex-1 flex-col items-stretch px-6 py-10">
+				<main className="flex flex-1 flex-col items-stretch px-4 sm:px-6 py-8 sm:py-10">
 
 
 					{/* Contenido principal: tarjeta de usuario centrada */}
-					<div className="mt-6 flex flex-1 items-start justify-center">
-						<UserInfoCard
-							{...USUARIO_DEMO}
-							showActions={false}
-							showPassword={false}
-							className="mx-auto"
+					<div className="mt-4 flex flex-1 items-start justify-center">
+						<ProfileCard
+							variant="detail"
+							{...userData}
+							onEditProfile={handleEditProfile}
+							onChangePassword={handleChangePassword}
+							onLogout={handleLogout}
 						/>
 					</div>
 				</main>
