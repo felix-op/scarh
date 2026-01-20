@@ -435,9 +435,8 @@ export default function ProfileCard({
 
 				<div className="flex w-full flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-5 px-1 sm:px-5">
 					<BotonVariante
-						variant="perfilEditar"
-						onClick={openEditModal}
-						className="w-64"
+						variant="editar"
+						onClick={() => {}}
 					/>
 					<BotonVariante
 						variant="perfilPassword"

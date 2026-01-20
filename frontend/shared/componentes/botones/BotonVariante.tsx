@@ -3,11 +3,11 @@
 import { ReactNode } from "react";
 
 const baseStyles = {
-	nuevo: "bg-nuevo-claro hover:bg-hover active:bg-active text-nuevo",
-	exito: "bg-exito-claro hover:bg-hover active:bg-active text-exito",
-	error: "bg-error-claro hover:bg-hover active:bg-active text-error",
-	default: "bg-default-claro hover:bg-hover active:bg-active text-default",
-	principal: "bg-principal hover:bg-principal-claro active:bg-principal-oscuro text-white",
+	nuevo: "bg-nuevo-claro text-nuevo",
+	exito: "bg-exito-claro text-exito",
+	error: "bg-error-claro text-error",
+	default: "bg-default-claro text-default",
+	principal: "bg-principal text-white",
 };
 
 type VariantConfig = {
@@ -26,37 +26,18 @@ const variantConfig: Record<string, VariantConfig> = {
 	logout: { style: baseStyles.error, icon: "icon-[line-md--logout]", text: "Cerrar sesión" },
 	ir: { style: baseStyles.default, icon: "icon-[oui--arrow-right]", text: "Ver más" },
 	filtro: { style: baseStyles.default, icon: "icon-[mage--filter]", text: "Filtrar" },
-	// Estética de los botones de perfil (ProfileActionButton)
-	perfilEditar: {
-		style: "bg-[var(--nuevo-claro)] text-[var(--principal)] border border-[var(--principal)]",
-		icon: "icon-[mdi--pencil]",
-		text: "Editar mis datos",
-		customClass:
-			"h-12 px-6 rounded-[20px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] flex justify-center items-center gap-2.5 font-outfit text-2xl font-normal whitespace-nowrap transition hover:brightness-95 active:scale-[0.99]",
-		disableShine: true,
-	},
-	perfilPassword: {
-		style: "bg-[var(--nuevo-claro)] text-[var(--principal)] border border-[var(--principal)]",
-		icon: "icon-[solar--lock-password-bold]",
-		text: "Cambiar contraseña",
-		customClass:
-			"h-12 px-6 rounded-[20px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] flex justify-center items-center gap-2.5 font-outfit text-2xl font-normal whitespace-nowrap transition hover:brightness-95 active:scale-[0.99]",
-		disableShine: true,
-	},
-	perfilLogout: {
-		style: "bg-[var(--error-claro)] text-[var(--error)] border border-[var(--error)]",
-		icon: "icon-[fluent--arrow-exit-20-regular]",
-		text: "Cerrar sesión",
-		customClass:
-			"h-12 px-6 rounded-[20px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] flex justify-center items-center gap-2.5 font-outfit text-2xl font-normal whitespace-nowrap transition hover:brightness-95 active:scale-[0.99]",
-		disableShine: true,
-	},
+	perfilEditar: { style: baseStyles.exito, icon: "icon-[mdi--pencil]", text: "Editar mis datos" },
+	perfilPassword: { style: baseStyles.nuevo, icon: "icon-[solar--lock-password-bold]", text: "Cambiar contraseña" },
+	perfilLogout: { style: baseStyles.error, icon: "icon-[fluent--arrow-exit-20-regular]", text: "Cerrar sesión" },
 	default: { style: baseStyles.default, icon: "", text: "Click me!" },
 } as const satisfies Record<string, VariantConfig>;
 
 const baseButtonClass = `
-	relative overflow-hidden flex flex-row items-center justify-center gap-2 shrink-0 
-	text-lg rounded-full py-2 px-4 cursor-pointer shadow-md border
+	relative overflow-hidden flex flex-row items-center justify-center gap-2 shrink-0
+	text-lg rounded-full py-2 px-4 cursor-pointer shadow-md border hover:brightness-95
+	transition-all duration-100 select-none 
+	shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]
+	active:brightness-105 active:scale-95 
 `;
 
 const shineEffectClass = `
@@ -64,11 +45,12 @@ const shineEffectClass = `
 	after:w-1/2 after:h-full after:skew-x-[-25deg]
 	after:bg-linear-to-r after:from-transparent after:via-white/40 after:to-transparent
 	hover:after:animate-shine
+	active:shadow-inner whitespace-nowrap 
+	before:content-[''] before:absolute before:inset-0 before:rounded-full
+    before:transition-opacity before:duration-100 before:opacity-0
+    active:before:opacity-100 
+    active:before:shadow-[inset_0px_4px_8px_rgba(0,0,0,0.2)]
 `;
-
-const buttonStyle = {
-	boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
-};
 
 type VariantKey = keyof typeof variantConfig;
 
@@ -102,7 +84,6 @@ export default function BotonVariante({
 				${config.disableShine ? '' : shineEffectClass}
 				${className}
 			`}
-			style={buttonStyle}
 			onClick={onClick}
 			disabled={disabled}
 			type={type}
