@@ -3,16 +3,17 @@
 import { ActionConfig, ColumnConfig } from "./types";
 
 type DataTableProps<T> = {
+	noResults?: boolean;
     isLoading?: boolean;
     data: T[];
     columns: ColumnConfig<T>[];
-	minWidth?: number;
+	minWidth?: number | string;
     rowIdKey: keyof T;
 	onAdd?: () => void;
 	actionConfig?: ActionConfig<T>;
 }
 
-export default function DataTable<T>({ isLoading = false, data, columns, minWidth = 300, rowIdKey }: DataTableProps<T>) {
+export default function DataTable<T>({ noResults = false, isLoading = false, data, columns, minWidth = 300, rowIdKey }: DataTableProps<T>) {
 	return (
 		<div className="pb-4">
 			<div  className="bg-table rounded-xl overflow-hidden border  dark:border-white/5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]">
@@ -39,7 +40,16 @@ export default function DataTable<T>({ isLoading = false, data, columns, minWidt
 										))}
 									</tr>
 								))
-								: data.map((row, index) => (
+								: (data.length===0) ? (
+									<tr>
+										<td colSpan={columns.length} className="p-4">
+											<div className="flex w-full items-center justify-center gap-2">
+												<span className={`${noResults ? "icon-[fluent--search-info-20-regular]" : "icon-[tabler--ghost-2]"} text-4xl`} />
+												{noResults ? "No se encontraron resultados para su búsqueda" : "No hay nada aquí"}
+											</div>
+										</td>
+									</tr>
+								) : data.map((row, index) => (
 									<tr
 										key={String(row[rowIdKey])}
 										className="border dark:border-white/5 hover:bg-table-hover opacity-0 animate-fade-in-up"
