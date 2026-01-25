@@ -8,8 +8,7 @@ export type ColumnConfig<T> = {
 }
 
 export type ActionConfig<T> = {
-    typeAction?: "fila" | "funcion" | "link";
-    actionLink?: string;
+    typeAction: "fila" | "funcion";
     actionFn?: (row: T) => void;
     actionColumns?: (row: T) => ReactNode
 }
