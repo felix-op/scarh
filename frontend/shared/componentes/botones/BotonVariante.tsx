@@ -10,27 +10,19 @@ const baseStyles = {
 	principal: "bg-principal text-white",
 };
 
-type VariantConfig = {
-	style: string;
-	icon: string;
-	text: string;
-	customClass?: string;
-	disableShine?: boolean;
+const variantConfig = {
+	login: { style: baseStyles.principal, icon: "icon-[line-md--login]", text: "Iniciar Sesión", disableShine: false },
+	agregar: { style: baseStyles.nuevo, icon: "icon-[mdi--add]", text: "Agregar", disableShine: false },
+	editar: { style: baseStyles.exito, icon: "icon-[line-md--edit]", text: "Editar", disableShine: false },
+	eliminar: { style: baseStyles.error, icon: "icon-[line-md--trash]", text: "Eliminar", disableShine: false },
+	logout: { style: baseStyles.error, icon: "icon-[line-md--logout]", text: "Cerrar sesión", disableShine: false },
+	ir: { style: baseStyles.default, icon: "icon-[oui--arrow-right]", text: "Ver más", disableShine: false },
+	filtro: { style: baseStyles.default, icon: "icon-[mage--filter]", text: "Filtrar", disableShine: false },
+	perfilEditar: { style: baseStyles.exito, icon: "icon-[mdi--pencil]", text: "Editar mis datos", disableShine: false },
+	perfilPassword: { style: baseStyles.nuevo, icon: "icon-[solar--lock-password-bold]", text: "Cambiar contraseña", disableShine: false },
+	perfilLogout: { style: baseStyles.error, icon: "icon-[fluent--arrow-exit-20-regular]", text: "Cerrar sesión", disableShine: false },
+	default: { style: baseStyles.default, icon: "", text: "Click me!", disableShine: false },
 };
-
-const variantConfig: Record<string, VariantConfig> = {
-	login: { style: baseStyles.principal, icon: "icon-[line-md--login]", text: "Iniciar Sesión" },
-	agregar: { style: baseStyles.nuevo, icon: "icon-[mdi--add]", text: "Agregar" },
-	editar: { style: baseStyles.exito, icon: "icon-[line-md--edit]", text: "Editar" },
-	eliminar: { style: baseStyles.error, icon: "icon-[line-md--trash]", text: "Eliminar" },
-	logout: { style: baseStyles.error, icon: "icon-[line-md--logout]", text: "Cerrar sesión" },
-	ir: { style: baseStyles.default, icon: "icon-[oui--arrow-right]", text: "Ver más" },
-	filtro: { style: baseStyles.default, icon: "icon-[mage--filter]", text: "Filtrar" },
-	perfilEditar: { style: baseStyles.exito, icon: "icon-[mdi--pencil]", text: "Editar mis datos" },
-	perfilPassword: { style: baseStyles.nuevo, icon: "icon-[solar--lock-password-bold]", text: "Cambiar contraseña" },
-	perfilLogout: { style: baseStyles.error, icon: "icon-[fluent--arrow-exit-20-regular]", text: "Cerrar sesión" },
-	default: { style: baseStyles.default, icon: "", text: "Click me!" },
-} as const satisfies Record<string, VariantConfig>;
 
 const baseButtonClass = `
 	relative overflow-hidden flex flex-row items-center justify-center gap-2 shrink-0
@@ -78,12 +70,7 @@ export default function BotonVariante({
 
 	return (
 		<button
-			className={`
-				${config.customClass ?? baseButtonClass}
-				${config.style}
-				${config.disableShine ? '' : shineEffectClass}
-				${className}
-			`}
+			className={`${baseButtonClass} ${config.style} ${config.disableShine ? '' : shineEffectClass} ${className}`}
 			onClick={onClick}
 			disabled={disabled}
 			type={type}

@@ -49,6 +49,10 @@
   --color-error-claro: var(--error-claro);
   --color-error-oscuro: var(--error-oscuro);
 
+  --color-info: var(--info);
+  --color-info-claro: var(--info-claro);
+  --color-info-oscuro: var(--info-oscuro);
+
   --color-hover: var(--hover);
   --color-active: var(--active);
 
@@ -120,6 +124,10 @@
   --error: #FF5757;
   --error-claro: #FFE8E8;
   --error-oscuro: #a85f5f;
+
+  --info: #0054A6;
+  --info-claro: #afcce9;
+  --info-oscuro: #1e2b3d;
   
   --default: #898989;
   --default-claro: #F4F4F4;
@@ -170,6 +178,10 @@
   --error: #d65757;
   --error-claro: #533131;
   --error-oscuro: #632a2a;
+
+  --info: #6e99d5;
+  --info-claro: #213045;
+  --info-oscuro: #222;
 
   --default: #a0a0a0;
   --default-claro: rgb(27, 31, 37);
