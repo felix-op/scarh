@@ -14,6 +14,7 @@ const variantConfig = {
 	login: { style: baseStyles.principal, icon: "icon-[line-md--login]", text: "Iniciar Sesión", disableShine: false },
 	agregar: { style: baseStyles.nuevo, icon: "icon-[mdi--add]", text: "Agregar", disableShine: false },
 	editar: { style: baseStyles.exito, icon: "icon-[line-md--edit]", text: "Editar", disableShine: false },
+	guardar: { style: baseStyles.nuevo, icon: "icon-[material-symbols--save]", text: "Guardar", disableShine: false },
 	eliminar: { style: baseStyles.error, icon: "icon-[line-md--trash]", text: "Eliminar", disableShine: false },
 	logout: { style: baseStyles.error, icon: "icon-[line-md--logout]", text: "Cerrar sesión", disableShine: false },
 	ir: { style: baseStyles.default, icon: "icon-[oui--arrow-right]", text: "Ver más", disableShine: false },
@@ -21,6 +22,10 @@ const variantConfig = {
 	perfilEditar: { style: baseStyles.exito, icon: "icon-[mdi--pencil]", text: "Editar mis datos", disableShine: false },
 	perfilPassword: { style: baseStyles.nuevo, icon: "icon-[solar--lock-password-bold]", text: "Cambiar contraseña", disableShine: false },
 	perfilLogout: { style: baseStyles.error, icon: "icon-[fluent--arrow-exit-20-regular]", text: "Cerrar sesión", disableShine: false },
+	cancelar: { style: baseStyles.error, icon: "icon-[material-symbols--close]", text: "Cancelar", disableShine: false },
+	cerrar: { style: baseStyles.default, icon: "icon-[material-symbols--close]", text: "Cerrar", disableShine: false },
+	confirmarError: { style: baseStyles.error, icon: "", text: "Confirmar", disableShine: false },
+	confirmarExito: { style: baseStyles.exito, icon: "", text: "Confirmar", disableShine: false },
 	default: { style: baseStyles.default, icon: "", text: "Click me!", disableShine: false },
 };
 
