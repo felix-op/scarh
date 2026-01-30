@@ -22,7 +22,7 @@ export default function DataTable<T>({ onAdd, actionConfig, noResults = false, i
 
 	return (
 		<div className="pb-4">
-			<div  className="bg-table rounded-xl overflow-hidden border  dark:border-white/5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]">
+			<div  className="bg-table rounded-xl overflow-hidden border dark:border-white/5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]">
 				<div className="overflow-x-auto overflow-y-hidden custom-scroll">
 					{(onAdd) && (
 						<div className="p-4">
@@ -39,9 +39,7 @@ export default function DataTable<T>({ onAdd, actionConfig, noResults = false, i
 									return <th key={column.id}>{column.header}</th>
 								})}
 								{actionConfig && actionConfig.typeAction==="fila" && (
-									<tr>
-										<th className="py-4 px-4 text-foreground-title">Acciones</th>
-									</tr>
+									<th className="py-4 px-4 text-foreground-title">Acciones</th>
 								)}
 							</tr>
 						</thead>
