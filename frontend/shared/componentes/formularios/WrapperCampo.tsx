@@ -20,12 +20,16 @@ export default function WrapperCampo<T extends FieldValues>({
 	rules,
 	render,
 }: WrapperCampoProps<T>) {
-	const { control } = useFormContext<T>();
+	const { control, formState: { errors } } = useFormContext<T>();
 
 	return (
-		<div className="field-container">
-			{label && <label htmlFor={name}>{label}</label>}
-
+		<div className="flex flex-col gap-2">
+			{label && (
+				<label className={`text-base font-medium text-foreground ${rules?.required && errors[name] ? 'text-red-500' : ''}`} htmlFor={name}>
+					{label}
+					{rules?.required && <span className="text-red-500"> *</span>}
+				</label>
+			)}
 			<Controller
 				name={name}
 				control={control}

@@ -60,6 +60,12 @@
   --color-table-header: var(--table-header);
   --color-table-hover: var(--table-hover);
 
+  --color-ventana: var(--ventana);
+  --color-ventana-foreground: var(--ventana-foreground);
+  --color-ventana-secondary: var(--ventana-secondary);
+  
+  --color-campo-input: var(--campo-input);
+
   --animate-shine: shine 0.6s ease-in-out;
   --animate-fade-in-up: fade-in-up 0.3s ease-out forwards;
   
@@ -139,6 +145,12 @@
   --table: #fafafa;
   --table-header: #fafafa;
   --table-hover: #ddd;
+
+  --ventana: #eee;
+  --ventana-foreground: #444;
+  --ventana-secondary: #ccc;
+
+  --campo-input: #fff;
 }
 
 .dark {
@@ -193,6 +205,12 @@
   --table: #23272f;
   --table-header: #23272f;
   --table-hover: #393e49;
+
+  --ventana: #111923;
+  --ventana-foreground: #f0f0f0;
+  --ventana-secondary: #333;
+
+  --campo-input: rgb(35 39 47);
 }
 
 @layer base {
