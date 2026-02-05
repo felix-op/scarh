@@ -43,6 +43,7 @@ export default function CampoInput<T extends FieldValues>({
 				required: required ? 'Este campo es obligatorio' : false,
 				pattern: pattern,
 			}}
+			disabled={disabled}
 			render={({ field, fieldState }) => (
 				<div className="relative flex flex-row items-center">
 					<span className={`absolute left-3 text-2xl ${icon}`} />
@@ -52,7 +53,7 @@ export default function CampoInput<T extends FieldValues>({
 						placeholder={placeholder}
 						disabled={disabled || isLoading}
 						aria-invalid={fieldState.invalid}
-						className={`w-full p-3 px-4 ${icon ? 'pl-10' : ''} ${disabled ? 'bg-gray-400' : 'bg-campo-input'} rounded-lg border border-border outline-none text-base text-foreground`}
+						className={`w-full p-3 px-4 ${icon ? 'pl-10' : ''} ${disabled ? 'bg-campo-input-disabled cursor-not-allowed' : 'bg-campo-input'} rounded-lg border border-border outline-none text-base text-foreground`}
 					/>
 
 					{isLoading && (

@@ -6,12 +6,15 @@ import {
 	Path,
 	RegisterOptions
 } from 'react-hook-form';
+import Label from './Label';
 
 type WrapperCampoProps<T extends FieldValues> = {
 	name: Path<T>;
 	label?: string;
 	rules?: Omit<RegisterOptions<T, Path<T>>, 'valueAsNumber' | 'valueAsDate' | 'setValueAs' | 'disabled'>;
 	render: React.ComponentProps<typeof Controller<T>>['render'];
+	layout?: 'stack' | 'row' | 'row-reverse';
+	disabled?: boolean;
 };
 
 export default function WrapperCampo<T extends FieldValues>({
@@ -19,33 +22,39 @@ export default function WrapperCampo<T extends FieldValues>({
 	label,
 	rules,
 	render,
+	layout = 'stack',
+	disabled = false,
 }: WrapperCampoProps<T>) {
 	const { control, formState: { errors } } = useFormContext<T>();
 
-	return (
-		<div className="flex flex-col gap-2">
-			{label && (
-				<label className={`text-base font-medium text-foreground ${rules?.required && errors[name] ? 'text-red-500' : ''}`} htmlFor={name}>
-					{label}
-					{rules?.required && <span className="text-red-500"> *</span>}
-				</label>
-			)}
-			<Controller
-				name={name}
-				control={control}
-				rules={rules}
-				render={(params) => (
-					<>
-						{render(params)}
+	const containerClasses = layout === 'stack'
+		? ""
+		: "flex flex-row items-center gap-2";
 
-						{params.fieldState.error && (
-							<span className="text-error">
-								{params.fieldState.error.message}
-							</span>
-						)}
-					</>
-				)}
-			/>
-		</div>
+
+	const labelElement = label && (
+		<Label name={name} disabled={disabled} text={label} required={!!rules?.required} error={!!errors[name]} />
+	);
+
+	return (
+		<Controller
+			name={name}
+			control={control}
+			rules={rules}
+			render={(params) => (
+				<div className='flex flex-col gap-2'>
+					{layout !== 'row-reverse' && labelElement}
+					<div className={containerClasses}>
+						{render(params)}
+						{layout === 'row-reverse' && labelElement}
+					</div>
+					{params.fieldState.error && (
+						<span className="text-error">
+							{params.fieldState.error.message}
+						</span>
+					)}
+				</div>
+			)}
+		/>
 	);
 }

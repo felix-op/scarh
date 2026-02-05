@@ -65,6 +65,7 @@
   --color-ventana-secondary: var(--ventana-secondary);
   
   --color-campo-input: var(--campo-input);
+  --color-campo-input-disabled: var(--campo-input-disabled);
 
   --animate-shine: shine 0.6s ease-in-out;
   --animate-fade-in-up: fade-in-up 0.3s ease-out forwards;
@@ -151,6 +152,7 @@
   --ventana-secondary: #ccc;
 
   --campo-input: #fff;
+  --campo-input-disabled: #bbb;
 }
 
 .dark {
@@ -211,6 +213,7 @@
   --ventana-secondary: #333;
 
   --campo-input: rgb(35 39 47);
+  --campo-input-disabled: #555;
 }
 
 @layer base {
