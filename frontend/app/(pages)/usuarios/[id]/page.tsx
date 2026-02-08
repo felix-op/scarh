@@ -24,6 +24,12 @@ type UsuarioDetalle = {
 	estado?: boolean;
 };
 
+const MODAL_CANCEL_BUTTON_CLASS =
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70";
+
+const MODAL_SAVE_BUTTON_CLASS =
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70";
+
 export default function UsuarioDetallePage() {
 	const params = useParams<{ id: string }>();
 	const router = useRouter();
@@ -318,18 +324,20 @@ export default function UsuarioDetallePage() {
 								<button
 									type="button"
 									onClick={() => setIsEditOpen(false)}
-									className="rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6]"
+									className={MODAL_CANCEL_BUTTON_CLASS}
 									disabled={isUpdatingUser}
 								>
-									Cancelar
+									<span className="icon-[mdi--close-thick] text-base" aria-hidden="true" />
+									<span>Cancelar</span>
 								</button>
 								<button
 									type="button"
 									onClick={handleSaveEdit}
-									className="rounded-lg bg-[#0D76B3] px-4 py-2 text-sm font-medium text-white hover:bg-[#0b679b] disabled:cursor-not-allowed disabled:opacity-70"
+									className={MODAL_SAVE_BUTTON_CLASS}
 									disabled={isUpdatingUser}
 								>
-									{isUpdatingUser ? "Guardando..." : "Guardar cambios"}
+									<span className="icon-[mdi--content-save] text-base" aria-hidden="true" />
+									<span>{isUpdatingUser ? "Guardando..." : "Guardar cambios"}</span>
 								</button>
 							</div>
 						</div>

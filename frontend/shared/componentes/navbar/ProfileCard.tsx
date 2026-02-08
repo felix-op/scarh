@@ -297,6 +297,10 @@ export default function ProfileCard({
 	};
 
 	const openEditModal = () => {
+		if (onEditProfile) {
+			onEditProfile();
+			return;
+		}
 		setEditForm(profileData);
 		setIsEditModalOpen(true);
 	};
@@ -436,7 +440,7 @@ export default function ProfileCard({
 				<div className="flex w-full flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-5 px-1 sm:px-5">
 					<BotonVariante
 						variant="editar"
-						onClick={() => {}}
+						onClick={openEditModal}
 					/>
 					<BotonVariante
 						variant="perfilPassword"
