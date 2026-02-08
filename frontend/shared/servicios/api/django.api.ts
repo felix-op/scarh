@@ -289,6 +289,7 @@ export function useGetMediciones({ params, config }: UseGetMedicionesOptions = {
 export type UsuarioResponse = {
 	id: number,
 	nombre_usuario: string,
+	legajo: string,
 	email: string,
 	first_name: string,
 	last_name: string,
@@ -297,6 +298,7 @@ export type UsuarioResponse = {
 
 export type UsuarioPostRequest = {
 	nombre_usuario: string,
+	legajo: string,
 	email: string,
 	first_name: string,
 	last_name: string,
@@ -306,15 +308,17 @@ export type UsuarioPostRequest = {
 
 export type UsuarioPutRequest = {
 	nombre_usuario: string,
+	legajo: string,
 	email: string,
 	first_name: string,
 	last_name: string,
 	estado: boolean,
-	contraseña: string,
+	contraseña?: string,
 };
 
 export type UsuarioPatchRequest = {
 	nombre_usuario?: string,
+	legajo?: string,
 	email?: string,
 	first_name?: string,
 	last_name?: string,

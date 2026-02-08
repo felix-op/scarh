@@ -10,6 +10,7 @@ class UsuarioTests(APITestCase):
         self.client.force_authenticate(user=self.admin)
         self.usuario_data = {
             'nombre_usuario': 'newuser',
+            'legajo': 'L-1001',
             'email': 'newuser@example.com',
             'first_name': 'New',
             'last_name': 'User',
@@ -20,6 +21,7 @@ class UsuarioTests(APITestCase):
             username='existinguser',
             password='oldpassword',
             email='existing@example.com',
+            legajo='L-0001',
             first_name='Existing',
             last_name='User'
         )
@@ -33,6 +35,7 @@ class UsuarioTests(APITestCase):
         
         user_data = next(u for u in response.data if u['nombre_usuario'] == 'existinguser')
         self.assertEqual(user_data['email'], 'existing@example.com')
+        self.assertEqual(user_data['legajo'], 'L-0001')
 
     def test_create_usuario(self):
         response = self.client.post(self.list_url, self.usuario_data, format='json')
@@ -46,11 +49,13 @@ class UsuarioTests(APITestCase):
         
         self.assertEqual(new_user.username, 'newuser')
         self.assertEqual(new_user.is_active, True)
+        self.assertEqual(new_user.legajo, 'L-1001')
 
     def test_retrieve_usuario(self):
         response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['nombre_usuario'], 'existinguser')
+        self.assertEqual(response.data['legajo'], 'L-0001')
 
     def test_update_usuario(self):
         update_data = {'first_name': 'Updated', 'last_name': 'Name'}

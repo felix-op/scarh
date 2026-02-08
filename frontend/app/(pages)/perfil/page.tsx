@@ -11,7 +11,7 @@ export default function ProfilePage() {
 
 	const handleLogout = () => {
 		signOut({
-			callbackUrl: "/",
+			callbackUrl: "/auth/login",
 			redirect: true,
 		});
 	};

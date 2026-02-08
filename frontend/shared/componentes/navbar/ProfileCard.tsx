@@ -291,7 +291,7 @@ export default function ProfileCard({
 			return;
 		}
 		signOut({
-			callbackUrl: "/",
+			callbackUrl: "/auth/login",
 			redirect: true,
 		});
 	};
