@@ -71,17 +71,22 @@ export default function UsuarioDetallePage() {
 	const [editEmail, setEditEmail] = useState("");
 	const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
+	const toDisplayValue = (value?: string | null) => {
+		const normalized = value?.trim();
+		return normalized ? normalized : "-";
+	};
+
 	const usuarioData = (usuario ?? {}) as UsuarioDetalle;
-	const username = usuarioData.nombre_usuario ?? usuarioData.username ?? "";
-	const nombre = usuarioData.first_name ?? "";
-	const apellido = usuarioData.last_name ?? "";
-	const legajo = usuarioData.legajo ?? "";
-	const email = usuarioData.email ?? "";
-	const displayUsername = username || "usuario1";
-	const displayNombre = nombre || "Nombre de la persona";
-	const displayApellido = apellido || "Apellido de la persona";
-	const displayLegajo = legajo || "-";
-	const displayEmail = email || "ejemplo@email.com";
+	const username = (usuarioData.nombre_usuario ?? usuarioData.username ?? "").trim();
+	const nombre = (usuarioData.first_name ?? "").trim();
+	const apellido = (usuarioData.last_name ?? "").trim();
+	const legajo = (usuarioData.legajo ?? "").trim();
+	const email = (usuarioData.email ?? "").trim();
+	const displayUsername = toDisplayValue(username);
+	const displayNombre = toDisplayValue(nombre);
+	const displayApellido = toDisplayValue(apellido);
+	const displayLegajo = toDisplayValue(legajo);
+	const displayEmail = toDisplayValue(email);
 	const estadoActivo = Boolean(usuarioData.estado ?? true);
 	const estadoVariant: EstadoVariant = estadoActivo ? "activo" : "inactivo";
 
