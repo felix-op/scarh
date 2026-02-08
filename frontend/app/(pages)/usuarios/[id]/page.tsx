@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import BotonVariante from "@componentes/botones/BotonVariante";
+import ChangePasswordModal from "@componentes/ChangePasswordModal";
 import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
 import {
 	useGetHistoriales,
@@ -36,10 +37,7 @@ export default function UsuarioDetallePage() {
 		configuracion: {
 			queriesToInvalidate: [["useGetUsuario"], ["useGetUsuarios"]],
 			refetch: true,
-			onSuccess: () => {
-				setIsEditOpen(false);
-				setEditPassword("");
-			},
+			onSuccess: () => setIsEditOpen(false),
 		},
 		params: { id: usuarioId },
 	});
@@ -65,7 +63,7 @@ export default function UsuarioDetallePage() {
 	const [editApellido, setEditApellido] = useState("");
 	const [editLegajo, setEditLegajo] = useState("");
 	const [editEmail, setEditEmail] = useState("");
-	const [editPassword, setEditPassword] = useState("");
+	const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
 	const usuarioData = (usuario ?? {}) as UsuarioDetalle;
 	const username = usuarioData.nombre_usuario ?? usuarioData.username ?? "";
@@ -92,7 +90,6 @@ export default function UsuarioDetallePage() {
 		setEditApellido(apellido);
 		setEditLegajo(String(legajo));
 		setEditEmail(email);
-		setEditPassword("");
 		setIsEditOpen(true);
 	}
 
@@ -110,9 +107,36 @@ export default function UsuarioDetallePage() {
 				first_name: editNombre.trim(),
 				last_name: editApellido.trim(),
 				estado: estadoActivo,
-				...(editPassword.trim() ? { contraseña: editPassword } : {}),
 			},
 		});
+	}
+
+	function handleOpenChangePassword() {
+		setIsChangePasswordOpen(true);
+	}
+
+	function handleCancelChangePassword() {
+		setIsChangePasswordOpen(false);
+	}
+
+	function handleSavePassword(password: string) {
+		if (!username.trim() || !email.trim() || !nombre.trim() || !apellido.trim()) {
+			alert("No se pudo cambiar la contraseña: faltan datos del usuario.");
+			return;
+		}
+
+		putUser({
+			data: {
+				nombre_usuario: username.trim(),
+				legajo: String(legajo).trim(),
+				email: email.trim(),
+				first_name: nombre.trim(),
+				last_name: apellido.trim(),
+				estado: estadoActivo,
+				contraseña: password,
+			},
+		});
+		setIsChangePasswordOpen(false);
 	}
 
 
@@ -146,7 +170,7 @@ export default function UsuarioDetallePage() {
 								<span className="icon-[oui--arrow-right]" />
 								<span>Ver historial de Acciones</span>
 							</BotonVariante>
-							<BotonVariante variant="perfilPassword">
+							<BotonVariante variant="perfilPassword" onClick={handleOpenChangePassword}>
 								<span className="icon-[solar--lock-password-bold]" />
 								<span>Cambiar contraseña</span>
 							</BotonVariante>
@@ -160,7 +184,7 @@ export default function UsuarioDetallePage() {
 						</div>
 					</div>
 
-					<div className="grid gap-6 lg:grid-cols-[480px,1fr]">
+					<div className="grid items-start gap-6 md:grid-cols-[45%_55%]">
 						{/* Datos del usuario */}
 						<section className="flex flex-col gap-4 rounded-3xl border border-[#E2E2E2] bg-white p-6 shadow-[0px_4px_12px_rgba(0,0,0,0.12)]">
 							<h2 className="text-center text-[32px] font-extrabold text-black drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
@@ -287,17 +311,6 @@ export default function UsuarioDetallePage() {
 										/>
 									</label>
 
-									<label className="flex flex-col gap-1">
-										<span className="text-sm font-medium text-[#374151]">Contraseña</span>
-										<input
-											type="password"
-											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-											placeholder="********"
-											value={editPassword}
-											onChange={(event) => setEditPassword(event.target.value)}
-											disabled={isUpdatingUser}
-										/>
-									</label>
 								</div>
 							</div>
 
@@ -354,6 +367,14 @@ export default function UsuarioDetallePage() {
 						</div>
 					</div>
 				</div>
+			)}
+			{isChangePasswordOpen && (
+				<ChangePasswordModal
+					open={isChangePasswordOpen}
+					onCancel={handleCancelChangePassword}
+					onSave={handleSavePassword}
+					isSaving={isUpdatingUser}
+				/>
 			)}
 		</PaginaBase>
 	);

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AddUserModal, { NewUserData } from "@componentes/AddUserModal";
+import ChangePasswordModal from "@componentes/ChangePasswordModal";
 import PaginaBase from "@componentes/base/PaginaBase";
 import { useGetUsuarios, usePostUsuario, usePutUsuario } from "@servicios/api/django.api";
 import DataTable from "@componentes/tabla/DataTable";
@@ -16,7 +17,6 @@ type Usuario = {
 	username: string;
 	legajo: string;
 	email: string;
-	password?: string;
 	estadoLabel: string;
 	estadoVariant: EstadoVariant;
 };
@@ -35,7 +35,7 @@ export default function UsersAdminPage() {
 			},
 		},
 	});
-	const { mutate: putUser } = usePutUsuario({
+	const { mutate: putUser, isPending: isUpdatingUser } = usePutUsuario({
 		configuracion: {
 			queriesToInvalidate: [["useGetUsuarios"]],
 			refetch: true,
@@ -46,6 +46,14 @@ export default function UsersAdminPage() {
 	const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
 	const [busqueda, setBusqueda] = useState("");
 	const searchParams = useSearchParams();
+	// --- Modal edición ---
+	const [isEditOpen, setIsEditOpen] = useState(false);
+	const [editNombre, setEditNombre] = useState("");
+	const [editUsername, setEditUsername] = useState("");
+	const [editLegajo, setEditLegajo] = useState("");
+	const [editEmail, setEditEmail] = useState("");
+	const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+	const [passwordTarget, setPasswordTarget] = useState<Usuario | undefined>(undefined);
 
 	const normalizeApiUsuarios = (data: any): Usuario[] => {
 		const list = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
@@ -60,7 +68,6 @@ export default function UsersAdminPage() {
 				username: u?.nombre_usuario ?? String(u?.id ?? idx),
 				legajo: String(u?.legajo ?? u?.id ?? u?.nombre_usuario ?? idx),
 				email: u?.email ?? "-",
-				password: u?.contraseña ?? "",
 				estadoLabel: estadoActivo ? "Activo" : "Inactivo",
 				estadoVariant: estadoActivo ? "activo" : "inactivo",
 			};
@@ -87,7 +94,6 @@ export default function UsersAdminPage() {
 		setEditUsername(target.username);
 		setEditLegajo(target.legajo);
 		setEditEmail(target.email);
-		setEditPassword(target.password ?? "");
 		setIsEditOpen(true);
 	}, [searchParams, usuarios]);
 
@@ -128,14 +134,6 @@ export default function UsersAdminPage() {
 		);
 	}, [busqueda, usuarios]);
 
-	// --- Modal edición ---
-	const [isEditOpen, setIsEditOpen] = useState(false);
-	const [editNombre, setEditNombre] = useState("");
-	const [editUsername, setEditUsername] = useState("");
-	const [editLegajo, setEditLegajo] = useState("");
-	const [editEmail, setEditEmail] = useState("");
-	const [editPassword, setEditPassword] = useState("");
-
 	const router = useRouter();
 
 
@@ -160,7 +158,6 @@ export default function UsersAdminPage() {
 		setEditUsername(targetUser.username);
 		setEditLegajo(targetUser.legajo);
 		setEditEmail(targetUser.email);
-		setEditPassword(targetUser.password ?? "");
 		setIsEditOpen(true);
 	}
 
@@ -183,7 +180,6 @@ export default function UsersAdminPage() {
 				first_name: firstName,
 				last_name: lastName,
 				estado: selectedUser.estadoVariant === "activo",
-				...(editPassword.trim() ? { contraseña: editPassword } : {}),
 			},
 		});
 
@@ -196,7 +192,6 @@ export default function UsersAdminPage() {
 						username: editUsername,
 						legajo: editLegajo,
 						email: editEmail,
-						password: editPassword || u.password,
 					}
 					: u,
 			),
@@ -209,26 +204,41 @@ export default function UsersAdminPage() {
 		setIsEditOpen(false);
 	}
 
-	function handleConfirmDelete() {
-		if (!selectedUser) return;
-
-		setUsuarios((prev) => {
-			const nuevaLista = prev.filter((u) => u.id !== selectedUser.id);
-
-			if (nuevaLista.length === 0) {
-				setSelectedId(undefined);
-			} else if (!nuevaLista.some((u) => u.id === selectedId)) {
-				setSelectedId(nuevaLista[0].id);
-			}
-
-			return nuevaLista;
-		});
-
-		setIsDeleteOpen(false);
+	function handleOpenChangePassword(usuario?: Usuario) {
+		const targetUser = usuario ?? selectedUser;
+		if (!targetUser) return;
+		setPasswordTarget(targetUser);
+		setIsChangePasswordOpen(true);
 	}
 
-	function handleCancelDelete() {
-		setIsDeleteOpen(false);
+	function handleCancelChangePassword() {
+		setIsChangePasswordOpen(false);
+		setPasswordTarget(undefined);
+	}
+
+	function handleSavePassword(password: string) {
+		const targetUser = passwordTarget ?? selectedUser;
+		if (!targetUser) return;
+
+		const nameParts = targetUser.nombre.trim().split(/\s+/);
+		const firstName = nameParts[0] ?? "";
+		const lastName = nameParts.slice(1).join(" ");
+
+		putUser({
+			params: { id: targetUser.id },
+			data: {
+				nombre_usuario: targetUser.username.trim(),
+				legajo: targetUser.legajo.trim(),
+				email: targetUser.email.trim(),
+				first_name: firstName,
+				last_name: lastName,
+				estado: targetUser.estadoVariant === "activo",
+				contraseña: password,
+			},
+		});
+
+		setIsChangePasswordOpen(false);
+		setPasswordTarget(undefined);
 	}
 
 	function handleOpenAdd() {
@@ -333,96 +343,92 @@ export default function UsersAdminPage() {
 				</main>
 
 				{/* Modal edición */}
-					{isEditOpen && (
-						<div className="fixed inset-0 z-50 bg-black/40" role="dialog" aria-modal="true">
-							<div className="absolute inset-y-0 right-0 flex h-full w-full sm:max-w-xl">
-								<div className="flex h-full w-full flex-col bg-white shadow-[-10px_0_28px_rgba(0,0,0,0.2)]">
-									<div className="flex items-start justify-between border-b border-[#E5E7EB] px-6 py-5">
-										<h2 className="text-xl font-semibold text-[#1E293B]">Editar usuario</h2>
-										<button
-											onClick={handleCancelEdit}
-											className="text-2xl text-[#9CA3AF] hover:text-[#4B5563]"
-											aria-label="Cerrar"
-										>
-											×
-										</button>
+				{isEditOpen && (
+					<div className="fixed inset-0 z-50 bg-black/40" role="dialog" aria-modal="true">
+						<div className="absolute inset-y-0 right-0 flex h-full w-full sm:max-w-xl">
+							<div className="flex h-full w-full flex-col bg-white shadow-[-10px_0_28px_rgba(0,0,0,0.2)]">
+								<div className="flex items-start justify-between border-b border-[#E5E7EB] px-6 py-5">
+									<h2 className="text-xl font-semibold text-[#1E293B]">Editar usuario</h2>
+									<button
+										onClick={handleCancelEdit}
+										className="text-2xl text-[#9CA3AF] hover:text-[#4B5563]"
+										aria-label="Cerrar"
+									>
+										×
+									</button>
+								</div>
+
+								<div className="flex-1 overflow-y-auto px-6 py-5">
+									<div className="grid grid-cols-1 gap-4">
+										<label className="flex flex-col gap-1">
+											<span className="text-sm font-medium text-[#374151]">Nombre y apellido</span>
+											<input
+												className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+												placeholder="Nombre completo"
+												value={editNombre}
+												onChange={(event) => setEditNombre(event.target.value)}
+											/>
+										</label>
+
+										<label className="flex flex-col gap-1">
+											<span className="text-sm font-medium text-[#374151]">Username</span>
+											<input
+												className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+												placeholder="usuario1"
+												value={editUsername}
+												onChange={(event) => setEditUsername(event.target.value)}
+											/>
+										</label>
+
+										<label className="flex flex-col gap-1">
+											<span className="text-sm font-medium text-[#374151]">Legajo</span>
+											<input
+												className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+												placeholder="123456/01"
+												value={editLegajo}
+												onChange={(event) => setEditLegajo(event.target.value)}
+											/>
+										</label>
+
+										<label className="flex flex-col gap-1">
+											<span className="text-sm font-medium text-[#374151]">Email</span>
+											<input
+												type="email"
+												className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+												placeholder="usuario@scarh.com"
+												value={editEmail}
+												onChange={(event) => setEditEmail(event.target.value)}
+											/>
+										</label>
 									</div>
+								</div>
 
-									<div className="flex-1 overflow-y-auto px-6 py-5">
-										<div className="grid grid-cols-1 gap-4">
-											<label className="flex flex-col gap-1">
-												<span className="text-sm font-medium text-[#374151]">Nombre y apellido</span>
-												<input
-													className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-													placeholder="Nombre completo"
-													value={editNombre}
-													onChange={(event) => setEditNombre(event.target.value)}
-												/>
-											</label>
-
-											<label className="flex flex-col gap-1">
-												<span className="text-sm font-medium text-[#374151]">Username</span>
-												<input
-													className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-													placeholder="usuario1"
-													value={editUsername}
-													onChange={(event) => setEditUsername(event.target.value)}
-												/>
-											</label>
-
-											<label className="flex flex-col gap-1">
-												<span className="text-sm font-medium text-[#374151]">Legajo</span>
-												<input
-													className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-													placeholder="123456/01"
-													value={editLegajo}
-													onChange={(event) => setEditLegajo(event.target.value)}
-												/>
-											</label>
-
-											<label className="flex flex-col gap-1">
-												<span className="text-sm font-medium text-[#374151]">Email</span>
-												<input
-													type="email"
-													className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-													placeholder="usuario@scarh.com"
-													value={editEmail}
-													onChange={(event) => setEditEmail(event.target.value)}
-												/>
-											</label>
-
-											<label className="flex flex-col gap-1">
-												<span className="text-sm font-medium text-[#374151]">Contraseña</span>
-												<input
-													type="password"
-													className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-													placeholder="************"
-													value={editPassword}
-													onChange={(event) => setEditPassword(event.target.value)}
-												/>
-											</label>
-										</div>
-									</div>
-
-									<div className="flex shrink-0 justify-end gap-3 border-t border-[#E5E7EB] px-6 py-4">
-										<button
-											type="button"
-											onClick={handleCancelEdit}
-											className="rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6]"
-										>
-											Cancelar
-										</button>
-										<button
-											type="button"
-											className="rounded-lg bg-[#0D76B3] px-4 py-2 text-sm font-medium text-white hover:bg-[#0b679b]"
-											onClick={handleSaveEdit}
-										>
-											Guardar cambios
-										</button>
-									</div>
+								<div className="flex shrink-0 justify-end gap-3 border-t border-[#E5E7EB] px-6 py-4">
+									<button
+										type="button"
+										onClick={() => handleOpenChangePassword(selectedUser)}
+										className="rounded-lg border border-[#0D76B3] px-4 py-2 text-sm font-medium text-[#0D76B3] hover:bg-[#EFF6FF]"
+									>
+										Cambiar contraseña
+									</button>
+									<button
+										type="button"
+										onClick={handleCancelEdit}
+										className="rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6]"
+									>
+										Cancelar
+									</button>
+									<button
+										type="button"
+										className="rounded-lg bg-[#0D76B3] px-4 py-2 text-sm font-medium text-white hover:bg-[#0b679b]"
+										onClick={handleSaveEdit}
+									>
+										Guardar cambios
+									</button>
 								</div>
 							</div>
 						</div>
+					</div>
 				)}
 
 				
@@ -433,6 +439,14 @@ export default function UsersAdminPage() {
 					onSave={handleSaveAdd}
 					isSaving={isCreatingUser}
 				/>
+				{isChangePasswordOpen && (
+					<ChangePasswordModal
+						open={isChangePasswordOpen}
+						onCancel={handleCancelChangePassword}
+						onSave={handleSavePassword}
+						isSaving={isUpdatingUser}
+					/>
+				)}
 			</div>
 		</PaginaBase>
 	);
