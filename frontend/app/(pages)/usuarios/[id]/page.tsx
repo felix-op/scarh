@@ -190,10 +190,10 @@ export default function UsuarioDetallePage() {
 						</div>
 					</div>
 
-					<div className="grid items-start gap-6 md:grid-cols-[45%_55%]">
+					<div className="flex flex-col items-stretch gap-6 xl:flex-row">
 						{/* Datos del usuario */}
-						<section className="flex flex-col gap-4 rounded-3xl border border-[#E2E2E2] bg-white p-6 shadow-[0px_4px_12px_rgba(0,0,0,0.12)]">
-							<h2 className="text-center text-[32px] font-extrabold text-black drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
+						<section className="flex min-w-0 flex-col gap-4 overflow-hidden rounded-3xl border border-[#E2E2E2] bg-white p-6 shadow-[0px_4px_12px_rgba(0,0,0,0.12)] xl:flex-[0_0_45%]">
+							<h2 className="text-left text-[32px] font-extrabold text-black drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
 								Información del Usuario
 							</h2>
 							<div className="h-px w-full bg-[#E2E2E2]" />
@@ -207,19 +207,19 @@ export default function UsuarioDetallePage() {
 							].map((row) => (
 								<div
 									key={row.label}
-									className="flex min-h-[72px] items-center gap-4 rounded-2xl px-3 py-3"
+									className="flex min-h-[72px] min-w-0 items-center gap-2 rounded-2xl px-3 py-3"
 								>
-									<div className="w-48 text-center text-[20px] font-normal text-[#838383] leading-6">
+									<div className="shrink-0 whitespace-nowrap text-left text-[20px] font-normal text-[#838383] leading-6">
 										{row.label}
 									</div>
-									<div className="text-[24px] font-semibold text-black leading-[28px]">
+									<div className="min-w-0 text-[24px] font-semibold text-black leading-[28px] break-words [overflow-wrap:anywhere]">
 										{row.value}
 									</div>
 								</div>
 							))}
 
-							<div className="flex items-center gap-4 rounded-2xl px-3 py-3">
-								<div className="w-48 text-center text-[20px] font-normal text-[#838383] leading-6">
+							<div className="flex min-w-0 items-center gap-2 rounded-2xl px-3 py-3">
+								<div className="shrink-0 whitespace-nowrap text-left text-[20px] font-normal text-[#838383] leading-6">
 									Estado:
 								</div>
 								<EstadoChip variant={estadoVariant} label={estadoActivo ? "Activo" : "Inactivo"} />
@@ -227,7 +227,7 @@ export default function UsuarioDetallePage() {
 						</section>
 
 						{/* Resumen historial */}
-						<section className="flex flex-col gap-4 rounded-3xl border border-[#E2E2E2] bg-white p-6 shadow-[0px_4px_12px_rgba(0,0,0,0.12)]">
+						<section className="flex min-w-0 flex-col gap-4 overflow-hidden rounded-3xl border border-[#E2E2E2] bg-white p-6 shadow-[0px_4px_12px_rgba(0,0,0,0.12)] xl:flex-[1_1_55%]">
 							<h2 className="text-center text-[32px] font-extrabold text-black drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
 								Resumen del Historial
 							</h2>
