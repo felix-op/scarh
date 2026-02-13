@@ -10,6 +10,9 @@ import DataTable from "@componentes/tabla/DataTable";
 import { ColumnConfig } from "@componentes/tabla/types";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
+import BotonIconoEditar from "@componentes/botones/BotonIconoEditar";
+import ActionMenu from "@componentes/tabla/ActionMenu";
+import BotonIconoIr from "@componentes/botones/BotonIconoIr";
 
 type Usuario = {
 	id: string;
@@ -278,187 +281,171 @@ export default function UsersAdminPage() {
 	const actionConfig = {
 		typeAction: "fila" as const,
 		actionColumns: (row: Usuario) => (
-			<div className="flex flex-wrap gap-2">
-				<BotonVariante
-					variant="editar"
+			<ActionMenu>
+				<BotonIconoEditar
 					onClick={(event) => {
 						event.stopPropagation();
 						handleOpenEdit(row);
 					}}
 				/>
-				<BotonVariante
-					variant="ir"
+				<BotonIconoIr
 					onClick={(event) => {
 						event.stopPropagation();
 						handleViewUser(row);
 					}}
 				/>
-			</div>
+			</ActionMenu>
 		),
 	};
 
 	return (
 		<PaginaBase>
-			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
+			<div className="flex flex-col gap-4">
+				<h1>Administración de usuarios</h1>
+				<p>
+					Seleccioná un usuario de la lista para ver o editar su
+					información.
+				</p>
 
-				<main className="flex flex-1 justify-center px-6 py-10">
-					<div className="flex w-full max-w-[1350px] flex-col gap-8">
-						<header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-							<div className="flex flex-col gap-1">
-								<h1 className="text-2xl font-semibold text-[#1E293B]">
-									Administración de usuarios
-								</h1>
-								<p className="text-sm text-[#6B7280]">
-									Seleccioná un usuario de la lista para ver o editar su
-									información.
-								</p>
-							</div>
-
-						</header>
-
-						<div className="flex flex-col gap-4 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm">
-							<div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-								<div className="flex flex-1 flex-wrap items-center gap-3">
-									<div className="relative w-full max-w-xl">
-										<span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] icon-[mdi--magnify] text-xl" />
-										<input
-											type="text"
-											value={busqueda}
-											onChange={(e) => setBusqueda(e.target.value)}
-											placeholder="Buscar por nombre, username, legajo o email"
-											className="w-full rounded-full border border-[#E5E7EB] bg-[#F3F3F3] py-2.5 pl-11 pr-4 text-sm text-[#111827] shadow-[3px_4px_4px_rgba(0,0,0,0.19)] focus:border-[#0D76B3] focus:outline-none"
-										/>
-									</div>
-
-									
-								</div>
-
-							</div>
-
-							<DataTable<Usuario>
-								data={filteredUsuarios}
-								columns={columns}
-								rowIdKey="id"
-								minWidth={820}
-								onAdd={handleOpenAdd}
-								actionConfig={actionConfig}
-								isLoading={isLoading}
+				<div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+					<div className="flex flex-1 flex-wrap items-center gap-3">
+						<div className="relative w-full max-w-xl">
+							<span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] icon-[mdi--magnify] text-xl" />
+							<input
+								type="text"
+								value={busqueda}
+								onChange={(e) => setBusqueda(e.target.value)}
+								placeholder="Buscar por nombre, username, legajo o email"
+								className="w-full rounded-full border border-[#E5E7EB] bg-[#F3F3F3] py-2.5 pl-11 pr-4 text-sm text-[#111827] shadow-[3px_4px_4px_rgba(0,0,0,0.19)] focus:border-[#0D76B3] focus:outline-none"
 							/>
 						</div>
+
+						
 					</div>
-				</main>
 
-				{/* Modal edición */}
-				{isEditOpen && (
-					<div className="fixed inset-0 z-50 bg-black/40" role="dialog" aria-modal="true">
-						<div className="absolute inset-y-0 right-0 flex h-full w-full sm:max-w-xl">
-							<div className="flex h-full w-full flex-col bg-white shadow-[-10px_0_28px_rgba(0,0,0,0.2)]">
-								<div className="flex items-start justify-between border-b border-[#E5E7EB] px-6 py-5">
-									<h2 className="text-xl font-semibold text-[#1E293B]">Editar usuario</h2>
-									<button
-										onClick={handleCancelEdit}
-										className="text-2xl text-[#9CA3AF] hover:text-[#4B5563]"
-										aria-label="Cerrar"
-									>
-										×
-									</button>
+				</div>
+
+				<DataTable<Usuario>
+					data={filteredUsuarios}
+					columns={columns}
+					rowIdKey="id"
+					minWidth={320}
+					onAdd={handleOpenAdd}
+					actionConfig={actionConfig}
+					isLoading={isLoading}
+				/>
+			</div>
+
+			{/* Modal edición */}
+			{isEditOpen && (
+				<div className="fixed inset-0 z-50 bg-black/40" role="dialog" aria-modal="true">
+					<div className="absolute inset-y-0 right-0 flex h-full w-full sm:max-w-xl">
+						<div className="flex h-full w-full flex-col bg-white shadow-[-10px_0_28px_rgba(0,0,0,0.2)]">
+							<div className="flex items-start justify-between border-b border-[#E5E7EB] px-6 py-5">
+								<h2 className="text-xl font-semibold text-[#1E293B]">Editar usuario</h2>
+								<button
+									onClick={handleCancelEdit}
+									className="text-2xl text-[#9CA3AF] hover:text-[#4B5563]"
+									aria-label="Cerrar"
+								>
+									×
+								</button>
+							</div>
+
+							<div className="flex-1 overflow-y-auto px-6 py-5">
+								<div className="grid grid-cols-1 gap-4">
+									<label className="flex flex-col gap-1">
+										<span className="text-sm font-medium text-[#374151]">Nombre y apellido</span>
+										<input
+											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+											placeholder="Nombre completo"
+											value={editNombre}
+											onChange={(event) => setEditNombre(event.target.value)}
+										/>
+									</label>
+
+									<label className="flex flex-col gap-1">
+										<span className="text-sm font-medium text-[#374151]">Username</span>
+										<input
+											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+											placeholder="usuario1"
+											value={editUsername}
+											onChange={(event) => setEditUsername(event.target.value)}
+										/>
+									</label>
+
+									<label className="flex flex-col gap-1">
+										<span className="text-sm font-medium text-[#374151]">Legajo</span>
+										<input
+											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+											placeholder="123456/01"
+											value={editLegajo}
+											onChange={(event) => setEditLegajo(event.target.value)}
+										/>
+									</label>
+
+									<label className="flex flex-col gap-1">
+										<span className="text-sm font-medium text-[#374151]">Email</span>
+										<input
+											type="email"
+											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+											placeholder="usuario@scarh.com"
+											value={editEmail}
+											onChange={(event) => setEditEmail(event.target.value)}
+										/>
+									</label>
 								</div>
+							</div>
 
-								<div className="flex-1 overflow-y-auto px-6 py-5">
-									<div className="grid grid-cols-1 gap-4">
-										<label className="flex flex-col gap-1">
-											<span className="text-sm font-medium text-[#374151]">Nombre y apellido</span>
-											<input
-												className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-												placeholder="Nombre completo"
-												value={editNombre}
-												onChange={(event) => setEditNombre(event.target.value)}
-											/>
-										</label>
-
-										<label className="flex flex-col gap-1">
-											<span className="text-sm font-medium text-[#374151]">Username</span>
-											<input
-												className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-												placeholder="usuario1"
-												value={editUsername}
-												onChange={(event) => setEditUsername(event.target.value)}
-											/>
-										</label>
-
-										<label className="flex flex-col gap-1">
-											<span className="text-sm font-medium text-[#374151]">Legajo</span>
-											<input
-												className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-												placeholder="123456/01"
-												value={editLegajo}
-												onChange={(event) => setEditLegajo(event.target.value)}
-											/>
-										</label>
-
-										<label className="flex flex-col gap-1">
-											<span className="text-sm font-medium text-[#374151]">Email</span>
-											<input
-												type="email"
-												className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-												placeholder="usuario@scarh.com"
-												value={editEmail}
-												onChange={(event) => setEditEmail(event.target.value)}
-											/>
-										</label>
-									</div>
-								</div>
-
-								<div className="flex shrink-0 justify-end gap-3 border-t border-[#E5E7EB] px-6 py-4">
-									<button
-										type="button"
-										onClick={() => handleOpenChangePassword(selectedUser)}
-										className="rounded-lg border border-[#0D76B3] px-4 py-2 text-sm font-medium text-[#0D76B3] hover:bg-[#EFF6FF]"
-										disabled={isUpdatingUser}
-									>
-										Cambiar contraseña
-									</button>
-									<button
-										type="button"
-										onClick={handleCancelEdit}
-										className={MODAL_CANCEL_BUTTON_CLASS}
-										disabled={isUpdatingUser}
-									>
-										<span className="icon-[mdi--close-thick] text-base" aria-hidden="true" />
-										<span>Cancelar</span>
-									</button>
-									<button
-										type="button"
-										className={MODAL_SAVE_BUTTON_CLASS}
-										onClick={handleSaveEdit}
-										disabled={isUpdatingUser}
-									>
-										<span className="icon-[mdi--content-save] text-base" aria-hidden="true" />
-										<span>{isUpdatingUser ? "Guardando..." : "Guardar cambios"}</span>
-									</button>
-								</div>
+							<div className="flex shrink-0 justify-end gap-3 border-t border-[#E5E7EB] px-6 py-4">
+								<button
+									type="button"
+									onClick={() => handleOpenChangePassword(selectedUser)}
+									className="rounded-lg border border-[#0D76B3] px-4 py-2 text-sm font-medium text-[#0D76B3] hover:bg-[#EFF6FF]"
+									disabled={isUpdatingUser}
+								>
+									Cambiar contraseña
+								</button>
+								<button
+									type="button"
+									onClick={handleCancelEdit}
+									className={MODAL_CANCEL_BUTTON_CLASS}
+									disabled={isUpdatingUser}
+								>
+									<span className="icon-[mdi--close-thick] text-base" aria-hidden="true" />
+									<span>Cancelar</span>
+								</button>
+								<button
+									type="button"
+									className={MODAL_SAVE_BUTTON_CLASS}
+									onClick={handleSaveEdit}
+									disabled={isUpdatingUser}
+								>
+									<span className="icon-[mdi--content-save] text-base" aria-hidden="true" />
+									<span>{isUpdatingUser ? "Guardando..." : "Guardar cambios"}</span>
+								</button>
 							</div>
 						</div>
 					</div>
-				)}
+				</div>
+			)}
 
-				
-				{/* Modal añadir */}
-				<AddUserModal
-					open={isAddOpen}
-					onCancel={handleCancelAdd}
-					onSave={handleSaveAdd}
-					isSaving={isCreatingUser}
+			
+			{/* Modal añadir */}
+			<AddUserModal
+				open={isAddOpen}
+				onCancel={handleCancelAdd}
+				onSave={handleSaveAdd}
+				isSaving={isCreatingUser}
+			/>
+			{isChangePasswordOpen && (
+				<ChangePasswordModal
+					open={isChangePasswordOpen}
+					onCancel={handleCancelChangePassword}
+					onSave={handleSavePassword}
+					isSaving={isUpdatingUser}
 				/>
-				{isChangePasswordOpen && (
-					<ChangePasswordModal
-						open={isChangePasswordOpen}
-						onCancel={handleCancelChangePassword}
-						onSave={handleSavePassword}
-						isSaving={isUpdatingUser}
-					/>
-				)}
-			</div>
+			)}
 		</PaginaBase>
 	);
 }
