@@ -12,3 +12,13 @@ export type ActionConfig<T> = {
     actionFn?: (row: T) => void;
     actionColumns?: (row: T) => ReactNode
 }
+
+export type PaginationConfig<T> = {
+    page: number;
+    maxPage: number;
+    prevPage: (prev: number) => void,
+    nextPage: (next: number) => void,
+    lengthPages: number,
+    lengthOptions: Array<number>,
+    changeLength: (length: number) => void,
+};
