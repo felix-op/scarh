@@ -5,6 +5,7 @@ from .medicionSerializer import MedicionSerializer
 from .ubicacionSerializer import UbicacionSerializer, UbicacionOutputSerializer
 from .estadisticaSerializer import EstadisticaInputSerializer, EstadisticaOutputSerializer
 from .customTokenRefreshView import CustomTokenRefreshSerializer
+from .changePasswordSerializer import ChangePasswordSerializer
 __all__ = [
     "UsuarioSerializer",
     "LimnigrafoSerializer",
@@ -16,4 +17,5 @@ __all__ = [
     "EstadisticaInputSerializer",
     "EstadisticaOutputSerializer",
     "CustomTokenRefreshSerializer",
+    "ChangePasswordSerializer",
 ]

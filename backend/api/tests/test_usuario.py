@@ -61,13 +61,41 @@ class UsuarioTests(APITestCase):
         self.assertEqual(self.usuario.first_name, 'Updated')
         self.assertEqual(self.usuario.last_name, 'Name')
 
-    def test_update_usuario_password(self):
-        update_data = {'contraseña': 'updatedpassword456'}
+    def test_update_usuario_password_ignored(self):
+        update_data = {'contraseña': 'ignoredpassword'}
         response = self.client.patch(self.detail_url, update_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         self.usuario.refresh_from_db()
-        self.assertTrue(self.usuario.check_password('updatedpassword456'))
+        self.assertFalse(self.usuario.check_password('ignoredpassword'))
+        self.assertTrue(self.usuario.check_password('oldpassword'))
+
+    def test_change_password_endpoint(self):
+        url = reverse('usuarios-cambiar-password', args=[self.usuario.id])
+        data = {
+            'password_actual': 'oldpassword',
+            'password_nueva': 'newsecurepassword'
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        self.usuario.refresh_from_db()
+        self.assertTrue(self.usuario.check_password('newsecurepassword'))
+
+    def test_change_password_endpoint_fail(self):
+        """
+        Verifica que falle si la contraseña actual es incorrecta.
+        """
+        url = reverse('usuarios-cambiar-password', args=[self.usuario.id])
+        data = {
+            'password_actual': 'wrongpassword',
+            'password_nueva': 'newsecurepassword'
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        
+        self.usuario.refresh_from_db()
+        self.assertFalse(self.usuario.check_password('newsecurepassword'))
 
     def test_delete_usuario(self):
         User = get_user_model()
