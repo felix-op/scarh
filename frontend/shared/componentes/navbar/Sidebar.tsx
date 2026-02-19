@@ -7,6 +7,7 @@ import Divider from "./Divider";
 import { useTheme } from "next-themes";
 import usePersistedState from "@hooks/usePersistedState";
 import useIsMounted from "@hooks/useIsMounted";
+import { useSession } from "next-auth/react";
 
 type SidebarItem = {
 	label: string;
@@ -27,10 +28,9 @@ const rutas: SidebarItem[] = [
 
 export default function Sidebar() {
 	const mounted = useIsMounted();
-	
-	const userName="Juan Perez"
 	const router = useRouter();
 	const { theme, setTheme } = useTheme();
+	const { data: session } = useSession();
 	
 	const [isCollapsed, setIsCollapsed] = usePersistedState("scarh-nav-collapsed", false);
 
@@ -49,6 +49,12 @@ export default function Sidebar() {
 	if (!mounted) {
 		return <div className="flex bg-sidebar font-outfit w-70 h-screen" />;
 	}
+
+	const userName =
+		session?.user?.username ||
+		session?.user?.name ||
+		session?.user?.email ||
+		"Usuario";
 
 	return (
 		<div className="flex bg-sidebar font-outfit">
@@ -101,6 +107,7 @@ export default function Sidebar() {
 				</div>
 				<Divider direccion="horizontal" />
 				<ProfileCard
+					variant="sidebar"
 					collapsed={isCollapsed}
 					userName={userName}
 				/>
