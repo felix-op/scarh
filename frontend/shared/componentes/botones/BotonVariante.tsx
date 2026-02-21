@@ -49,7 +49,7 @@ const shineEffectClass = `
     active:before:shadow-[inset_0px_4px_8px_rgba(0,0,0,0.2)]
 `;
 
-type VariantKey = keyof typeof variantConfig;
+export type ButtonVariant = keyof typeof variantConfig;
 
 type BotonVarianteProps = {
     children?: ReactNode;
@@ -58,7 +58,7 @@ type BotonVarianteProps = {
     disabled?: boolean;
     className?: string;
     type?: 'button' | 'submit' | 'reset';
-    variant?: VariantKey;
+    variant?: ButtonVariant;
 };
 
 export default function BotonVariante({

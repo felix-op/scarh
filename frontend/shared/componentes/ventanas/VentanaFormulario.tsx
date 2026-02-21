@@ -5,7 +5,7 @@ import Formulario from "@componentes/formularios/Formulario";
 import { ReactNode, useCallback, useState } from "react";
 import { Drawer, DrawerContent, DrawerTitle, DrawerFooter, DrawerDescription } from "@componentes/components/ui/drawer";
 import { DefaultValues, FieldValues } from "react-hook-form";
-import VentanaConfirmarCierre from "./VentanaConfirmarCierre";
+import VentanaConfirmar from "./VentanaConfirmar";
 
 type VentanaFormularioProps<T extends FieldValues> = {
 	open: boolean;
@@ -13,6 +13,7 @@ type VentanaFormularioProps<T extends FieldValues> = {
 	onSubmit: (data: T) => void,
 	valoresIniciales: DefaultValues<T>,
 	children: ReactNode,
+	titulo?: string,
 	descripcion?: string,
 	classNameVentana?: string,
 	classNameFormulario?: string,
@@ -25,6 +26,7 @@ export default function VentanaFormulario<T extends FieldValues>({
 	onSubmit,
 	children,
 	valoresIniciales,
+	titulo = "",
 	descripcion = "",
 	classNameVentana = "",
 	classNameFormulario = "",
@@ -53,7 +55,7 @@ export default function VentanaFormulario<T extends FieldValues>({
 				<DrawerContent className={`bg-transparent border-none py-4 pr-2 ${classNameVentana}`}>
 					<div className="flex flex-col bg-ventana dark:border w-full h-full rounded-lg">
 						<DrawerTitle className="flex justify-between items-center p-5 shrink-0">
-							<span className="text-2xl text-ventana-foreground font-bold">Agregar Limnígrafo</span>
+							<span className="text-2xl text-ventana-foreground font-bold">{titulo}</span>
 							<button type="button" className="flex bg-ventana-secondary rounded-full cursor-pointer text-foreground hover:text-error p-2" onClick={handleClose}>
 								<span className="icon-[material-symbols--close] text-2xl" />
 							</button>
@@ -73,7 +75,7 @@ export default function VentanaFormulario<T extends FieldValues>({
 					</div>
 				</DrawerContent>
 			</Drawer>
-			<VentanaConfirmarCierre
+			<VentanaConfirmar
 				open={confirmar}
 				onClose={() => {
 					setConfirmar(false);
@@ -85,6 +87,7 @@ export default function VentanaFormulario<T extends FieldValues>({
 				}}
 				title="Cerrar Formulario"
 				description="Está seguro que desea cerrar el formulario? Perderá todos sus cambios realizados."
+				variant="cierre"
 			/>
 		</>
 	);
