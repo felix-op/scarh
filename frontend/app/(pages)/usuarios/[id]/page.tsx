@@ -8,11 +8,9 @@ import ChangePasswordModal from "@componentes/ChangePasswordModal";
 import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
 import {
 	useGetHistoriales,
-	useGetUsuario,
 	HistorialItem,
-	useDeleteUsuario,
-	usePutUsuario,
 } from "@servicios/api/django.api";
+import { useDeleteUsuario, useGetUsuario, usePutUsuario } from "@servicios/api";
 
 type UsuarioDetalle = {
 	nombre_usuario?: string;

@@ -1,302 +1,162 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import AddUserModal, { NewUserData } from "@componentes/AddUserModal";
-import ChangePasswordModal from "@componentes/ChangePasswordModal";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
-import { useGetUsuarios, usePostUsuario, usePutUsuario } from "@servicios/api/django.api";
 import DataTable from "@componentes/tabla/DataTable";
-import { ColumnConfig } from "@componentes/tabla/types";
-import BotonVariante from "@componentes/botones/BotonVariante";
+import { ActionConfig, ColumnConfig } from "@componentes/tabla/types";
 import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
-import BotonIconoEditar from "@componentes/botones/BotonIconoEditar";
 import ActionMenu from "@componentes/tabla/ActionMenu";
+import VentanaAgregrarUsuario from "./componentes/VentanaAgregarUsuario";
+import BotonVariante from "@componentes/botones/BotonVariante";
+import { UsuarioResponse } from "types/usuarios";
+import { useGetUsuarios } from "@servicios/api";
 import BotonIconoIr from "@componentes/botones/BotonIconoIr";
+import BotonIconoEditar from "@componentes/botones/BotonIconoEditar";
+import VentanaEditarUsuario from "./componentes/VentanaEditarUsuario";
+import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
+import BotonIconoEliminar from "@componentes/botones/BotonIconoEliminar";
+import VentanaEliminarUsuario from "./componentes/VentanaEliminarUsuario";
 
-type Usuario = {
-	id: string;
-	nombre: string;
-	username: string;
-	legajo: string;
-	email: string;
-	estadoLabel: string;
-	estadoVariant: EstadoVariant;
+const queriesToInvalidate = ["useGetUsuarios"];
+
+const defaultMessage: VentanaAceptarOptions = {
+	title: "",
+	description: "",
+	variant: "info",
 };
 
-const MODAL_CANCEL_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70";
-
-const MODAL_SAVE_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70";
-
 export default function UsersAdminPage() {
-	const { data: users, isLoading } = useGetUsuarios({});
-	const { mutate: postUser, isPending: isCreatingUser } = usePostUsuario({
-		configuracion: {
-			queriesToInvalidate: [["useGetUsuarios"]],
-			refetch: true,
-			onSuccess: (created) => {
-				setIsAddOpen(false);
-				// Seleccionar el nuevo usuario si viene en la respuesta
-				const newId = (created as any)?.id ?? (created as any)?.nombre_usuario;
-				if (newId) setSelectedId(String(newId));
-			},
-		},
-	});
-	const { mutate: putUser, isPending: isUpdatingUser } = usePutUsuario({
-		configuracion: {
-			queriesToInvalidate: [["useGetUsuarios"]],
-			refetch: true,
-		},
-	});
-
-	const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-	const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+	const { data: usuarios, isLoading, isRefetching } = useGetUsuarios({});
+	const [usuarioEditar, setUsuarioEditar] = useState<UsuarioResponse | null>(null);
 	const [busqueda, setBusqueda] = useState("");
-	const searchParams = useSearchParams();
-	// --- Modal edición ---
+	const [message, setMesage] = useState(defaultMessage);
+
+	// --- Modal añadir ---
+	const [isAddOpen, setIsAddOpen] = useState(false);
+	const handleOpenAdd = () => setIsAddOpen(true);
+	const handleCancelAdd = () => setIsAddOpen(false);
+
+	// --- Modal editar ---
 	const [isEditOpen, setIsEditOpen] = useState(false);
-	const [editNombre, setEditNombre] = useState("");
-	const [editUsername, setEditUsername] = useState("");
-	const [editLegajo, setEditLegajo] = useState("");
-	const [editEmail, setEditEmail] = useState("");
-	const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-	const [passwordTarget, setPasswordTarget] = useState<Usuario | undefined>(undefined);
-
-	const normalizeApiUsuarios = (data: any): Usuario[] => {
-		const list = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
-
-		return list.map((u: any, idx: number) => {
-			const nombreCompleto = `${u?.first_name ?? ""} ${u?.last_name ?? ""}`.trim();
-			const estadoActivo = Boolean(u?.estado);
-
-			return {
-				id: String(u?.id ?? u?.nombre_usuario ?? idx),
-				nombre: nombreCompleto || u?.nombre_usuario || "Sin nombre",
-				username: u?.nombre_usuario ?? String(u?.id ?? idx),
-				legajo: String(u?.legajo ?? u?.id ?? u?.nombre_usuario ?? idx),
-				email: u?.email ?? "-",
-				estadoLabel: estadoActivo ? "Activo" : "Inactivo",
-				estadoVariant: estadoActivo ? "activo" : "inactivo",
-			};
-		});
-	};
-
-	useEffect(() => {
-		if (!users) return;
-		const parsed = normalizeApiUsuarios(users);
-		setUsuarios(parsed);
-		if (parsed.length && (!selectedId || !parsed.some((u) => u.id === selectedId))) {
-			setSelectedId(parsed[0].id);
-		}
-	}, [users, selectedId]);
-
-	// Abrir modal de edición si viene editId en la URL
-	useEffect(() => {
-		const editId = searchParams.get("editId");
-		if (!editId || !usuarios.length) return;
-		const target = usuarios.find((u) => u.id === editId);
-		if (!target) return;
-		setSelectedId(target.id);
-		setEditNombre(target.nombre);
-		setEditUsername(target.username);
-		setEditLegajo(target.legajo);
-		setEditEmail(target.email);
+	const handleOpenEdit = (row: UsuarioResponse) => {
+		setUsuarioEditar(row);
 		setIsEditOpen(true);
-	}, [searchParams, usuarios]);
+	}
+	const handleCancelEdit = () => {
+		setUsuarioEditar(null);
+		setIsEditOpen(false);
+	}
 
-	const selectedUser = useMemo(
-		() => usuarios.find((u) => u.id === selectedId),
-		[usuarios, selectedId],
-	);
+	// --- Modal eliminar ---
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+	const handleOpenDelete = (row: UsuarioResponse) => {
+		setUsuarioEditar(row);
+		setIsDeleteOpen(true);
+	}
+	const handleCloseDelete = () => {
+		setUsuarioEditar(null);
+		setIsDeleteOpen(false);
+	}
+
+	// --- Modal informar ---
+	const [isOpenInfo, setIsOpenInfo] = useState(false);
+	const handleOpenInfo = (message: VentanaAceptarOptions) => {
+		setMesage(message);
+		setIsOpenInfo(true);
+	};
+	const handleCloseInfo = () => setIsOpenInfo(false);
 
 	const renderEstadoPill = (variant: EstadoVariant, label: string) => {
-		return <EstadoChip variant={variant} label={label} />;
+		return (
+			<div className="p-2">
+				<EstadoChip variant={variant} label={label} />
+			</div>
+		);
 	};
 
-	const columns = useMemo<ColumnConfig<Usuario>[]>(() => [
+	const handleViewUser = (usuario: UsuarioResponse) => {
+		router.push(`/usuarios/${usuario.id}`);
+	};
+
+	// Configuración de la tabla
+	const columns: ColumnConfig<UsuarioResponse>[] = [
 		{
 			id: "estado",
 			header: "Estado",
-			cell: (row) => renderEstadoPill(row.estadoVariant, row.estadoLabel),
+			cell: (row) => renderEstadoPill(row.estado ? "activo" : "inactivo", row.estado ? "Activo" : "Inactivo"),
 		},
 		{
 			id: "nombre",
 			header: "Nombre",
-			accessorKey: "nombre",
+			cell: (row) => <p className="p-4">{`${row.first_name} ${row.last_name}`}</p>,
 		},
 		{
 			id: "legajo",
 			header: "Legajo",
 			accessorKey: "legajo",
 		},
-	], []);
+	];
+
+	const actionConfig: ActionConfig<UsuarioResponse> = {
+		typeAction: "fila",
+		actionColumns: (row) => (
+			<ActionMenu>
+				<BotonVariante
+					variant="editar"
+					className="hidden xl:flex"
+					onClick={() => {
+						handleOpenEdit(row);
+					}}
+				/>
+				<BotonIconoEditar
+					className="xl:hidden"
+					onClick={() => {
+						handleOpenEdit(row);
+					}}
+				/>
+				<BotonVariante
+					variant="ir"
+					className="hidden xl:flex"
+					onClick={() => {
+						handleViewUser(row);
+					}}
+				/>
+				<BotonIconoIr
+					className="xl:hidden"
+					onClick={() => {
+						handleViewUser(row);
+					}}
+				/>
+				<BotonVariante
+					variant="eliminar"
+					className="hidden xl:flex"
+					onClick={() => {
+						handleOpenDelete(row);
+					}}
+				/>
+				<BotonIconoEliminar
+					className="xl:hidden"
+					onClick={() => {
+						handleOpenDelete(row);
+					}}
+				/>
+			</ActionMenu>
+		),
+	};
 
 	const filteredUsuarios = useMemo(() => {
+		if (!usuarios) return [];
 		const term = busqueda.trim().toLowerCase();
 		if (!term) return usuarios;
 		return usuarios.filter((u) =>
-			[u.nombre, u.username, u.legajo, u.email]
+			[u.first_name, u.last_name, u.nombre_usuario, u.legajo, u.email]
 				.filter(Boolean)
 				.some((field) => String(field).toLowerCase().includes(term)),
 		);
 	}, [busqueda, usuarios]);
 
 	const router = useRouter();
-
-
-	// --- Modal añadir ---
-	const [isAddOpen, setIsAddOpen] = useState(false);
-
-	const handleSelectUser = (usuario: Usuario) => {
-		setSelectedId(usuario.id);
-	};
-
-	const handleViewUser = (usuario: Usuario) => {
-		handleSelectUser(usuario);
-		router.push(`/usuarios/${usuario.id}`);
-	};
-
-	function handleOpenEdit(usuario?: Usuario) {
-		const targetUser = usuario ?? selectedUser;
-		if (!targetUser) return;
-
-		setSelectedId(targetUser.id);
-		setEditNombre(targetUser.nombre);
-		setEditUsername(targetUser.username);
-		setEditLegajo(targetUser.legajo);
-		setEditEmail(targetUser.email);
-		setIsEditOpen(true);
-	}
-
-	function handleSaveEdit() {
-		if (!selectedUser) return;
-		if (!editNombre.trim() || !editUsername.trim() || !editEmail.trim()) {
-			alert("Completá al menos nombre, username y email.");
-			return;
-		}
-		const nameParts = editNombre.trim().split(/\s+/);
-		const firstName = nameParts[0] ?? "";
-		const lastName = nameParts.slice(1).join(" ");
-
-		putUser({
-			params: { id: selectedUser.id },
-			data: {
-				nombre_usuario: editUsername.trim(),
-				legajo: editLegajo.trim(),
-				email: editEmail.trim(),
-				first_name: firstName,
-				last_name: lastName,
-				estado: selectedUser.estadoVariant === "activo",
-			},
-		});
-
-		setUsuarios((prev) =>
-			prev.map((u) =>
-				u.id === selectedUser.id
-					? {
-						...u,
-						nombre: editNombre,
-						username: editUsername,
-						legajo: editLegajo,
-						email: editEmail,
-					}
-					: u,
-			),
-		);
-
-		setIsEditOpen(false);
-	}
-
-	function handleCancelEdit() {
-		setIsEditOpen(false);
-	}
-
-	function handleOpenChangePassword(usuario?: Usuario) {
-		const targetUser = usuario ?? selectedUser;
-		if (!targetUser) return;
-		setPasswordTarget(targetUser);
-		setIsChangePasswordOpen(true);
-	}
-
-	function handleCancelChangePassword() {
-		setIsChangePasswordOpen(false);
-		setPasswordTarget(undefined);
-	}
-
-	function handleSavePassword(password: string) {
-		const targetUser = passwordTarget ?? selectedUser;
-		if (!targetUser) return;
-
-		const nameParts = targetUser.nombre.trim().split(/\s+/);
-		const firstName = nameParts[0] ?? "";
-		const lastName = nameParts.slice(1).join(" ");
-
-		putUser({
-			params: { id: targetUser.id },
-			data: {
-				nombre_usuario: targetUser.username.trim(),
-				legajo: targetUser.legajo.trim(),
-				email: targetUser.email.trim(),
-				first_name: firstName,
-				last_name: lastName,
-				estado: targetUser.estadoVariant === "activo",
-				contraseña: password,
-			},
-		});
-
-		setIsChangePasswordOpen(false);
-		setPasswordTarget(undefined);
-	}
-
-	function handleOpenAdd() {
-		setIsAddOpen(true);
-	}
-
-	function handleCancelAdd() {
-		setIsAddOpen(false);
-	}
-
-	function handleSaveAdd(data: NewUserData) {
-		if (isCreatingUser) return;
-		if (!data.nombre.trim() || !data.apellido.trim() || !data.username.trim() || !data.email.trim()) {
-			alert("Completá al menos nombre, apellido, username y email.");
-			return;
-		}
-
-		postUser({
-			data: {
-				email: data.email,
-				first_name: data.nombre.trim(),
-				last_name: data.apellido.trim(),
-				legajo: data.legajo.trim(),
-				estado: true,
-				contraseña: data.password || "123456",
-				nombre_usuario: data.username,
-			},
-		});
-	}
-
-	const actionConfig = {
-		typeAction: "fila" as const,
-		actionColumns: (row: Usuario) => (
-			<ActionMenu>
-				<BotonIconoEditar
-					onClick={(event) => {
-						event.stopPropagation();
-						handleOpenEdit(row);
-					}}
-				/>
-				<BotonIconoIr
-					onClick={(event) => {
-						event.stopPropagation();
-						handleViewUser(row);
-					}}
-				/>
-			</ActionMenu>
-		),
-	};
 
 	return (
 		<PaginaBase>
@@ -318,134 +178,45 @@ export default function UsersAdminPage() {
 								placeholder="Buscar por nombre, username, legajo o email"
 								className="w-full rounded-full border border-[#E5E7EB] bg-[#F3F3F3] py-2.5 pl-11 pr-4 text-sm text-[#111827] shadow-[3px_4px_4px_rgba(0,0,0,0.19)] focus:border-[#0D76B3] focus:outline-none"
 							/>
-						</div>
-
-						
+						</div>						
 					</div>
-
 				</div>
 
-				<DataTable<Usuario>
+				<DataTable
 					data={filteredUsuarios}
 					columns={columns}
 					rowIdKey="id"
 					minWidth={320}
 					onAdd={handleOpenAdd}
 					actionConfig={actionConfig}
-					isLoading={isLoading}
+					isLoading={isLoading || isRefetching}
 				/>
 			</div>
-
-			{/* Modal edición */}
-			{isEditOpen && (
-				<div className="fixed inset-0 z-50 bg-black/40" role="dialog" aria-modal="true">
-					<div className="absolute inset-y-0 right-0 flex h-full w-full sm:max-w-xl">
-						<div className="flex h-full w-full flex-col bg-white shadow-[-10px_0_28px_rgba(0,0,0,0.2)]">
-							<div className="flex items-start justify-between border-b border-[#E5E7EB] px-6 py-5">
-								<h2 className="text-xl font-semibold text-[#1E293B]">Editar usuario</h2>
-								<button
-									onClick={handleCancelEdit}
-									className="text-2xl text-[#9CA3AF] hover:text-[#4B5563]"
-									aria-label="Cerrar"
-								>
-									×
-								</button>
-							</div>
-
-							<div className="flex-1 overflow-y-auto px-6 py-5">
-								<div className="grid grid-cols-1 gap-4">
-									<label className="flex flex-col gap-1">
-										<span className="text-sm font-medium text-[#374151]">Nombre y apellido</span>
-										<input
-											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-											placeholder="Nombre completo"
-											value={editNombre}
-											onChange={(event) => setEditNombre(event.target.value)}
-										/>
-									</label>
-
-									<label className="flex flex-col gap-1">
-										<span className="text-sm font-medium text-[#374151]">Username</span>
-										<input
-											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-											placeholder="usuario1"
-											value={editUsername}
-											onChange={(event) => setEditUsername(event.target.value)}
-										/>
-									</label>
-
-									<label className="flex flex-col gap-1">
-										<span className="text-sm font-medium text-[#374151]">Legajo</span>
-										<input
-											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-											placeholder="123456/01"
-											value={editLegajo}
-											onChange={(event) => setEditLegajo(event.target.value)}
-										/>
-									</label>
-
-									<label className="flex flex-col gap-1">
-										<span className="text-sm font-medium text-[#374151]">Email</span>
-										<input
-											type="email"
-											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-											placeholder="usuario@scarh.com"
-											value={editEmail}
-											onChange={(event) => setEditEmail(event.target.value)}
-										/>
-									</label>
-								</div>
-							</div>
-
-							<div className="flex shrink-0 justify-end gap-3 border-t border-[#E5E7EB] px-6 py-4">
-								<button
-									type="button"
-									onClick={() => handleOpenChangePassword(selectedUser)}
-									className="rounded-lg border border-[#0D76B3] px-4 py-2 text-sm font-medium text-[#0D76B3] hover:bg-[#EFF6FF]"
-									disabled={isUpdatingUser}
-								>
-									Cambiar contraseña
-								</button>
-								<button
-									type="button"
-									onClick={handleCancelEdit}
-									className={MODAL_CANCEL_BUTTON_CLASS}
-									disabled={isUpdatingUser}
-								>
-									<span className="icon-[mdi--close-thick] text-base" aria-hidden="true" />
-									<span>Cancelar</span>
-								</button>
-								<button
-									type="button"
-									className={MODAL_SAVE_BUTTON_CLASS}
-									onClick={handleSaveEdit}
-									disabled={isUpdatingUser}
-								>
-									<span className="icon-[mdi--content-save] text-base" aria-hidden="true" />
-									<span>{isUpdatingUser ? "Guardando..." : "Guardar cambios"}</span>
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			)}
-
-			
-			{/* Modal añadir */}
-			<AddUserModal
+			<VentanaAgregrarUsuario
 				open={isAddOpen}
-				onCancel={handleCancelAdd}
-				onSave={handleSaveAdd}
-				isSaving={isCreatingUser}
+				onClose={handleCancelAdd}
+				handleMessage={handleOpenInfo}
+				queriesToInvalidate={queriesToInvalidate}
 			/>
-			{isChangePasswordOpen && (
-				<ChangePasswordModal
-					open={isChangePasswordOpen}
-					onCancel={handleCancelChangePassword}
-					onSave={handleSavePassword}
-					isSaving={isUpdatingUser}
-				/>
-			)}
+			<VentanaEditarUsuario
+				open={isEditOpen}
+				onClose={handleCancelEdit}
+				handleMessage={handleOpenInfo}
+				usuario={usuarioEditar}
+				queriesToInvalidate={queriesToInvalidate}
+			/>
+			<VentanaEliminarUsuario
+				open={isDeleteOpen}
+				onClose={handleCloseDelete}
+				handleMessage={handleOpenInfo}
+				usuario={usuarioEditar}
+				queriesToInvalidate={queriesToInvalidate}
+			/>
+			<VentanaAceptar
+				open={isOpenInfo}
+				onClose={handleCloseInfo}
+				options={message}
+			/>
 		</PaginaBase>
 	);
 }

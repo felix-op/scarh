@@ -1,4 +1,4 @@
-import { QueryKey, UseQueryOptions } from "@tanstack/react-query";
+import { UseQueryOptions } from "@tanstack/react-query";
 import { AxiosError, AxiosRequestConfig } from "axios";
 
 export type ParamsBase = Record<string, string> & {
@@ -27,7 +27,7 @@ export type onErrorFunction<TParams extends ParamsBase, TRequest> = (
 ) => void | Promise<void>
 
 export type MutationConfig<TRequest, TResponse, TParams extends ParamsBase> = {
-	queriesToInvalidate?: QueryKey[],
+	queriesToInvalidate?: string[],
 	data?: TRequest,
 	onSuccess?: onSuccessFunction<TResponse, TParams, TRequest>, 
 	onError?: onErrorFunction<TParams, TRequest>,

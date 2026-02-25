@@ -111,13 +111,12 @@ export type UseGetOptions<TParams extends ParamsBase, TResponse = unknown> = {
 	config: UseGetConfig<TResponse>,
 };
 
-export default function useGet<TParams extends ParamsBase, TResponse = unknown>({
+export function useGet<TParams extends ParamsBase, TResponse = unknown>({
 	key,
 	url,
 	params,
 	config,
 }: UseGetOptions<TParams, TResponse>) {
-
 	const { configAxios = {}, ...restConfig } = config;
 
 	return useQuery<TResponse, Error>({
@@ -172,7 +171,7 @@ type UseGenericMutationProps<TRequest, TResponse, TParams extends ParamsBase> = 
 	data?: TRequest,
 	token: string,
 	contentType: ContentTypeOptions,
-	queriesToInvalidate: QueryKey[],
+	queriesToInvalidate: string[],
 	onSuccess?: onSuccessFunction<TResponse, TParams, TRequest>, 
 	onError?: onErrorFunction<TParams, TRequest>,
 	refetch: boolean
