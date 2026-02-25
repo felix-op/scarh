@@ -31,7 +31,7 @@ const variantConfig = {
 
 const baseButtonClass = `
 	relative overflow-hidden flex flex-row items-center justify-center gap-2 shrink-0
-	text-lg rounded-full py-2 px-4 cursor-pointer shadow-md border hover:brightness-95
+	text-lg rounded-full py-2 px-4 shadow-md border hover:brightness-95
 	transition-all duration-100 select-none 
 	shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]
 	active:brightness-105 active:scale-95 
@@ -75,7 +75,7 @@ export default function BotonVariante({
 
 	return (
 		<button
-			className={`${baseButtonClass} ${config.style} ${config.disableShine ? '' : shineEffectClass} ${className}`}
+			className={`${baseButtonClass} ${disabled ? "cursor-not-allowed" : "cursor-pointer"} ${config.style} ${config.disableShine ? '' : shineEffectClass} ${className}`}
 			onClick={onClick}
 			disabled={disabled}
 			type={type}
