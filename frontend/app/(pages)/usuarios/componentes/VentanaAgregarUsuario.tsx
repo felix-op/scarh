@@ -1,34 +1,42 @@
-import AlertaErrorBackend from "@componentes/alertas/AlertaErrorBackend";
 import CampoInput from "@componentes/formularios/CampoInput";
 import CampoPassword from "@componentes/formularios/CampoPassword";
 import VentanaFormulario from "@componentes/ventanas/VentanaFormulario";
 import { usePostUsuario } from "@servicios/api";
-import { useState } from "react";
-import { TCrearUsuario, TError } from "../types";
+import { TCrearUsuario } from "../types";
 import { defaultFormCrearUsuario } from "../constantes";
+import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 
 type VentanaAgregrarUsuarioProps = {
 	open: boolean,
 	onClose: () => void,
 	queriesToInvalidate: string[],
+	handleMessage: (message: VentanaAceptarOptions) => void
 }
 
 export default function VentanaAgregrarUsuario({
 	open,
 	onClose,
 	queriesToInvalidate,
+	handleMessage
 }: VentanaAgregrarUsuarioProps) {
-	const [error, setError] = useState<TError>(null);
-	const { mutate: crearUsuario } = usePostUsuario({
+	const { mutate: crearUsuario, isPending } = usePostUsuario({
 		configuracion: {
 			queriesToInvalidate,
-			onSuccess: () => {
-				setError(null);
+			onSuccess: (data) => {
 				onClose();
+				handleMessage({
+					title: "Creado Correctamente",
+					description: `El usuario ${data?.nombre_usuario} se creó correctamente`,
+					variant: "exito",
+				});
 			},
 			onError: (e) => {
 				console.error("Error en el componente VentanaAgregarUsuario: ", e);
-				setError(e);
+				handleMessage({
+					title: "Error al crear",
+					description: `No se pudo crear el usuario`,
+					variant: "error",
+				});
 			},
 		},
 	});
@@ -57,24 +65,27 @@ export default function VentanaAgregrarUsuario({
 			titulo="Agregar Usuario"
 			valoresIniciales={valoresIniciales}
 			classNameContenido="flex flex-col gap-4"
+			isLoading={isPending}
 		>
-			<AlertaErrorBackend error={error} />
 			<CampoInput
 				name="first_name"
 				label="Nombre"
 				placeholder="Ingrese el o los nombres del usuario"
+				disabled={isPending}
 				required
 			/>
 			<CampoInput
 				name="last_name"
 				label="Apellido"
 				placeholder="Ingrese el o los apellidos del usuario"
+				disabled={isPending}
 				required
 			/>
 			<CampoInput
 				name="nombre_usuario"
 				label="Nombre de usuario"
 				placeholder="Ingrese el nombre de usuario para acceder al sistema"
+				disabled={isPending}
 				required
 			/>
 			<CampoInput
@@ -82,6 +93,7 @@ export default function VentanaAgregrarUsuario({
 				label="Legajo"
 				type="number"
 				placeholder="Ingrese el o los nombres del usuario"
+				disabled={isPending}
 				required
 			/>
 			<CampoInput
@@ -89,18 +101,21 @@ export default function VentanaAgregrarUsuario({
 				label="Correo Electrónico"
 				type="email"
 				placeholder="Ingrese el correo electrónico para el usuario"
+				disabled={isPending}
 				required
 			/>
 			<CampoPassword
 				name="password1"
 				label="Contraseña"
 				placeholder="Ingrese una contraseña de 8 caracteres con al menos un caracter especial"
+				disabled={isPending}
 			/>
 			<CampoPassword
 				name="password2"
 				label="Confirmar Contraseña"
 				placeholder="Confirme la contraseña"
 				targetName="password1"
+				disabled={isPending}
 				isConfirm
 			/>
 		</VentanaFormulario>

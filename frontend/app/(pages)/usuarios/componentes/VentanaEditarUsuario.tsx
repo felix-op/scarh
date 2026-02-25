@@ -1,17 +1,17 @@
-import AlertaErrorBackend from "@componentes/alertas/AlertaErrorBackend";
 import CampoCheckbox from "@componentes/formularios/CampoCheckBox";
 import CampoInput from "@componentes/formularios/CampoInput";
 import VentanaFormulario from "@componentes/ventanas/VentanaFormulario";
 import { usePutUsuario } from "@servicios/api";
-import { useState } from "react";
-import { TEditarUsuario, TError } from "../types";
+import { TEditarUsuario } from "../types";
 import { UsuarioResponse } from "types/usuarios";
+import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 
 type VentanaEditarUsuarioProps = {
 	open: boolean,
 	onClose: () => void,
 	usuario: UsuarioResponse | null,
 	queriesToInvalidate: string[],
+	handleMessage: (message: VentanaAceptarOptions) => void
 }
 
 export default function VentanaEditarUsuario({
@@ -19,18 +19,26 @@ export default function VentanaEditarUsuario({
 	onClose,
 	usuario,
 	queriesToInvalidate,
+	handleMessage
 }: VentanaEditarUsuarioProps) {
-	const [error, setError] = useState<TError>(null);
-	const { mutate: editarUsuario } = usePutUsuario({
+	const { mutate: editarUsuario, isPending } = usePutUsuario({
 		configuracion: {
 			queriesToInvalidate,
 			onSuccess: () => {
-				setError(null);
 				onClose();
+				handleMessage({
+					title: "Editado Correctamente",
+					description: `El usuario ${usuario?.nombre_usuario} se editó correctamente`,
+					variant: "exito",
+				});
 			},
 			onError: (e) => {
 				console.error("Error en el componente VentanaEditarUsuario: ", e);
-				setError(e);
+				handleMessage({
+					title: "Error al editar",
+					description: `El usuario ${usuario?.nombre_usuario} no se pudo editar`,
+					variant: "error",
+				});
 			},
 		},
 	});
@@ -66,8 +74,8 @@ export default function VentanaEditarUsuario({
 			titulo="Editar Usuario"
 			valoresIniciales={valoresIniciales}
 			classNameContenido="flex flex-col gap-4"
+			isLoading={isPending}
 		>
-			<AlertaErrorBackend error={error} />
 			<CampoInput
 				name="first_name"
 				label="Nombre"
