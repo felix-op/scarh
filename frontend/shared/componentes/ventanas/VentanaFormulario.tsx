@@ -17,7 +17,8 @@ type VentanaFormularioProps<T extends FieldValues> = {
 	descripcion?: string,
 	classNameVentana?: string,
 	classNameFormulario?: string,
-	classNameContenido?: string,	
+	classNameContenido?: string,
+	isLoading?: boolean,
 };
 
 export default function VentanaFormulario<T extends FieldValues>({
@@ -31,14 +32,13 @@ export default function VentanaFormulario<T extends FieldValues>({
 	classNameVentana = "",
 	classNameFormulario = "",
 	classNameContenido = "",
+	isLoading = false,
 }: VentanaFormularioProps<T>) {
 	const [edited, setEdited] = useState(false);
 	const [confirmar, setConfirmar] = useState(false);
 
 	const onDirty = useCallback((dirty: boolean) => {
-		if (dirty) {
-			setEdited(true);
-		}
+		setEdited(dirty);
 	}, [setEdited]);
 
 	const handleClose = () => {
@@ -69,7 +69,7 @@ export default function VentanaFormulario<T extends FieldValues>({
 							<hr className="h-[2px] bg-ventana-secondary" />
 							<DrawerFooter className="sm:flex-row justify-between p-5 shrink-0">
 								<BotonVariante variant="cancelar" onClick={handleClose} />
-								<BotonVariante variant="guardar" type="submit" />
+								<BotonVariante variant="guardar" type="submit" loading={isLoading} disabled={isLoading} />
 							</DrawerFooter>
 						</Formulario>
 					</div>
