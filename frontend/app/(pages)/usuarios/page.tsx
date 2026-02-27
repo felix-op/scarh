@@ -195,12 +195,14 @@ export default function UsersAdminPage() {
 			<VentanaAgregrarUsuario
 				open={isAddOpen}
 				onClose={handleCancelAdd}
+				usuarios={usuarios ?? []}
 				handleMessage={handleOpenInfo}
 				queriesToInvalidate={queriesToInvalidate}
 			/>
 			<VentanaEditarUsuario
 				open={isEditOpen}
 				onClose={handleCancelEdit}
+				usuarios={usuarios ?? []}
 				handleMessage={handleOpenInfo}
 				usuario={usuarioEditar}
 				queriesToInvalidate={queriesToInvalidate}

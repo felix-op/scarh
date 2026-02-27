@@ -1,14 +1,16 @@
 import CampoInput from "@componentes/formularios/CampoInput";
 import CampoPassword from "@componentes/formularios/CampoPassword";
 import VentanaFormulario from "@componentes/ventanas/VentanaFormulario";
-import { usePostUsuario } from "@servicios/api";
-import { TCrearUsuario } from "../types";
-import { defaultFormCrearUsuario } from "../constantes";
 import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
+import { usePostUsuario } from "@servicios/api";
+import { UsuarioResponse } from "types/usuarios";
+import { defaultFormCrearUsuario } from "../constantes";
+import { TCrearUsuario } from "../types";
 
 type VentanaAgregrarUsuarioProps = {
 	open: boolean,
 	onClose: () => void,
+	usuarios: UsuarioResponse[],
 	queriesToInvalidate: string[],
 	handleMessage: (message: VentanaAceptarOptions) => void
 }
@@ -16,9 +18,20 @@ type VentanaAgregrarUsuarioProps = {
 export default function VentanaAgregrarUsuario({
 	open,
 	onClose,
+	usuarios,
 	queriesToInvalidate,
 	handleMessage
 }: VentanaAgregrarUsuarioProps) {
+	const esNombreUsuarioDuplicado = (valor: string) => {
+		const valorNormalizado = valor.trim().toLowerCase();
+		return usuarios.some((usuario) => usuario.nombre_usuario.trim().toLowerCase() === valorNormalizado);
+	};
+
+	const esLegajoDuplicado = (valor: string) => {
+		const valorNormalizado = valor.trim().toLowerCase();
+		return usuarios.some((usuario) => usuario.legajo.trim().toLowerCase() === valorNormalizado);
+	};
+
 	const { mutate: crearUsuario, isPending } = usePostUsuario({
 		configuracion: {
 			queriesToInvalidate,
@@ -32,9 +45,23 @@ export default function VentanaAgregrarUsuario({
 			},
 			onError: (e) => {
 				console.error("Error en el componente VentanaAgregarUsuario: ", e);
+
+				const errores = (e.response?.data ?? {}) as Record<string, unknown>;
+				const existeNombreUsuario = Boolean(errores.nombre_usuario) || Boolean(errores.username);
+				const existeLegajo = Boolean(errores.legajo);
+				let descripcion = "No se pudo crear el usuario";
+
+				if (existeNombreUsuario && existeLegajo) {
+					descripcion = "El nombre de usuario y el legajo ya existen";
+				} else if (existeNombreUsuario) {
+					descripcion = "El nombre de usuario ya existe";
+				} else if (existeLegajo) {
+					descripcion = "El legajo ya existe";
+				}
+
 				handleMessage({
 					title: "Error al crear",
-					description: `No se pudo crear el usuario`,
+					description: descripcion,
 					variant: "error",
 				});
 			},
@@ -44,6 +71,24 @@ export default function VentanaAgregrarUsuario({
 	const valoresIniciales = defaultFormCrearUsuario;
 
 	const onSubmit: TCrearUsuario = (data) => {
+		if (esNombreUsuarioDuplicado(data.nombre_usuario)) {
+			handleMessage({
+				title: "Error al crear",
+				description: "El nombre de usuario ya existe",
+				variant: "error",
+			});
+			return;
+		}
+
+		if (esLegajoDuplicado(data.legajo)) {
+			handleMessage({
+				title: "Error al crear",
+				description: "El legajo ya existe",
+				variant: "error",
+			});
+			return;
+		}
+
 		crearUsuario({
 			data: {
 				nombre_usuario: data.nombre_usuario,
@@ -85,6 +130,7 @@ export default function VentanaAgregrarUsuario({
 				name="nombre_usuario"
 				label="Nombre de usuario"
 				placeholder="Ingrese el nombre de usuario para acceder al sistema"
+				validate={(value) => !esNombreUsuarioDuplicado(value) || "El nombre de usuario ya existe"}
 				disabled={isPending}
 				required
 			/>
@@ -92,7 +138,8 @@ export default function VentanaAgregrarUsuario({
 				name="legajo"
 				label="Legajo"
 				type="number"
-				placeholder="Ingrese el o los nombres del usuario"
+				placeholder="Ingrese el legajo del usuario"
+				validate={(value) => !esLegajoDuplicado(value) || "El legajo ya existe"}
 				disabled={isPending}
 				required
 			/>

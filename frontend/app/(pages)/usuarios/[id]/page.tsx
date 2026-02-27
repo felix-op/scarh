@@ -6,11 +6,14 @@ import PaginaBase from "@componentes/base/PaginaBase";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import ChangePasswordModal from "@componentes/ChangePasswordModal";
 import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
+import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 import {
 	useGetHistoriales,
 	HistorialItem,
 } from "@servicios/api/django.api";
-import { useDeleteUsuario, useGetUsuario, usePutUsuario } from "@servicios/api";
+import { useDeleteUsuario, useGetUsuario, useGetUsuarios, usePutUsuario } from "@servicios/api";
+import { UsuarioResponse } from "types/usuarios";
+import VentanaEditarUsuario from "../componentes/VentanaEditarUsuario";
 
 type UsuarioDetalle = {
 	nombre_usuario?: string;
@@ -22,11 +25,11 @@ type UsuarioDetalle = {
 	estado?: boolean;
 };
 
-const MODAL_CANCEL_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70";
-
-const MODAL_SAVE_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70";
+const defaultMessage: VentanaAceptarOptions = {
+	title: "",
+	description: "",
+	variant: "info",
+};
 
 export default function UsuarioDetallePage() {
 	const params = useParams<{ id: string }>();
@@ -34,6 +37,7 @@ export default function UsuarioDetallePage() {
 	const usuarioId = params?.id ?? "";
 
 	const { data: usuario } = useGetUsuario({ params: { id: usuarioId } });
+	const { data: usuarios } = useGetUsuarios({});
 	const { data: historialData } = useGetHistoriales({
 		params: { queryParams: { limit: 10, page: 1 } },
 	});
@@ -62,12 +66,9 @@ export default function UsuarioDetallePage() {
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
-	const [editUsername, setEditUsername] = useState("");
-	const [editNombre, setEditNombre] = useState("");
-	const [editApellido, setEditApellido] = useState("");
-	const [editLegajo, setEditLegajo] = useState("");
-	const [editEmail, setEditEmail] = useState("");
 	const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+	const [isOpenInfo, setIsOpenInfo] = useState(false);
+	const [message, setMessage] = useState(defaultMessage);
 
 	const toDisplayValue = (value?: string | null) => {
 		const normalized = value?.trim();
@@ -93,31 +94,23 @@ export default function UsuarioDetallePage() {
 		return items.filter((item) => item.username === username);
 	}, [historialData, username]);
 
+	const usuarioParaEditar: UsuarioResponse | null = usuario ? {
+		id: Number(usuarioId),
+		nombre_usuario: username,
+		first_name: nombre,
+		last_name: apellido,
+		legajo: legajo,
+		email: email,
+		estado: estadoActivo,
+	} : null;
+
 	function handleOpenEdit() {
-		setEditUsername(username);
-		setEditNombre(nombre);
-		setEditApellido(apellido);
-		setEditLegajo(String(legajo));
-		setEditEmail(email);
 		setIsEditOpen(true);
 	}
 
-	function handleSaveEdit() {
-		if (!editNombre.trim() || !editApellido.trim() || !editUsername.trim() || !editEmail.trim()) {
-			alert("Completá al menos nombre, apellido, username y email.");
-			return;
-		}
-
-		putUser({
-			data: {
-				nombre_usuario: editUsername.trim(),
-				legajo: editLegajo.trim(),
-				email: editEmail.trim(),
-				first_name: editNombre.trim(),
-				last_name: editApellido.trim(),
-				estado: estadoActivo,
-			},
-		});
+	function handleOpenInfo(newMessage: VentanaAceptarOptions) {
+		setMessage(newMessage);
+		setIsOpenInfo(true);
 	}
 
 	function handleOpenChangePassword() {
@@ -244,109 +237,14 @@ export default function UsuarioDetallePage() {
 				</div>
 			</div>
 
-			{isEditOpen && (
-				<div className="fixed inset-0 z-50 bg-black/40" role="dialog" aria-modal="true">
-					<div className="absolute inset-y-0 right-0 flex h-full w-full sm:max-w-xl">
-						<div className="flex h-full w-full flex-col bg-white shadow-[-10px_0_28px_rgba(0,0,0,0.2)]">
-							<div className="flex items-start justify-between border-b border-[#E5E7EB] px-6 py-5">
-								<div>
-									<h2 className="text-xl font-semibold text-[#111827]">Editar usuario</h2>
-								</div>
-								<button
-									onClick={() => setIsEditOpen(false)}
-									className="text-2xl text-[#9CA3AF] hover:text-[#4B5563]"
-									aria-label="Cerrar"
-									disabled={isUpdatingUser}
-								>
-									×
-								</button>
-							</div>
-
-							<div className="flex-1 overflow-y-auto px-6 py-5">
-								<div className="grid grid-cols-1 gap-4">
-									<label className="flex flex-col gap-1">
-										<span className="text-sm font-medium text-[#374151]">Nombre</span>
-										<input
-											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-											placeholder="Nombre"
-											value={editNombre}
-											onChange={(event) => setEditNombre(event.target.value)}
-											disabled={isUpdatingUser}
-										/>
-									</label>
-
-									<label className="flex flex-col gap-1">
-										<span className="text-sm font-medium text-[#374151]">Apellido</span>
-										<input
-											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-											placeholder="Apellido"
-											value={editApellido}
-											onChange={(event) => setEditApellido(event.target.value)}
-											disabled={isUpdatingUser}
-										/>
-									</label>
-
-									<label className="flex flex-col gap-1">
-										<span className="text-sm font-medium text-[#374151]">Username</span>
-										<input
-											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-											placeholder="usuario1"
-											value={editUsername}
-											onChange={(event) => setEditUsername(event.target.value)}
-											disabled={isUpdatingUser}
-										/>
-									</label>
-
-									<label className="flex flex-col gap-1">
-										<span className="text-sm font-medium text-[#374151]">Legajo</span>
-										<input
-											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-											placeholder="123456/01"
-											value={editLegajo}
-											onChange={(event) => setEditLegajo(event.target.value)}
-											disabled={isUpdatingUser}
-										/>
-									</label>
-
-									<label className="flex flex-col gap-1">
-										<span className="text-sm font-medium text-[#374151]">Email</span>
-										<input
-											type="email"
-											className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
-											placeholder="usuario@mail.com"
-											value={editEmail}
-											onChange={(event) => setEditEmail(event.target.value)}
-											disabled={isUpdatingUser}
-										/>
-									</label>
-
-								</div>
-							</div>
-
-							<div className="flex shrink-0 justify-end gap-3 border-t border-[#E5E7EB] px-6 py-4">
-								<button
-									type="button"
-									onClick={() => setIsEditOpen(false)}
-									className={MODAL_CANCEL_BUTTON_CLASS}
-									disabled={isUpdatingUser}
-								>
-									<span className="icon-[mdi--close-thick] text-base" aria-hidden="true" />
-									<span>Cancelar</span>
-								</button>
-								<button
-									type="button"
-									onClick={handleSaveEdit}
-									className={MODAL_SAVE_BUTTON_CLASS}
-									disabled={isUpdatingUser}
-								>
-									<span className="icon-[mdi--content-save] text-base" aria-hidden="true" />
-									<span>{isUpdatingUser ? "Guardando..." : "Guardar cambios"}</span>
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			)}
+			<VentanaEditarUsuario
+				open={isEditOpen}
+				onClose={() => setIsEditOpen(false)}
+				usuario={usuarioParaEditar}
+				usuarios={usuarios ?? []}
+				queriesToInvalidate={["useGetUsuario", "useGetUsuarios"]}
+				handleMessage={handleOpenInfo}
+			/>
 
 			{isDeleteOpen && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
@@ -387,6 +285,11 @@ export default function UsuarioDetallePage() {
 					isSaving={isUpdatingUser}
 				/>
 			)}
+			<VentanaAceptar
+				open={isOpenInfo}
+				onClose={() => setIsOpenInfo(false)}
+				options={message}
+			/>
 		</PaginaBase>
 	);
 }
