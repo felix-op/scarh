@@ -1,19 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import ChangePasswordModal from "@componentes/ChangePasswordModal";
 import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
 import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
-import {
-	useGetHistoriales,
-	HistorialItem,
-} from "@servicios/api/django.api";
 import { useDeleteUsuario, useGetUsuario, useGetUsuarios, usePutUsuario } from "@servicios/api";
 import { UsuarioResponse } from "types/usuarios";
 import VentanaEditarUsuario from "../componentes/VentanaEditarUsuario";
+import ResumenHistorialUsuario from "../componentes/ResumenHistorialUsuario";
 
 type UsuarioDetalle = {
 	nombre_usuario?: string;
@@ -38,9 +35,8 @@ export default function UsuarioDetallePage() {
 
 	const { data: usuario } = useGetUsuario({ params: { id: usuarioId } });
 	const { data: usuarios } = useGetUsuarios({});
-	const { data: historialData } = useGetHistoriales({
-		params: { queryParams: { limit: "10", page: "1" } },
-	});
+	const usuarioData = (usuario ?? {}) as UsuarioDetalle;
+	const username = (usuarioData.nombre_usuario ?? usuarioData.username ?? "").trim();
 	const { mutate: putUser, isPending: isUpdatingUser } = usePutUsuario({
 		configuracion: {
 			queriesToInvalidate: [["useGetUsuario"], ["useGetUsuarios"]],
@@ -75,8 +71,6 @@ export default function UsuarioDetallePage() {
 		return normalized ? normalized : "-";
 	};
 
-	const usuarioData = (usuario ?? {}) as UsuarioDetalle;
-	const username = (usuarioData.nombre_usuario ?? usuarioData.username ?? "").trim();
 	const nombre = (usuarioData.first_name ?? "").trim();
 	const apellido = (usuarioData.last_name ?? "").trim();
 	const legajo = (usuarioData.legajo ?? "").trim();
@@ -88,11 +82,6 @@ export default function UsuarioDetallePage() {
 	const displayEmail = toDisplayValue(email);
 	const estadoActivo = Boolean(usuarioData.estado ?? true);
 	const estadoVariant: EstadoVariant = estadoActivo ? "activo" : "inactivo";
-
-	const _historialUsuario: HistorialItem[] = useMemo(() => {
-		const items = Array.isArray(historialData?.results) ? historialData.results : [];
-		return items.filter((item) => item.username === username);
-	}, [historialData, username]);
 
 	const usuarioParaEditar: UsuarioResponse | null = usuario ? {
 		id: Number(usuarioId),
@@ -230,7 +219,7 @@ export default function UsuarioDetallePage() {
 							<div className="h-px w-full bg-[#E2E2E2]" />
 
 							<div className="flex flex-col gap-4">
-								
+								<ResumenHistorialUsuario username={username} maxRecords={6} />
 							</div>
 						</section>
 					</div>
