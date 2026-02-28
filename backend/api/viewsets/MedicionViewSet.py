@@ -1,13 +1,12 @@
-from rest_framework import viewsets, mixins, status
-from rest_framework.permissions import AllowAny 
+from rest_framework import viewsets, mixins
 from rest_framework.pagination import PageNumberPagination
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import timedelta
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from ..models import Medicion
 from ..serializer import MedicionSerializer
-from ..models import Limnigrafo 
 from ..permissions import IsAutomaticOrManual
+from ..utils.audit import registrar_accion_auditoria
 
 class MedicionPagination(PageNumberPagination):
     page_size = 50               
@@ -64,6 +63,21 @@ class MedicionViewSet(
         limnigrafo.estado = nuevo_estado
         
         limnigrafo.save(update_fields=['bateria_actual', 'ultima_conexion', 'estado'])
+
+        if medicion_instance.fuente == "manual":
+            registrar_accion_auditoria(
+                request=self.request,
+                tipo_accion="manual_data_load",
+                entidad="Métrica",
+                entidad_id=medicion_instance.id,
+                descripcion=f"Cargó manualmente datos para el limnígrafo '{limnigrafo.codigo}'.",
+                metadata={
+                    "limnigrafo_id": limnigrafo.id,
+                    "limnigrafo_codigo": limnigrafo.codigo,
+                    "medicion_id": medicion_instance.id,
+                    "fecha_hora_medicion": medicion_instance.fecha_hora.isoformat(),
+                },
+            )
 
     def _calcular_estado(self, limnigrafo, fecha_hora_medicion):
         """
@@ -126,4 +140,3 @@ class MedicionViewSet(
             return 'advertencia'
         else:
             return 'normal'
-

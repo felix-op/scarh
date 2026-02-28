@@ -296,38 +296,56 @@ export type HistorialItem = {
 	id: number,
 	date: string,
 	type: string,
-	object_id: number,
+	object_id: string,
 	model_name: string,
 	username: string,
 	object_repr: string,
+	description: string,
+	status: string,
 }
 
 export type HistorialResponse = {
 	count: number,
-	next: string,
-	previous: string,
+	next: string | null,
+	previous: string | null,
 	results: HistorialItem[]
 };
 
+export type HistorialDetailItem = HistorialItem & {
+	metadata: Record<string, unknown>,
+}
+
 // ENDPOINT: GET-HISTORIALES
 
+type UseGetHistorialesParams = {
+	queryParams?: {
+		limit?: string,
+		page?: string,
+		type?: string,
+		model?: string,
+		usuario?: string,
+		desde?: string,
+		hasta?: string,
+	}
+}
+
 type UseGetHistorialesOptions = {
-	params?: {
-		queryParams?: {
-			limit?: number,
-			page?: number,
-		}
-	},
-	configuracion?: UseGetConfig,
+	params?: UseGetHistorialesParams,
+	configuracion?: UseGetConfig<HistorialResponse>,
 }
 
 export function useGetHistoriales({ params, configuracion }: UseGetHistorialesOptions) {
-	const defaultParams = {};
+	const defaultParams = {
+		queryParams: {
+			limit: "10",
+			page: "1",
+		},
+	};
 	const defaultConfig = {};
 
 	return useGet({
 		key: "useGetHistoriales",
-		url: `${NEXT_PROXY_URL}/historial/?limit={limit}&page={page}`,
+		url: `${NEXT_PROXY_URL}/historial/`,
 		params: params ?? defaultParams,
 		config: configuracion ?? defaultConfig,
 	});
@@ -339,7 +357,7 @@ type UseGetHistorialOptions = {
 	params?: {
 		id: string,
 	}
-	configuracion?: UseGetConfig,
+	configuracion?: UseGetConfig<HistorialDetailItem>,
 }
 
 export function useGetHistorial({ params, configuracion }: UseGetHistorialOptions) {
@@ -348,7 +366,7 @@ export function useGetHistorial({ params, configuracion }: UseGetHistorialOption
 	}
 	const defaultConfig = {};
 
-	return useGet({
+	return useGet<{ id: string }, HistorialDetailItem>({
 		key: "useGetHistorial",
 		url: `${NEXT_PROXY_URL}/historial/{id}`,
 		params: params ?? defaultParams,

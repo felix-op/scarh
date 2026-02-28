@@ -1,17 +1,18 @@
-type HistoryRow = {
-  id: string;
-  usuario: string;
-  accion: string;
-  entidad: string;
-  descripcion: string;
-  fechaHora: string;
-  registroId: string;
-  estado: string;
+export type HistoryRow = {
+	id: string;
+	usuario: string;
+	accion: string;
+	entidad: string;
+	descripcion: string;
+	fechaHora: string;
+	registroId: string;
+	estado: string;
 };
 
 type HistoryTableProps = {
-  rows: HistoryRow[];
-  className?: string;
+	rows: HistoryRow[];
+	className?: string;
+	emptyMessage?: string;
 };
 
 const estadoStyles: Record<string, string> = {
@@ -20,7 +21,11 @@ const estadoStyles: Record<string, string> = {
 	"En revisión": "bg-[#FFF4E5] text-[#B15C04] border-[#F8D3A3]",
 };
 
-export default function HistoryTable({ rows, className = "" }: HistoryTableProps) {
+export default function HistoryTable({
+	rows,
+	className = "",
+	emptyMessage = "No hay acciones registradas con los filtros seleccionados.",
+}: HistoryTableProps) {
 	return (
 		<div
 			className={`overflow-hidden rounded-[20px] border border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)] ${className}`}
@@ -38,24 +43,32 @@ export default function HistoryTable({ rows, className = "" }: HistoryTableProps
 					</tr>
 				</thead>
 				<tbody className="divide-y divide-[#EAEAEA]">
-					{rows.map((row) => (
-						<tr key={row.id} className="hover:bg-[#F9FBFF]">
-							<td className="px-4 py-3 font-semibold text-[#011018]">{row.usuario}</td>
-							<td className="px-4 py-3">{row.accion}</td>
-							<td className="px-4 py-3 text-[#0982C8]">{row.entidad}</td>
-							<td className="px-4 py-3 text-[#4B4B4B]">{row.descripcion}</td>
-							<td className="px-4 py-3 text-[#4B4B4B]">{row.fechaHora}</td>
-							<td className="px-4 py-3 text-[#6B6B6B]">{row.registroId}</td>
-							<td className="px-4 py-3">
-								<span
-									className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[13px] font-semibold ${estadoStyles[row.estado] ?? "bg-[#EEF2F7] text-[#374151] border-[#D1D5DB]"}`}
-								>
-									<span className="h-2 w-2 rounded-full bg-current" />
-									{row.estado}
-								</span>
+					{rows.length === 0 ? (
+						<tr>
+							<td className="px-4 py-8 text-center text-[#6B7280]" colSpan={7}>
+								{emptyMessage}
 							</td>
 						</tr>
-					))}
+					) : (
+						rows.map((row) => (
+							<tr key={row.id} className="hover:bg-[#F9FBFF]">
+								<td className="px-4 py-3 font-semibold text-[#011018]">{row.usuario}</td>
+								<td className="px-4 py-3">{row.accion}</td>
+								<td className="px-4 py-3 text-[#0982C8]">{row.entidad}</td>
+								<td className="px-4 py-3 text-[#4B4B4B]">{row.descripcion}</td>
+								<td className="px-4 py-3 text-[#4B4B4B]">{row.fechaHora}</td>
+								<td className="px-4 py-3 text-[#6B6B6B]">{row.registroId}</td>
+								<td className="px-4 py-3">
+									<span
+										className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[13px] font-semibold ${estadoStyles[row.estado] ?? "bg-[#EEF2F7] text-[#374151] border-[#D1D5DB]"}`}
+									>
+										<span className="h-2 w-2 rounded-full bg-current" />
+										{row.estado}
+									</span>
+								</td>
+							</tr>
+						))
+					)}
 				</tbody>
 			</table>
 		</div>

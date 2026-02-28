@@ -1,8 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.exceptions import ValidationError
 from django.utils.dateparse import parse_date
-from ..models import Limnigrafo
+from ..models import Accion
 from ..serializer import HistorialListSerializer, HistorialDetailSerializer
 from rest_framework.permissions import IsAuthenticated
 
@@ -12,7 +11,7 @@ class HistorialPagination(PageNumberPagination):
     max_page_size = 1000          
 
 class HistorialViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Limnigrafo.history.all().order_by('-history_date')
+    queryset = Accion.objects.select_related("usuario").all().order_by("-fecha_hora")
     pagination_class = HistorialPagination
     permission_classes = [IsAuthenticated]
     
@@ -25,36 +24,53 @@ class HistorialViewSet(viewsets.ReadOnlyModelViewSet):
 
         queryset = super().get_queryset()
 
-        model = self.request.query_params.get('model')
-        if model and model.lower() not in ['limnígrafo', 'limnigrafo']:
-            return queryset.none()
-
-        type_param = self.request.query_params.get('type')
-        if type_param:
-            mapa_inverso = {
-                'created': '+', 
-                'modified': '~', 
-                'deleted': '-'
+        model = self.request.query_params.get("model")
+        if model:
+            model_map = {
+                "usuario": "Usuario",
+                "limnigrafo": "Limnígrafo",
+                "limnígrafo": "Limnígrafo",
+                "metrica": "Métrica",
+                "métrica": "Métrica",
             }
-            simbolo = mapa_inverso.get(type_param.lower())
-            if simbolo:
-                queryset = queryset.filter(history_type=simbolo)
+            model_normalizado = model.strip().lower()
+            model_filtrado = model_map.get(model_normalizado, model.strip())
+            queryset = queryset.filter(entidad__iexact=model_filtrado)
 
-        user_id = self.request.query_params.get('usuario')
-        if user_id:
-            queryset = queryset.filter(history_user_id=user_id)
+        type_param = self.request.query_params.get("type")
+        if type_param:
+            mapa_tipo = {
+                "created": "created",
+                "creacion": "created",
+                "modificacion": "modified",
+                "modified": "modified",
+                "eliminacion": "deleted",
+                "deleted": "deleted",
+                "manual_data_load": "manual_data_load",
+                "carga_manual_de_datos": "manual_data_load",
+            }
+            tipo = mapa_tipo.get(type_param.lower().strip())
+            if tipo:
+                queryset = queryset.filter(tipo_accion=tipo)
 
-        desde = self.request.query_params.get('desde')
-        hasta = self.request.query_params.get('hasta')
+        usuario = self.request.query_params.get("usuario")
+        if usuario:
+            if usuario.isdigit():
+                queryset = queryset.filter(usuario_id=int(usuario))
+            else:
+                queryset = queryset.filter(usuario__username__iexact=usuario.strip())
+
+        desde = self.request.query_params.get("desde")
+        hasta = self.request.query_params.get("hasta")
 
         if desde:
             fecha_dt = parse_date(desde)
             if fecha_dt:
-                queryset = queryset.filter(history_date__date__gte=fecha_dt)
+                queryset = queryset.filter(fecha_hora__date__gte=fecha_dt)
         
         if hasta:
             fecha_dt = parse_date(hasta)
             if fecha_dt:
-                queryset = queryset.filter(history_date__date__lte=fecha_dt)
+                queryset = queryset.filter(fecha_hora__date__lte=fecha_dt)
 
         return queryset

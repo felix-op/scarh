@@ -39,7 +39,7 @@ export default function UsuarioDetallePage() {
 	const { data: usuario } = useGetUsuario({ params: { id: usuarioId } });
 	const { data: usuarios } = useGetUsuarios({});
 	const { data: historialData } = useGetHistoriales({
-		params: { queryParams: { limit: 10, page: 1 } },
+		params: { queryParams: { limit: "10", page: "1" } },
 	});
 	const { mutate: putUser, isPending: isUpdatingUser } = usePutUsuario({
 		configuracion: {

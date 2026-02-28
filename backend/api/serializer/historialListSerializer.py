@@ -1,56 +1,36 @@
 from rest_framework import serializers
-from ..models import Limnigrafo
+from ..models import Accion
 
 class HistorialListSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='history_id')
-    object_id = serializers.IntegerField(source='id')
-    date = serializers.DateTimeField(source='history_date')
+    date = serializers.DateTimeField(source="fecha_hora")
     username = serializers.SerializerMethodField()
-    type = serializers.SerializerMethodField()
-    model_name = serializers.SerializerMethodField()
-    object_repr = serializers.SerializerMethodField()
+    type = serializers.CharField(source="tipo_accion")
+    model_name = serializers.CharField(source="entidad")
+    object_id = serializers.CharField(source="entidad_id")
+    object_repr = serializers.CharField(source="descripcion")
+    description = serializers.CharField(source="descripcion")
+    status = serializers.CharField(source="estado")
 
     class Meta:
-        model = Limnigrafo.history.model
+        model = Accion
         fields = [
-            'id', 
-            'date', 
-            'type', 
-            'object_id', 
-            'model_name', 
-            'username', 
-            'object_repr'
+            "id",
+            "date",
+            "type",
+            "object_id",
+            "model_name",
+            "username",
+            "object_repr",
+            "description",
+            "status",
         ]
 
     def get_username(self, obj):
-        return obj.history_user.username if obj.history_user else "Sistema"
-
-    def get_type(self, obj):
-        mapa = {'+': 'created', '~': 'modified', '-': 'deleted'}
-        return mapa.get(obj.history_type, 'unknown')
-
-    def get_model_name(self, obj):
-        return "Limnígrafo"
-
-    def get_object_repr(self, obj):
-        return str(obj)
+        return obj.usuario.username if obj.usuario else "Sistema"
 
 
 class HistorialDetailSerializer(HistorialListSerializer):
-    changes = serializers.SerializerMethodField()
+    metadata = serializers.JSONField()
 
     class Meta(HistorialListSerializer.Meta):
-        fields = HistorialListSerializer.Meta.fields + ['changes']
-
-    def get_changes(self, obj):
-        changes = []
-        if obj.prev_record: #prev record trae el estado anterior
-            delta = obj.diff_against(obj.prev_record)
-            
-            for change in delta.changes:
-                changes.append({
-                    "field": change.field,
-                    "old_value": change.old,
-                    "new_value": change.new
-                })
-        return changes
+        fields = HistorialListSerializer.Meta.fields + ["metadata"]

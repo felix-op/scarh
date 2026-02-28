@@ -1,137 +1,219 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
-import FilterBar from "@componentes/FilterBar";
-import HistorialCard from "@componentes/HistorialCard";
-import HistorialTable from "@componentes/HistorialTable";
-import { useGetHistorial, useGetHistoriales } from "@servicios/api/django.api";
+import FilterBar, { FilterOption, HistorialFilters } from "@componentes/FilterBar";
+import HistorialTable, { HistoryRow } from "@componentes/HistorialTable";
+import { useGetUsuarios } from "@servicios/api";
+import { HistorialItem, useGetHistoriales } from "@servicios/api/django.api";
 
-import { useEffect } from "react";
+const PAGE_SIZE = 10;
 
-const FILTER_USERS = [
-	"Todos",
-	"admin",
-	"marcela",
-	"federico",
-	"ximena",
-	"invitado",
+const EMPTY_FILTERS: HistorialFilters = {
+	usuario: "",
+	accion: "",
+	entidad: "",
+	desde: "",
+	hasta: "",
+};
+
+const ACTION_OPTIONS: FilterOption[] = [
+	{ label: "Todos", value: "" },
+	{ label: "Creación", value: "created" },
+	{ label: "Modificación", value: "modified" },
+	{ label: "Eliminación", value: "deleted" },
+	{ label: "Carga manual de datos", value: "manual_data_load" },
 ];
 
-const FILTER_ACTIONS = [
-	"Todos",
-	"Creación",
-	"Modificación",
-	"Eliminación",
-	"Carga manual de datos",
-	"Edición de métricas",
-	"Edición de estadísticas",
-];
+const ACTION_LABELS: Record<string, string> = {
+	created: "Creación",
+	modified: "Modificación",
+	deleted: "Eliminación",
+	manual_data_load: "Carga manual de datos",
+};
 
-const FILTER_ENTITIES = [
-	"Todas",
-	"Limnígrafo",
-	"Métrica",
-	"Estadística",
-	"Usuario",
-	"Dashboard",
-	"Catálogo",
-];
+const STATUS_LABELS: Record<string, string> = {
+	success: "Exitoso",
+	failed: "Fallido",
+	review: "En revisión",
+};
 
-const HISTORIAL_FILAS = [
-	{
-		id: "h-1",
-		usuario: "admin",
-		accion: "Modificación",
-		entidad: "Limnígrafo",
-		descripcion: "Actualizó nivel manual",
-		fechaHora: "2025-11-20 14:23",
-		registroId: "LMN-0458",
-		estado: "Exitoso",
-	},
-	{
-		id: "h-2",
-		usuario: "marcela",
-		accion: "Creación",
-		entidad: "Métrica",
-		descripcion: "Agregó valor manual de temperatura",
-		fechaHora: "2025-11-21 10:15",
-		registroId: "MET-1021",
-		estado: "Exitoso",
-	},
-	{
-		id: "h-3",
-		usuario: "federico",
-		accion: "Eliminación",
-		entidad: "Estadística",
-		descripcion: "Eliminó datos estadisticos",
-		fechaHora: "2025-11-22 09:05",
-		registroId: "EST-3304",
-		estado: "En revisión",
-	},
-	{
-		id: "h-4",
-		usuario: "ximena",
-		accion: "Modificación",
-		entidad: "Usuario",
-		descripcion: "Actualizó permisos",
-		fechaHora: "2025-11-23 16:40",
-		registroId: "USR-0099",
-		estado: "Exitoso",
-	},
-	{
-		id: "h-5",
-		usuario: "admin",
-		accion: "Carga manual de datos",
-		entidad: "Limnígrafo",
-		descripcion: "Cargó limnigrafos",
-		fechaHora: "2025-11-23 08:20",
-		registroId: "LMN-0458",
-		estado: "Exitoso",
-	},
-	{
-		id: "h-6",
-		usuario: "marcela",
-		accion: "Edición de métricas",
-		entidad: "Métrica",
-		descripcion: "Normalizó valores fuera de rango",
-		fechaHora: "2025-11-23 11:10",
-		registroId: "MET-1021",
-		estado: "Exitoso",
-	},
-	{
-		id: "h-7",
-		usuario: "federico",
-		accion: "Edición de estadísticas",
-		entidad: "Estadística",
-		descripcion: "descrip x",
-		fechaHora: "2025-11-23 12:45",
-		registroId: "EST-3304",
-		estado: "Exitoso",
-	},
-];
+const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("es-AR", {
+	year: "numeric",
+	month: "2-digit",
+	day: "2-digit",
+	hour: "2-digit",
+	minute: "2-digit",
+});
+
+function getActionLabel(type: string): string {
+	return ACTION_LABELS[type] ?? type;
+}
+
+function getStatusLabel(status: string): string {
+	return STATUS_LABELS[status] ?? status;
+}
+
+function formatDateTime(value: string): string {
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) {
+		return "-";
+	}
+	return DATE_TIME_FORMATTER.format(date);
+}
+
+function mapHistorialToRow(item: HistorialItem): HistoryRow {
+	return {
+		id: String(item.id),
+		usuario: item.username || "Sistema",
+		accion: getActionLabel(item.type),
+		entidad: item.model_name || "-",
+		descripcion: item.description || item.object_repr || "-",
+		fechaHora: formatDateTime(item.date),
+		registroId: item.object_id || "-",
+		estado: getStatusLabel(item.status),
+	};
+}
 
 export default function HistorialPage() {
+	const searchParams = useSearchParams();
+	const usuarioParam = searchParams.get("usuario")?.trim() ?? "";
 
-	const { data: historiales } = useGetHistoriales({
+	const [filters, setFilters] = useState<HistorialFilters>({
+		...EMPTY_FILTERS,
+		usuario: usuarioParam,
+	});
+	const [appliedFilters, setAppliedFilters] = useState<HistorialFilters>({
+		...EMPTY_FILTERS,
+		usuario: usuarioParam,
+	});
+	const [currentPage, setCurrentPage] = useState(1);
+
+	const historialQueryParams = useMemo(() => {
+		const params: Record<string, string> = {
+			limit: String(PAGE_SIZE),
+			page: String(currentPage),
+		};
+
+		if (appliedFilters.usuario) {
+			params.usuario = appliedFilters.usuario;
+		}
+		if (appliedFilters.accion) {
+			params.type = appliedFilters.accion;
+		}
+		if (appliedFilters.entidad) {
+			params.model = appliedFilters.entidad;
+		}
+		if (appliedFilters.desde) {
+			params.desde = appliedFilters.desde;
+		}
+		if (appliedFilters.hasta) {
+			params.hasta = appliedFilters.hasta;
+		}
+
+		return params;
+	}, [appliedFilters, currentPage]);
+
+	const {
+		data: historialData,
+		isLoading: isLoadingHistorial,
+		isFetching: isFetchingHistorial,
+		error: historialError,
+	} = useGetHistoriales({
 		params: {
-			queryParams: {
-				limit: 10,
-				page: 1,
+			queryParams: historialQueryParams,
+		},
+	});
+
+	const { data: usuariosData } = useGetUsuarios({});
+
+	const userOptions = useMemo<FilterOption[]>(() => {
+		const usernames = new Set<string>();
+
+		(Array.isArray(usuariosData) ? usuariosData : []).forEach((usuario) => {
+			const username = usuario.nombre_usuario?.trim();
+			if (username) {
+				usernames.add(username);
 			}
+		});
+
+		(historialData?.results ?? []).forEach((item) => {
+			const username = item.username?.trim();
+			if (username) {
+				usernames.add(username);
+			}
+		});
+
+		if (usuarioParam) {
+			usernames.add(usuarioParam);
 		}
-	});
 
+		return [
+			{ label: "Todos", value: "" },
+			...Array.from(usernames)
+				.sort((a, b) => a.localeCompare(b))
+				.map((username) => ({ label: username, value: username })),
+		];
+	}, [usuariosData, historialData, usuarioParam]);
 
-	const { data: historial } = useGetHistorial({
-		params: {
-			id: "1",
-		}
-	});
+	const entityOptions = useMemo<FilterOption[]>(() => {
+		const entities = new Set<string>(["Usuario", "Limnígrafo", "Métrica"]);
 
-	useEffect(() => {
-		console.log("historiales: ", historiales);
-		console.log("historial: ", historial);
-	}, [historiales, historial]);
+		(historialData?.results ?? []).forEach((item) => {
+			const entity = item.model_name?.trim();
+			if (entity) {
+				entities.add(entity);
+			}
+		});
+
+		return [
+			{ label: "Todas", value: "" },
+			...Array.from(entities)
+				.sort((a, b) => a.localeCompare(b))
+				.map((entity) => ({ label: entity, value: entity })),
+		];
+	}, [historialData]);
+
+	const rows = useMemo<HistoryRow[]>(
+		() => (historialData?.results ?? []).map(mapHistorialToRow),
+		[historialData],
+	);
+
+	const totalRecords = historialData?.count ?? 0;
+	const totalPages = Math.max(1, Math.ceil(totalRecords / PAGE_SIZE));
+	const startRow = totalRecords === 0 ? 0 : ((currentPage - 1) * PAGE_SIZE) + 1;
+	const endRow = Math.min(currentPage * PAGE_SIZE, totalRecords);
+
+	function handleFilterChange(field: keyof HistorialFilters, value: string) {
+		setFilters((previous) => ({
+			...previous,
+			[field]: value,
+		}));
+	}
+
+	function handleApplyFilters() {
+		setAppliedFilters(filters);
+		setCurrentPage(1);
+	}
+
+	function handleClearFilters() {
+		const resetFilters = {
+			...EMPTY_FILTERS,
+			usuario: usuarioParam,
+		};
+		setFilters(resetFilters);
+		setAppliedFilters(resetFilters);
+		setCurrentPage(1);
+	}
+
+	function handlePrevPage() {
+		setCurrentPage((previous) => Math.max(1, previous - 1));
+	}
+
+	function handleNextPage() {
+		setCurrentPage((previous) => Math.min(totalPages, previous + 1));
+	}
 
 	return (
 		<PaginaBase>
@@ -145,35 +227,67 @@ export default function HistorialPage() {
 					</header>
 
 					<FilterBar
-						users={FILTER_USERS}
-						actions={FILTER_ACTIONS}
-						entities={FILTER_ENTITIES}
+						users={userOptions}
+						actions={ACTION_OPTIONS}
+						entities={entityOptions}
+						values={filters}
+						onChange={handleFilterChange}
+						onApply={handleApplyFilters}
+						onClear={handleClearFilters}
+						isLoading={isFetchingHistorial}
 					/>
 
-					<div className="grid gap-6 xl:grid-cols-[3fr_1.2fr]">
-						<section className="flex flex-col gap-4 rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-							<div className="flex flex-wrap items-center justify-between gap-3">
-								<div>
-									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-										Historial de acciones
-									</p>
-								</div>
-								<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569]">
-									{HISTORIAL_FILAS.length} registros
-								</span>
+					<section className="flex flex-col gap-4 rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
+						<div className="flex flex-wrap items-center justify-between gap-3">
+							<div>
+								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+									Historial de acciones
+								</p>
 							</div>
+							<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569]">
+								{isLoadingHistorial ? "Cargando..." : `${totalRecords} registros`}
+							</span>
+						</div>
 
-							<HistorialTable rows={HISTORIAL_FILAS} />
-						</section>
+						{historialError ? (
+							<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">
+								No se pudo cargar el historial. Intentalo nuevamente.
+							</p>
+						) : null}
 
-						<HistorialCard
-							actionsToday={7}
-							lastAction="Actualizó permisos de usuario"
-							lastUser="ximena"
-							lastTimestamp="2025-11-23 16:40"
-							pendingReviews={1}
+						<HistorialTable
+							rows={rows}
+							emptyMessage={
+								isLoadingHistorial
+									? "Cargando historial..."
+									: "No hay acciones registradas con los filtros seleccionados."
+							}
 						/>
-					</div>
+
+						<div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+							<p className="text-[13px] text-[#64748B]">
+								Mostrando {startRow}-{endRow} de {totalRecords}. Página {currentPage} de {totalPages}
+							</p>
+							<div className="flex gap-2">
+								<button
+									type="button"
+									onClick={handlePrevPage}
+									disabled={currentPage <= 1 || isFetchingHistorial}
+									className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40"
+								>
+									Anterior
+								</button>
+								<button
+									type="button"
+									onClick={handleNextPage}
+									disabled={currentPage >= totalPages || isFetchingHistorial}
+									className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40"
+								>
+									Siguiente
+								</button>
+							</div>
+						</div>
+					</section>
 				</div>
 			</main>
 		</PaginaBase>

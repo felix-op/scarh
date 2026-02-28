@@ -5,7 +5,7 @@ import { signOut, useSession } from "next-auth/react";
 import ProfileCard from "@componentes/navbar/ProfileCard";
 import PaginaBase from "@componentes/base/PaginaBase";
 import ChangePasswordModal from "@componentes/ChangePasswordModal";
-import { useGetUsuario, usePutUsuario } from "@servicios/api/django.api";
+import { useGetUsuario, usePutUsuario } from "@servicios/api";
 
 type SessionUserExtended = {
 	id?: string;
