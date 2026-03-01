@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import FilterBar, { FilterOption, HistorialFilters } from "@componentes/FilterBar";
-import HistorialTable, { HistoryRow } from "@componentes/HistorialTable";
+import DataTable from "@componentes/tabla/DataTable";
+import { ColumnConfig } from "@componentes/tabla/types";
 import { useGetUsuarios } from "@servicios/api";
 import { HistorialItem, useGetHistoriales } from "@servicios/api/django.api";
 
@@ -33,16 +34,23 @@ const ACTION_LABELS: Record<string, string> = {
 	manual_data_load: "Carga manual de datos",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-	success: "Exitoso",
-	failed: "Fallido",
-	review: "En revisión",
+type HistoryRow = {
+	id: string;
+	usuario: string;
+	accion: string;
+	entidad: string;
+	descripcion: string;
+	fecha: string;
+	hora: string;
 };
 
-const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("es-AR", {
+const DATE_FORMATTER = new Intl.DateTimeFormat("es-AR", {
 	year: "numeric",
 	month: "2-digit",
 	day: "2-digit",
+});
+
+const TIME_FORMATTER = new Intl.DateTimeFormat("es-AR", {
 	hour: "2-digit",
 	minute: "2-digit",
 });
@@ -51,16 +59,20 @@ function getActionLabel(type: string): string {
 	return ACTION_LABELS[type] ?? type;
 }
 
-function getStatusLabel(status: string): string {
-	return STATUS_LABELS[status] ?? status;
-}
-
-function formatDateTime(value: string): string {
+function formatDate(value: string): string {
 	const date = new Date(value);
 	if (Number.isNaN(date.getTime())) {
 		return "-";
 	}
-	return DATE_TIME_FORMATTER.format(date);
+	return DATE_FORMATTER.format(date);
+}
+
+function formatTime(value: string): string {
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) {
+		return "-";
+	}
+	return TIME_FORMATTER.format(date);
 }
 
 function mapHistorialToRow(item: HistorialItem): HistoryRow {
@@ -70,11 +82,43 @@ function mapHistorialToRow(item: HistorialItem): HistoryRow {
 		accion: getActionLabel(item.type),
 		entidad: item.model_name || "-",
 		descripcion: item.description || item.object_repr || "-",
-		fechaHora: formatDateTime(item.date),
-		registroId: item.object_id || "-",
-		estado: getStatusLabel(item.status),
+		fecha: formatDate(item.date),
+		hora: formatTime(item.date),
 	};
 }
+
+const historyColumns: ColumnConfig<HistoryRow>[] = [
+	{
+		id: "usuario",
+		header: "Usuario",
+		cell: (row) => <span className="px-4 py-3 font-semibold text-[#011018]">{row.usuario}</span>,
+	},
+	{
+		id: "accion",
+		header: "Acción realizada",
+		cell: (row) => <span className="px-4 py-3">{row.accion}</span>,
+	},
+	{
+		id: "entidad",
+		header: "Entidad afectada",
+		cell: (row) => <span className="px-4 py-3 text-[#0982C8]">{row.entidad}</span>,
+	},
+	{
+		id: "descripcion",
+		header: "Descripción",
+		cell: (row) => <span className="px-4 py-3 text-[#4B4B4B]">{row.descripcion}</span>,
+	},
+	{
+		id: "fechaHora",
+		header: "Fecha y hora",
+		cell: (row) => (
+			<div className="px-4 py-3 text-[#4B4B4B]">
+				<p className="leading-5">{row.fecha}</p>
+				<p className="text-[13px] text-[#64748B] leading-5">{row.hora}</p>
+			</div>
+		),
+	},
+];
 
 export default function HistorialPage() {
 	const searchParams = useSearchParams();
@@ -255,13 +299,30 @@ export default function HistorialPage() {
 							</p>
 						) : null}
 
-						<HistorialTable
-							rows={rows}
-							emptyMessage={
-								isLoadingHistorial
-									? "Cargando historial..."
-									: "No hay acciones registradas con los filtros seleccionados."
+						<DataTable
+							data={rows}
+							columns={historyColumns}
+							rowIdKey="id"
+							showTopBar={false}
+							enableRowAnimation={false}
+							loadingRows={6}
+							isLoading={isLoadingHistorial}
+							emptyStateContent={
+								<span className="text-[#6B7280]">
+									No hay acciones registradas con los filtros seleccionados.
+								</span>
 							}
+							styles={{
+								cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)]",
+								scrollerClassName: "overflow-x-auto",
+								tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F]",
+								theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none",
+								headerCellClassName: "px-4 py-3",
+								tbodyClassName: "divide-y divide-[#EAEAEA]",
+								rowClassName: "border-0 hover:bg-[#F9FBFF]",
+								cellClassName: "align-middle",
+								emptyCellClassName: "px-4 py-8",
+							}}
 						/>
 
 						<div className="flex flex-wrap items-center justify-between gap-3 pt-2">
