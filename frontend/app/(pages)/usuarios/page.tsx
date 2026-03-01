@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import DataTable from "@componentes/tabla/DataTable";
-import { ActionConfig, ColumnConfig } from "@componentes/tabla/types";
+import { ActionConfig, ColumnConfig, PaginationConfig } from "@componentes/tabla/types";
 import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
 import ActionMenu from "@componentes/tabla/ActionMenu";
 import VentanaAgregrarUsuario from "./componentes/VentanaAgregarUsuario";
@@ -17,6 +17,7 @@ import VentanaEditarUsuario from "./componentes/VentanaEditarUsuario";
 import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 import BotonIconoEliminar from "@componentes/botones/BotonIconoEliminar";
 import VentanaEliminarUsuario from "./componentes/VentanaEliminarUsuario";
+import usePaginarTabla from "@hooks/usePaginarTabla";
 
 const queriesToInvalidate = ["useGetUsuarios"];
 
@@ -89,7 +90,7 @@ export default function UsersAdminPage() {
 		{
 			id: "nombre",
 			header: "Nombre",
-			cell: (row) => <p className="p-4">{`${row.first_name} ${row.last_name}`}</p>,
+			cell: (row) => <p className="p-4 xl:w-100">{`${row.first_name} ${row.last_name}`}</p>,
 		},
 		{
 			id: "legajo",
@@ -110,7 +111,7 @@ export default function UsersAdminPage() {
 					}}
 				/>
 				<BotonIconoEditar
-					className="xl:hidden"
+					className="hidden sm:block xl:hidden"
 					onClick={() => {
 						handleOpenEdit(row);
 					}}
@@ -136,7 +137,7 @@ export default function UsersAdminPage() {
 					}}
 				/>
 				<BotonIconoEliminar
-					className="xl:hidden"
+					className="hidden sm:block xl:hidden"
 					onClick={() => {
 						handleOpenDelete(row);
 					}}
@@ -155,6 +156,10 @@ export default function UsersAdminPage() {
 				.some((field) => String(field).toLowerCase().includes(term)),
 		);
 	}, [busqueda, usuarios]);
+
+	const { items: usuariosPaginados, ...rest } = usePaginarTabla({ data: filteredUsuarios, initialLimit: 10 });
+
+	const paginationConfig: PaginationConfig<UsuarioResponse> = { lengthOptions: [10, 20, 50, 100], ...rest };
 
 	const router = useRouter();
 
@@ -183,13 +188,14 @@ export default function UsersAdminPage() {
 				</div>
 
 				<DataTable
-					data={filteredUsuarios}
+					data={usuariosPaginados}
 					columns={columns}
 					rowIdKey="id"
 					minWidth={320}
 					onAdd={handleOpenAdd}
 					actionConfig={actionConfig}
 					isLoading={isLoading || isRefetching}
+					paginationConfig={paginationConfig}
 				/>
 			</div>
 			<VentanaAgregrarUsuario
