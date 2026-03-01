@@ -28,10 +28,10 @@ export default function DataTable<T>({ onAdd, actionConfig, paginationConfig, no
 		<div className="pb-4">
 			<div className="bg-table rounded-xl overflow-hidden border dark:border-white/5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]">
 				<div className="overflow-x-auto overflow-y-hidden custom-scroll">
-					<div className="flex items-center justify-between p-4">
+					<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4">
 						{(onAdd) && (<BotonVariante variant="agregar" onClick={onAdd} />)}
 						{paginationConfig && (
-							<div className="flex gap-2 items-center">
+							<div className="flex gap-2 items-center self-end">
 								<div>
 									{paginationConfig.page} <span className="text-foreground">
 										de {paginationConfig.maxPage}
