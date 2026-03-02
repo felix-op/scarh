@@ -44,13 +44,18 @@ const HEADER_ACTION_SECONDARY_BUTTON_CLASS =
 
 type FuenteFiltro = "" | "manual" | "automatico";
 
-type MedicionesFilters = {
+type ComparativasFilters = {
+	desde: string;
+	hasta: string;
+	atributo: EstadisticaAtributo;
+};
+
+type HistorialFilters = {
 	limnigrafo: string;
 	fuente: FuenteFiltro;
 	desde: string;
 	hasta: string;
 	busqueda: string;
-	atributo: EstadisticaAtributo;
 };
 
 type MedicionRow = {
@@ -65,32 +70,35 @@ type MedicionRow = {
 	bateria: string;
 };
 
-function getDefaultFilters(): MedicionesFilters {
+function getDefaultDateRange() {
 	const now = new Date();
 	const from = new Date(now);
 	from.setDate(now.getDate() - 7);
 
 	return {
-		limnigrafo: "",
-		fuente: "",
 		desde: toDatetimeLocalInputValue(from),
 		hasta: toDatetimeLocalInputValue(now),
-		busqueda: "",
+	};
+}
+
+function getDefaultComparativasFilters(): ComparativasFilters {
+	const { desde, hasta } = getDefaultDateRange();
+	return {
+		desde,
+		hasta,
 		atributo: "altura_agua",
 	};
 }
 
-function getAtributoValue(medicion: MedicionResponse, atributo: EstadisticaAtributo): number | null {
-	switch (atributo) {
-		case "altura_agua":
-			return medicion.altura_agua;
-		case "presion":
-			return medicion.presion;
-		case "temperatura":
-			return medicion.temperatura;
-		default:
-			return null;
-	}
+function getDefaultHistorialFilters(): HistorialFilters {
+	const { desde, hasta } = getDefaultDateRange();
+	return {
+		limnigrafo: "",
+		fuente: "",
+		desde,
+		hasta,
+		busqueda: "",
+	};
 }
 
 function toIsoString(value: string): string | null {
@@ -212,8 +220,10 @@ const tableColumns: ColumnConfig<MedicionRow>[] = [
 ];
 
 export default function MedicionesPage() {
-	const [filters, setFilters] = useState<MedicionesFilters>(getDefaultFilters);
-	const [appliedFilters, setAppliedFilters] = useState<MedicionesFilters>(getDefaultFilters);
+	const [comparativasFilters, setComparativasFilters] = useState<ComparativasFilters>(getDefaultComparativasFilters);
+	const [appliedComparativasFilters, setAppliedComparativasFilters] = useState<ComparativasFilters>(getDefaultComparativasFilters);
+	const [historialFilters, setHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
+	const [appliedHistorialFilters, setAppliedHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [compareIds, setCompareIds] = useState<string[]>([]);
 	const [compareSearch, setCompareSearch] = useState("");
@@ -282,25 +292,25 @@ export default function MedicionesPage() {
 			page: String(currentPage),
 		};
 
-		if (appliedFilters.limnigrafo) {
-			params.limnigrafo = appliedFilters.limnigrafo;
+		if (appliedHistorialFilters.limnigrafo) {
+			params.limnigrafo = appliedHistorialFilters.limnigrafo;
 		}
-		if (appliedFilters.fuente) {
-			params.fuente = appliedFilters.fuente;
+		if (appliedHistorialFilters.fuente) {
+			params.fuente = appliedHistorialFilters.fuente;
 		}
 
-		const desdeIso = toIsoString(appliedFilters.desde);
+		const desdeIso = toIsoString(appliedHistorialFilters.desde);
 		if (desdeIso) {
 			params.desde = desdeIso;
 		}
 
-		const hastaIso = toIsoString(appliedFilters.hasta);
+		const hastaIso = toIsoString(appliedHistorialFilters.hasta);
 		if (hastaIso) {
 			params.hasta = hastaIso;
 		}
 
 		return params;
-	}, [appliedFilters, currentPage]);
+	}, [appliedHistorialFilters, currentPage]);
 
 	const {
 		data: medicionesData,
@@ -308,21 +318,21 @@ export default function MedicionesPage() {
 		isFetching: isFetchingMediciones,
 		error: medicionesError,
 		refetch: refetchMediciones,
-		} = useGetMediciones({
-			params: {
-				queryParams,
-			},
-			config: {
-				placeholderData: (previous) => previous,
-			},
-		});
+	} = useGetMediciones({
+		params: {
+			queryParams,
+		},
+		config: {
+			placeholderData: (previous) => previous,
+		},
+	});
 
 	const postMedicion = usePostMedicion();
 	const postEstadistica = usePostEstadistica();
 
 	const visibleMediciones = useMemo(() => {
 		const source = medicionesData?.results ?? [];
-		const search = appliedFilters.busqueda.trim().toLowerCase();
+		const search = appliedHistorialFilters.busqueda.trim().toLowerCase();
 		if (!search) {
 			return source;
 		}
@@ -341,7 +351,7 @@ export default function MedicionesPage() {
 
 			return target.includes(search);
 		});
-	}, [appliedFilters.busqueda, limnigrafoNameById, medicionesData]);
+	}, [appliedHistorialFilters.busqueda, limnigrafoNameById, medicionesData]);
 
 	const tableRows = useMemo(
 		() =>
@@ -391,11 +401,7 @@ export default function MedicionesPage() {
 	async function handleCalcularEstadisticas() {
 		setEstadisticasError(null);
 
-		const selectedIds = compareIds.length > 0
-			? compareIds
-			: appliedFilters.limnigrafo
-				? [appliedFilters.limnigrafo]
-				: [];
+		const selectedIds = compareIds;
 
 		if (selectedIds.length === 0) {
 			setEstadisticas([]);
@@ -403,8 +409,8 @@ export default function MedicionesPage() {
 			return;
 		}
 
-		const desdeIso = toIsoString(appliedFilters.desde);
-		const hastaIso = toIsoString(appliedFilters.hasta);
+		const desdeIso = toIsoString(appliedComparativasFilters.desde);
+		const hastaIso = toIsoString(appliedComparativasFilters.hasta);
 
 		if (!desdeIso || !hastaIso) {
 			setEstadisticas([]);
@@ -416,7 +422,7 @@ export default function MedicionesPage() {
 			const result = await postEstadistica.mutateAsync({
 				data: {
 					limnigrafos: selectedIds.map((item) => Number.parseInt(item, 10)).filter((item) => !Number.isNaN(item)),
-					atributo: appliedFilters.atributo,
+					atributo: appliedComparativasFilters.atributo,
 					fecha_inicio: desdeIso,
 					fecha_fin: hastaIso,
 				},
@@ -432,26 +438,47 @@ export default function MedicionesPage() {
 		}
 	}
 
-	function handleFilterChange<K extends keyof MedicionesFilters>(field: K, value: MedicionesFilters[K]) {
-		setFilters((prev) => ({ ...prev, [field]: value }));
+	function handleComparativasFilterChange<K extends keyof ComparativasFilters>(
+		field: K,
+		value: ComparativasFilters[K],
+	) {
+		setComparativasFilters((prev) => ({ ...prev, [field]: value }));
 	}
 
-	function handleApplyFilters() {
-		setAppliedFilters(filters);
+	function handleApplyComparativasFilters() {
+		setAppliedComparativasFilters(comparativasFilters);
+		setMensaje(null);
+		setErrorAccion(null);
+	}
+
+	function handleClearComparativasFilters() {
+		const reset = getDefaultComparativasFilters();
+		setComparativasFilters(reset);
+		setAppliedComparativasFilters(reset);
+		setCompareIds([]);
+		setCompareSearch("");
+		setEstadisticas([]);
+		setEstadisticasError(null);
+	}
+
+	function handleHistorialFilterChange<K extends keyof HistorialFilters>(field: K, value: HistorialFilters[K]) {
+		setHistorialFilters((prev) => ({ ...prev, [field]: value }));
+	}
+
+	function handleApplyHistorialFilters() {
+		setAppliedHistorialFilters(historialFilters);
 		setCurrentPage(1);
 		setMensaje(null);
 		setErrorAccion(null);
 	}
 
-	function handleClearFilters() {
-		const reset = getDefaultFilters();
-		setFilters(reset);
-		setAppliedFilters(reset);
+	function handleClearHistorialFilters() {
+		const reset = getDefaultHistorialFilters();
+		setHistorialFilters(reset);
+		setAppliedHistorialFilters(reset);
 		setCurrentPage(1);
-		setCompareIds([]);
-		setCompareSearch("");
-		setEstadisticas([]);
-		setEstadisticasError(null);
+		setMensaje(null);
+		setErrorAccion(null);
 	}
 
 	function handleManualFormChange<K extends keyof ManualFormState>(field: K, value: ManualFormState[K]) {
@@ -490,7 +517,10 @@ export default function MedicionesPage() {
 		setErrorAccion(null);
 		setMensaje(null);
 
-		const limnigrafoId = Number.parseInt(manualForm.limnigrafo || appliedFilters.limnigrafo, 10);
+		const limnigrafoId = Number.parseInt(
+			manualForm.limnigrafo || appliedHistorialFilters.limnigrafo,
+			10,
+		);
 		if (Number.isNaN(limnigrafoId)) {
 			setErrorAccion("Seleccioná un limnígrafo para cargar la medición manual.");
 			return;
@@ -577,7 +607,9 @@ export default function MedicionesPage() {
 		}
 
 		const fallbackLimnigrafoId = Number.parseInt(
-			importFallbackLimnigrafo || appliedFilters.limnigrafo || manualForm.limnigrafo,
+			importFallbackLimnigrafo
+				|| appliedHistorialFilters.limnigrafo
+				|| manualForm.limnigrafo,
 			10,
 		);
 		setIsImporting(true);
@@ -665,116 +697,6 @@ export default function MedicionesPage() {
 					</header>
 
 					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-						<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-								Limnígrafo
-								<select
-									value={filters.limnigrafo}
-									onChange={(event) => handleFilterChange("limnigrafo", event.target.value)}
-									className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-								>
-									<option value="">Todos</option>
-									{limnigrafos.map((limnigrafo) => (
-										<option key={limnigrafo.id} value={String(limnigrafo.id)}>
-											{limnigrafo.codigo}
-										</option>
-									))}
-								</select>
-							</label>
-
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-								Fuente
-								<select
-									value={filters.fuente}
-									onChange={(event) => handleFilterChange("fuente", event.target.value as FuenteFiltro)}
-									className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-								>
-									<option value="">Todas</option>
-									<option value="manual">Manual</option>
-									<option value="automatico">Automática</option>
-								</select>
-							</label>
-
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-								Desde
-								<input
-									type="datetime-local"
-									value={filters.desde}
-									onChange={(event) => handleFilterChange("desde", event.target.value)}
-									className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-								/>
-							</label>
-
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-								Hasta
-								<input
-									type="datetime-local"
-									value={filters.hasta}
-									onChange={(event) => handleFilterChange("hasta", event.target.value)}
-									className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-								/>
-							</label>
-
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-								Buscar
-								<input
-									type="text"
-									value={filters.busqueda}
-									onChange={(event) => handleFilterChange("busqueda", event.target.value)}
-									placeholder="ID, limnígrafo o valor"
-									className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-								/>
-							</label>
-
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-								Atributo
-								<select
-									value={filters.atributo}
-									onChange={(event) => handleFilterChange("atributo", event.target.value as EstadisticaAtributo)}
-									className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-								>
-									<option value="altura_agua">Altura del agua</option>
-									<option value="presion">Presión</option>
-									<option value="temperatura">Temperatura</option>
-								</select>
-							</label>
-						</div>
-
-						<div className="mt-5 flex flex-wrap gap-3">
-							<button
-								type="button"
-								onClick={handleApplyFilters}
-								className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)]"
-							>
-								Aplicar filtros
-							</button>
-							<button
-								type="button"
-								onClick={handleClearFilters}
-								className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155]"
-							>
-								Limpiar
-							</button>
-							<button
-								type="button"
-								onClick={() => handleExport("csv")}
-								disabled={isExporting}
-								className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
-							>
-								Exportar CSV
-							</button>
-							<button
-								type="button"
-								onClick={() => handleExport("json")}
-								disabled={isExporting}
-								className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
-							>
-								Exportar JSON
-							</button>
-						</div>
-					</section>
-
-					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
 						<div className="flex flex-col gap-4">
 							<div className="flex flex-wrap items-center justify-between gap-3">
 								<div>
@@ -788,6 +710,60 @@ export default function MedicionesPage() {
 								>
 									{postEstadistica.isPending ? "Calculando..." : "Calcular estadísticas"}
 								</button>
+							</div>
+
+							<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+								<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+										Desde
+										<input
+											type="datetime-local"
+											value={comparativasFilters.desde}
+											onChange={(event) => handleComparativasFilterChange("desde", event.target.value)}
+											className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+										/>
+									</label>
+
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+										Hasta
+										<input
+											type="datetime-local"
+											value={comparativasFilters.hasta}
+											onChange={(event) => handleComparativasFilterChange("hasta", event.target.value)}
+											className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+										/>
+									</label>
+
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+										Atributo
+										<select
+											value={comparativasFilters.atributo}
+											onChange={(event) => handleComparativasFilterChange("atributo", event.target.value as EstadisticaAtributo)}
+											className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+										>
+											<option value="altura_agua">Altura del agua</option>
+											<option value="presion">Presión</option>
+											<option value="temperatura">Temperatura</option>
+										</select>
+									</label>
+								</div>
+
+								<div className="mt-4 flex flex-wrap gap-3">
+									<button
+										type="button"
+										onClick={handleApplyComparativasFilters}
+										className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)]"
+									>
+										Aplicar filtros de comparativas
+									</button>
+									<button
+										type="button"
+										onClick={handleClearComparativasFilters}
+										className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155]"
+									>
+										Limpiar
+									</button>
+								</div>
 							</div>
 
 							<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
@@ -913,8 +889,105 @@ export default function MedicionesPage() {
 							</span>
 						</div>
 
+						<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+							<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+								<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+									Limnígrafo
+									<select
+										value={historialFilters.limnigrafo}
+										onChange={(event) => handleHistorialFilterChange("limnigrafo", event.target.value)}
+										className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+									>
+										<option value="">Todos</option>
+										{limnigrafos.map((limnigrafo) => (
+											<option key={limnigrafo.id} value={String(limnigrafo.id)}>
+												{limnigrafo.codigo}
+											</option>
+										))}
+									</select>
+								</label>
+
+								<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+									Fuente
+									<select
+										value={historialFilters.fuente}
+										onChange={(event) => handleHistorialFilterChange("fuente", event.target.value as FuenteFiltro)}
+										className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+									>
+										<option value="">Todas</option>
+										<option value="manual">Manual</option>
+										<option value="automatico">Automática</option>
+									</select>
+								</label>
+
+								<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+									Desde
+									<input
+										type="datetime-local"
+										value={historialFilters.desde}
+										onChange={(event) => handleHistorialFilterChange("desde", event.target.value)}
+										className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+									/>
+								</label>
+
+								<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+									Hasta
+									<input
+										type="datetime-local"
+										value={historialFilters.hasta}
+										onChange={(event) => handleHistorialFilterChange("hasta", event.target.value)}
+										className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+									/>
+								</label>
+
+								<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+									Buscar
+									<input
+										type="text"
+										value={historialFilters.busqueda}
+										onChange={(event) => handleHistorialFilterChange("busqueda", event.target.value)}
+										placeholder="ID, limnígrafo o valor"
+										className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+									/>
+								</label>
+							</div>
+
+							<div className="mt-4 flex flex-wrap gap-3">
+								<button
+									type="button"
+									onClick={handleApplyHistorialFilters}
+									className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)]"
+								>
+									Aplicar filtros de historial
+								</button>
+								<button
+									type="button"
+									onClick={handleClearHistorialFilters}
+									className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155]"
+								>
+									Limpiar
+								</button>
+								<button
+									type="button"
+									onClick={() => handleExport("csv")}
+									disabled={isExporting}
+									className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
+								>
+									Exportar CSV
+								</button>
+								<button
+									type="button"
+									onClick={() => handleExport("json")}
+									disabled={isExporting}
+									className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
+								>
+									Exportar JSON
+								</button>
+							</div>
+						</div>
+
 						{topError ? (
-							<p className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">
+							<p className="mb-4 mt-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">
 								No se pudieron cargar las mediciones. Verificá la conexión con el backend.
 							</p>
 						) : null}
@@ -944,7 +1017,7 @@ export default function MedicionesPage() {
 						<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
 							<p className="text-[13px] text-[#64748B]">
 								Mostrando {startRow}-{endRow} de {serverCount}. Página {currentPage} de {totalPages}
-								{appliedFilters.busqueda ? ` (coincidencias en página: ${tableRows.length})` : ""}
+								{appliedHistorialFilters.busqueda ? ` (coincidencias en página: ${tableRows.length})` : ""}
 							</p>
 							<div className="flex gap-2">
 								<button
