@@ -801,7 +801,7 @@ export default function MedicionesPage() {
 											type="text"
 											value={compareSearch}
 											onChange={(event) => setCompareSearch(event.target.value)}
-											placeholder="Código, descripción o ID"
+											placeholder="Buscar ..."
 											className="rounded-xl border border-[#D3D4D5] bg-white px-3 py-2 text-[14px] text-[#334155] outline-none focus:border-[#0982C8]"
 										/>
 									</div>
@@ -875,7 +875,7 @@ export default function MedicionesPage() {
 											<th className="px-4 py-3">Limnígrafo</th>
 											<th className="px-4 py-3">Mínimo</th>
 											<th className="px-4 py-3">Máximo</th>
-											<th className="px-4 py-3">Desv. est.</th>
+											<th className="px-4 py-3">Desv. estándar</th>
 											<th className="px-4 py-3">Percentil 90</th>
 										</tr>
 									</thead>
