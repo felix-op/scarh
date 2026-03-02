@@ -159,7 +159,7 @@ export default function UsersAdminPage() {
 
 	const { items: usuariosPaginados, ...rest } = usePaginarTabla({ data: filteredUsuarios, initialLimit: 10 });
 
-	const paginationConfig: PaginationConfig<UsuarioResponse> = { lengthOptions: [10, 20, 50, 100], ...rest };
+	const paginationConfig: PaginationConfig = { lengthOptions: [10, 20, 50, 100], ...rest };
 
 	const router = useRouter();
 

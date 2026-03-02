@@ -1,6 +1,7 @@
 from rest_framework import viewsets, mixins
 from rest_framework.pagination import PageNumberPagination
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from datetime import timedelta
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from ..models import Medicion
@@ -34,6 +35,27 @@ class MedicionViewSet(
                 type=OpenApiTypes.INT,
                 location=OpenApiParameter.QUERY
             ),
+            OpenApiParameter(
+                name='fuente',
+                description='Filtrar por origen de medición: manual o automatico',
+                required=False,
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY
+            ),
+            OpenApiParameter(
+                name='desde',
+                description='Fecha/hora de inicio (ISO 8601)',
+                required=False,
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY
+            ),
+            OpenApiParameter(
+                name='hasta',
+                description='Fecha/hora de fin (ISO 8601)',
+                required=False,
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY
+            ),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -42,8 +64,22 @@ class MedicionViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
         limnigrafo_id = self.request.query_params.get('limnigrafo')
+        fuente = self.request.query_params.get('fuente')
+        desde = self.request.query_params.get('desde')
+        hasta = self.request.query_params.get('hasta')
+
         if limnigrafo_id:
             queryset = queryset.filter(limnigrafo_id=limnigrafo_id)
+        if fuente in {"manual", "automatico"}:
+            queryset = queryset.filter(fuente=fuente)
+        if desde:
+            desde_dt = parse_datetime(desde)
+            if desde_dt is not None:
+                queryset = queryset.filter(fecha_hora__gte=desde_dt)
+        if hasta:
+            hasta_dt = parse_datetime(hasta)
+            if hasta_dt is not None:
+                queryset = queryset.filter(fecha_hora__lte=hasta_dt)
         return queryset
     
     def perform_create(self, serializer):

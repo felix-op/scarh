@@ -1,7 +1,8 @@
 import { UseQueryOptions } from "@tanstack/react-query";
 import { AxiosError, AxiosRequestConfig } from "axios";
 
-export type ParamsBase = Record<string, string> & {
+export type ParamsBase = {
+	[key: string]: string | Record<string, string> | undefined;
 	queryParams?: Record<string, string>,
 };
 
@@ -27,10 +28,11 @@ export type onErrorFunction<TParams extends ParamsBase, TRequest> = (
 ) => void | Promise<void>
 
 export type MutationConfig<TRequest, TResponse, TParams extends ParamsBase> = {
-	queriesToInvalidate?: string[],
+	queriesToInvalidate?: Array<string | readonly unknown[]>,
 	data?: TRequest,
 	onSuccess?: onSuccessFunction<TResponse, TParams, TRequest>, 
 	onError?: onErrorFunction<TParams, TRequest>,
+	onSettled?: (...args: unknown[]) => void | Promise<void>,
 	refetch?: boolean,
 	configAxios?: AxiosRequestConfig
 };

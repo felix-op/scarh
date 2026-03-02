@@ -58,6 +58,7 @@ export default function ProfilePage() {
 	const currentEmail = usuarioApi?.email ?? sessionUser?.email ?? "";
 	const currentLegajo = usuarioApi?.legajo ?? userId;
 	const currentEstado = Boolean(usuarioApi?.estado ?? true);
+	const statusVariant: "activo" | "inactivo" = currentEstado ? "activo" : "inactivo";
 
 	const handleLogout = () => {
 		signOut({
@@ -129,7 +130,7 @@ export default function ProfilePage() {
 		legajo: String(currentLegajo ?? ""),
 		avatarUrl: sessionUser?.image ?? undefined,
 		statusLabel: currentEstado ? "Activo" : "Inactivo",
-		statusVariant: (currentEstado ? "activo" : "inactivo") as const,
+		statusVariant,
 	};
 
 	return (

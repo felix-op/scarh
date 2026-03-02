@@ -257,10 +257,15 @@ export type MedicionPaginatedResponse = {
 // ENDPOINT: GET-MEDICIONES
 
 type UseGetMedicionesParams = {
-	limnigrafo?: string, // ID del limnígrafo (debe ser string para query params)
-	limit?: string, // Cantidad de resultados por página
-	page?: string, // Número de página
-}
+	queryParams?: {
+		limnigrafo?: string, // ID del limnígrafo
+		fuente?: "manual" | "automatico", // Filtrar por origen
+		desde?: string, // Fecha/hora de inicio ISO 8601
+		hasta?: string, // Fecha/hora de fin ISO 8601
+		limit?: string, // Cantidad de resultados por página
+		page?: string, // Número de página
+	}
+} & ParamsBase
 
 type UseGetMedicionesOptions = {
 	params?: UseGetMedicionesParams,
@@ -274,8 +279,81 @@ export function useGetMediciones({ params, config }: UseGetMedicionesOptions = {
 	return useGet<UseGetMedicionesParams, MedicionPaginatedResponse>({
 		key: "useGetMediciones",
 		url: `${NEXT_PROXY_URL}/medicion/`,
-		params: params ?? {},
+		params: params ?? { queryParams: {} },
 		config: config ?? {},
+	});
+}
+
+// ENDPOINT: POST-MEDICION
+
+export type MedicionPostRequest = {
+	limnigrafo: number,
+	fecha_hora?: string,
+	altura_agua: number,
+	presion?: number | null,
+	temperatura?: number | null,
+	nivel_de_bateria?: number | null,
+};
+
+type UsePostMedicionOptions = {
+	params?: ParamsBase,
+	configuracion?: MutationConfig<
+		MedicionPostRequest,
+		MedicionResponse,
+		ParamsBase
+	>
+};
+
+export function usePostMedicion({ params, configuracion }: UsePostMedicionOptions = {}) {
+	const defaultConfig = {};
+
+	return usePost<MedicionPostRequest, MedicionResponse, ParamsBase>({
+		url: `${NEXT_PROXY_URL}/medicion/`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? {},
+	});
+}
+
+/*
+************************
+	ESTADISTICA
+************************
+*/
+
+export type EstadisticaAtributo = "altura_agua" | "presion" | "temperatura";
+
+export type EstadisticaInput = {
+	limnigrafos: number[],
+	atributo: EstadisticaAtributo,
+	fecha_inicio: string,
+	fecha_fin: string,
+};
+
+export type EstadisticaOutputItem = {
+	id: number | null,
+	maximo: number,
+	minimo: number,
+	atributo: EstadisticaAtributo,
+	desvio_estandar: number,
+	percentil_90: number,
+};
+
+type UsePostEstadisticaOptions = {
+	params?: ParamsBase,
+	configuracion?: MutationConfig<
+		EstadisticaInput,
+		EstadisticaOutputItem[],
+		ParamsBase
+	>
+};
+
+export function usePostEstadistica({ params, configuracion }: UsePostEstadisticaOptions = {}) {
+	const defaultConfig = {};
+
+	return usePost<EstadisticaInput, EstadisticaOutputItem[], ParamsBase>({
+		url: `${NEXT_PROXY_URL}/estadistica/`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? {},
 	});
 }
 
@@ -327,14 +405,14 @@ type UseGetHistorialesParams = {
 		desde?: string,
 		hasta?: string,
 	}
-}
+} & ParamsBase
 
 type UseGetHistorialesOptions = {
 	params?: UseGetHistorialesParams,
 	configuracion?: UseGetConfig<HistorialResponse>,
 }
 
-export function useGetHistoriales({ params, configuracion }: UseGetHistorialesOptions) {
+export function useGetHistoriales({ params, configuracion }: UseGetHistorialesOptions = {}) {
 	const defaultParams = {
 		queryParams: {
 			limit: "10",
@@ -343,7 +421,7 @@ export function useGetHistoriales({ params, configuracion }: UseGetHistorialesOp
 	};
 	const defaultConfig = {};
 
-	return useGet({
+	return useGet<UseGetHistorialesParams, HistorialResponse>({
 		key: "useGetHistoriales",
 		url: `${NEXT_PROXY_URL}/historial/`,
 		params: params ?? defaultParams,

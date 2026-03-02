@@ -34,7 +34,7 @@ export function useGetUsuario({ params, configuracion }: UseGetUsuarioOptions) {
 	}
 	const defaultConfig = {};
 
-	return useGet({
+	return useGet<{ id: string }, UsuarioResponse>({
 		key: "useGetUsuario",
 		url: `${NEXT_PROXY_URL}/usuarios/{id}`,
 		params: params ?? defaultParams,
