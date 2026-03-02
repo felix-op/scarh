@@ -23,6 +23,8 @@ class HistorialViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
 
         queryset = super().get_queryset()
+        # Ocultar eventos técnicos/sistémicos que no representan cambios funcionales de datos.
+        queryset = queryset.exclude(descripcion__startswith="Regeneró la clave API del limnígrafo")
 
         model = self.request.query_params.get("model")
         if model:

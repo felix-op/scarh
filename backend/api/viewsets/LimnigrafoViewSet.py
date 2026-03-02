@@ -88,6 +88,8 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
             metadata={
                 "codigo": limnigrafo.codigo,
                 "key_prefix": key_obj.prefix,
+                # Evento técnico: se conserva en auditoría, pero no se muestra en historial funcional.
+                "visible_in_historial": False,
             },
         )
         

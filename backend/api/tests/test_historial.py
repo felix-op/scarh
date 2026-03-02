@@ -177,6 +177,56 @@ class HistorialTests(APITestCase):
         self.assertIn("metadata", response.data)
         self.assertEqual(response.data["metadata"]["campo"], "altura_agua")
 
+    def test_hidden_technical_actions_are_excluded_from_list(self):
+        visible_action = Accion.objects.create(
+            tipo_accion="modified",
+            entidad="Limnígrafo",
+            entidad_id="123",
+            descripcion="Modificó el limnígrafo 'LMG-H-010'.",
+            usuario=self.user,
+            metadata={"visible_in_historial": True},
+        )
+        hidden_action = Accion.objects.create(
+            tipo_accion="modified",
+            entidad="Limnígrafo",
+            entidad_id="124",
+            descripcion="Regeneró la clave API del limnígrafo 'LMG-H-011'.",
+            usuario=self.user,
+            metadata={"visible_in_historial": False},
+        )
+
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        result_ids = [item["id"] for item in response.data["results"]]
+        self.assertIn(visible_action.id, result_ids)
+        self.assertNotIn(hidden_action.id, result_ids)
+
+    def test_legacy_api_key_rotation_actions_are_excluded_from_list(self):
+        legacy_hidden = Accion.objects.create(
+            tipo_accion="modified",
+            entidad="Limnígrafo",
+            entidad_id="200",
+            descripcion="Regeneró la clave API del limnígrafo 'LMG-H-200'.",
+            usuario=self.user,
+            metadata={},
+        )
+        normal_action = Accion.objects.create(
+            tipo_accion="modified",
+            entidad="Limnígrafo",
+            entidad_id="201",
+            descripcion="Modificó el limnígrafo 'LMG-H-201'.",
+            usuario=self.user,
+            metadata={},
+        )
+
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        result_ids = [item["id"] for item in response.data["results"]]
+        self.assertIn(normal_action.id, result_ids)
+        self.assertNotIn(legacy_hidden.id, result_ids)
+
     def test_manual_data_load_logged(self):
         limnigrafo = Limnigrafo.objects.create(
             codigo="LMG-H-010",
