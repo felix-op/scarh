@@ -1,6 +1,9 @@
 "use client";
 
-import { SeriePoint } from "../utils";
+export type SeriePoint = {
+	label: string;
+	value: number;
+};
 
 type MedicionLineChartProps = {
 	title: string;

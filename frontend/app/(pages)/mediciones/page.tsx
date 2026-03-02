@@ -17,10 +17,12 @@ import {
 	usePostEstadistica,
 	usePostMedicion,
 } from "@servicios/api/django.api";
-import MedicionLineChart from "./componentes/MedicionLineChart";
+import ModalCargaManualMedicion, {
+	ManualFormState,
+} from "@componentes/mediciones/ModalCargaManualMedicion";
+import ModalImportacionMediciones from "@componentes/mediciones/ModalImportacionMediciones";
 import {
 	buildCsvContent,
-	buildSerie,
 	downloadTextFile,
 	formatDate,
 	formatNumber,
@@ -34,17 +36,11 @@ import {
 const PAGE_SIZE = 25;
 const EXPORT_PAGE_SIZE = 1000;
 
-const ATTRIBUTE_LABELS: Record<EstadisticaAtributo, string> = {
-	altura_agua: "Altura del agua",
-	presion: "Presión",
-	temperatura: "Temperatura",
-};
+const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70";
 
-const ATTRIBUTE_UNITS: Record<EstadisticaAtributo, string> = {
-	altura_agua: "m",
-	presion: "hPa",
-	temperatura: "°C",
-};
+const HEADER_ACTION_SECONDARY_BUTTON_CLASS =
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70";
 
 type FuenteFiltro = "" | "manual" | "automatico";
 
@@ -67,15 +63,6 @@ type MedicionRow = {
 	presion: string;
 	temperatura: string;
 	bateria: string;
-};
-
-type ManualFormState = {
-	limnigrafo: string;
-	fecha_hora: string;
-	altura_agua: string;
-	presion: string;
-	temperatura: string;
-	nivel_de_bateria: string;
 };
 
 function getDefaultFilters(): MedicionesFilters {
@@ -229,14 +216,18 @@ export default function MedicionesPage() {
 	const [appliedFilters, setAppliedFilters] = useState<MedicionesFilters>(getDefaultFilters);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [compareIds, setCompareIds] = useState<string[]>([]);
+	const [compareSearch, setCompareSearch] = useState("");
 	const [estadisticas, setEstadisticas] = useState<EstadisticaOutputItem[]>([]);
 	const [estadisticasError, setEstadisticasError] = useState<string | null>(null);
 	const [mensaje, setMensaje] = useState<string | null>(null);
 	const [errorAccion, setErrorAccion] = useState<string | null>(null);
 	const [isExporting, setIsExporting] = useState(false);
 	const [isImporting, setIsImporting] = useState(false);
+	const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+	const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 	const [importRows, setImportRows] = useState<ParsedMedicionImportRow[]>([]);
 	const [importFileName, setImportFileName] = useState("");
+	const [importFallbackLimnigrafo, setImportFallbackLimnigrafo] = useState("");
 	const [manualForm, setManualForm] = useState<ManualFormState>({
 		limnigrafo: "",
 		fecha_hora: toDatetimeLocalInputValue(new Date()),
@@ -271,6 +262,19 @@ export default function MedicionesPage() {
 		});
 		return map;
 	}, [limnigrafos]);
+
+	const filteredCompareLimnigrafos = useMemo(() => {
+		const search = compareSearch.trim().toLowerCase();
+		if (!search) {
+			return limnigrafos;
+		}
+
+		return limnigrafos.filter((limnigrafo) => (
+			`${limnigrafo.codigo} ${limnigrafo.descripcion ?? ""} ${limnigrafo.id}`
+				.toLowerCase()
+				.includes(search)
+		));
+	}, [compareSearch, limnigrafos]);
 
 	const queryParams = useMemo(() => {
 		const params: Record<string, string> = {
@@ -348,35 +352,6 @@ export default function MedicionesPage() {
 				),
 			),
 		[limnigrafoNameById, visibleMediciones],
-	);
-
-	const statsValues = useMemo(() => {
-		const values = visibleMediciones
-			.map((medicion) => getAtributoValue(medicion, appliedFilters.atributo))
-			.filter((value): value is number => value !== null && Number.isFinite(value));
-
-		if (values.length === 0) {
-			return {
-				promedio: null,
-				minimo: null,
-				maximo: null,
-				ultima: null,
-			};
-		}
-
-		const suma = values.reduce((acc, value) => acc + value, 0);
-		return {
-			promedio: suma / values.length,
-			minimo: Math.min(...values),
-			maximo: Math.max(...values),
-			ultima: values[values.length - 1],
-		};
-	}, [appliedFilters.atributo, visibleMediciones]);
-
-	const serie = useMemo(
-		() =>
-			buildSerie(visibleMediciones, (medicion) => getAtributoValue(medicion, appliedFilters.atributo), 30),
-		[appliedFilters.atributo, visibleMediciones],
 	);
 
 	const serverCount = medicionesData?.count ?? 0;
@@ -474,12 +449,40 @@ export default function MedicionesPage() {
 		setAppliedFilters(reset);
 		setCurrentPage(1);
 		setCompareIds([]);
+		setCompareSearch("");
 		setEstadisticas([]);
 		setEstadisticasError(null);
 	}
 
 	function handleManualFormChange<K extends keyof ManualFormState>(field: K, value: ManualFormState[K]) {
 		setManualForm((prev) => ({ ...prev, [field]: value }));
+	}
+
+	function handleToggleCompare(limnigrafoId: string, checked: boolean) {
+		setCompareIds((prev) => {
+			if (checked) {
+				return prev.includes(limnigrafoId) ? prev : [...prev, limnigrafoId];
+			}
+			return prev.filter((id) => id !== limnigrafoId);
+		});
+	}
+
+	function handleSelectAllCompare() {
+		setCompareIds(limnigrafos.map((limnigrafo) => String(limnigrafo.id)));
+	}
+
+	function handleSelectFilteredCompare() {
+		setCompareIds((prev) => {
+			const next = new Set(prev);
+			filteredCompareLimnigrafos.forEach((limnigrafo) => {
+				next.add(String(limnigrafo.id));
+			});
+			return Array.from(next);
+		});
+	}
+
+	function handleClearCompareSelection() {
+		setCompareIds([]);
 	}
 
 	async function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
@@ -522,6 +525,7 @@ export default function MedicionesPage() {
 			await postMedicion.mutateAsync({ data: payload });
 			await refetchMediciones();
 			setMensaje("Medición manual registrada correctamente.");
+			setIsManualModalOpen(false);
 			setManualForm((prev) => ({
 				...prev,
 				altura_agua: "",
@@ -572,7 +576,10 @@ export default function MedicionesPage() {
 			return;
 		}
 
-		const fallbackLimnigrafoId = Number.parseInt(appliedFilters.limnigrafo || manualForm.limnigrafo, 10);
+		const fallbackLimnigrafoId = Number.parseInt(
+			importFallbackLimnigrafo || appliedFilters.limnigrafo || manualForm.limnigrafo,
+			10,
+		);
 		setIsImporting(true);
 		setErrorAccion(null);
 		setMensaje(null);
@@ -617,17 +624,44 @@ export default function MedicionesPage() {
 		if (importErrors.length > 0) {
 			setErrorAccion(importErrors.slice(0, 4).join(" "));
 		}
+
+		if (successCount > 0 && importErrors.length === 0) {
+			setImportRows([]);
+			setImportFileName("");
+			setIsImportModalOpen(false);
+		}
 	}
 
 	return (
 		<PaginaBase>
 			<main className="flex flex-1 justify-center px-6 py-10">
 				<div className="flex w-full max-w-[1568px] flex-col gap-8">
-					<header className="flex flex-col gap-1">
-						<h1 className="text-[34px] font-semibold text-[#011018]">Mediciones</h1>
-						<p className="text-base text-[#4D5562]">
-							Gestión operativa de mediciones históricas, análisis, comparación, exportación e importación.
-						</p>
+					<header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+						<div className="flex flex-col gap-1">
+							<h1 className="text-[34px] font-semibold text-[#011018]">Mediciones</h1>
+							<p className="text-base text-[#4D5562]">
+								Gestión operativa de mediciones históricas, análisis, comparación, exportación e importación.
+							</p>
+						</div>
+
+						<div className="flex flex-wrap items-center gap-3 lg:justify-end">
+							<button
+								type="button"
+								onClick={() => setIsManualModalOpen(true)}
+								className={HEADER_ACTION_PRIMARY_BUTTON_CLASS}
+							>
+								<span className="icon-[mdi--pencil] text-base" aria-hidden="true" />
+								<span>Carga manual</span>
+							</button>
+							<button
+								type="button"
+								onClick={() => setIsImportModalOpen(true)}
+								className={HEADER_ACTION_SECONDARY_BUTTON_CLASS}
+							>
+								<span className="icon-[mdi--upload] text-base" aria-hidden="true" />
+								<span>Importación</span>
+							</button>
+						</div>
 					</header>
 
 					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
@@ -740,79 +774,92 @@ export default function MedicionesPage() {
 						</div>
 					</section>
 
-					<section className="grid gap-6 lg:grid-cols-4">
-						<div className="rounded-[24px] bg-white p-5 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-							<p className="text-[14px] font-semibold uppercase tracking-[0.08em] text-[#64748B]">Total</p>
-							<p className="mt-2 text-[30px] font-semibold text-[#011018]">{serverCount}</p>
-							<p className="text-[13px] text-[#64748B]">Registros en el historial</p>
-						</div>
-						<div className="rounded-[24px] bg-white p-5 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-							<p className="text-[14px] font-semibold uppercase tracking-[0.08em] text-[#64748B]">Promedio</p>
-							<p className="mt-2 text-[30px] font-semibold text-[#011018]">
-								{statsValues.promedio === null ? "-" : `${formatNumber(statsValues.promedio, 2)} ${ATTRIBUTE_UNITS[appliedFilters.atributo]}`}
-							</p>
-							<p className="text-[13px] text-[#64748B]">{ATTRIBUTE_LABELS[appliedFilters.atributo]}</p>
-						</div>
-						<div className="rounded-[24px] bg-white p-5 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-							<p className="text-[14px] font-semibold uppercase tracking-[0.08em] text-[#64748B]">Mínimo</p>
-							<p className="mt-2 text-[30px] font-semibold text-[#011018]">
-								{statsValues.minimo === null ? "-" : `${formatNumber(statsValues.minimo, 2)} ${ATTRIBUTE_UNITS[appliedFilters.atributo]}`}
-							</p>
-							<p className="text-[13px] text-[#64748B]">Valor mínimo del rango</p>
-						</div>
-						<div className="rounded-[24px] bg-white p-5 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-							<p className="text-[14px] font-semibold uppercase tracking-[0.08em] text-[#64748B]">Máximo</p>
-							<p className="mt-2 text-[30px] font-semibold text-[#011018]">
-								{statsValues.maximo === null ? "-" : `${formatNumber(statsValues.maximo, 2)} ${ATTRIBUTE_UNITS[appliedFilters.atributo]}`}
-							</p>
-							<p className="text-[13px] text-[#64748B]">Valor máximo del rango</p>
-						</div>
-					</section>
-
-					<MedicionLineChart
-						title="Serie temporal"
-						subtitle={`Últimos puntos de ${ATTRIBUTE_LABELS[appliedFilters.atributo].toLowerCase()}`}
-						data={serie}
-					/>
-
 					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
 						<div className="flex flex-col gap-4">
 							<div className="flex flex-wrap items-center justify-between gap-3">
 								<div>
-									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Comparación</p>
-									<p className="text-[14px] text-[#64748B]">Seleccioná limnígrafos y calculá estadísticas comparativas.</p>
+									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Comparativas</p>
 								</div>
 								<button
 									type="button"
 									onClick={handleCalcularEstadisticas}
 									disabled={postEstadistica.isPending}
-									className="rounded-xl bg-[#0EA5E9] px-4 py-2 text-[14px] font-semibold text-white disabled:opacity-50"
+									className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
 								>
 									{postEstadistica.isPending ? "Calculando..." : "Calcular estadísticas"}
 								</button>
 							</div>
 
-							<div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-4">
-								{limnigrafos.map((limnigrafo) => {
-									const isChecked = compareIds.includes(String(limnigrafo.id));
-									return (
-										<label key={limnigrafo.id} className="flex items-center gap-2 rounded-xl border border-[#E2E8F0] px-3 py-2 text-[14px] text-[#334155]">
-											<input
-												type="checkbox"
-												checked={isChecked}
-												onChange={(event) => {
-													setCompareIds((prev) => {
-														if (event.target.checked) {
-															return [...prev, String(limnigrafo.id)];
-														}
-														return prev.filter((id) => id !== String(limnigrafo.id));
-													});
-												}}
-											/>
-											{limnigrafo.codigo}
+							<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+								<div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+									<div className="flex w-full max-w-xl flex-col gap-1">
+										<label htmlFor="compare-search" className="text-[13px] font-semibold text-[#475569]">
+											Buscar limnígrafo
 										</label>
-									);
-								})}
+										<input
+											id="compare-search"
+											type="text"
+											value={compareSearch}
+											onChange={(event) => setCompareSearch(event.target.value)}
+											placeholder="Código, descripción o ID"
+											className="rounded-xl border border-[#D3D4D5] bg-white px-3 py-2 text-[14px] text-[#334155] outline-none focus:border-[#0982C8]"
+										/>
+									</div>
+
+									<div className="flex flex-wrap gap-2">
+										<button
+											type="button"
+											onClick={handleSelectAllCompare}
+											disabled={limnigrafos.length === 0}
+											className="rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-2 text-[13px] font-semibold text-[#1D4ED8] disabled:opacity-50"
+										>
+											Seleccionar todos
+										</button>
+										<button
+											type="button"
+											onClick={handleSelectFilteredCompare}
+											disabled={filteredCompareLimnigrafos.length === 0}
+											className="rounded-lg border border-[#BAE6FD] bg-[#ECFEFF] px-3 py-2 text-[13px] font-semibold text-[#0369A1] disabled:opacity-50"
+										>
+											Seleccionar visibles
+										</button>
+										<button
+											type="button"
+											onClick={handleClearCompareSelection}
+											disabled={compareIds.length === 0}
+											className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] disabled:opacity-50"
+										>
+											Limpiar selección
+										</button>
+									</div>
+								</div>
+
+								<p className="mt-3 text-[13px] text-[#64748B]">
+									Seleccionados: {compareIds.length} de {limnigrafos.length}
+									{compareSearch.trim() ? ` • Visibles: ${filteredCompareLimnigrafos.length}` : ""}
+								</p>
+
+								<div className="mt-3 max-h-[220px] overflow-auto rounded-xl border border-[#E2E8F0] bg-white p-2">
+									{filteredCompareLimnigrafos.length === 0 ? (
+										<p className="px-2 py-3 text-[13px] text-[#64748B]">No hay limnígrafos para ese filtro.</p>
+									) : (
+										<div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
+											{filteredCompareLimnigrafos.map((limnigrafo) => {
+												const isChecked = compareIds.includes(String(limnigrafo.id));
+												return (
+													<label key={limnigrafo.id} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] px-3 py-2 text-[14px] text-[#334155]">
+														<input
+															type="checkbox"
+															checked={isChecked}
+															onChange={(event) => handleToggleCompare(String(limnigrafo.id), event.target.checked)}
+														/>
+														<span className="font-medium">{limnigrafo.codigo}</span>
+													</label>
+												);
+											})}
+										</div>
+									)}
+								</div>
 							</div>
 
 							{estadisticasError ? (
@@ -920,153 +967,28 @@ export default function MedicionesPage() {
 						</div>
 					</section>
 
-					<section className="grid gap-6 lg:grid-cols-2">
-						<form
-							onSubmit={handleManualSubmit}
-							className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]"
-						>
-							<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Carga manual</p>
-							<p className="mb-4 mt-1 text-[14px] text-[#64748B]">Registro manual con validaciones.</p>
+					<ModalCargaManualMedicion
+						open={isManualModalOpen}
+						onOpenChange={setIsManualModalOpen}
+						manualForm={manualForm}
+						limnigrafos={limnigrafos}
+						isSubmitting={postMedicion.isPending}
+						onManualFormChange={handleManualFormChange}
+						onSubmit={handleManualSubmit}
+					/>
 
-							<div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-								<label className="flex flex-col gap-1 text-[14px] font-semibold text-[#4B4B4B]">
-									Limnígrafo
-									<select
-										value={manualForm.limnigrafo}
-										onChange={(event) => handleManualFormChange("limnigrafo", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[14px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									>
-										<option value="">Seleccionar</option>
-										{limnigrafos.map((limnigrafo) => (
-											<option key={limnigrafo.id} value={String(limnigrafo.id)}>
-												{limnigrafo.codigo}
-											</option>
-										))}
-									</select>
-								</label>
-
-								<label className="flex flex-col gap-1 text-[14px] font-semibold text-[#4B4B4B]">
-									Fecha/hora
-									<input
-										type="datetime-local"
-										value={manualForm.fecha_hora}
-										onChange={(event) => handleManualFormChange("fecha_hora", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[14px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									/>
-								</label>
-
-								<label className="flex flex-col gap-1 text-[14px] font-semibold text-[#4B4B4B]">
-									Altura del agua (m)
-									<input
-										type="text"
-										value={manualForm.altura_agua}
-										onChange={(event) => handleManualFormChange("altura_agua", event.target.value)}
-										placeholder="Obligatorio"
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[14px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									/>
-								</label>
-
-								<label className="flex flex-col gap-1 text-[14px] font-semibold text-[#4B4B4B]">
-									Presión (hPa)
-									<input
-										type="text"
-										value={manualForm.presion}
-										onChange={(event) => handleManualFormChange("presion", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[14px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									/>
-								</label>
-
-								<label className="flex flex-col gap-1 text-[14px] font-semibold text-[#4B4B4B]">
-									Temperatura (°C)
-									<input
-										type="text"
-										value={manualForm.temperatura}
-										onChange={(event) => handleManualFormChange("temperatura", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[14px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									/>
-								</label>
-
-								<label className="flex flex-col gap-1 text-[14px] font-semibold text-[#4B4B4B]">
-									Batería (%)
-									<input
-										type="text"
-										value={manualForm.nivel_de_bateria}
-										onChange={(event) => handleManualFormChange("nivel_de_bateria", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[14px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									/>
-								</label>
-							</div>
-
-							<button
-								type="submit"
-								disabled={postMedicion.isPending}
-								className="mt-4 rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white disabled:opacity-50"
-							>
-								{postMedicion.isPending ? "Guardando..." : "Guardar medición manual"}
-							</button>
-						</form>
-
-						<div className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-							<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Importación de archivo</p>
-							<p className="mb-4 mt-1 text-[14px] text-[#64748B]">Soporta JSON o CSV con columnas estándar de mediciones.</p>
-
-							<label className="inline-flex cursor-pointer items-center rounded-xl border border-[#CBD5E1] bg-white px-4 py-2 text-[14px] font-semibold text-[#334155]">
-								Seleccionar archivo
-								<input
-									type="file"
-									accept=".json,.csv"
-									onChange={handleImportFileChange}
-									className="hidden"
-								/>
-							</label>
-
-							{importFileName ? (
-								<p className="mt-3 text-[13px] text-[#64748B]">
-									Archivo: <span className="font-semibold text-[#0F172A]">{importFileName}</span>
-								</p>
-							) : null}
-
-							<div className="mt-4 max-h-[220px] overflow-auto rounded-xl border border-[#E2E8F0]">
-								<table className="min-w-full text-left text-[13px] text-[#334155]">
-									<thead className="bg-[#F8FAFC] text-[12px] uppercase tracking-wide text-[#64748B]">
-										<tr>
-											<th className="px-3 py-2">#</th>
-											<th className="px-3 py-2">Fecha</th>
-											<th className="px-3 py-2">Altura</th>
-											<th className="px-3 py-2">Presión</th>
-											<th className="px-3 py-2">Temperatura</th>
-										</tr>
-									</thead>
-									<tbody>
-										{importRows.length === 0 ? (
-											<tr>
-												<td colSpan={5} className="px-3 py-4 text-center text-[#64748B]">Sin filas cargadas.</td>
-											</tr>
-										) : (
-											importRows.slice(0, 20).map((row, index) => (
-												<tr key={`import-row-${index}`} className="border-t border-[#E2E8F0]">
-													<td className="px-3 py-2">{index + 1}</td>
-													<td className="px-3 py-2">{row.fecha_hora ? formatDate(row.fecha_hora) : "-"}</td>
-													<td className="px-3 py-2">{formatNumber(row.altura_agua, 2)}</td>
-													<td className="px-3 py-2">{formatNumber(row.presion, 2)}</td>
-													<td className="px-3 py-2">{formatNumber(row.temperatura, 2)}</td>
-												</tr>
-											))
-										)}
-									</tbody>
-								</table>
-							</div>
-
-							<button
-								type="button"
-								onClick={handleImportSubmit}
-								disabled={isImporting || importRows.length === 0}
-								className="mt-4 rounded-xl bg-[#0EA5E9] px-5 py-3 text-[14px] font-semibold text-white disabled:opacity-50"
-							>
-								{isImporting ? "Importando..." : "Importar al backend"}
-							</button>
-						</div>
-					</section>
+					<ModalImportacionMediciones
+						open={isImportModalOpen}
+						onOpenChange={setIsImportModalOpen}
+						limnigrafos={limnigrafos}
+						importFallbackLimnigrafo={importFallbackLimnigrafo}
+						onImportFallbackChange={setImportFallbackLimnigrafo}
+						importFileName={importFileName}
+						importRows={importRows}
+						isImporting={isImporting}
+						onFileChange={handleImportFileChange}
+						onImportSubmit={handleImportSubmit}
+					/>
 
 					{errorAccion ? (
 						<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">{errorAccion}</p>
