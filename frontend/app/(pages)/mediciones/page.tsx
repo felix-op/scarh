@@ -2,10 +2,7 @@
 
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import PaginaBase from "@componentes/base/PaginaBase";
-import DataTable from "@componentes/tabla/DataTable";
-import { ColumnConfig } from "@componentes/tabla/types";
 import {
-	EstadisticaAtributo,
 	EstadisticaOutputItem,
 	LimnigrafoPaginatedResponse,
 	LimnigrafoResponse,
@@ -21,6 +18,9 @@ import ModalCargaManualMedicion, {
 	ManualFormState,
 } from "@componentes/mediciones/ModalCargaManualMedicion";
 import ModalImportacionMediciones from "@componentes/mediciones/ModalImportacionMediciones";
+import SeccionComparativasMediciones from "./secciones/SeccionComparativasMediciones";
+import SeccionHistorialMediciones from "./secciones/SeccionHistorialMediciones";
+import { ComparativasFilters, HistorialFilters, MedicionRow } from "./secciones/types";
 import {
 	buildCsvContent,
 	downloadTextFile,
@@ -41,34 +41,6 @@ const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
 
 const HEADER_ACTION_SECONDARY_BUTTON_CLASS =
 	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70";
-
-type FuenteFiltro = "" | "manual" | "automatico";
-
-type ComparativasFilters = {
-	desde: string;
-	hasta: string;
-	atributo: EstadisticaAtributo;
-};
-
-type HistorialFilters = {
-	limnigrafo: string;
-	fuente: FuenteFiltro;
-	desde: string;
-	hasta: string;
-	busqueda: string;
-};
-
-type MedicionRow = {
-	id: string;
-	limnigrafo: string;
-	fuente: string;
-	fecha: string;
-	hora: string;
-	altura: string;
-	presion: string;
-	temperatura: string;
-	bateria: string;
-};
 
 function getDefaultDateRange() {
 	const now = new Date();
@@ -163,61 +135,6 @@ function mapMedicionToRow(medicion: MedicionResponse, limnigrafoName: string): M
 		bateria: medicion.nivel_de_bateria !== null ? `${formatNumber(medicion.nivel_de_bateria, 1)} %` : "-",
 	};
 }
-
-const tableColumns: ColumnConfig<MedicionRow>[] = [
-	{
-		id: "limnigrafo",
-		header: "Limnígrafo",
-		cell: (row) => <span className="px-4 py-3 font-semibold text-[#011018]">{row.limnigrafo}</span>,
-	},
-	{
-		id: "fuente",
-		header: "Fuente",
-		cell: (row) => (
-			<div className="px-4 py-3">
-				<span
-					className={`inline-flex rounded-full border px-2.5 py-1 text-[12px] font-semibold ${
-						row.fuente === "manual"
-							? "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]"
-							: "border-[#BFDBFE] bg-[#EFF6FF] text-[#1E40AF]"
-					}`}
-				>
-					{row.fuente === "manual" ? "Manual" : "Automático"}
-				</span>
-			</div>
-		),
-	},
-	{
-		id: "altura",
-		header: "Altura",
-		cell: (row) => <span className="px-4 py-3">{row.altura}</span>,
-	},
-	{
-		id: "presion",
-		header: "Presión",
-		cell: (row) => <span className="px-4 py-3">{row.presion}</span>,
-	},
-	{
-		id: "temperatura",
-		header: "Temperatura",
-		cell: (row) => <span className="px-4 py-3">{row.temperatura}</span>,
-	},
-	{
-		id: "bateria",
-		header: "Batería",
-		cell: (row) => <span className="px-4 py-3">{row.bateria}</span>,
-	},
-	{
-		id: "fechaHora",
-		header: "Fecha y hora",
-		cell: (row) => (
-			<div className="px-4 py-3 text-[#4B4B4B]">
-				<p className="leading-5">{row.fecha}</p>
-				<p className="text-[13px] leading-5 text-[#64748B]">{row.hora}</p>
-			</div>
-		),
-	},
-];
 
 export default function MedicionesPage() {
 	const [comparativasFilters, setComparativasFilters] = useState<ComparativasFilters>(getDefaultComparativasFilters);
@@ -696,349 +613,54 @@ export default function MedicionesPage() {
 						</div>
 					</header>
 
-					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-						<div className="flex flex-col gap-4">
-							<div className="flex flex-wrap items-center justify-between gap-3">
-								<div>
-									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Comparativas</p>
-								</div>
-								<button
-									type="button"
-									onClick={handleCalcularEstadisticas}
-									disabled={postEstadistica.isPending}
-									className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
-								>
-									{postEstadistica.isPending ? "Calculando..." : "Calcular estadísticas"}
-								</button>
-							</div>
+					<SeccionComparativasMediciones
+						filters={comparativasFilters}
+						onDesdeChange={(value) => handleComparativasFilterChange("desde", value)}
+						onHastaChange={(value) => handleComparativasFilterChange("hasta", value)}
+						onAtributoChange={(value) => handleComparativasFilterChange("atributo", value)}
+						onApplyFilters={handleApplyComparativasFilters}
+						onClearFilters={handleClearComparativasFilters}
+						onCalcular={handleCalcularEstadisticas}
+						isCalculando={postEstadistica.isPending}
+						compareSearch={compareSearch}
+						onCompareSearchChange={setCompareSearch}
+						onSelectAll={handleSelectAllCompare}
+						onSelectVisible={handleSelectFilteredCompare}
+						onClearSelection={handleClearCompareSelection}
+						onToggleSelection={handleToggleCompare}
+						limnigrafosTotales={limnigrafos.length}
+						filteredLimnigrafos={filteredCompareLimnigrafos}
+						compareIds={compareIds}
+						estadisticasError={estadisticasError}
+						estadisticas={estadisticas}
+						limnigrafoNameById={limnigrafoNameById}
+					/>
 
-							<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-								<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-										Desde
-										<input
-											type="datetime-local"
-											value={comparativasFilters.desde}
-											onChange={(event) => handleComparativasFilterChange("desde", event.target.value)}
-											className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-										/>
-									</label>
-
-									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-										Hasta
-										<input
-											type="datetime-local"
-											value={comparativasFilters.hasta}
-											onChange={(event) => handleComparativasFilterChange("hasta", event.target.value)}
-											className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-										/>
-									</label>
-
-									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-										Atributo
-										<select
-											value={comparativasFilters.atributo}
-											onChange={(event) => handleComparativasFilterChange("atributo", event.target.value as EstadisticaAtributo)}
-											className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-										>
-											<option value="altura_agua">Altura del agua</option>
-											<option value="presion">Presión</option>
-											<option value="temperatura">Temperatura</option>
-										</select>
-									</label>
-								</div>
-
-								<div className="mt-4 flex flex-wrap gap-3">
-									<button
-										type="button"
-										onClick={handleApplyComparativasFilters}
-										className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)]"
-									>
-										Aplicar filtros de comparativas
-									</button>
-									<button
-										type="button"
-										onClick={handleClearComparativasFilters}
-										className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155]"
-									>
-										Limpiar
-									</button>
-								</div>
-							</div>
-
-							<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-								<div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-									<div className="flex w-full max-w-xl flex-col gap-1">
-										<label htmlFor="compare-search" className="text-[13px] font-semibold text-[#475569]">
-											Buscar limnígrafo
-										</label>
-										<input
-											id="compare-search"
-											type="text"
-											value={compareSearch}
-											onChange={(event) => setCompareSearch(event.target.value)}
-											placeholder="Buscar ..."
-											className="rounded-xl border border-[#D3D4D5] bg-white px-3 py-2 text-[14px] text-[#334155] outline-none focus:border-[#0982C8]"
-										/>
-									</div>
-
-									<div className="flex flex-wrap gap-2">
-										<button
-											type="button"
-											onClick={handleSelectAllCompare}
-											disabled={limnigrafos.length === 0}
-											className="rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-2 text-[13px] font-semibold text-[#1D4ED8] disabled:opacity-50"
-										>
-											Seleccionar todos
-										</button>
-										<button
-											type="button"
-											onClick={handleSelectFilteredCompare}
-											disabled={filteredCompareLimnigrafos.length === 0}
-											className="rounded-lg border border-[#BAE6FD] bg-[#ECFEFF] px-3 py-2 text-[13px] font-semibold text-[#0369A1] disabled:opacity-50"
-										>
-											Seleccionar visibles
-										</button>
-										<button
-											type="button"
-											onClick={handleClearCompareSelection}
-											disabled={compareIds.length === 0}
-											className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] disabled:opacity-50"
-										>
-											Limpiar selección
-										</button>
-									</div>
-								</div>
-
-								<p className="mt-3 text-[13px] text-[#64748B]">
-									Seleccionados: {compareIds.length} de {limnigrafos.length}
-									{compareSearch.trim() ? ` • Visibles: ${filteredCompareLimnigrafos.length}` : ""}
-								</p>
-
-								<div className="mt-3 max-h-[220px] overflow-auto rounded-xl border border-[#E2E8F0] bg-white p-2">
-									{filteredCompareLimnigrafos.length === 0 ? (
-										<p className="px-2 py-3 text-[13px] text-[#64748B]">No hay limnígrafos para ese filtro.</p>
-									) : (
-										<div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
-											{filteredCompareLimnigrafos.map((limnigrafo) => {
-												const isChecked = compareIds.includes(String(limnigrafo.id));
-												return (
-													<label key={limnigrafo.id} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] px-3 py-2 text-[14px] text-[#334155]">
-														<input
-															type="checkbox"
-															checked={isChecked}
-															onChange={(event) => handleToggleCompare(String(limnigrafo.id), event.target.checked)}
-														/>
-														<span className="font-medium">{limnigrafo.codigo}</span>
-													</label>
-												);
-											})}
-										</div>
-									)}
-								</div>
-							</div>
-
-							{estadisticasError ? (
-								<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">
-									{estadisticasError}
-								</p>
-							) : null}
-
-							<div className="overflow-x-auto rounded-xl border border-[#E2E8F0]">
-								<table className="min-w-full text-left text-[14px] text-[#334155]">
-									<thead className="bg-[#F8FAFC] text-[12px] uppercase tracking-wide text-[#64748B]">
-										<tr>
-											<th className="px-4 py-3">Limnígrafo</th>
-											<th className="px-4 py-3">Mínimo</th>
-											<th className="px-4 py-3">Máximo</th>
-											<th className="px-4 py-3">Desv. estándar</th>
-											<th className="px-4 py-3">Percentil 90</th>
-										</tr>
-									</thead>
-									<tbody>
-										{estadisticas.length === 0 ? (
-											<tr>
-												<td colSpan={5} className="px-4 py-5 text-center text-[#64748B]">
-													Sin datos comparativos calculados.
-												</td>
-											</tr>
-										) : (
-											estadisticas.map((item, index) => (
-												<tr key={`estadistica-${item.id ?? "global"}-${index}`} className="border-t border-[#E2E8F0]">
-													<td className="px-4 py-3 font-semibold text-[#0F172A]">
-														{item.id === null ? "Global" : (limnigrafoNameById.get(item.id) ?? `ID ${item.id}`)}
-													</td>
-													<td className="px-4 py-3">{formatNumber(item.minimo, 2)}</td>
-													<td className="px-4 py-3">{formatNumber(item.maximo, 2)}</td>
-													<td className="px-4 py-3">{formatNumber(item.desvio_estandar, 2)}</td>
-													<td className="px-4 py-3">{formatNumber(item.percentil_90, 2)}</td>
-												</tr>
-											))
-										)}
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</section>
-
-					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
-						<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-							<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Historial completo</p>
-							<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569]">
-								{isLoading ? "Cargando..." : `${serverCount} registros`}
-							</span>
-						</div>
-
-						<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-							<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-								<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-									Limnígrafo
-									<select
-										value={historialFilters.limnigrafo}
-										onChange={(event) => handleHistorialFilterChange("limnigrafo", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									>
-										<option value="">Todos</option>
-										{limnigrafos.map((limnigrafo) => (
-											<option key={limnigrafo.id} value={String(limnigrafo.id)}>
-												{limnigrafo.codigo}
-											</option>
-										))}
-									</select>
-								</label>
-
-								<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-									Fuente
-									<select
-										value={historialFilters.fuente}
-										onChange={(event) => handleHistorialFilterChange("fuente", event.target.value as FuenteFiltro)}
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									>
-										<option value="">Todas</option>
-										<option value="manual">Manual</option>
-										<option value="automatico">Automática</option>
-									</select>
-								</label>
-
-								<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-									Desde
-									<input
-										type="datetime-local"
-										value={historialFilters.desde}
-										onChange={(event) => handleHistorialFilterChange("desde", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									/>
-								</label>
-
-								<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-									Hasta
-									<input
-										type="datetime-local"
-										value={historialFilters.hasta}
-										onChange={(event) => handleHistorialFilterChange("hasta", event.target.value)}
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									/>
-								</label>
-
-								<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
-									Buscar
-									<input
-										type="text"
-										value={historialFilters.busqueda}
-										onChange={(event) => handleHistorialFilterChange("busqueda", event.target.value)}
-										placeholder="ID, limnígrafo o valor"
-										className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
-									/>
-								</label>
-							</div>
-
-							<div className="mt-4 flex flex-wrap gap-3">
-								<button
-									type="button"
-									onClick={handleApplyHistorialFilters}
-									className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)]"
-								>
-									Aplicar filtros de historial
-								</button>
-								<button
-									type="button"
-									onClick={handleClearHistorialFilters}
-									className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155]"
-								>
-									Limpiar
-								</button>
-								<button
-									type="button"
-									onClick={() => handleExport("csv")}
-									disabled={isExporting}
-									className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
-								>
-									Exportar CSV
-								</button>
-								<button
-									type="button"
-									onClick={() => handleExport("json")}
-									disabled={isExporting}
-									className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
-								>
-									Exportar JSON
-								</button>
-							</div>
-						</div>
-
-						{topError ? (
-							<p className="mb-4 mt-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">
-								No se pudieron cargar las mediciones. Verificá la conexión con el backend.
-							</p>
-						) : null}
-
-						<DataTable
-							data={tableRows}
-							columns={tableColumns}
-							rowIdKey="id"
-							showTopBar={false}
-							enableRowAnimation={false}
-							loadingRows={8}
-							isLoading={isLoading}
-							emptyStateContent={<span className="text-[#6B7280]">No hay mediciones para los filtros seleccionados.</span>}
-							styles={{
-								cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)]",
-								scrollerClassName: "overflow-x-auto",
-								tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F]",
-								theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none",
-								headerCellClassName: "px-4 py-3",
-								tbodyClassName: "divide-y divide-[#EAEAEA]",
-								rowClassName: "border-0 hover:bg-[#F9FBFF]",
-								cellClassName: "align-middle",
-								emptyCellClassName: "px-4 py-8",
-							}}
-						/>
-
-						<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-							<p className="text-[13px] text-[#64748B]">
-								Mostrando {startRow}-{endRow} de {serverCount}. Página {currentPage} de {totalPages}
-								{appliedHistorialFilters.busqueda ? ` (coincidencias en página: ${tableRows.length})` : ""}
-							</p>
-							<div className="flex gap-2">
-								<button
-									type="button"
-									onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-									disabled={currentPage <= 1 || isFetchingMediciones}
-									className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40"
-								>
-									Anterior
-								</button>
-								<button
-									type="button"
-									onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-									disabled={currentPage >= totalPages || isFetchingMediciones}
-									className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40"
-								>
-									Siguiente
-								</button>
-							</div>
-						</div>
-					</section>
+					<SeccionHistorialMediciones
+						filters={historialFilters}
+						limnigrafos={limnigrafos}
+						onLimnigrafoChange={(value) => handleHistorialFilterChange("limnigrafo", value)}
+						onFuenteChange={(value) => handleHistorialFilterChange("fuente", value)}
+						onDesdeChange={(value) => handleHistorialFilterChange("desde", value)}
+						onHastaChange={(value) => handleHistorialFilterChange("hasta", value)}
+						onBusquedaChange={(value) => handleHistorialFilterChange("busqueda", value)}
+						onApplyFilters={handleApplyHistorialFilters}
+						onClearFilters={handleClearHistorialFilters}
+						onExport={handleExport}
+						isExporting={isExporting}
+						hasTopError={Boolean(topError)}
+						rows={tableRows}
+						isLoading={isLoading}
+						serverCount={serverCount}
+						startRow={startRow}
+						endRow={endRow}
+						currentPage={currentPage}
+						totalPages={totalPages}
+						isFetching={isFetchingMediciones}
+						hasBusqueda={Boolean(appliedHistorialFilters.busqueda)}
+						onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+						onNextPage={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+					/>
 
 					<ModalCargaManualMedicion
 						open={isManualModalOpen}
