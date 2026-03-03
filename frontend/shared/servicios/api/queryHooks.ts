@@ -15,11 +15,16 @@ interface ApiMethods {
 }
 
 export const api: ApiMethods = {
-	get: (url: string, config: AxiosRequestConfig) => axios.get(url, { ...config, withCredentials: true }),
-	post: (url: string, config: AxiosRequestConfig) => axios.post(url, { ...config, withCredentials: true }),
-	put: (url: string, config: AxiosRequestConfig) => axios.put(url, { ...config, withCredentials: true }),
-	patch: (url: string, config: AxiosRequestConfig) => axios.patch(url, { ...config, withCredentials: true }),
-	delete: (url: string, config: AxiosRequestConfig) => axios.delete(url, { ...config, withCredentials: true }),
+	get: (url: string, config: AxiosRequestConfig = {}) =>
+		axios.get(url, { ...config, withCredentials: true }),
+	post: (url: string, data?: unknown, config: AxiosRequestConfig = {}) =>
+		axios.post(url, data, { ...config, withCredentials: true }),
+	put: (url: string, data?: unknown, config: AxiosRequestConfig = {}) =>
+		axios.put(url, data, { ...config, withCredentials: true }),
+	patch: (url: string, data?: unknown, config: AxiosRequestConfig = {}) =>
+		axios.patch(url, data, { ...config, withCredentials: true }),
+	delete: (url: string, config: AxiosRequestConfig = {}) =>
+		axios.delete(url, { ...config, withCredentials: true }),
 }
 
 export function urlConParametros<TParams extends ParamsBase>(baseUrl: string, parametros: TParams) {
@@ -38,8 +43,9 @@ export function urlConParametros<TParams extends ParamsBase>(baseUrl: string, pa
 			if (key === 'queryParams') {
 				return;
 			}
-			if (parametros[key] !== undefined) {
-				url = url.replace(param, parametros[key]);
+			const paramValue = parametros[key];
+			if (typeof paramValue === "string") {
+				url = url.replace(param, paramValue);
 			} else {
 				console.warn(`⚠️ Advertencia: Falta el parámetro '${key}' para la URL.`);
 			}
@@ -111,13 +117,12 @@ export type UseGetOptions<TParams extends ParamsBase, TResponse = unknown> = {
 	config: UseGetConfig<TResponse>,
 };
 
-export default function useGet<TParams extends ParamsBase, TResponse = unknown>({
+export function useGet<TParams extends ParamsBase, TResponse = unknown>({
 	key,
 	url,
 	params,
 	config,
 }: UseGetOptions<TParams, TResponse>) {
-
 	const { configAxios = {}, ...restConfig } = config;
 
 	return useQuery<TResponse, Error>({
@@ -172,7 +177,7 @@ type UseGenericMutationProps<TRequest, TResponse, TParams extends ParamsBase> = 
 	data?: TRequest,
 	token: string,
 	contentType: ContentTypeOptions,
-	queriesToInvalidate: QueryKey[],
+	queriesToInvalidate: Array<string | readonly unknown[]>,
 	onSuccess?: onSuccessFunction<TResponse, TParams, TRequest>, 
 	onError?: onErrorFunction<TParams, TRequest>,
 	refetch: boolean

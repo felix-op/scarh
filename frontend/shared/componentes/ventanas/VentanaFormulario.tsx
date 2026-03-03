@@ -5,7 +5,7 @@ import Formulario from "@componentes/formularios/Formulario";
 import { ReactNode, useCallback, useState } from "react";
 import { Drawer, DrawerContent, DrawerTitle, DrawerFooter, DrawerDescription } from "@componentes/components/ui/drawer";
 import { DefaultValues, FieldValues } from "react-hook-form";
-import VentanaConfirmarCierre from "./VentanaConfirmarCierre";
+import VentanaConfirmar from "./VentanaConfirmar";
 
 type VentanaFormularioProps<T extends FieldValues> = {
 	open: boolean;
@@ -13,10 +13,12 @@ type VentanaFormularioProps<T extends FieldValues> = {
 	onSubmit: (data: T) => void,
 	valoresIniciales: DefaultValues<T>,
 	children: ReactNode,
+	titulo?: string,
 	descripcion?: string,
 	classNameVentana?: string,
 	classNameFormulario?: string,
-	classNameContenido?: string,	
+	classNameContenido?: string,
+	isLoading?: boolean,
 };
 
 export default function VentanaFormulario<T extends FieldValues>({
@@ -25,18 +27,18 @@ export default function VentanaFormulario<T extends FieldValues>({
 	onSubmit,
 	children,
 	valoresIniciales,
+	titulo = "",
 	descripcion = "",
 	classNameVentana = "",
 	classNameFormulario = "",
 	classNameContenido = "",
+	isLoading = false,
 }: VentanaFormularioProps<T>) {
 	const [edited, setEdited] = useState(false);
 	const [confirmar, setConfirmar] = useState(false);
 
 	const onDirty = useCallback((dirty: boolean) => {
-		if (dirty) {
-			setEdited(true);
-		}
+		setEdited(dirty);
 	}, [setEdited]);
 
 	const handleClose = () => {
@@ -50,10 +52,10 @@ export default function VentanaFormulario<T extends FieldValues>({
 	return (
 		<>
 			<Drawer open={open} onClose={handleClose} direction="right" dismissible={!edited}>
-				<DrawerContent className={`bg-transparent border-none py-4 pr-2 ${classNameVentana}`}>
+				<DrawerContent className={`bg-transparent border-none py-4 pr-2 lg:min-w-100 xl:min-w-150 ${classNameVentana}`}>
 					<div className="flex flex-col bg-ventana dark:border w-full h-full rounded-lg">
 						<DrawerTitle className="flex justify-between items-center p-5 shrink-0">
-							<span className="text-2xl text-ventana-foreground font-bold">Agregar Limnígrafo</span>
+							<span className="text-2xl text-ventana-foreground font-bold">{titulo}</span>
 							<button type="button" className="flex bg-ventana-secondary rounded-full cursor-pointer text-foreground hover:text-error p-2" onClick={handleClose}>
 								<span className="icon-[material-symbols--close] text-2xl" />
 							</button>
@@ -67,13 +69,13 @@ export default function VentanaFormulario<T extends FieldValues>({
 							<hr className="h-[2px] bg-ventana-secondary" />
 							<DrawerFooter className="sm:flex-row justify-between p-5 shrink-0">
 								<BotonVariante variant="cancelar" onClick={handleClose} />
-								<BotonVariante variant="guardar" type="submit" />
+								<BotonVariante variant="guardar" type="submit" loading={isLoading} disabled={isLoading} />
 							</DrawerFooter>
 						</Formulario>
 					</div>
 				</DrawerContent>
 			</Drawer>
-			<VentanaConfirmarCierre
+			<VentanaConfirmar
 				open={confirmar}
 				onClose={() => {
 					setConfirmar(false);
@@ -85,6 +87,7 @@ export default function VentanaFormulario<T extends FieldValues>({
 				}}
 				title="Cerrar Formulario"
 				description="Está seguro que desea cerrar el formulario? Perderá todos sus cambios realizados."
+				variant="cierre"
 			/>
 		</>
 	);

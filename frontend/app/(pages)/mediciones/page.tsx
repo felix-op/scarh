@@ -1,273 +1,698 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import PaginaBase from "@componentes/base/PaginaBase";
 import {
+	EstadisticaOutputItem,
+	LimnigrafoPaginatedResponse,
+	LimnigrafoResponse,
+	MedicionPaginatedResponse,
+	MedicionPostRequest,
+	MedicionResponse,
 	useGetLimnigrafos,
 	useGetMediciones,
-	type LimnigrafoPaginatedResponse,
-	type MedicionPaginatedResponse
+	usePostEstadistica,
+	usePostMedicion,
 } from "@servicios/api/django.api";
-import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
+import ModalCargaManualMedicion, {
+	ManualFormState,
+} from "@componentes/mediciones/ModalCargaManualMedicion";
+import ModalImportacionMediciones from "@componentes/mediciones/ModalImportacionMediciones";
+import SeccionComparativasMediciones from "./secciones/SeccionComparativasMediciones";
+import SeccionHistorialMediciones from "./secciones/SeccionHistorialMediciones";
+import { ComparativasFilters, HistorialFilters, MedicionRow } from "./secciones/types";
+import {
+	buildCsvContent,
+	downloadTextFile,
+	formatDate,
+	formatNumber,
+	formatTime,
+	parseImportRowsByFilename,
+	parseNumeric,
+	ParsedMedicionImportRow,
+	toDatetimeLocalInputValue,
+} from "./utils";
 
-type MedicionRow = {
-	id: string;
-	timestamp: string;
-	temperatura: string;
-	altura: string;
-	presion: string;
-};
+const PAGE_SIZE = 25;
+const EXPORT_PAGE_SIZE = 1000;
 
-function formatTimestamp(timestamp: string) {
-	const fecha = new Date(timestamp);
-	if (Number.isNaN(fecha.getTime())) {
-		return timestamp;
+const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70";
+
+const HEADER_ACTION_SECONDARY_BUTTON_CLASS =
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70";
+
+function getDefaultDateRange() {
+	const now = new Date();
+	const from = new Date(now);
+	from.setDate(now.getDate() - 7);
+
+	return {
+		desde: toDatetimeLocalInputValue(from),
+		hasta: toDatetimeLocalInputValue(now),
+	};
+}
+
+function getDefaultComparativasFilters(): ComparativasFilters {
+	const { desde, hasta } = getDefaultDateRange();
+	return {
+		desde,
+		hasta,
+		atributo: "altura_agua",
+	};
+}
+
+function getDefaultHistorialFilters(): HistorialFilters {
+	const { desde, hasta } = getDefaultDateRange();
+	return {
+		limnigrafo: "",
+		fuente: "",
+		desde,
+		hasta,
+		busqueda: "",
+	};
+}
+
+function toIsoString(value: string): string | null {
+	if (!value) {
+		return null;
+	}
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.getTime())) {
+		return null;
+	}
+	return parsed.toISOString();
+}
+
+async function fetchAllMedicionesForExport(queryParams: Record<string, string>): Promise<MedicionResponse[]> {
+	let page = 1;
+	const allRows: MedicionResponse[] = [];
+
+	while (true) {
+		const currentParams = new URLSearchParams({
+			...queryParams,
+			limit: String(EXPORT_PAGE_SIZE),
+			page: String(page),
+		});
+
+		const response = await fetch(`/api/proxy/medicion/?${currentParams.toString()}`, {
+			method: "GET",
+			cache: "no-store",
+		});
+
+		if (!response.ok) {
+			const errorBody = await response.json().catch(() => ({}));
+			const errorText =
+				typeof errorBody === "string"
+					? errorBody
+					: errorBody?.detail ?? errorBody?.error ?? "No se pudieron exportar las mediciones.";
+			throw new Error(errorText);
+		}
+
+		const payload = (await response.json()) as MedicionPaginatedResponse;
+		allRows.push(...(payload.results ?? []));
+
+		if (!payload.next) {
+			break;
+		}
+
+		page += 1;
 	}
 
-	return `${fecha.toLocaleDateString("es-AR", {
-		day: "2-digit",
-		month: "2-digit",
-		year: "numeric",
-		timeZone: "America/Argentina/Buenos_Aires",
-	})} ${fecha.toLocaleTimeString("es-AR", {
-		hour: "2-digit",
-		minute: "2-digit",
-		timeZone: "America/Argentina/Buenos_Aires",
-	})}`;
+	return allRows;
+}
+
+function mapMedicionToRow(medicion: MedicionResponse, limnigrafoName: string): MedicionRow {
+	return {
+		id: String(medicion.id),
+		limnigrafo: limnigrafoName,
+		fuente: medicion.fuente,
+		fecha: formatDate(medicion.fecha_hora),
+		hora: formatTime(medicion.fecha_hora),
+		altura: medicion.altura_agua !== null ? `${formatNumber(medicion.altura_agua, 2)} m` : "-",
+		presion: medicion.presion !== null ? `${formatNumber(medicion.presion, 2)} hPa` : "-",
+		temperatura: medicion.temperatura !== null ? `${formatNumber(medicion.temperatura, 2)} °C` : "-",
+		bateria: medicion.nivel_de_bateria !== null ? `${formatNumber(medicion.nivel_de_bateria, 1)} %` : "-",
+	};
 }
 
 export default function MedicionesPage() {
-	const router = useRouter();
-	const searchParams = useSearchParams();
-	const [selectedLimnigrafoId, setSelectedLimnigrafoId] = useState("");
-
-	// Consultar datos reales del backend con auto-refresh cada 5 minutos
-	const { data: limnigrafosData, isLoading: isLoadingLimnigrafos } = useGetLimnigrafos({
-		config: {
-			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
-		}
+	const [comparativasFilters, setComparativasFilters] = useState<ComparativasFilters>(getDefaultComparativasFilters);
+	const [appliedComparativasFilters, setAppliedComparativasFilters] = useState<ComparativasFilters>(getDefaultComparativasFilters);
+	const [historialFilters, setHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
+	const [appliedHistorialFilters, setAppliedHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [compareIds, setCompareIds] = useState<string[]>([]);
+	const [compareSearch, setCompareSearch] = useState("");
+	const [estadisticas, setEstadisticas] = useState<EstadisticaOutputItem[]>([]);
+	const [estadisticasError, setEstadisticasError] = useState<string | null>(null);
+	const [mensaje, setMensaje] = useState<string | null>(null);
+	const [errorAccion, setErrorAccion] = useState<string | null>(null);
+	const [isExporting, setIsExporting] = useState(false);
+	const [isImporting, setIsImporting] = useState(false);
+	const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+	const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+	const [importRows, setImportRows] = useState<ParsedMedicionImportRow[]>([]);
+	const [importFileName, setImportFileName] = useState("");
+	const [importFallbackLimnigrafo, setImportFallbackLimnigrafo] = useState("");
+	const [manualForm, setManualForm] = useState<ManualFormState>({
+		limnigrafo: "",
+		fecha_hora: toDatetimeLocalInputValue(new Date()),
+		altura_agua: "",
+		presion: "",
+		temperatura: "",
+		nivel_de_bateria: "",
 	});
-	const { data: medicionesData, isLoading: isLoadingMediciones } = useGetMediciones({
-		config: {
-			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
-		}
+
+	const {
+		data: limnigrafosData,
+		isLoading: isLoadingLimnigrafos,
+		error: limnigrafosError,
+	} = useGetLimnigrafos({
+		params: {
+			queryParams: {
+				limit: "1000",
+				page: "1",
+			},
+		},
 	});
 
-	// Cast explícito para TypeScript
-	const limnigrafos = limnigrafosData as LimnigrafoPaginatedResponse | undefined;
-	const mediciones = medicionesData as MedicionPaginatedResponse | undefined;
+	const limnigrafosPayload = limnigrafosData as LimnigrafoPaginatedResponse | LimnigrafoResponse[] | undefined;
+	const limnigrafos = Array.isArray(limnigrafosPayload)
+		? limnigrafosPayload
+		: limnigrafosPayload?.results ?? [];
 
-	// Transformar datos del backend a formato frontend
-	const limnigrafosTransformados = useMemo(() => {
-		// Manejar tanto respuesta paginada como array directo
-		const limnigrafosArray = Array.isArray(limnigrafos) 
-			? limnigrafos 
-			: limnigrafos?.results;
-			
-		const medicionesArray = mediciones?.results || [];
-		
-		if (!limnigrafosArray || limnigrafosArray.length === 0) return [];
+	const limnigrafoNameById = useMemo(() => {
+		const map = new Map<number, string>();
+		limnigrafos.forEach((limnigrafo) => {
+			map.set(limnigrafo.id, limnigrafo.codigo);
+		});
+		return map;
+	}, [limnigrafos]);
 
-		// Convertir array de mediciones a Map para búsqueda eficiente
-		const medicionesMap = new Map(
-			medicionesArray.map(m => [m.limnigrafo, m])
-		);
-
-		// Transformar formato backend a formato frontend
-		return transformarLimnigrafos(
-			limnigrafosArray,
-			medicionesMap
-		);
-	}, [limnigrafos, mediciones]);
-
-	// Seleccionar limnímgrafo automáticamente desde URL o primero de la lista
-	useEffect(() => {
-		const paramId = searchParams?.get("id");
-		if (paramId && paramId !== selectedLimnigrafoId) {
-			setSelectedLimnigrafoId(paramId);
-		} else if (!paramId && !selectedLimnigrafoId && limnigrafosTransformados[0]) {
-			setSelectedLimnigrafoId(limnigrafosTransformados[0].id);
-		}
-	}, [searchParams, limnigrafosTransformados, selectedLimnigrafoId]);
-
-	const selectedLimnigrafo = useMemo(() => {
-		return (
-			limnigrafosTransformados.find((item) => item.id === selectedLimnigrafoId) ??
-			limnigrafosTransformados[0] ??
-			null
-		);
-	}, [limnigrafosTransformados, selectedLimnigrafoId]);
-
-	// Filtrar mediciones del limnímgrafo seleccionado y formatearlas para la tabla
-	const medicionesFiltered = useMemo(() => {
-		if (!selectedLimnigrafo || !mediciones?.results) {
-			return [];
+	const filteredCompareLimnigrafos = useMemo(() => {
+		const search = compareSearch.trim().toLowerCase();
+		if (!search) {
+			return limnigrafos;
 		}
 
-		// Obtener ID numérico del limnímgrafo seleccionado
-		const limnigrafoIdNum = Number(selectedLimnigrafo.id);
+		return limnigrafos.filter((limnigrafo) => (
+			`${limnigrafo.codigo} ${limnigrafo.descripcion ?? ""} ${limnigrafo.id}`
+				.toLowerCase()
+				.includes(search)
+		));
+	}, [compareSearch, limnigrafos]);
 
-		// Filtrar mediciones de este limnímgrafo
-		return mediciones.results
-			.filter(m => m.limnigrafo === limnigrafoIdNum)
-			.sort((a, b) => {
-				// Ordenar por fecha descendente (más reciente primero)
-				const fechaA = new Date(a.fecha_hora).getTime();
-				const fechaB = new Date(b.fecha_hora).getTime();
-				return fechaB - fechaA;
-			})
-			.map(m => ({
-				id: m.id.toString(),
-				timestamp: m.fecha_hora,
-				temperatura: m.temperatura != null ? `${m.temperatura.toFixed(1)} C` : '-',
-				altura: m.altura_agua != null ? `${m.altura_agua.toFixed(2)} mts` : '-',
-				presion: m.presion != null ? `${m.presion.toFixed(2)} bar` : '-',
+	const queryParams = useMemo(() => {
+		const params: Record<string, string> = {
+			limit: String(PAGE_SIZE),
+			page: String(currentPage),
+		};
+
+		if (appliedHistorialFilters.limnigrafo) {
+			params.limnigrafo = appliedHistorialFilters.limnigrafo;
+		}
+		if (appliedHistorialFilters.fuente) {
+			params.fuente = appliedHistorialFilters.fuente;
+		}
+
+		const desdeIso = toIsoString(appliedHistorialFilters.desde);
+		if (desdeIso) {
+			params.desde = desdeIso;
+		}
+
+		const hastaIso = toIsoString(appliedHistorialFilters.hasta);
+		if (hastaIso) {
+			params.hasta = hastaIso;
+		}
+
+		return params;
+	}, [appliedHistorialFilters, currentPage]);
+
+	const {
+		data: medicionesData,
+		isLoading: isLoadingMediciones,
+		isFetching: isFetchingMediciones,
+		error: medicionesError,
+		refetch: refetchMediciones,
+	} = useGetMediciones({
+		params: {
+			queryParams,
+		},
+		config: {
+			placeholderData: (previous) => previous,
+		},
+	});
+
+	const postMedicion = usePostMedicion();
+	const postEstadistica = usePostEstadistica();
+
+	const visibleMediciones = useMemo(() => {
+		const source = medicionesData?.results ?? [];
+		const search = appliedHistorialFilters.busqueda.trim().toLowerCase();
+		if (!search) {
+			return source;
+		}
+
+		return source.filter((medicion) => {
+			const limnigrafoName = (limnigrafoNameById.get(medicion.limnigrafo) ?? "").toLowerCase();
+			const target = [
+				String(medicion.id),
+				limnigrafoName,
+				medicion.fuente,
+				medicion.fecha_hora,
+				String(medicion.altura_agua ?? ""),
+				String(medicion.presion ?? ""),
+				String(medicion.temperatura ?? ""),
+			].join(" ").toLowerCase();
+
+			return target.includes(search);
+		});
+	}, [appliedHistorialFilters.busqueda, limnigrafoNameById, medicionesData]);
+
+	const tableRows = useMemo(
+		() =>
+			visibleMediciones.map((medicion) =>
+				mapMedicionToRow(
+					medicion,
+					limnigrafoNameById.get(medicion.limnigrafo) ?? `ID ${medicion.limnigrafo}`,
+				),
+			),
+		[limnigrafoNameById, visibleMediciones],
+	);
+
+	const serverCount = medicionesData?.count ?? 0;
+	const totalPages = Math.max(1, Math.ceil(serverCount / PAGE_SIZE));
+	const startRow = serverCount === 0 ? 0 : ((currentPage - 1) * PAGE_SIZE) + 1;
+	const endRow = Math.min(currentPage * PAGE_SIZE, serverCount);
+
+	const isLoading = isLoadingLimnigrafos || isLoadingMediciones;
+	const topError = limnigrafosError ?? medicionesError;
+
+	async function handleExport(format: "csv" | "json") {
+		setErrorAccion(null);
+		setMensaje(null);
+		setIsExporting(true);
+
+		try {
+			const exportRows = await fetchAllMedicionesForExport(queryParams);
+			if (format === "csv") {
+				const csv = buildCsvContent(exportRows, limnigrafoNameById);
+				downloadTextFile(`mediciones_${Date.now()}.csv`, csv, "text/csv;charset=utf-8");
+			} else {
+				downloadTextFile(
+					`mediciones_${Date.now()}.json`,
+					JSON.stringify(exportRows, null, 2),
+					"application/json;charset=utf-8",
+				);
+			}
+
+			setMensaje(`Exportación completada (${exportRows.length} registros).`);
+		} catch (error) {
+			setErrorAccion(error instanceof Error ? error.message : "No se pudo exportar la información.");
+		} finally {
+			setIsExporting(false);
+		}
+	}
+
+	async function handleCalcularEstadisticas() {
+		setEstadisticasError(null);
+
+		const selectedIds = compareIds;
+
+		if (selectedIds.length === 0) {
+			setEstadisticas([]);
+			setEstadisticasError("Seleccioná al menos un limnígrafo para calcular estadísticas.");
+			return;
+		}
+
+		const desdeIso = toIsoString(appliedComparativasFilters.desde);
+		const hastaIso = toIsoString(appliedComparativasFilters.hasta);
+
+		if (!desdeIso || !hastaIso) {
+			setEstadisticas([]);
+			setEstadisticasError("Definí un rango de fechas válido para calcular estadísticas.");
+			return;
+		}
+
+		try {
+			const result = await postEstadistica.mutateAsync({
+				data: {
+					limnigrafos: selectedIds.map((item) => Number.parseInt(item, 10)).filter((item) => !Number.isNaN(item)),
+					atributo: appliedComparativasFilters.atributo,
+					fecha_inicio: desdeIso,
+					fecha_fin: hastaIso,
+				},
+			});
+			setEstadisticas(result);
+		} catch (error) {
+			setEstadisticas([]);
+			setEstadisticasError(
+				error instanceof Error
+					? error.message
+					: "No se pudieron calcular estadísticas para el rango seleccionado.",
+			);
+		}
+	}
+
+	function handleComparativasFilterChange<K extends keyof ComparativasFilters>(
+		field: K,
+		value: ComparativasFilters[K],
+	) {
+		setComparativasFilters((prev) => ({ ...prev, [field]: value }));
+	}
+
+	function handleApplyComparativasFilters() {
+		setAppliedComparativasFilters(comparativasFilters);
+		setMensaje(null);
+		setErrorAccion(null);
+	}
+
+	function handleClearComparativasFilters() {
+		const reset = getDefaultComparativasFilters();
+		setComparativasFilters(reset);
+		setAppliedComparativasFilters(reset);
+		setCompareIds([]);
+		setCompareSearch("");
+		setEstadisticas([]);
+		setEstadisticasError(null);
+	}
+
+	function handleHistorialFilterChange<K extends keyof HistorialFilters>(field: K, value: HistorialFilters[K]) {
+		setHistorialFilters((prev) => ({ ...prev, [field]: value }));
+	}
+
+	function handleApplyHistorialFilters() {
+		setAppliedHistorialFilters(historialFilters);
+		setCurrentPage(1);
+		setMensaje(null);
+		setErrorAccion(null);
+	}
+
+	function handleClearHistorialFilters() {
+		const reset = getDefaultHistorialFilters();
+		setHistorialFilters(reset);
+		setAppliedHistorialFilters(reset);
+		setCurrentPage(1);
+		setMensaje(null);
+		setErrorAccion(null);
+	}
+
+	function handleManualFormChange<K extends keyof ManualFormState>(field: K, value: ManualFormState[K]) {
+		setManualForm((prev) => ({ ...prev, [field]: value }));
+	}
+
+	function handleToggleCompare(limnigrafoId: string, checked: boolean) {
+		setCompareIds((prev) => {
+			if (checked) {
+				return prev.includes(limnigrafoId) ? prev : [...prev, limnigrafoId];
+			}
+			return prev.filter((id) => id !== limnigrafoId);
+		});
+	}
+
+	function handleSelectAllCompare() {
+		setCompareIds(limnigrafos.map((limnigrafo) => String(limnigrafo.id)));
+	}
+
+	function handleSelectFilteredCompare() {
+		setCompareIds((prev) => {
+			const next = new Set(prev);
+			filteredCompareLimnigrafos.forEach((limnigrafo) => {
+				next.add(String(limnigrafo.id));
+			});
+			return Array.from(next);
+		});
+	}
+
+	function handleClearCompareSelection() {
+		setCompareIds([]);
+	}
+
+	async function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
+		event.preventDefault();
+		setErrorAccion(null);
+		setMensaje(null);
+
+		const limnigrafoId = Number.parseInt(
+			manualForm.limnigrafo || appliedHistorialFilters.limnigrafo,
+			10,
+		);
+		if (Number.isNaN(limnigrafoId)) {
+			setErrorAccion("Seleccioná un limnígrafo para cargar la medición manual.");
+			return;
+		}
+
+		const altura = parseNumeric(manualForm.altura_agua);
+		if (altura === null) {
+			setErrorAccion("La altura del agua es obligatoria y debe ser numérica.");
+			return;
+		}
+
+		const presion = parseNumeric(manualForm.presion);
+		const temperatura = parseNumeric(manualForm.temperatura);
+		const bateria = parseNumeric(manualForm.nivel_de_bateria);
+		if (bateria !== null && (bateria < 0 || bateria > 100)) {
+			setErrorAccion("El nivel de batería debe estar entre 0 y 100.");
+			return;
+		}
+
+		const fechaIso = toIsoString(manualForm.fecha_hora) ?? new Date().toISOString();
+
+		const payload: MedicionPostRequest = {
+			limnigrafo: limnigrafoId,
+			fecha_hora: fechaIso,
+			altura_agua: altura,
+			presion,
+			temperatura,
+			nivel_de_bateria: bateria,
+		};
+
+		try {
+			await postMedicion.mutateAsync({ data: payload });
+			await refetchMediciones();
+			setMensaje("Medición manual registrada correctamente.");
+			setIsManualModalOpen(false);
+			setManualForm((prev) => ({
+				...prev,
+				altura_agua: "",
+				presion: "",
+				temperatura: "",
+				nivel_de_bateria: "",
+				fecha_hora: toDatetimeLocalInputValue(new Date()),
 			}));
-	}, [selectedLimnigrafo, mediciones]);
+		} catch (error) {
+			setErrorAccion(error instanceof Error ? error.message : "No se pudo registrar la medición manual.");
+		}
+	}
 
-	// Obtener la medición más reciente para mostrar valores actuales
-	const latestMedicion = useMemo(() => medicionesFiltered[0], [medicionesFiltered]);
+	async function handleImportFileChange(event: ChangeEvent<HTMLInputElement>) {
+		setErrorAccion(null);
+		setMensaje(null);
 
-	const temperaturaActual =
-		latestMedicion?.temperatura ?? selectedLimnigrafo?.temperatura ?? "-";
-	const alturaActual =
-		latestMedicion?.altura ?? selectedLimnigrafo?.altura ?? "-";
-	const presionActual =
-		latestMedicion?.presion ?? selectedLimnigrafo?.presion ?? "-";
+		const file = event.target.files?.[0];
+		if (!file) {
+			return;
+		}
+
+		try {
+			const text = await file.text();
+			const rows = parseImportRowsByFilename(text, file.name);
+			if (rows.length === 0) {
+				setImportRows([]);
+				setImportFileName("");
+				setErrorAccion("No se encontraron filas válidas en el archivo.");
+				return;
+			}
+
+			setImportRows(rows);
+			setImportFileName(file.name);
+			setMensaje(`Archivo cargado: ${rows.length} filas listas para importar.`);
+		} catch (error) {
+			setImportRows([]);
+			setImportFileName("");
+			setErrorAccion(error instanceof Error ? error.message : "No se pudo procesar el archivo seleccionado.");
+		} finally {
+			event.target.value = "";
+		}
+	}
+
+	async function handleImportSubmit() {
+		if (importRows.length === 0) {
+			setErrorAccion("Cargá un archivo con mediciones antes de importar.");
+			return;
+		}
+
+		const fallbackLimnigrafoId = Number.parseInt(
+			importFallbackLimnigrafo
+				|| appliedHistorialFilters.limnigrafo
+				|| manualForm.limnigrafo,
+			10,
+		);
+		setIsImporting(true);
+		setErrorAccion(null);
+		setMensaje(null);
+
+		let successCount = 0;
+		const importErrors: string[] = [];
+
+		for (let index = 0; index < importRows.length; index += 1) {
+			const row = importRows[index];
+			const limnigrafoId = row.limnigrafo ?? fallbackLimnigrafoId;
+
+			if (!limnigrafoId || Number.isNaN(limnigrafoId)) {
+				importErrors.push(`Fila ${index + 1}: falta limnígrafo válido.`);
+				continue;
+			}
+
+			const payload: MedicionPostRequest = {
+				limnigrafo: limnigrafoId,
+				fecha_hora: row.fecha_hora,
+				altura_agua: row.altura_agua,
+				presion: row.presion,
+				temperatura: row.temperatura,
+				nivel_de_bateria: row.nivel_de_bateria,
+			};
+
+			try {
+				await postMedicion.mutateAsync({ data: payload });
+				successCount += 1;
+			} catch (error) {
+				const message = error instanceof Error ? error.message : "Error desconocido";
+				importErrors.push(`Fila ${index + 1}: ${message}`);
+			}
+		}
+
+		setIsImporting(false);
+		await refetchMediciones();
+
+		if (successCount > 0) {
+			setMensaje(`Importación finalizada. Filas guardadas: ${successCount}.`);
+		}
+
+		if (importErrors.length > 0) {
+			setErrorAccion(importErrors.slice(0, 4).join(" "));
+		}
+
+		if (successCount > 0 && importErrors.length === 0) {
+			setImportRows([]);
+			setImportFileName("");
+			setIsImportModalOpen(false);
+		}
+	}
 
 	return (
 		<PaginaBase>
-			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
+			<main className="flex flex-1 justify-center px-6 py-10">
+				<div className="flex w-full max-w-[1568px] flex-col gap-8">
+					<header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+						<div className="flex flex-col gap-1">
+							<h1 className="text-[34px] font-semibold text-[#011018]">Mediciones</h1>
+							<p className="text-base text-[#4D5562]">
+								Gestión operativa de mediciones históricas, análisis, comparación, exportación e importación.
+							</p>
+						</div>
 
-				<main className="flex flex-1 items-start justify-center px-6 py-10">
-					<div className="flex w-full max-w-[1568px] flex-col gap-6">
-						<section className="rounded-3xl bg-white p-6 shadow-[0px_12px_30px_rgba(27,39,94,0.08)]">
-							<div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-								<div>
-									<h1 className="text-3xl font-semibold text-[#0D1B2A]">
-										Mediciones
-									</h1>
-								<p className="text-base text-[#4D5562]">
-									Consulta la temperatura, altura y presion reportada por cada
-									limnigrafo segun la fecha del registro.
-								</p>
-							</div>								<div className="flex w-full max-w-sm flex-col gap-2">
-									<label
-										htmlFor="limnigrafo-selector"
-										className="text-sm font-semibold text-[#4D5562]"
-									>
-										Seleccionar limnigrafo
-									</label>
-									<select
-										id="limnigrafo-selector"
-										className="rounded-2xl border border-[#CFD8E3] bg-white px-4 py-3 text-base font-medium text-[#0F172A] outline-none focus:border-[#1D9BF0]"
-										value={selectedLimnigrafoId}
-										onChange={(event) => setSelectedLimnigrafoId(event.target.value)}
-									>
-										{limnigrafosTransformados.map((limnigrafo) => (
-											<option key={limnigrafo.id} value={limnigrafo.id}>
-												{limnigrafo.nombre}
-											</option>
-										))}
-									</select>
-								</div>
-							</div>
+						<div className="flex flex-wrap items-center gap-3 lg:justify-end">
+							<button
+								type="button"
+								onClick={() => setIsManualModalOpen(true)}
+								className={HEADER_ACTION_PRIMARY_BUTTON_CLASS}
+							>
+								<span className="icon-[mdi--pencil] text-base" aria-hidden="true" />
+								<span>Carga manual</span>
+							</button>
+							<button
+								type="button"
+								onClick={() => setIsImportModalOpen(true)}
+								className={HEADER_ACTION_SECONDARY_BUTTON_CLASS}
+							>
+								<span className="icon-[mdi--upload] text-base" aria-hidden="true" />
+								<span>Importación</span>
+							</button>
+						</div>
+					</header>
 
-							{selectedLimnigrafo && (
-								<div className="mt-6 grid gap-4 md:grid-cols-3">
-									<div className="rounded-2xl bg-[#F4F8FF] px-4 py-3">
-										<p className="text-sm text-[#4D5562]">Temperatura actual</p>
-										<p className="text-2xl font-semibold text-[#0D1B2A]">
-											{temperaturaActual}
-										</p>
-									</div>
-									<div className="rounded-2xl bg-[#F4F8FF] px-4 py-3">
-										<p className="text-sm text-[#4D5562]">Altura actual</p>
-										<p className="text-2xl font-semibold text-[#0D1B2A]">
-											{alturaActual}
-										</p>
-									</div>
-									<div className="rounded-2xl bg-[#F4F8FF] px-4 py-3">
-										<p className="text-sm text-[#4D5562]">Presion actual</p>
-										<p className="text-2xl font-semibold text-[#0D1B2A]">
-											{presionActual}
-										</p>
-									</div>
-								</div>
-							)}
-						</section>
+					<SeccionComparativasMediciones
+						filters={comparativasFilters}
+						onDesdeChange={(value) => handleComparativasFilterChange("desde", value)}
+						onHastaChange={(value) => handleComparativasFilterChange("hasta", value)}
+						onAtributoChange={(value) => handleComparativasFilterChange("atributo", value)}
+						onApplyFilters={handleApplyComparativasFilters}
+						onClearFilters={handleClearComparativasFilters}
+						onCalcular={handleCalcularEstadisticas}
+						isCalculando={postEstadistica.isPending}
+						compareSearch={compareSearch}
+						onCompareSearchChange={setCompareSearch}
+						onSelectAll={handleSelectAllCompare}
+						onSelectVisible={handleSelectFilteredCompare}
+						onClearSelection={handleClearCompareSelection}
+						onToggleSelection={handleToggleCompare}
+						limnigrafosTotales={limnigrafos.length}
+						filteredLimnigrafos={filteredCompareLimnigrafos}
+						compareIds={compareIds}
+						estadisticasError={estadisticasError}
+						estadisticas={estadisticas}
+						limnigrafoNameById={limnigrafoNameById}
+					/>
 
-						<section className="rounded-3xl bg-white p-6 shadow-[0px_12px_30px_rgba(27,39,94,0.08)]">
-							<div className="flex items-center justify-between">
-								<h2 className="text-2xl font-semibold text-[#0D1B2A]">
-									Registros por fecha
-								</h2>
-								<p className="text-sm text-[#64748B]">
-									{selectedLimnigrafo
-										? `${medicionesFiltered.length} registros`
-										: "Sin limnigrafo seleccionado"}
-								</p>
-							</div>
+					<SeccionHistorialMediciones
+						filters={historialFilters}
+						limnigrafos={limnigrafos}
+						onLimnigrafoChange={(value) => handleHistorialFilterChange("limnigrafo", value)}
+						onFuenteChange={(value) => handleHistorialFilterChange("fuente", value)}
+						onDesdeChange={(value) => handleHistorialFilterChange("desde", value)}
+						onHastaChange={(value) => handleHistorialFilterChange("hasta", value)}
+						onBusquedaChange={(value) => handleHistorialFilterChange("busqueda", value)}
+						onApplyFilters={handleApplyHistorialFilters}
+						onClearFilters={handleClearHistorialFilters}
+						onExport={handleExport}
+						isExporting={isExporting}
+						hasTopError={Boolean(topError)}
+						rows={tableRows}
+						isLoading={isLoading}
+						serverCount={serverCount}
+						startRow={startRow}
+						endRow={endRow}
+						currentPage={currentPage}
+						totalPages={totalPages}
+						isFetching={isFetchingMediciones}
+						hasBusqueda={Boolean(appliedHistorialFilters.busqueda)}
+						onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+						onNextPage={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+					/>
 
-							<div className="mt-6 overflow-x-auto">
-								<table className="min-w-full border-separate border-spacing-y-3">
-									<thead>
-										<tr className="text-left text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
-											<th className="rounded-l-2xl bg-[#F8FAFC] px-4 py-3">
-												Fecha
-											</th>
-											<th className="bg-[#F8FAFC] px-4 py-3">Temperatura</th>
-											<th className="bg-[#F8FAFC] px-4 py-3">Altura</th>
-											<th className="rounded-r-2xl bg-[#F8FAFC] px-4 py-3">
-												Presion
-											</th>
-										</tr>
-									</thead>
-									<tbody>
-										{medicionesFiltered.map((medicion) => (
-											<tr
-												key={medicion.id}
-												className="text-base text-[#0F172A]"
-											>
-												<td className="rounded-l-2xl bg-white px-4 py-4 shadow-[0px_6px_16px_rgba(15,23,42,0.08)]">
-													<div className="font-semibold">
-														{formatTimestamp(medicion.timestamp)}
-													</div>
-													<p className="text-sm text-[#64748B]">
-														{selectedLimnigrafo?.nombre}
-													</p>
-												</td>
-												<td className="bg-white px-4 py-4 shadow-[0px_6px_16px_rgba(15,23,42,0.08)]">
-													{medicion.temperatura}
-												</td>
-												<td className="bg-white px-4 py-4 shadow-[0px_6px_16px_rgba(15,23,42,0.08)]">
-													{medicion.altura}
-												</td>
-												<td className="rounded-r-2xl bg-white px-4 py-4 shadow-[0px_6px_16px_rgba(15,23,42,0.08)]">
-													{medicion.presion}
-												</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
+					<ModalCargaManualMedicion
+						open={isManualModalOpen}
+						onOpenChange={setIsManualModalOpen}
+						manualForm={manualForm}
+						limnigrafos={limnigrafos}
+						isSubmitting={postMedicion.isPending}
+						onManualFormChange={handleManualFormChange}
+						onSubmit={handleManualSubmit}
+					/>
 
-								{(isLoadingLimnigrafos || isLoadingMediciones) ? (
-									<p className="py-8 text-center text-sm text-[#6F6F6F]">
-										Cargando mediciones desde el backend...
-									</p>
-								) : medicionesFiltered.length === 0 ? (
-									<p className="py-8 text-center text-sm text-[#6F6F6F]">
-										{selectedLimnigrafo
-											? "No hay mediciones registradas para este limnígrafo."
-											: "Selecciona un limnigrafo para ver sus mediciones."}
-									</p>
-								) : null}
-							</div>
-						</section>
-					</div>
-				</main>
-			</div>
+					<ModalImportacionMediciones
+						open={isImportModalOpen}
+						onOpenChange={setIsImportModalOpen}
+						limnigrafos={limnigrafos}
+						importFallbackLimnigrafo={importFallbackLimnigrafo}
+						onImportFallbackChange={setImportFallbackLimnigrafo}
+						importFileName={importFileName}
+						importRows={importRows}
+						isImporting={isImporting}
+						onFileChange={handleImportFileChange}
+						onImportSubmit={handleImportSubmit}
+					/>
+
+					{errorAccion ? (
+						<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">{errorAccion}</p>
+					) : null}
+					{mensaje ? (
+						<p className="rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 text-[14px] text-[#166534]">{mensaje}</p>
+					) : null}
+				</div>
+			</main>
 		</PaginaBase>
 	);
 }

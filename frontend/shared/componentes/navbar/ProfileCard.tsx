@@ -8,7 +8,7 @@ import SwapContainer from "@componentes/animaciones/SwapContainer";
 import Icon from "@componentes/icons/Icon";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@componentes/components/ui/dialog";
-import { useGetUsuario, usePachtUsuario } from "@servicios/api/django.api";
+import { useGetUsuario, usePachtUsuario } from "@servicios/api";
 
 type EstadoVariant = "activo" | "inactivo" | "pendiente" | "suspendido";
 

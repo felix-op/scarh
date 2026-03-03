@@ -3,15 +3,17 @@ import BotonIcono from "./BotonIcono";
 
 type BotonIconoEditarProps = {
     onClick?: MouseEventHandler,
+	className?: string
 };
 
 export default function BotonIconoEditar({
-	onClick
+	onClick,
+	className = "",
 }: BotonIconoEditarProps) {
 	return (
 		<BotonIcono
 			icono="icon-[tabler--edit]"
-			className="text-exito hover:border-exito"
+			className={`text-exito hover:border-exito ${className}`}
 			onClick={onClick}
 		/>
 	);

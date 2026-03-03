@@ -13,7 +13,7 @@ export type ActionConfig<T> = {
     actionColumns?: (row: T) => ReactNode
 }
 
-export type PaginationConfig<T> = {
+export type PaginationConfig = {
     page: number;
     maxPage: number;
     prevPage: (prev: number) => void,
@@ -22,3 +22,18 @@ export type PaginationConfig<T> = {
     lengthOptions: Array<number>,
     changeLength: (length: number) => void,
 };
+
+export type DataTableStyles<T> = {
+    rootClassName?: string;
+    cardClassName?: string;
+    scrollerClassName?: string;
+    topBarClassName?: string;
+    tableClassName?: string;
+    theadClassName?: string;
+    headerRowClassName?: string;
+    headerCellClassName?: string;
+    tbodyClassName?: string;
+    rowClassName?: string | ((row: T, index: number) => string);
+    cellClassName?: string;
+    emptyCellClassName?: string;
+}
