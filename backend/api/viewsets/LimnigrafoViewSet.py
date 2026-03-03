@@ -1,6 +1,9 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
+from django_filters.rest_framework import DjangoFilterBackend
 from ..models import Limnigrafo
 from ..serializer import LimnigrafoSerializer
+from ..filters import LimnigrafoFilter
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -12,10 +15,20 @@ from ..utils.audit import (
     construir_descripcion_modificacion,
 )
 
+class LimnigrafoPagination(PageNumberPagination):
+    page_size = 10               
+    page_size_query_param = 'limit' 
+    max_page_size = 100 
+
 class LimnigrafoViewSet(viewsets.ModelViewSet):
-    queryset = Limnigrafo.objects.all()
+    queryset = Limnigrafo.objects.all().order_by('id')
     serializer_class = LimnigrafoSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = LimnigrafoPagination
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = LimnigrafoFilter
+    ordering_fields = ['id', 'codigo', 'estado', 'ultimo_mantenimiento', 'bateria_actual']
+    ordering = ['id']
 
     def perform_create(self, serializer):
         limnigrafo = serializer.save()

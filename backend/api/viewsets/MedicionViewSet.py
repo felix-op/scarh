@@ -1,4 +1,6 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import AllowAny 
 from rest_framework.pagination import PageNumberPagination
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
@@ -7,6 +9,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from ..models import Medicion
 from ..serializer import MedicionSerializer
 from ..permissions import IsAutomaticOrManual
+from ..filters import MedicionFilter
 from ..utils.audit import registrar_accion_auditoria
 
 class MedicionPagination(PageNumberPagination):
@@ -23,64 +26,16 @@ class MedicionViewSet(
     queryset = Medicion.objects.all().order_by('-fecha_hora')
     serializer_class = MedicionSerializer
     pagination_class = MedicionPagination
-    
     permission_classes = [IsAutomaticOrManual] 
+    
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = MedicionFilter
+    ordering_fields = ['fecha_hora', 'altura_agua', 'nivel_de_bateria']
+    ordering = ['-fecha_hora']
 
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='limnigrafo',
-                description='ID del limnígrafo para filtrar las mediciones',
-                required=False,
-                type=OpenApiTypes.INT,
-                location=OpenApiParameter.QUERY
-            ),
-            OpenApiParameter(
-                name='fuente',
-                description='Filtrar por origen de medición: manual o automatico',
-                required=False,
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.QUERY
-            ),
-            OpenApiParameter(
-                name='desde',
-                description='Fecha/hora de inicio (ISO 8601)',
-                required=False,
-                type=OpenApiTypes.DATETIME,
-                location=OpenApiParameter.QUERY
-            ),
-            OpenApiParameter(
-                name='hasta',
-                description='Fecha/hora de fin (ISO 8601)',
-                required=False,
-                type=OpenApiTypes.DATETIME,
-                location=OpenApiParameter.QUERY
-            ),
-        ]
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        limnigrafo_id = self.request.query_params.get('limnigrafo')
-        fuente = self.request.query_params.get('fuente')
-        desde = self.request.query_params.get('desde')
-        hasta = self.request.query_params.get('hasta')
-
-        if limnigrafo_id:
-            queryset = queryset.filter(limnigrafo_id=limnigrafo_id)
-        if fuente in {"manual", "automatico"}:
-            queryset = queryset.filter(fuente=fuente)
-        if desde:
-            desde_dt = parse_datetime(desde)
-            if desde_dt is not None:
-                queryset = queryset.filter(fecha_hora__gte=desde_dt)
-        if hasta:
-            hasta_dt = parse_datetime(hasta)
-            if hasta_dt is not None:
-                queryset = queryset.filter(fecha_hora__lte=hasta_dt)
-        return queryset
     
     def perform_create(self, serializer):
         medicion_instance = serializer.save()
