@@ -1,4 +1,5 @@
-from rest_framework import viewsets, mixins, status
+from rest_framework import viewsets, mixins, status, filters
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import AllowAny 
 from rest_framework.pagination import PageNumberPagination
 from django.utils import timezone
@@ -8,6 +9,7 @@ from ..models import Medicion
 from ..serializer import MedicionSerializer
 from ..models import Limnigrafo 
 from ..permissions import IsAutomaticOrManual
+from ..filters import MedicionFilter
 
 class MedicionPagination(PageNumberPagination):
     page_size = 50               
@@ -23,29 +25,16 @@ class MedicionViewSet(
     queryset = Medicion.objects.all().order_by('-fecha_hora')
     serializer_class = MedicionSerializer
     pagination_class = MedicionPagination
-    
     permission_classes = [IsAutomaticOrManual] 
+    
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = MedicionFilter
+    ordering_fields = ['fecha_hora', 'altura_agua', 'nivel_de_bateria']
+    ordering = ['-fecha_hora']
 
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='limnigrafo',
-                description='ID del limnígrafo para filtrar las mediciones',
-                required=False,
-                type=OpenApiTypes.INT,
-                location=OpenApiParameter.QUERY
-            ),
-        ]
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        limnigrafo_id = self.request.query_params.get('limnigrafo')
-        if limnigrafo_id:
-            queryset = queryset.filter(limnigrafo_id=limnigrafo_id)
-        return queryset
     
     def perform_create(self, serializer):
         medicion_instance = serializer.save()
