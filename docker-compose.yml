@@ -54,4 +54,5 @@ volumes:
 
 networks:
   red_compartida:
+    external: true
     name: red_proyectos

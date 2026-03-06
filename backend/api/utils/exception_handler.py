@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from rest_framework.views import exception_handler
 from rest_framework.response import Response
 from django.conf import settings
@@ -19,7 +20,20 @@ def custom_exception_handler(exc, context):
     if isinstance(exc, ParseError):
         data['descripcion_tecnica'] = f"Error de formato JSON: {str(exc)}"
         data['descripcion_usuario'] = "Hay un valor con formato incorrecto. Verifique que los números y fechas sean válidos."
-    
+    elif isinstance(exc, IntegrityError):
+        error_msg = str(exc).lower()
+        if 'unique' in error_msg or 'duplicate' in error_msg:
+            response.status_code = 409
+            data['codigo'] = 409
+            data['titulo'] = "Conflict"
+            data['descripcion_tecnica'] = f"Error de dato unico: {str(exc)}"
+            data['descripcion_usuario'] = "Ya existe un registro con estos datos. No se permiten elementos duplicados."
+        else:
+            response.status_code = 400
+            data['codigo'] = 400
+            data['titulo'] = "Bad Request"
+            data['descripcion_tecnica'] = f"Error de integridad: {str(exc)}"
+            data['descripcion_usuario'] = "No se pudo procesar la solicitud por un error en los datos."
     elif isinstance(response.data, dict):
         if 'detail' in response.data:
             data['descripcion_tecnica'] = response.data['detail']
