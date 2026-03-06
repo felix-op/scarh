@@ -40,11 +40,11 @@ export default function usePaginarTabla<T>({
 	};
 
 	const prevPage = (value: number) => {
-		setPage(value);
+		setPage(value - 1);
 	};
 
 	const nextPage = (value: number) => {
-		setPage(value);
+		setPage(value + 1);
 	};
 
 	return {

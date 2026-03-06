@@ -18,6 +18,7 @@ import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/Ven
 import BotonIconoEliminar from "@componentes/botones/BotonIconoEliminar";
 import VentanaEliminarUsuario from "./componentes/VentanaEliminarUsuario";
 import usePaginarTabla from "@hooks/usePaginarTabla";
+import Filtros from "@componentes/filtros/Filtros";
 
 const queriesToInvalidate = ["useGetUsuarios"];
 
@@ -157,9 +158,9 @@ export default function UsersAdminPage() {
 		);
 	}, [busqueda, usuarios]);
 
-	const { items: usuariosPaginados, ...rest } = usePaginarTabla({ data: filteredUsuarios, initialLimit: 10 });
+	const { items: usuariosPaginados, ...rest } = usePaginarTabla({ data: filteredUsuarios, initialLimit: 5 });
 
-	const paginationConfig: PaginationConfig = { lengthOptions: [10, 20, 50, 100], ...rest };
+	const paginationConfig: PaginationConfig = { lengthOptions: [5, 10, 20], ...rest };
 
 	const router = useRouter();
 
@@ -171,6 +172,9 @@ export default function UsersAdminPage() {
 					Seleccioná un usuario de la lista para ver o editar su
 					información.
 				</p>
+				<Filtros
+					
+				/>
 
 				<div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
 					<div className="flex flex-1 flex-wrap items-center gap-3">
