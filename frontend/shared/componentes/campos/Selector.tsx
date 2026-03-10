@@ -1,10 +1,11 @@
-import { DetailedHTMLProps, ReactNode, SelectHTMLAttributes } from "react";
+import { CSSProperties, DetailedHTMLProps, ReactNode, SelectHTMLAttributes } from "react";
 
 type SelectorProps = {
     children: ReactNode;
     error?: boolean;
     disabled?: boolean;
     isLoading?: boolean;
+	containerStyle?: CSSProperties;
 };
 
 export default function Selector({
@@ -12,10 +13,11 @@ export default function Selector({
 	error = false,
 	disabled = false,
 	isLoading = false,
+	containerStyle,
 	...rest
 }: DetailedHTMLProps<SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement> & SelectorProps) {
 	return (
-		<div className="relative flex items-center">
+		<div className="relative flex items-center" style={containerStyle}>
 			<select
 				{...rest}
 				className={`

@@ -1,24 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import DataTable from "@componentes/tabla/DataTable";
-import { ActionConfig, ColumnConfig, PaginationConfig } from "@componentes/tabla/types";
+import { ActionConfig, ColumnConfig } from "@componentes/tabla/types";
 import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
 import ActionMenu from "@componentes/tabla/ActionMenu";
 import VentanaAgregrarUsuario from "./componentes/VentanaAgregarUsuario";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import { UsuarioResponse } from "types/usuarios";
 import { useGetUsuarios } from "@servicios/api";
-import BotonIconoIr from "@componentes/botones/BotonIconoIr";
 import BotonIconoEditar from "@componentes/botones/BotonIconoEditar";
 import VentanaEditarUsuario from "./componentes/VentanaEditarUsuario";
 import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
-import BotonIconoEliminar from "@componentes/botones/BotonIconoEliminar";
 import VentanaEliminarUsuario from "./componentes/VentanaEliminarUsuario";
-import usePaginarTabla from "@hooks/usePaginarTabla";
-import Filtros from "@componentes/filtros/Filtros";
+import usePaginadoBackend from "@hooks/usePaginadoBackend";
+import FiltrosContenedor from "@componentes/filtros/FiltrosContenedor";
+import FiltroBusqueda from "@componentes/filtros/FiltroBusqueda";
+import FiltroOpciones from "@componentes/filtros/FiltroOpciones";
 
 const queriesToInvalidate = ["useGetUsuarios"];
 
@@ -29,9 +29,24 @@ const defaultMessage: VentanaAceptarOptions = {
 };
 
 export default function UsersAdminPage() {
-	const { data: usuarios, isLoading, isRefetching } = useGetUsuarios({});
+	const [page, setPage] = useState(1);
+	const [lengthPages, setLengthPages] = useState(5);
+	const [isOpenFiltros, setIsOpenFiltros] = useState(false);
+	const [search, setSearch] = useState("");
+	const [estado, setEstado] = useState("true");
+	
+	const { data: usuarios, isLoading, isRefetching } = useGetUsuarios({
+		params: {
+			queryParams: {
+				page: String(page),
+				limit: String(lengthPages),
+				search,
+				is_active: estado,
+			},
+		}
+	});
+
 	const [usuarioEditar, setUsuarioEditar] = useState<UsuarioResponse | null>(null);
-	const [busqueda, setBusqueda] = useState("");
 	const [message, setMesage] = useState(defaultMessage);
 
 	// --- Modal añadir ---
@@ -91,12 +106,13 @@ export default function UsersAdminPage() {
 		{
 			id: "nombre",
 			header: "Nombre",
-			cell: (row) => <p className="p-4 xl:w-100">{`${row.first_name} ${row.last_name}`}</p>,
+			cell: (row) => <p className="p-4">{`${row.first_name} ${row.last_name}`}</p>,
 		},
 		{
 			id: "legajo",
 			header: "Legajo",
 			accessorKey: "legajo",
+			cell: (row) => <p className="p-4">{row.legajo || "No cargado"}</p>,
 		},
 	];
 
@@ -106,63 +122,36 @@ export default function UsersAdminPage() {
 			<ActionMenu>
 				<BotonVariante
 					variant="editar"
-					className="hidden xl:flex"
+					className="hidden lg:flex"
 					onClick={() => {
-						handleOpenEdit(row);
+						handleViewUser(row);
 					}}
 				/>
 				<BotonIconoEditar
-					className="hidden sm:block xl:hidden"
-					onClick={() => {
-						handleOpenEdit(row);
-					}}
-				/>
-				<BotonVariante
-					variant="ir"
-					className="hidden xl:flex"
+					className="lg:hidden"
 					onClick={() => {
 						handleViewUser(row);
-					}}
-				/>
-				<BotonIconoIr
-					className="xl:hidden"
-					onClick={() => {
-						handleViewUser(row);
-					}}
-				/>
-				<BotonVariante
-					variant="eliminar"
-					className="hidden xl:flex"
-					onClick={() => {
-						handleOpenDelete(row);
-					}}
-				/>
-				<BotonIconoEliminar
-					className="hidden sm:block xl:hidden"
-					onClick={() => {
-						handleOpenDelete(row);
 					}}
 				/>
 			</ActionMenu>
 		),
 	};
 
-	const filteredUsuarios = useMemo(() => {
-		if (!usuarios) return [];
-		const term = busqueda.trim().toLowerCase();
-		if (!term) return usuarios;
-		return usuarios.filter((u) =>
-			[u.first_name, u.last_name, u.nombre_usuario, u.legajo, u.email]
-				.filter(Boolean)
-				.some((field) => String(field).toLowerCase().includes(term)),
-		);
-	}, [busqueda, usuarios]);
-
-	const { items: usuariosPaginados, ...rest } = usePaginarTabla({ data: filteredUsuarios, initialLimit: 5 });
-
-	const paginationConfig: PaginationConfig = { lengthOptions: [5, 10, 20], ...rest };
+	const paginationConfig = usePaginadoBackend({
+		data: usuarios,
+		page,
+		setPage,
+		lengthOptions: [5, 10, 20],
+		lengthPages,
+		setLengthPages,
+	});
 
 	const router = useRouter();
+
+	const onSearch = useCallback((value: string) => {
+		setPage(1);
+		setSearch(value);
+	}, [setPage, setSearch]);
 
 	return (
 		<PaginaBase>
@@ -172,31 +161,39 @@ export default function UsersAdminPage() {
 					Seleccioná un usuario de la lista para ver o editar su
 					información.
 				</p>
-				<Filtros
-					
-				/>
 
-				<div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-					<div className="flex flex-1 flex-wrap items-center gap-3">
-						<div className="relative w-full max-w-xl">
-							<span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] icon-[mdi--magnify] text-xl" />
-							<input
-								type="text"
-								value={busqueda}
-								onChange={(e) => setBusqueda(e.target.value)}
-								placeholder="Buscar por nombre, username, legajo o email"
-								className="w-full rounded-full border border-[#E5E7EB] bg-[#F3F3F3] py-2.5 pl-11 pr-4 text-sm text-[#111827] shadow-[3px_4px_4px_rgba(0,0,0,0.19)] focus:border-[#0D76B3] focus:outline-none"
+				<FiltrosContenedor open={isOpenFiltros}>
+					<h4>Filtros</h4>
+					<div className="flex flex-col lg:flex-row lg:items-center gap-4">
+						<div className="flex-2">
+							<FiltroBusqueda
+								label="Buscar"
+								onSearch={onSearch}
+								placeholder="Por nombre, apellido, email, documento o nombre de usuario"
 							/>
-						</div>						
+						</div>
+						<div className="flex-1">
+							<FiltroOpciones
+								title="Estado"
+								options={[{ label: "Activo", value: "true"}, {label: "Inactivo", value: "false"}]}
+								onSelect={(value) => {
+									setPage(1);
+									setEstado(value);
+								}}
+							/>
+						</div>
 					</div>
-				</div>
+				</FiltrosContenedor>
 
 				<DataTable
-					data={usuariosPaginados}
+					data={usuarios?.results || []}
 					columns={columns}
 					rowIdKey="id"
 					minWidth={320}
 					onAdd={handleOpenAdd}
+					onFilter={() => {
+						setIsOpenFiltros((prev) => !prev)
+					}}
 					actionConfig={actionConfig}
 					isLoading={isLoading || isRefetching}
 					paginationConfig={paginationConfig}
@@ -205,14 +202,14 @@ export default function UsersAdminPage() {
 			<VentanaAgregrarUsuario
 				open={isAddOpen}
 				onClose={handleCancelAdd}
-				usuarios={usuarios ?? []}
+				usuarios={[]}
 				handleMessage={handleOpenInfo}
 				queriesToInvalidate={queriesToInvalidate}
 			/>
 			<VentanaEditarUsuario
 				open={isEditOpen}
 				onClose={handleCancelEdit}
-				usuarios={usuarios ?? []}
+				usuarios={[]}
 				handleMessage={handleOpenInfo}
 				usuario={usuarioEditar}
 				queriesToInvalidate={queriesToInvalidate}

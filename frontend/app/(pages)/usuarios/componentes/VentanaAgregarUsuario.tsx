@@ -120,26 +120,10 @@ export default function VentanaAgregrarUsuario({
 				required
 			/>
 			<CampoInput
-				name="last_name"
-				label="Apellido"
-				placeholder="Ingrese el o los apellidos del usuario"
-				disabled={isPending}
-				required
-			/>
-			<CampoInput
 				name="nombre_usuario"
 				label="Nombre de usuario"
 				placeholder="Ingrese el nombre de usuario para acceder al sistema"
 				validate={(value) => !esNombreUsuarioDuplicado(value) || "El nombre de usuario ya existe"}
-				disabled={isPending}
-				required
-			/>
-			<CampoInput
-				name="legajo"
-				label="Legajo"
-				type="number"
-				placeholder="Ingrese el legajo del usuario"
-				validate={(value) => !esLegajoDuplicado(value) || "El legajo ya existe"}
 				disabled={isPending}
 				required
 			/>

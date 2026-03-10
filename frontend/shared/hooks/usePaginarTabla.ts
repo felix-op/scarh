@@ -26,6 +26,7 @@ export default function usePaginarTabla<T>({
 
 	// Memorizamos los cálculos para evitar re-slices innecesarios
 	const { items, maxPage } = useMemo(() => {
+		if (!Array.isArray(data)) return { items: [], maxPage: 1 };
 		const total = Math.ceil(data.length / lengthPages);
 		const inicio = (page - 1) * lengthPages;
 		return {

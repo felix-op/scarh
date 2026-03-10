@@ -1,3 +1,4 @@
+import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 import { TFormCrearUsuario, TFormEditarUsuario } from "./types";
 
 export const defaultFormCrearUsuario: TFormCrearUsuario = {
@@ -17,4 +18,10 @@ export const defaultFormEditarUsuario: TFormEditarUsuario = {
 	legajo: "",
 	email: "",
 	estado: true,
+};
+
+export const defaultMessage: VentanaAceptarOptions = {
+	title: "",
+	description: "",
+	variant: "info",
 };
