@@ -3,6 +3,8 @@
 import TablaHome from "@componentes/TablaHome";
 import MetricaCard from "@componentes/MetricaCard";
 import PaginaBase from "@componentes/base/PaginaBase";
+import DataTable from "@componentes/tabla/DataTable";
+import { type ColumnConfig } from "@componentes/tabla/types";
 import {
 	Card,
 	CardContent,
@@ -30,7 +32,7 @@ import {
 	type MedicionResponse,
 	type MedicionPaginatedResponse,
 } from "@servicios/api/django.api";
-import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
+import { mapearEstado } from "@lib/transformers/limnigrafoTransformer";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { ComparativasFilters } from "../mediciones/secciones/types";
@@ -69,6 +71,15 @@ type ChartSerie = {
 type ChartPoint = {
 	date: string;
 	[key: string]: string | number | null;
+};
+
+type ComparativaTableRow = {
+	rowId: string;
+	limnigrafo: string;
+	minimo: string;
+	maximo: string;
+	desvioEstandar: string;
+	percentil90: string;
 };
 
 type TimeRange = "90d" | "30d" | "7d";
@@ -306,27 +317,62 @@ export default function Home() {
 	}, [medicionesRecientes]);
 
 	const homeLimnigrafos = useMemo(() => {
-		if (limnigrafos.length === 0 || medicionesMap.size === 0) {
+		if (limnigrafos.length === 0) {
 			return [];
 		}
 
-		const transformados = transformarLimnigrafos(
-			limnigrafos,
-			medicionesMap
-		);
+		return limnigrafos
+			.map((limnigrafo) => {
+				const medicionReciente = medicionesMap.get(limnigrafo.id);
+				const medicion = medicionReciente ?? limnigrafo.ultima_medicion;
+				const fechaUltimoRegistro = medicion?.fecha_hora ?? limnigrafo.ultima_conexion;
+				const fechaRegistro = fechaUltimoRegistro ? new Date(fechaUltimoRegistro) : null;
+				const ultimoRegistro = fechaRegistro && !Number.isNaN(fechaRegistro.getTime())
+					? `${fechaRegistro.toLocaleDateString("es-AR")} ${fechaRegistro.toLocaleTimeString("es-AR", {
+						hour: "2-digit",
+						minute: "2-digit",
+					})}`
+					: "Sin registros";
 
-		return transformados
-			.filter(
-				(item) =>
-					item.estado.variante === "advertencia" ||
-					item.estado.variante === "fuera"
-			)
+				return {
+					id: String(limnigrafo.id),
+					nombre: limnigrafo.codigo,
+					nivel_de_bateria: medicionReciente?.nivel_de_bateria !== null
+						&& medicionReciente?.nivel_de_bateria !== undefined
+						? `${formatNumber(medicionReciente.nivel_de_bateria, 1)} %`
+						: "-",
+					estado: mapearEstado(limnigrafo.estado),
+					ultimoRegistro,
+					altura: medicion?.altura_agua !== null && medicion?.altura_agua !== undefined
+						? `${formatNumber(medicion.altura_agua, 2)} m`
+						: "-",
+					temperatura: medicion?.temperatura !== null && medicion?.temperatura !== undefined
+						? `${formatNumber(medicion.temperatura, 2)} °C`
+						: "-",
+					presion: medicion?.presion !== null && medicion?.presion !== undefined
+						? `${formatNumber(medicion.presion, 2)} hPa`
+						: "-",
+				};
+			})
 			.sort((a, b) => {
 				const priorityA = estadoPriority[a.estado.variante ?? ""] ?? 4;
 				const priorityB = estadoPriority[b.estado.variante ?? ""] ?? 4;
-				return priorityA - priorityB;
+				if (priorityA !== priorityB) {
+					return priorityA - priorityB;
+				}
+				return a.nombre.localeCompare(b.nombre, "es");
 			});
 	}, [limnigrafos, medicionesMap]);
+
+	const limnigrafosEnAlerta = useMemo(
+		() =>
+			homeLimnigrafos.filter(
+				(item) =>
+					item.estado.variante === "advertencia" ||
+					item.estado.variante === "fuera",
+			).length,
+		[homeLimnigrafos],
+	);
 
 	const chartSeries = useMemo<ChartSerie[]>(() => {
 		return compareIds
@@ -451,8 +497,54 @@ export default function Home() {
 	const hasChartError = Boolean(medicionesComparativasError);
 	const shouldShowEstadisticas = limnigrafosSeleccionadosParaEstadisticas.length > 0
 		&& Boolean(rangoEstadisticas.desdeIso && rangoEstadisticas.hastaIso);
-	const estadisticasVisibles = shouldShowEstadisticas ? estadisticas : [];
+	const estadisticasVisibles = useMemo(
+		() => (shouldShowEstadisticas ? estadisticas : []),
+		[estadisticas, shouldShowEstadisticas],
+	);
 	const estadisticasErrorVisible = shouldShowEstadisticas ? estadisticasError : null;
+	const comparativaRows = useMemo<ComparativaTableRow[]>(
+		() =>
+			estadisticasVisibles.map((item, index) => ({
+				rowId: `${item.id ?? "global"}-${index}`,
+				limnigrafo: item.id === null ? "Global" : (limnigrafoNameById.get(item.id) ?? `ID ${item.id}`),
+				minimo: formatNumber(item.minimo, 2),
+				maximo: formatNumber(item.maximo, 2),
+				desvioEstandar: formatNumber(item.desvio_estandar, 2),
+				percentil90: formatNumber(item.percentil_90, 2),
+			})),
+		[estadisticasVisibles, limnigrafoNameById],
+	);
+
+	const comparativaColumns = useMemo<ColumnConfig<ComparativaTableRow>[]>(
+		() => [
+			{
+				id: "limnigrafo",
+				header: "Limnígrafo",
+				cell: (row) => <span className="px-4 py-3 font-semibold text-[#0F172A] dark:text-[#E2E8F0]">{row.limnigrafo}</span>,
+			},
+			{
+				id: "minimo",
+				header: "Mínimo",
+				accessorKey: "minimo",
+			},
+			{
+				id: "maximo",
+				header: "Máximo",
+				accessorKey: "maximo",
+			},
+			{
+				id: "desvioEstandar",
+				header: "Desv. estándar",
+				accessorKey: "desvioEstandar",
+			},
+			{
+				id: "percentil90",
+				header: "Percentil 90",
+				accessorKey: "percentil90",
+			},
+		],
+		[],
+	);
 
 	useEffect(() => {
 		const { desdeIso, hastaIso } = rangoEstadisticas;
@@ -532,13 +624,27 @@ export default function Home() {
 					) : null}
 
 					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
+						<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+							<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+								Estados críticos y último registro
+							</p>
+							<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]">
+								{loadingLimnigrafos || loadingMediciones
+									? "Cargando..."
+									: `${limnigrafosEnAlerta} en alerta / ${homeLimnigrafos.length} total`}
+							</span>
+						</div>
+						<TablaHome
+							data={homeLimnigrafos}
+							className="max-h-[45vh] overflow-y-auto"
+						/>
+					</section>
+
+					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 						<div className="flex flex-col gap-5">
 							<div className="flex flex-wrap items-center justify-between gap-3">
 								<div className="space-y-1">
-									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Filtros globales</p>
-									<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-										Aplican a métricas rápidas y gráfico temporal.
-									</p>
+									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Filtros</p>
 								</div>
 								<span className="rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1 text-[12px] font-semibold text-[#1D4ED8] dark:border-[#1D4ED8] dark:bg-[#102A43] dark:text-[#93C5FD]">
 									{isCalculandoEstadisticas ? "Actualizando estadísticas..." : "Actualización automática"}
@@ -598,25 +704,9 @@ export default function Home() {
 					</section>
 
 					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
-						<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-							<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-								Estados críticos
-							</p>
-							<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]">
-								{loadingLimnigrafos || loadingMediciones ? "Cargando..." : `${homeLimnigrafos.length} en alerta`}
-							</span>
-						</div>
-						<TablaHome
-							data={homeLimnigrafos}
-							className="max-h-[45vh] overflow-y-auto"
-						/>
-					</section>
-
-					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 						<div className="mb-6">
-							<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Métricas rápidas</p>
-							<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-								Resumen de {atributoSeleccionado.label.toLowerCase()} para el rango seleccionado.
+							<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+								Resumen de {atributoSeleccionado.label.toLowerCase()} para la ventana seleccionada.
 							</p>
 						</div>
 						<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -753,13 +843,13 @@ export default function Home() {
 								Resultados comparativos
 							</p>
 							<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-								El rango de fechas de este bloque afecta solo este cuadro comparativo.
+								Seleccione el rango de fechas específico para calcular los resultados comparativos.
 							</p>
 						</div>
 
 						<div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
 							<label className="flex flex-col gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-								Desde (comparativas)
+								Desde
 								<input
 									type="datetime-local"
 									value={comparativasFilters.desde}
@@ -768,7 +858,7 @@ export default function Home() {
 								/>
 							</label>
 							<label className="flex flex-col gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-								Hasta (comparativas)
+								Hasta
 								<input
 									type="datetime-local"
 									value={comparativasFilters.hasta}
@@ -784,40 +874,27 @@ export default function Home() {
 							</p>
 						) : null}
 
-						<div className="overflow-x-auto rounded-xl border border-[#E2E8F0] dark:border-[#475569]">
-							<table className="min-w-full text-left text-[14px] text-[#334155] dark:text-[#CBD5E1]">
-								<thead className="bg-[#F8FAFC] text-[12px] uppercase tracking-wide text-[#64748B] dark:bg-[#0F172A] dark:text-[#94A3B8]">
-									<tr>
-										<th className="px-4 py-3">Limnígrafo</th>
-										<th className="px-4 py-3">Mínimo</th>
-										<th className="px-4 py-3">Máximo</th>
-										<th className="px-4 py-3">Desv. estándar</th>
-										<th className="px-4 py-3">Percentil 90</th>
-									</tr>
-								</thead>
-								<tbody>
-									{estadisticasVisibles.length === 0 ? (
-										<tr>
-											<td colSpan={5} className="px-4 py-5 text-center text-[#64748B] dark:text-[#94A3B8]">
-												Sin datos comparativos calculados.
-											</td>
-										</tr>
-									) : (
-										estadisticasVisibles.map((item, index) => (
-											<tr key={`estadistica-${item.id ?? "global"}-${index}`} className="border-t border-[#E2E8F0] dark:border-[#334155]">
-												<td className="px-4 py-3 font-semibold text-[#0F172A] dark:text-[#E2E8F0]">
-													{item.id === null ? "Global" : (limnigrafoNameById.get(item.id) ?? `ID ${item.id}`)}
-												</td>
-												<td className="px-4 py-3">{formatNumber(item.minimo, 2)}</td>
-												<td className="px-4 py-3">{formatNumber(item.maximo, 2)}</td>
-												<td className="px-4 py-3">{formatNumber(item.desvio_estandar, 2)}</td>
-												<td className="px-4 py-3">{formatNumber(item.percentil_90, 2)}</td>
-											</tr>
-										))
-									)}
-								</tbody>
-							</table>
-						</div>
+						<DataTable
+							data={comparativaRows}
+							columns={comparativaColumns}
+							rowIdKey="rowId"
+							showTopBar={false}
+							enableRowAnimation={false}
+							minWidth={760}
+							emptyStateContent={<span className="text-[#6B7280] dark:text-[#94A3B8]">Sin datos comparativos calculados.</span>}
+							styles={{
+								rootClassName: "pb-0",
+								cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)] dark:border-[#334155] dark:bg-[#0F172A] dark:shadow-[0px_10px_20px_rgba(0,0,0,0.45)]",
+								scrollerClassName: "overflow-x-auto",
+								tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F] dark:text-[#CBD5E1]",
+								theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none dark:bg-[#111923] dark:text-[#94A3B8]",
+								headerCellClassName: "px-4 py-3",
+								tbodyClassName: "divide-y divide-[#EAEAEA] dark:divide-[#334155]",
+								rowClassName: "border-0 hover:bg-[#F9FBFF] dark:hover:bg-[#1E293B]",
+								cellClassName: "align-middle p-4",
+								emptyCellClassName: "px-4 py-8 text-center",
+							}}
+						/>
 					</section>
 				</div>
 			</main>
