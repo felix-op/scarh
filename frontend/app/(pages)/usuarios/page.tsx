@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import DataTable from "@componentes/tabla/DataTable";
@@ -112,6 +112,7 @@ export default function UsersAdminPage() {
 			id: "legajo",
 			header: "Legajo",
 			accessorKey: "legajo",
+			cell: (row) => <p className="p-4">{row.legajo || "No cargado"}</p>,
 		},
 	];
 
@@ -147,6 +148,11 @@ export default function UsersAdminPage() {
 
 	const router = useRouter();
 
+	const onSearch = useCallback((value: string) => {
+		setPage(1);
+		setSearch(value);
+	}, [setPage, setSearch]);
+
 	return (
 		<PaginaBase>
 			<div className="flex flex-col gap-4">
@@ -162,10 +168,7 @@ export default function UsersAdminPage() {
 						<div className="flex-2">
 							<FiltroBusqueda
 								label="Buscar"
-								onSearch={(value) => {
-									setPage(1);
-									setSearch(value);
-								}}
+								onSearch={onSearch}
 								placeholder="Por nombre, apellido, email, documento o nombre de usuario"
 							/>
 						</div>
@@ -188,7 +191,9 @@ export default function UsersAdminPage() {
 					rowIdKey="id"
 					minWidth={320}
 					onAdd={handleOpenAdd}
-					onFilter={() => setIsOpenFiltros((prev) => !prev)}
+					onFilter={() => {
+						setIsOpenFiltros((prev) => !prev)
+					}}
 					actionConfig={actionConfig}
 					isLoading={isLoading || isRefetching}
 					paginationConfig={paginationConfig}

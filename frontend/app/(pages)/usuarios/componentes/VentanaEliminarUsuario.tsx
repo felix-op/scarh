@@ -6,7 +6,8 @@ import { UsuarioResponse } from "types/usuarios";
 type VentanaEliminarUsuarioProps = {
 	open: boolean;
 	onClose: () => void;
-	usuario: UsuarioResponse | null;
+	onSuccess: () => void;
+	usuario?: UsuarioResponse | null;
 	queriesToInvalidate: string[]
 	handleMessage: (message: VentanaAceptarOptions) => void
 };
@@ -14,6 +15,7 @@ type VentanaEliminarUsuarioProps = {
 export default function VentanaEliminarUsuario({
 	open,
 	onClose,
+	onSuccess,
 	usuario,
 	queriesToInvalidate,
 	handleMessage,
@@ -23,12 +25,7 @@ export default function VentanaEliminarUsuario({
 		configuracion: {
 			queriesToInvalidate,
 			onSuccess: () => {
-				onClose();
-				handleMessage({
-					title: "Eliminado correctamente",
-					description: `El usuario ${usuario?.id} se eliminó correctamente`,
-					variant: "exito",
-				});
+				onSuccess();
 			},
 			onError: () => {
 				onClose();

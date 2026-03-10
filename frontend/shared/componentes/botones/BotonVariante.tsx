@@ -18,6 +18,7 @@ const variantConfig = {
 	eliminar: { style: baseStyles.error, icon: "icon-[line-md--trash]", text: "Eliminar", disableShine: false },
 	logout: { style: baseStyles.error, icon: "icon-[line-md--logout]", text: "Cerrar sesión", disableShine: false },
 	ir: { style: baseStyles.default, icon: "icon-[oui--arrow-right]", text: "Ver más", disableShine: false },
+	volver: { style: baseStyles.default, icon: "icon-[mdi--arrow-left]", text: "Volver", disableShine: false },
 	filtro: { style: baseStyles.default, icon: "icon-[mage--filter]", text: "Filtrar", disableShine: false },
 	perfilEditar: { style: baseStyles.exito, icon: "icon-[mdi--pencil]", text: "Editar mis datos", disableShine: false },
 	perfilPassword: { style: baseStyles.nuevo, icon: "icon-[solar--lock-password-bold]", text: "Cambiar contraseña", disableShine: false },
