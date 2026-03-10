@@ -9,7 +9,7 @@ const tableColumns: ColumnConfig<MedicionRow>[] = [
 	{
 		id: "limnigrafo",
 		header: "Limnígrafo",
-		cell: (row) => <span className="px-4 py-3 font-semibold text-[#011018]">{row.limnigrafo}</span>,
+		cell: (row) => <span className="px-4 py-3 font-semibold text-[#011018] dark:text-[#E2E8F0]">{row.limnigrafo}</span>,
 	},
 	{
 		id: "fuente",
@@ -19,8 +19,8 @@ const tableColumns: ColumnConfig<MedicionRow>[] = [
 				<span
 					className={`inline-flex rounded-full border px-2.5 py-1 text-[12px] font-semibold ${
 						row.fuente === "manual"
-							? "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]"
-							: "border-[#BFDBFE] bg-[#EFF6FF] text-[#1E40AF]"
+							? "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E] dark:border-[#A16207] dark:bg-[#422006] dark:text-[#FCD34D]"
+							: "border-[#BFDBFE] bg-[#EFF6FF] text-[#1E40AF] dark:border-[#1D4ED8] dark:bg-[#0B2A43] dark:text-[#93C5FD]"
 					}`}
 				>
 					{row.fuente === "manual" ? "Manual" : "Automático"}
@@ -52,9 +52,9 @@ const tableColumns: ColumnConfig<MedicionRow>[] = [
 		id: "fechaHora",
 		header: "Fecha y hora",
 		cell: (row) => (
-			<div className="px-4 py-3 text-[#4B4B4B]">
+			<div className="px-4 py-3 text-[#4B4B4B] dark:text-[#CBD5E1]">
 				<p className="leading-5">{row.fecha}</p>
-				<p className="text-[13px] leading-5 text-[#64748B]">{row.hora}</p>
+				<p className="text-[13px] leading-5 text-[#64748B] dark:text-[#94A3B8]">{row.hora}</p>
 			</div>
 		),
 	},
@@ -112,22 +112,22 @@ export default function SeccionHistorialMediciones({
 	onNextPage,
 }: SeccionHistorialMedicionesProps) {
 	return (
-		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
+		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 			<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
 				<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Historial completo</p>
-				<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569]">
+				<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]">
 					{isLoading ? "Cargando..." : `${serverCount} registros`}
 				</span>
 			</div>
 
-			<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+			<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 dark:border-[#334155] dark:bg-[#111923]">
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Limnígrafo
 						<select
 							value={filters.limnigrafo}
 							onChange={(event) => onLimnigrafoChange(event.target.value)}
-							className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 						>
 							<option value="">Todos</option>
 							{limnigrafos.map((limnigrafo) => (
@@ -138,12 +138,12 @@ export default function SeccionHistorialMediciones({
 						</select>
 					</label>
 
-					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Fuente
 						<select
 							value={filters.fuente}
 							onChange={(event) => onFuenteChange(event.target.value as FuenteFiltro)}
-							className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 						>
 							<option value="">Todas</option>
 							<option value="manual">Manual</option>
@@ -151,34 +151,34 @@ export default function SeccionHistorialMediciones({
 						</select>
 					</label>
 
-					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Desde
 						<input
 							type="datetime-local"
 							value={filters.desde}
 							onChange={(event) => onDesdeChange(event.target.value)}
-							className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 						/>
 					</label>
 
-					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Hasta
 						<input
 							type="datetime-local"
 							value={filters.hasta}
 							onChange={(event) => onHastaChange(event.target.value)}
-							className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 						/>
 					</label>
 
-					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Buscar
 						<input
 							type="text"
 							value={filters.busqueda}
 							onChange={(event) => onBusquedaChange(event.target.value)}
 							placeholder="ID, limnígrafo o valor"
-							className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 						/>
 					</label>
 				</div>
@@ -187,14 +187,14 @@ export default function SeccionHistorialMediciones({
 					<button
 						type="button"
 						onClick={onApplyFilters}
-						className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)]"
+						className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)] dark:bg-[#0369A1] dark:shadow-[0px_4px_12px_rgba(2,132,199,0.4)]"
 					>
 						Aplicar filtros de historial
 					</button>
 					<button
 						type="button"
 						onClick={onClearFilters}
-						className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155]"
+						className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]"
 					>
 						Limpiar
 					</button>
@@ -202,7 +202,7 @@ export default function SeccionHistorialMediciones({
 						type="button"
 						onClick={() => onExport("csv")}
 						disabled={isExporting}
-						className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
+						className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50 dark:border-[#2563EB] dark:bg-[#0B2A43] dark:text-[#93C5FD]"
 					>
 						Exportar CSV
 					</button>
@@ -210,7 +210,7 @@ export default function SeccionHistorialMediciones({
 						type="button"
 						onClick={() => onExport("json")}
 						disabled={isExporting}
-						className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
+						className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50 dark:border-[#2563EB] dark:bg-[#0B2A43] dark:text-[#93C5FD]"
 					>
 						Exportar JSON
 					</button>
@@ -218,7 +218,7 @@ export default function SeccionHistorialMediciones({
 			</div>
 
 			{hasTopError ? (
-				<p className="mb-4 mt-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">
+				<p className="mb-4 mt-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
 					No se pudieron cargar las mediciones. Verificá la conexión con el backend.
 				</p>
 			) : null}
@@ -231,22 +231,22 @@ export default function SeccionHistorialMediciones({
 				enableRowAnimation={false}
 				loadingRows={8}
 				isLoading={isLoading}
-				emptyStateContent={<span className="text-[#6B7280]">No hay mediciones para los filtros seleccionados.</span>}
+				emptyStateContent={<span className="text-[#6B7280] dark:text-[#94A3B8]">No hay mediciones para los filtros seleccionados.</span>}
 				styles={{
-					cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)]",
+					cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)] dark:border-[#334155] dark:bg-[#0F172A] dark:shadow-[0px_10px_20px_rgba(0,0,0,0.45)]",
 					scrollerClassName: "overflow-x-auto",
-					tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F]",
-					theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none",
+					tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F] dark:text-[#CBD5E1]",
+					theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none dark:bg-[#111923] dark:text-[#94A3B8]",
 					headerCellClassName: "px-4 py-3",
-					tbodyClassName: "divide-y divide-[#EAEAEA]",
-					rowClassName: "border-0 hover:bg-[#F9FBFF]",
+					tbodyClassName: "divide-y divide-[#EAEAEA] dark:divide-[#334155]",
+					rowClassName: "border-0 hover:bg-[#F9FBFF] dark:hover:bg-[#1E293B]",
 					cellClassName: "align-middle",
 					emptyCellClassName: "px-4 py-8",
 				}}
 			/>
 
 			<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-				<p className="text-[13px] text-[#64748B]">
+				<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
 					Mostrando {startRow}-{endRow} de {serverCount}. Página {currentPage} de {totalPages}
 					{hasBusqueda ? ` (coincidencias en página: ${rows.length})` : ""}
 				</p>
@@ -255,7 +255,7 @@ export default function SeccionHistorialMediciones({
 						type="button"
 						onClick={onPrevPage}
 						disabled={currentPage <= 1 || isFetching}
-						className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40"
+						className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]"
 					>
 						Anterior
 					</button>
@@ -263,7 +263,7 @@ export default function SeccionHistorialMediciones({
 						type="button"
 						onClick={onNextPage}
 						disabled={currentPage >= totalPages || isFetching}
-						className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40"
+						className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]"
 					>
 						Siguiente
 					</button>

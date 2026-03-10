@@ -51,7 +51,7 @@ export default function ModalCargaManualMedicion({
 				<form onSubmit={onSubmit} className="flex h-full flex-col">
 					<DialogHeader className="border-b border-ventana-secondary px-6 py-5 text-left">
 						<DialogTitle className="text-2xl font-bold text-ventana-foreground">Carga manual</DialogTitle>
-						<DialogDescription className="text-sm text-foreground-secondary">
+						<DialogDescription className="text-sm text-foreground/80">
 							Registro manual de mediciones con validación de campos.
 						</DialogDescription>
 					</DialogHeader>

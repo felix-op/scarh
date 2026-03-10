@@ -34,10 +34,10 @@ const PAGE_SIZE = 25;
 const EXPORT_PAGE_SIZE = 1000;
 
 const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70";
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#1D4ED8] dark:bg-[#0B2A43] dark:text-[#93C5FD] dark:hover:bg-[#12385B]";
 
 const HEADER_ACTION_SECONDARY_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70";
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#9D174D] dark:bg-[#3F1222] dark:text-[#FDA4AF] dark:hover:bg-[#4D162B]";
 
 function getDefaultDateRange() {
 	const now = new Date();
@@ -470,8 +470,8 @@ export default function MedicionesPage() {
 				<div className="flex w-full max-w-[1568px] flex-col gap-8">
 					<header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
 						<div className="flex flex-col gap-1">
-							<h1 className="text-[34px] font-semibold text-[#011018]">Mediciones</h1>
-							<p className="text-base text-[#4D5562]">
+							<h1 className="text-[34px] font-semibold text-[#011018] dark:text-[#E2E8F0]">Mediciones</h1>
+							<p className="text-base text-[#4D5562] dark:text-[#94A3B8]">
 								Gestión operativa de mediciones históricas, análisis, exportación e importación.
 							</p>
 						</div>
@@ -546,10 +546,10 @@ export default function MedicionesPage() {
 					/>
 
 					{errorAccion ? (
-						<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">{errorAccion}</p>
+						<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">{errorAccion}</p>
 					) : null}
 					{mensaje ? (
-						<p className="rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 text-[14px] text-[#166534]">{mensaje}</p>
+						<p className="rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 text-[14px] text-[#166534] dark:border-[#14532D] dark:bg-[#0F2E1A] dark:text-[#86EFAC]">{mensaje}</p>
 					) : null}
 				</div>
 			</main>
