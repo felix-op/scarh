@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 
 class Usuario(AbstractUser):
     email = models.EmailField(unique=True)
-    legajo = models.CharField(max_length=50, blank=True, default="")
+    legajo = models.CharField(max_length=50, blank=True, default="", unique=True)
 
     def __str__(self):
         return self.username

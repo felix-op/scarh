@@ -27,7 +27,42 @@ def custom_exception_handler(exc, context):
             data['codigo'] = 409
             data['titulo'] = "Conflict"
             data['descripcion_tecnica'] = f"Error de dato unico: {str(exc)}"
-            data['descripcion_usuario'] = "Ya existe un registro con estos datos. No se permiten elementos duplicados."
+            
+            mensajes_especificos = []
+            if hasattr(response, 'data') and isinstance(response.data, dict):
+                for campo, errores in response.data.items():
+                    nombre_campo = "General" if campo == "non_field_errors" else campo
+                    mensaje = errores[0] if isinstance(errores, list) and errores else errores
+                    mensajes_especificos.append(f"{nombre_campo}: {mensaje}")
+            
+            if not mensajes_especificos:
+                import re
+                
+                campos_conocidos = {
+                    'username': 'nombre_usuario',
+                    'email': 'email',
+                    'legajo': 'legajo'
+                }
+                
+                campo_encontrado = None
+                match = re.search(r'unique constraint failed: \w+\.(\w+)|duplicate key value violates unique constraint.*\n.*key \((\w+)\)=|key \'(\w+)\'', error_msg)
+                
+                if match:
+                    campo_encontrado = next((g for g in match.groups() if g), None)
+                if not campo_encontrado:
+                    for db_field in campos_conocidos.keys():
+                        if db_field in error_msg:
+                            campo_encontrado = db_field
+                            break
+                            
+                if campo_encontrado:
+                    nombre_amigable = campos_conocidos.get(campo_encontrado, campo_encontrado)
+                    mensajes_especificos.append(f"{nombre_amigable}: Ya existe un registro con este dato.")
+            
+            if mensajes_especificos:
+                data['descripcion_usuario'] = " ".join(mensajes_especificos)
+            else:
+                data['descripcion_usuario'] = "Ya existe un registro con estos datos. No se permiten elementos duplicados."
         else:
             response.status_code = 400
             data['codigo'] = 400
@@ -41,10 +76,11 @@ def custom_exception_handler(exc, context):
             mensajes_especificos = []
             for campo, errores in response.data.items():
                 nombre_campo = "General" if campo == "non_field_errors" else campo
-                mensaje = errores[0] if isinstance(errores, list) else errores
+                mensaje = errores[0] if isinstance(errores, list) and errores else errores
                 mensajes_especificos.append(f"{nombre_campo}: {mensaje}")
-            
-            data['descripcion_tecnica'] = "Faltan o son incorrectos los campos: " + ", ".join(mensajes_especificos)
+                
+            data['descripcion_usuario'] = " ".join(mensajes_especificos) if mensajes_especificos else "Por favor, revisa los datos enviados."
+            data['descripcion_tecnica'] = "Faltan o son incorrectos los campos: " + ", ".join(mensajes_especificos) if mensajes_especificos else "Cuerpo de la solicitud vacío o con estructura inválida."
     
     elif isinstance(response.data, list):
         data['descripcion_tecnica'] = ", ".join([str(e) for e in response.data])
