@@ -46,3 +46,10 @@ export type BackendError = {
     descripcion_usuario: string;
     titulo: string;
 };
+
+export type Paginado<T> = {
+	count: number;
+	next: string | null;
+	previous: string | null;
+	results: T[];
+};

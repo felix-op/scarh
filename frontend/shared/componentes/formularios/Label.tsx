@@ -1,17 +1,17 @@
 type LabelProps = {
 	name: string,
 	text: string,
-	error: boolean,
-	required: boolean,
-	disabled: boolean,
+	error?: boolean,
+	required?: boolean,
+	disabled?: boolean,
 }
 
 export default function Label({
 	name,
 	text,
-	error,
-	required,
-	disabled,
+	error = false,
+	required = false,
+	disabled = false,
 }: LabelProps) {
 	return (
 		<label

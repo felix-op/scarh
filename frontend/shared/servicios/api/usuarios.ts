@@ -1,5 +1,5 @@
 import { UsuarioPatchRequest, UsuarioPostRequest, UsuarioPutRequest, UsuarioResponse } from "types/usuarios";
-import { MutationConfig, ParamsBase, UseGetConfig } from "./types";
+import { MutationConfig, Paginado, ParamsBase, UseGetConfig } from "./types";
 import { useGet, useDelete, usePatch, usePost, usePut } from "./queryHooks";
 
 const NEXT_PROXY_URL = "/api/proxy";
@@ -13,7 +13,7 @@ export function useGetUsuarios({ params, configuracion }: UseGetUsuariosOptions)
 	const defaultParams = {};
 	const defaultConfig = {};
 
-	return useGet<ParamsBase, UsuarioResponse[]>({
+	return useGet<ParamsBase, Paginado<UsuarioResponse>>({
 		key: "useGetUsuarios",
 		url: `${NEXT_PROXY_URL}/usuarios/`,
 		params: params ?? defaultParams,

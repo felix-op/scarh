@@ -1,0 +1,18 @@
+/* Contenedor principal del componente de filtros */
+.filtros-wrapper {
+    display: grid;
+    grid-template-rows: 0fr; /* Estado inicial cerrado */
+    transition: grid-template-rows 0.3s ease-out, margin-bottom 0.3s ease-out;
+    overflow: hidden;
+}
+
+/* Estado cuando isOpenFiltros es true */
+.filtros-wrapper.is-open {
+    grid-template-rows: 1fr;
+    margin-bottom: 1rem; /* El gap que empuja la tabla */
+}
+
+/* Contenedor interno necesario para que el grid calcule el tamaño */
+.filtros-inner {
+    min-height: 0;
+}

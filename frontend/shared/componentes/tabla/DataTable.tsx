@@ -15,6 +15,7 @@ type DataTableProps<T> = {
 	minWidth?: number | string;
 	rowIdKey: keyof T;
 	onAdd?: () => void;
+	onFilter?: () => void;
 	actionConfig?: ActionConfig<T>;
 	paginationConfig?: PaginationConfig;
 	showTopBar?: boolean;
@@ -26,6 +27,7 @@ type DataTableProps<T> = {
 
 export default function DataTable<T>({
 	onAdd,
+	onFilter,
 	actionConfig,
 	paginationConfig,
 	noResults = false,
@@ -64,7 +66,10 @@ export default function DataTable<T>({
 						<div
 							className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 ${styles?.topBarClassName ?? ""}`.trim()}
 						>
-							{(onAdd) && (<BotonVariante variant="agregar" onClick={onAdd} />)}
+							<div className="flex gap-2">
+								{(onAdd) && (<BotonVariante variant="agregar" onClick={onAdd} />)}
+								{(onFilter) && (<BotonVariante variant="filtro" onClick={onFilter} />)}
+							</div>
 							{paginationConfig && (
 								<div className="flex gap-2 items-center self-end sm:self-auto">
 									<div>
