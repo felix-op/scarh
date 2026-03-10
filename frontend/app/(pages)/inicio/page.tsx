@@ -31,9 +31,8 @@ import {
 	type MedicionPaginatedResponse,
 } from "@servicios/api/django.api";
 import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import SeccionComparativasMediciones from "../mediciones/secciones/SeccionComparativasMediciones";
 import { ComparativasFilters } from "../mediciones/secciones/types";
 import { toDatetimeLocalInputValue } from "../mediciones/utils";
 
@@ -156,6 +155,16 @@ function formatAtributoValue(value: number | null, atributo: EstadisticaAtributo
 	return `${value.toFixed(decimals)} ${unit}`;
 }
 
+function formatNumber(value: number, decimals = 2): string {
+	if (Number.isNaN(value)) {
+		return "-";
+	}
+	return value.toLocaleString("es-AR", {
+		minimumFractionDigits: decimals,
+		maximumFractionDigits: decimals,
+	});
+}
+
 function getStartDateFromRange(reference: Date, range: TimeRange): Date {
 	const start = new Date(reference);
 	start.setDate(start.getDate() - TIME_RANGE_DAYS[range]);
@@ -164,12 +173,11 @@ function getStartDateFromRange(reference: Date, range: TimeRange): Date {
 
 export default function Home() {
 	const [comparativasFilters, setComparativasFilters] = useState<ComparativasFilters>(getDefaultComparativasFilters);
-	const [appliedComparativasFilters, setAppliedComparativasFilters] = useState<ComparativasFilters>(getDefaultComparativasFilters);
 	const [compareIds, setCompareIds] = useState<string[]>([]);
-	const [compareSearch, setCompareSearch] = useState("");
 	const [timeRange, setTimeRange] = useState<TimeRange>("30d");
 	const [estadisticas, setEstadisticas] = useState<EstadisticaOutputItem[]>([]);
 	const [estadisticasError, setEstadisticasError] = useState<string | null>(null);
+	const statsRequestIdRef = useRef(0);
 
 	const { data: limnigrafosData, isLoading: loadingLimnigrafos, error: limnigrafosError } = useGetLimnigrafos({
 		params: {
@@ -228,7 +236,7 @@ export default function Home() {
 		}
 	});
 
-	const postEstadistica = usePostEstadistica();
+	const { mutateAsync: calcularEstadistica, isPending: isCalculandoEstadisticas } = usePostEstadistica();
 
 	const limnigrafosPayload = limnigrafosData as LimnigrafoPaginatedResponse | LimnigrafoResponse[] | undefined;
 	const limnigrafos = useMemo(
@@ -266,18 +274,18 @@ export default function Home() {
 		[limnigrafos],
 	);
 
-	const filteredCompareLimnigrafos = useMemo(() => {
-		const search = compareSearch.trim().toLowerCase();
-		if (!search) {
-			return limnigrafos;
-		}
+	const limnigrafosSeleccionadosParaEstadisticas = useMemo(
+		() => compareIds
+			.map((item) => Number.parseInt(item, 10))
+			.filter((item) => !Number.isNaN(item)),
+		[compareIds],
+	);
 
-		return limnigrafos.filter((limnigrafo) => (
-			`${limnigrafo.codigo} ${limnigrafo.descripcion ?? ""} ${limnigrafo.id}`
-				.toLowerCase()
-				.includes(search)
-		));
-	}, [compareSearch, limnigrafos]);
+	const rangoEstadisticas = useMemo(() => {
+		const desdeIso = toIsoString(comparativasFilters.desde);
+		const hastaIso = toIsoString(comparativasFilters.hasta);
+		return { desdeIso, hastaIso };
+	}, [comparativasFilters.desde, comparativasFilters.hasta]);
 
 	const medicionesMap = useMemo(() => {
 		const map = new Map<number, MedicionResponse>();
@@ -362,7 +370,7 @@ export default function Home() {
 		const grouped = new Map<string, ChartPoint>();
 
 		ordered.forEach((medicion) => {
-			const value = getMedicionValueByAtributo(medicion, appliedComparativasFilters.atributo);
+			const value = getMedicionValueByAtributo(medicion, comparativasFilters.atributo);
 			if (value === null || Number.isNaN(value)) {
 				return;
 			}
@@ -378,7 +386,7 @@ export default function Home() {
 		return Array.from(grouped.entries())
 			.sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
 			.map((entry) => entry[1]);
-	}, [appliedComparativasFilters.atributo, chartSeries, medicionesComparativas]);
+	}, [chartSeries, comparativasFilters.atributo, medicionesComparativas]);
 
 	const filteredChartData = useMemo(() => {
 		if (chartData.length === 0) {
@@ -416,7 +424,7 @@ export default function Home() {
 			.filter((medicion) => new Date(medicion.fecha_hora) >= startDate);
 
 		const valores = medicionesEnRango
-			.map((medicion) => getMedicionValueByAtributo(medicion, appliedComparativasFilters.atributo))
+			.map((medicion) => getMedicionValueByAtributo(medicion, comparativasFilters.atributo))
 			.filter((value): value is number => value !== null && Number.isFinite(value));
 
 		const totalRegistros = medicionesEnRango.length;
@@ -436,102 +444,68 @@ export default function Home() {
 			maximo,
 			ultimaMedicion,
 		};
-	}, [appliedComparativasFilters.atributo, chartData, chartSeries, medicionesComparativas, timeRange]);
+	}, [chartData, chartSeries, comparativasFilters.atributo, medicionesComparativas, timeRange]);
 
 	const topError = limnigrafosError ?? medicionesRecientesError;
-	const atributoSeleccionado = ATRIBUTO_METADATA[appliedComparativasFilters.atributo];
+	const atributoSeleccionado = ATRIBUTO_METADATA[comparativasFilters.atributo];
 	const hasChartError = Boolean(medicionesComparativasError);
+	const shouldShowEstadisticas = limnigrafosSeleccionadosParaEstadisticas.length > 0
+		&& Boolean(rangoEstadisticas.desdeIso && rangoEstadisticas.hastaIso);
+	const estadisticasVisibles = shouldShowEstadisticas ? estadisticas : [];
+	const estadisticasErrorVisible = shouldShowEstadisticas ? estadisticasError : null;
 
-	async function handleCalcularEstadisticas() {
-		setEstadisticasError(null);
+	useEffect(() => {
+		const { desdeIso, hastaIso } = rangoEstadisticas;
 
-		const selectedIds = compareIds;
-
-		if (selectedIds.length === 0) {
-			setEstadisticas([]);
-			setEstadisticasError("Seleccioná al menos un limnígrafo para calcular estadísticas.");
+		if (limnigrafosSeleccionadosParaEstadisticas.length === 0 || !desdeIso || !hastaIso) {
+			statsRequestIdRef.current += 1;
 			return;
 		}
 
-		const desdeIso = toIsoString(appliedComparativasFilters.desde);
-		const hastaIso = toIsoString(appliedComparativasFilters.hasta);
+		const requestId = statsRequestIdRef.current + 1;
+		statsRequestIdRef.current = requestId;
 
-		if (!desdeIso || !hastaIso) {
-			setEstadisticas([]);
-			setEstadisticasError("Definí un rango de fechas válido para calcular estadísticas.");
-			return;
-		}
+		const timeoutId = window.setTimeout(async () => {
+			try {
+				setEstadisticasError(null);
+				const result = await calcularEstadistica({
+					data: {
+						limnigrafos: limnigrafosSeleccionadosParaEstadisticas,
+						atributo: comparativasFilters.atributo,
+						fecha_inicio: desdeIso,
+						fecha_fin: hastaIso,
+					},
+				});
 
-		try {
-			const result = await postEstadistica.mutateAsync({
-				data: {
-					limnigrafos: selectedIds
-						.map((item) => Number.parseInt(item, 10))
-						.filter((item) => !Number.isNaN(item)),
-					atributo: appliedComparativasFilters.atributo,
-					fecha_inicio: desdeIso,
-					fecha_fin: hastaIso,
-				},
-			});
-			setEstadisticas(result);
-		} catch (error) {
-			setEstadisticas([]);
-			setEstadisticasError(
-				error instanceof Error
-					? error.message
-					: "No se pudieron calcular estadísticas para el rango seleccionado.",
-			);
-		}
-	}
+				if (statsRequestIdRef.current !== requestId) {
+					return;
+				}
+
+				setEstadisticas(result);
+			} catch (error) {
+				if (statsRequestIdRef.current !== requestId) {
+					return;
+				}
+
+				setEstadisticas([]);
+				setEstadisticasError(
+					error instanceof Error
+						? error.message
+						: "No se pudieron calcular estadísticas para el rango seleccionado.",
+				);
+			}
+		}, 300);
+
+		return () => {
+			window.clearTimeout(timeoutId);
+		};
+	}, [calcularEstadistica, comparativasFilters.atributo, limnigrafosSeleccionadosParaEstadisticas, rangoEstadisticas]);
 
 	function handleComparativasFilterChange<K extends keyof ComparativasFilters>(
 		field: K,
 		value: ComparativasFilters[K],
 	) {
 		setComparativasFilters((prev) => ({ ...prev, [field]: value }));
-	}
-
-	function handleApplyComparativasFilters() {
-		setAppliedComparativasFilters(comparativasFilters);
-		setEstadisticas([]);
-		setEstadisticasError(null);
-	}
-
-	function handleClearComparativasFilters() {
-		const reset = getDefaultComparativasFilters();
-		setComparativasFilters(reset);
-		setAppliedComparativasFilters(reset);
-		setCompareIds([]);
-		setCompareSearch("");
-		setEstadisticas([]);
-		setEstadisticasError(null);
-	}
-
-	function handleToggleCompare(limnigrafoId: string, checked: boolean) {
-		setCompareIds((prev) => {
-			if (checked) {
-				return prev.includes(limnigrafoId) ? prev : [...prev, limnigrafoId];
-			}
-			return prev.filter((id) => id !== limnigrafoId);
-		});
-	}
-
-	function handleSelectAllCompare() {
-		setCompareIds(limnigrafos.map((limnigrafo) => String(limnigrafo.id)));
-	}
-
-	function handleSelectFilteredCompare() {
-		setCompareIds((prev) => {
-			const next = new Set(prev);
-			filteredCompareLimnigrafos.forEach((limnigrafo) => {
-				next.add(String(limnigrafo.id));
-			});
-			return Array.from(next);
-		});
-	}
-
-	function handleClearCompareSelection() {
-		setCompareIds([]);
 	}
 
 	function handleTimeRangeChange(value: string) {
@@ -556,6 +530,72 @@ export default function Home() {
 							No se pudieron cargar todos los datos del inicio. Verificá la conexión con el backend.
 						</p>
 					) : null}
+
+					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
+						<div className="flex flex-col gap-5">
+							<div className="flex flex-wrap items-center justify-between gap-3">
+								<div className="space-y-1">
+									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Filtros globales</p>
+									<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
+										Aplican a métricas rápidas y gráfico temporal.
+									</p>
+								</div>
+								<span className="rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1 text-[12px] font-semibold text-[#1D4ED8] dark:border-[#1D4ED8] dark:bg-[#102A43] dark:text-[#93C5FD]">
+									{isCalculandoEstadisticas ? "Actualizando estadísticas..." : "Actualización automática"}
+								</span>
+							</div>
+
+							<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+								<label className="flex flex-col gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+									Atributo
+									<select
+										value={comparativasFilters.atributo}
+										onChange={(event) => handleComparativasFilterChange("atributo", event.target.value as EstadisticaAtributo)}
+										className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+									>
+										<option value="altura_agua">Altura del agua</option>
+										<option value="presion">Presión</option>
+										<option value="temperatura">Temperatura</option>
+									</select>
+								</label>
+
+								<label htmlFor="global-time-range" className="flex flex-col gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+									Ventana
+									<select
+										id="global-time-range"
+										value={timeRange}
+										onChange={(event) => handleTimeRangeChange(event.target.value)}
+										className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+									>
+										<option value="90d">Últimos 90 días</option>
+										<option value="30d">Últimos 30 días</option>
+										<option value="7d">Últimos 7 días</option>
+									</select>
+								</label>
+
+								<div className="flex flex-col gap-2">
+									<label htmlFor="global-limnigrafos-trigger" className="text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+										Limnígrafos ({compareIds.length})
+									</label>
+									<MultiSelect
+										id="global-limnigrafos-trigger"
+										options={chartLimnigrafoOptions}
+										selectedValues={compareIds}
+										onChange={setCompareIds}
+										placeholder="Seleccionar limnígrafos"
+										className="h-9 text-[12px]"
+										emptyText="No hay limnígrafos disponibles"
+									/>
+								</div>
+							</div>
+
+							<div className="flex flex-wrap items-center gap-3">
+								<span className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
+									Seleccionados: {compareIds.length} de {limnigrafos.length}
+								</span>
+							</div>
+						</div>
+					</section>
 
 					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 						<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -588,13 +628,13 @@ export default function Home() {
 							/>
 							<MetricaCard
 								title="Promedio"
-								value={formatAtributoValue(resumenMetricas.promedio, appliedComparativasFilters.atributo)}
+								value={formatAtributoValue(resumenMetricas.promedio, comparativasFilters.atributo)}
 								detail={`Atributo: ${atributoSeleccionado.label}`}
 								accent="#22C55E"
 							/>
 							<MetricaCard
 								title="Rango"
-								value={`${formatAtributoValue(resumenMetricas.minimo, appliedComparativasFilters.atributo)} / ${formatAtributoValue(resumenMetricas.maximo, appliedComparativasFilters.atributo)}`}
+								value={`${formatAtributoValue(resumenMetricas.minimo, comparativasFilters.atributo)} / ${formatAtributoValue(resumenMetricas.maximo, comparativasFilters.atributo)}`}
 								detail="Mínimo / Máximo"
 								accent="#F97316"
 							/>
@@ -611,49 +651,15 @@ export default function Home() {
 					</section>
 
 					<Card className="rounded-[24px] border-none bg-white pt-0 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
-						<CardHeader className="flex items-start gap-3 space-y-0 border-b border-[#E2E8F0] py-5 lg:flex-row dark:border-[#334155]">
+						<CardHeader className="space-y-0 border-b border-[#E2E8F0] py-5 dark:border-[#334155]">
 							<div className="grid flex-1 gap-1">
 								<CardTitle className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
 									Evolución temporal
 								</CardTitle>
 								<CardDescription className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-									Serie de {atributoSeleccionado.label.toLowerCase()} para limnígrafos seleccionados.
-									Actualización automática cada 30 segundos.
+									Serie de {atributoSeleccionado.label.toLowerCase()} para limnígrafos seleccionados ({compareIds.length}).
+									Ventana actual: {TIME_RANGE_LABEL[timeRange]}. Actualización automática cada 30 segundos.
 								</CardDescription>
-							</div>
-
-							<div className="flex w-full flex-col gap-1 sm:w-[160px]">
-								<label htmlFor="chart-time-range" className="text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-									Ventana
-								</label>
-								<select
-									id="chart-time-range"
-									value={timeRange}
-									onChange={(event) => handleTimeRangeChange(event.target.value)}
-									className="rounded-lg border border-[#D3D4D5] bg-white px-3 py-2 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
-								>
-									<option value="90d">Últimos 90 días</option>
-									<option value="30d">Últimos 30 días</option>
-									<option value="7d">Últimos 7 días</option>
-								</select>
-							</div>
-
-							<div className="flex w-full flex-col gap-1 sm:w-[190px]">
-								<label htmlFor="chart-limnigrafos-trigger" className="text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-									Limnígrafos ({compareIds.length} seleccionados)
-								</label>
-								<div>
-									<MultiSelect
-										id="chart-limnigrafos-trigger"
-										options={chartLimnigrafoOptions}
-										selectedValues={compareIds}
-										onChange={setCompareIds}
-										placeholder="Seleccionar limnígrafos"
-										className="h-10"
-										emptyText="No hay limnígrafos disponibles"
-									/>
-								</div>
-								<p className="text-[12px] text-[#64748B] dark:text-[#94A3B8]">Abrí el selector para elegir uno o varios.</p>
 							</div>
 						</CardHeader>
 
@@ -741,28 +747,78 @@ export default function Home() {
 						</CardContent>
 					</Card>
 
-					<SeccionComparativasMediciones
-						filters={comparativasFilters}
-						onDesdeChange={(value) => handleComparativasFilterChange("desde", value)}
-						onHastaChange={(value) => handleComparativasFilterChange("hasta", value)}
-						onAtributoChange={(value) => handleComparativasFilterChange("atributo", value)}
-						onApplyFilters={handleApplyComparativasFilters}
-						onClearFilters={handleClearComparativasFilters}
-						onCalcular={handleCalcularEstadisticas}
-						isCalculando={postEstadistica.isPending}
-						compareSearch={compareSearch}
-						onCompareSearchChange={setCompareSearch}
-						onSelectAll={handleSelectAllCompare}
-						onSelectVisible={handleSelectFilteredCompare}
-						onClearSelection={handleClearCompareSelection}
-						onToggleSelection={handleToggleCompare}
-						limnigrafosTotales={limnigrafos.length}
-						filteredLimnigrafos={filteredCompareLimnigrafos}
-						compareIds={compareIds}
-						estadisticasError={estadisticasError}
-						estadisticas={estadisticas}
-						limnigrafoNameById={limnigrafoNameById}
-					/>
+					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
+						<div className="mb-4">
+							<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+								Resultados comparativos
+							</p>
+							<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
+								El rango de fechas de este bloque afecta solo este cuadro comparativo.
+							</p>
+						</div>
+
+						<div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+							<label className="flex flex-col gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+								Desde (comparativas)
+								<input
+									type="datetime-local"
+									value={comparativasFilters.desde}
+									onChange={(event) => handleComparativasFilterChange("desde", event.target.value)}
+									className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+								/>
+							</label>
+							<label className="flex flex-col gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+								Hasta (comparativas)
+								<input
+									type="datetime-local"
+									value={comparativasFilters.hasta}
+									onChange={(event) => handleComparativasFilterChange("hasta", event.target.value)}
+									className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+								/>
+							</label>
+						</div>
+
+						{estadisticasErrorVisible ? (
+							<p className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
+								{estadisticasErrorVisible}
+							</p>
+						) : null}
+
+						<div className="overflow-x-auto rounded-xl border border-[#E2E8F0] dark:border-[#475569]">
+							<table className="min-w-full text-left text-[14px] text-[#334155] dark:text-[#CBD5E1]">
+								<thead className="bg-[#F8FAFC] text-[12px] uppercase tracking-wide text-[#64748B] dark:bg-[#0F172A] dark:text-[#94A3B8]">
+									<tr>
+										<th className="px-4 py-3">Limnígrafo</th>
+										<th className="px-4 py-3">Mínimo</th>
+										<th className="px-4 py-3">Máximo</th>
+										<th className="px-4 py-3">Desv. estándar</th>
+										<th className="px-4 py-3">Percentil 90</th>
+									</tr>
+								</thead>
+								<tbody>
+									{estadisticasVisibles.length === 0 ? (
+										<tr>
+											<td colSpan={5} className="px-4 py-5 text-center text-[#64748B] dark:text-[#94A3B8]">
+												Sin datos comparativos calculados.
+											</td>
+										</tr>
+									) : (
+										estadisticasVisibles.map((item, index) => (
+											<tr key={`estadistica-${item.id ?? "global"}-${index}`} className="border-t border-[#E2E8F0] dark:border-[#334155]">
+												<td className="px-4 py-3 font-semibold text-[#0F172A] dark:text-[#E2E8F0]">
+													{item.id === null ? "Global" : (limnigrafoNameById.get(item.id) ?? `ID ${item.id}`)}
+												</td>
+												<td className="px-4 py-3">{formatNumber(item.minimo, 2)}</td>
+												<td className="px-4 py-3">{formatNumber(item.maximo, 2)}</td>
+												<td className="px-4 py-3">{formatNumber(item.desvio_estandar, 2)}</td>
+												<td className="px-4 py-3">{formatNumber(item.percentil_90, 2)}</td>
+											</tr>
+										))
+									)}
+								</tbody>
+							</table>
+						</div>
+					</section>
 				</div>
 			</main>
 		</PaginaBase>
