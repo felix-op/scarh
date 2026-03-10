@@ -42,28 +42,29 @@ export default function TablaHome({
             className={`
         w-full max-w-[1568px]
         rounded-[20px]
-        bg-white
+        bg-white dark:bg-[#1B1F25]
         shadow-[1px_6px_12px_rgba(0,0,0,0.25)]
+        dark:shadow-[0px_10px_24px_rgba(0,0,0,0.45)]
         overflow-hidden custom-scroll
         font-outfit
         ${className}
       `}
         >
             <header
-                className="grid items-center gap-4 border-b border-[#6E6F72]/30 px-5 py-2"
+                className="grid items-center gap-4 border-b border-[#6E6F72]/30 px-5 py-2 dark:border-[#334155]"
                 style={{ gridTemplateColumns: columnasTablaBase }}
             >
                 {baseColumnTitles.map((title) => (
                     <div
                         key={title}
-                        className="text-center text-[18px] font-medium text-[#605E5E]"
+                        className="text-center text-[18px] font-medium text-[#605E5E] dark:text-[#CBD5E1]"
                     >
                         {title}
                     </div>
                 ))}
             </header>
 
-            <div className="flex flex-col divide-y divide-[#F0F0F0]">
+            <div className="flex flex-col divide-y divide-[#F0F0F0] dark:divide-[#334155]">
                 {data.map((row) => (
                     <TablaHomeRow
                         key={row.id}
@@ -91,7 +92,7 @@ function TablaHomeRow({ data }: TablaHomeRowProps) {
         <RenglonDatos
             celdas={celdas}
             plantillaColumnas={columnasTablaBase}
-            claseBaseCelda="text-[18px] font-semibold text-black"
+            claseBaseCelda="text-[18px] font-semibold text-black dark:text-[#E2E8F0]"
         />
     );
 }
