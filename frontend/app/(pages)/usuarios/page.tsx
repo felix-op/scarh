@@ -162,15 +162,21 @@ export default function UsersAdminPage() {
 						<div className="flex-2">
 							<FiltroBusqueda
 								label="Buscar"
-								onSearch={(value) => setSearch(value)}
-								placeholder="Ingrese el nombre, apellido, documento o nombre de usuario"
+								onSearch={(value) => {
+									setPage(1);
+									setSearch(value);
+								}}
+								placeholder="Por nombre, apellido, email, documento o nombre de usuario"
 							/>
 						</div>
 						<div className="flex-1">
 							<FiltroOpciones
 								title="Estado"
 								options={[{ label: "Activo", value: "true"}, {label: "Inactivo", value: "false"}]}
-								onSelect={(value) => setEstado(value)}
+								onSelect={(value) => {
+									setPage(1);
+									setEstado(value);
+								}}
 							/>
 						</div>
 					</div>
