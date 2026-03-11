@@ -3,10 +3,11 @@
 import { useState } from "react";
 
 export type NewUserData = {
-	nombre: string;
-	legajo: string;
+	nombre: string;   // first name
+	apellido: string; // last name
+	username: string;
+	legajo: string;   // decorativo
 	email: string;
-	telefono: string;
 	password: string;
 };
 
@@ -14,20 +15,29 @@ type AddUserModalProps = {
 	open: boolean;
 	onCancel: () => void;
 	onSave: (data: NewUserData) => void;
+	isSaving?: boolean;
 };
 
 const EMPTY_USER: NewUserData = {
 	nombre: "",
+	apellido: "",
+	username: "",
 	legajo: "",
 	email: "",
-	telefono: "",
 	password: "",
 };
+
+const MODAL_CANCEL_BUTTON_CLASS =
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70";
+
+const MODAL_SAVE_BUTTON_CLASS =
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70";
 
 export default function AddUserModal({
 	open,
 	onCancel,
 	onSave,
+	isSaving = false,
 }: AddUserModalProps) {
 	const [formValues, setFormValues] = useState<NewUserData>(EMPTY_USER);
 
@@ -43,11 +53,13 @@ export default function AddUserModal({
 	}
 
 	function handleSave() {
+		if (isSaving) return;
 		onSave(formValues);
 		resetForm();
 	}
 
 	function handleCancel() {
+		if (isSaving) return;
 		resetForm();
 		onCancel();
 	}
@@ -57,121 +69,117 @@ export default function AddUserModal({
 	}
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-			<div className="flex w-[976px] max-w-[95vw] flex-col gap-4 rounded-[38px] bg-white p-8 shadow-lg">
-				<h2 className="text-center text-3xl font-extrabold text-black drop-shadow">
-					Información de Usuario
-				</h2>
-
-				<div className="h-px w-full bg-[#E2E2E2]" />
-
-				<div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-					<div className="flex flex-col items-center justify-center gap-6">
-						<div className="w-[240px] rounded-3xl bg-white p-4 shadow-md">
-							<div className="mb-2 text-center text-2xl font-semibold text-[#032C44]">
-								Estado
-							</div>
-							<div className="flex items-center justify-center gap-3 rounded-full bg-[#F0F0F0]/80 px-6 py-3 shadow">
-								<div className="flex h-10 w-10 items-center justify-center rounded-full shadow">
-									<div className="h-7 w-7 rounded-full border border-[#0F7810]/40 bg-[#1ED760]" />
-								</div>
-								<span className="text-lg font-semibold text-black drop-shadow">
-									Activo
-								</span>
-							</div>
+		<div className="fixed inset-0 z-50 bg-black/40" role="dialog" aria-modal="true">
+			<div className="absolute inset-y-0 right-0 flex h-full w-full sm:max-w-xl">
+				<div className="flex h-full w-full flex-col bg-white shadow-[-10px_0_28px_rgba(0,0,0,0.2)]">
+					<div className="flex items-start justify-between border-b border-[#E5E7EB] px-6 py-5">
+						<div>
+							<h2 className="text-xl font-semibold text-[#111827]">Nuevo usuario</h2>
 						</div>
+						<button
+							onClick={handleCancel}
+							className="text-2xl text-[#9CA3AF] hover:text-[#4B5563]"
+							aria-label="Cerrar"
+							disabled={isSaving}
+						>
+							×
+						</button>
 					</div>
 
-					<div className="rounded-2xl border border-[#E2E2E2] bg-white p-6 shadow-inner">
-						<div className="grid gap-5 md:grid-cols-2">
-							<div className="flex flex-col gap-1 rounded-2xl bg-white p-3 shadow">
-								<span className="text-center text-base font-normal text-[#838383]">
-									Número de legajo
-								</span>
+					<div className="flex-1 overflow-y-auto px-6 py-5">
+						<div className="grid grid-cols-1 gap-4">
+							<label className="flex flex-col gap-1">
+								<span className="text-sm font-medium text-[#374151]">Nombre</span>
 								<input
-									className="w-full border-none bg-transparent text-center text-xl font-semibold text-black outline-none"
-									placeholder="12345678/123"
-									value={formValues.legajo}
-									onChange={(event) => handleChange("legajo", event.target.value)}
-								/>
-							</div>
-
-							<div className="flex flex-col gap-1 rounded-2xl bg-white p-3 shadow">
-								<span className="text-center text-base font-normal text-[#838383]">
-									Email
-								</span>
-								<input
-									className="w-full border-none bg-transparent text-center text-xl font-semibold text-black outline-none"
-									placeholder="ejemplo123@gmail.com"
-									value={formValues.email}
-									onChange={(event) => handleChange("email", event.target.value)}
-								/>
-							</div>
-
-							<div className="flex flex-col gap-1 rounded-2xl bg-white p-3 shadow">
-								<span className="text-center text-base font-normal text-[#838383]">
-									Nombre
-								</span>
-								<input
-									className="w-full border-none bg-transparent text-center text-xl font-semibold text-black outline-none"
-									placeholder="Nombre de la persona"
+									className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+									placeholder="Nombre"
 									value={formValues.nombre}
 									onChange={(event) => handleChange("nombre", event.target.value)}
+									disabled={isSaving}
 								/>
-							</div>
+							</label>
 
-							<div className="flex flex-col gap-1 rounded-2xl bg-white p-3 shadow">
-								<span className="text-center text-base font-normal text-[#838383]">
-									Número de teléfono
-								</span>
+							<label className="flex flex-col gap-1">
+								<span className="text-sm font-medium text-[#374151]">Apellido</span>
 								<input
-									className="w-full border-none bg-transparent text-center text-xl font-semibold text-black outline-none"
-									placeholder="+5492901123456"
-									value={formValues.telefono}
-									onChange={(event) =>
-										handleChange("telefono", event.target.value)
-									}
+									className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+									placeholder="Apellido"
+									value={formValues.apellido}
+									onChange={(event) => handleChange("apellido", event.target.value)}
+									disabled={isSaving}
 								/>
-							</div>
+							</label>
 
-							<div className="md:col-span-2 flex flex-col gap-1 rounded-2xl bg-white p-3 shadow">
-								<span className="text-center text-base font-normal text-[#838383]">
-									Contraseña
-								</span>
+							<label className="flex flex-col gap-1">
+								<span className="text-sm font-medium text-[#374151]">Username</span>
+								<input
+									className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+									placeholder="usuario1"
+									value={formValues.username}
+									onChange={(event) => handleChange("username", event.target.value)}
+									disabled={isSaving}
+								/>
+							</label>
+
+							<label className="flex flex-col gap-1">
+								<span className="text-sm font-medium text-[#374151]">Legajo </span>
+								<input
+									className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+									placeholder="123456/01"
+									value={formValues.legajo}
+									onChange={(event) => handleChange("legajo", event.target.value)}
+									disabled={isSaving}
+								/>
+							</label>
+
+							<label className="flex flex-col gap-1">
+								<span className="text-sm font-medium text-[#374151]">Email</span>
+								<input
+									type="email"
+									className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+									placeholder="usuario@mail.com"
+									value={formValues.email}
+									onChange={(event) => handleChange("email", event.target.value)}
+									disabled={isSaving}
+								/>
+							</label>
+
+							<label className="flex flex-col gap-1">
+								<span className="text-sm font-medium text-[#374151]">Contraseña</span>
 								<input
 									type="password"
-									className="w-full border-none bg-transparent text-center text-xl font-semibold text-black outline-none"
-									placeholder="******************"
+									className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm text-[#111827] focus:border-[#0D76B3] focus:outline-none"
+									placeholder="********"
 									value={formValues.password}
-									onChange={(event) =>
-										handleChange("password", event.target.value)
-									}
+									onChange={(event) => handleChange("password", event.target.value)}
+									disabled={isSaving}
 								/>
-							</div>
+							</label>
 						</div>
 					</div>
-				</div>
 
-				<div className="h-px w-full bg-[#E2E2E2]" />
-
-				<div className="flex items-center justify-center gap-10">
-					<button
-						type="button"
-						onClick={handleCancel}
-						className="flex h-12 w-40 items-center justify-center rounded-2xl bg-[#8392A5] text-base font-normal text-[#E7F5FE]"
-					>
-						Cancelar
-					</button>
-					<button
-						type="button"
-						onClick={handleSave}
-						className="flex h-12 w-40 items-center justify-center rounded-2xl bg-[#43BE7E] text-base font-normal text-[#E7F5FE]"
-					>
-						Guardar
-					</button>
+					<div className="flex shrink-0 justify-end gap-3 border-t border-[#E5E7EB] px-6 py-4">
+						<button
+							type="button"
+							onClick={handleCancel}
+							className={MODAL_CANCEL_BUTTON_CLASS}
+							disabled={isSaving}
+						>
+							<span className="icon-[mdi--close-thick] text-base" aria-hidden="true" />
+							<span>Cancelar</span>
+						</button>
+						<button
+							type="button"
+							onClick={handleSave}
+							className={MODAL_SAVE_BUTTON_CLASS}
+							disabled={isSaving}
+						>
+							<span className="icon-[mdi--content-save] text-base" aria-hidden="true" />
+							<span>{isSaving ? "Guardando..." : "Guardar"}</span>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
 	);
 }
-

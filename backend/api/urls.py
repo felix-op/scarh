@@ -3,7 +3,7 @@ from .views import hola_api, CustomTokenObtainPairView, CustomTokenRefreshView
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import LogoutView
 from rest_framework.routers import DefaultRouter
-from .viewsets import UsuarioViewSet, LimnigrafoViewSet, HistorialViewSet, MedicionViewSet, UbicacionViewSet, EstadisticaViewSet
+from .viewsets import UsuarioViewSet, LimnigrafoViewSet, HistorialViewSet, MedicionViewSet, UbicacionViewSet, EstadisticaViewSet, AlertaViewSet
 
 router = DefaultRouter()
 
@@ -13,6 +13,7 @@ router.register(r'historial', HistorialViewSet, basename='historial')
 router.register(r'medicion', MedicionViewSet, basename='medicion') 
 router.register(r'ubicacion', UbicacionViewSet, basename='ubicacion') 
 router.register(r'estadistica', EstadisticaViewSet, basename='estadistica') 
+router.register(r'alertas', AlertaViewSet, basename='alertas') 
 
 
 urlpatterns = [
@@ -22,4 +23,3 @@ urlpatterns = [
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('', include(router.urls)),
 ]
-

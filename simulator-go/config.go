@@ -26,14 +26,17 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"gopkg.in/yaml.v3"
+	"os"
+	"strings"
 )
 
 type Config struct {
-	BackendURL      string             `yaml:"backend_url"`
-	IntervalSeconds int                `yaml:"interval_seconds"`
-	Limnigrafos     []LimnigrafoConfig `yaml:"limnigrafos"`
+	BackendURL         string             `yaml:"backend_url"`
+	IntervalSeconds    int                `yaml:"interval_seconds"`
+	IntervalMinMinutes float64            `yaml:"interval_minutes_min"`
+	IntervalMaxMinutes float64            `yaml:"interval_minutes_max"`
+	Limnigrafos        []LimnigrafoConfig `yaml:"limnigrafos"`
 }
 
 type LimnigrafoConfig struct {
@@ -64,12 +67,38 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("error parseando YAML: %w", err)
 	}
 
+	cfg.BackendURL = strings.TrimRight(strings.TrimSpace(cfg.BackendURL), "/")
 	if cfg.BackendURL == "" {
 		return nil, fmt.Errorf("backend_url es obligatorio")
 	}
 
-	if cfg.IntervalSeconds <= 0 {
-		cfg.IntervalSeconds = 5
+	// Compatibilidad:
+	// 1) Config nueva: interval_minutes_min / interval_minutes_max
+	// 2) Config vieja: interval_seconds
+	if cfg.IntervalMinMinutes <= 0 && cfg.IntervalMaxMinutes <= 0 {
+		if cfg.IntervalSeconds > 0 {
+			fixedMinutes := float64(cfg.IntervalSeconds) / 60.0
+			cfg.IntervalMinMinutes = fixedMinutes
+			cfg.IntervalMaxMinutes = fixedMinutes
+		} else {
+			cfg.IntervalMinMinutes = 0.25 // 15 segundos
+			cfg.IntervalMaxMinutes = 0.75 // 45 segundos
+		}
+	}
+
+	if cfg.IntervalMinMinutes <= 0 {
+		cfg.IntervalMinMinutes = cfg.IntervalMaxMinutes
+	}
+	if cfg.IntervalMaxMinutes <= 0 {
+		cfg.IntervalMaxMinutes = cfg.IntervalMinMinutes
+	}
+
+	if cfg.IntervalMinMinutes <= 0 || cfg.IntervalMaxMinutes <= 0 {
+		return nil, fmt.Errorf("interval_minutes_min e interval_minutes_max deben ser mayores a 0")
+	}
+
+	if cfg.IntervalMinMinutes > cfg.IntervalMaxMinutes {
+		cfg.IntervalMinMinutes, cfg.IntervalMaxMinutes = cfg.IntervalMaxMinutes, cfg.IntervalMinMinutes
 	}
 
 	if len(cfg.Limnigrafos) == 0 {

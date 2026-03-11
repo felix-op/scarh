@@ -4,6 +4,7 @@ from .HistorialViewSet import HistorialViewSet
 from .MedicionViewSet import MedicionViewSet
 from .UbicacionViewSet import UbicacionViewSet
 from .EstadisticaViewSet import EstadisticaViewSet
+from .AlertaViewSet import AlertaViewSet
 
 __all__ = [
     "UsuarioViewSet",
@@ -12,4 +13,5 @@ __all__ = [
     "MedicionViewSet",
     "UbicacionViewSet",
     "EstadisticaViewSet",
+    "AlertaViewSet",
 ]

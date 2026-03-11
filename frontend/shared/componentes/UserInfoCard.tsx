@@ -136,7 +136,7 @@ export function UserInfoCard({
 
 	const handleLogout = () => {
 		signOut({
-			callbackUrl: "/",
+			callbackUrl: "/auth/login",
 			redirect: true,
 		});
 	};

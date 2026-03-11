@@ -5,7 +5,7 @@
 //
 // PROPÓSITO:
 //   - Enviar mediciones al endpoint /medicion/ del backend
-//   - Autenticar usando JWT Tokens (header: Authorization: Bearer <token>)
+//   - Autenticar usando API Keys (header: Authorization: Api-Key <token>)
 //   - Manejar errores de red y respuestas HTTP
 // ============================================================================
 
@@ -17,13 +17,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
 // SendMeasurement envía una medición al backend SCARH
 func SendMeasurement(backendURL string, token string, m Medicion) error {
-	// Construir URL completa
-	url := backendURL + "medicion/"
+	// Construir URL completa de forma robusta (con o sin '/' al final)
+	url := strings.TrimRight(backendURL, "/") + "/medicion/"
 
 	// Serializar medición a JSON
 	jsonData, err := json.Marshal(m)
@@ -41,7 +42,7 @@ func SendMeasurement(backendURL string, token string, m Medicion) error {
 
 	// Agregar headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Authorization", "Api-Key "+token)
 
 	// Crear cliente HTTP con timeout
 	client := &http.Client{

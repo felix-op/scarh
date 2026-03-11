@@ -1,7 +1,8 @@
-import { QueryKey, UseQueryOptions } from "@tanstack/react-query";
-import { AxiosRequestConfig } from "axios";
+import { UseQueryOptions } from "@tanstack/react-query";
+import { AxiosError, AxiosRequestConfig } from "axios";
 
-export type ParamsBase = Record<string, string> & {
+export type ParamsBase = {
+	[key: string]: string | Record<string, string> | undefined;
 	queryParams?: Record<string, string>,
 };
 
@@ -21,19 +22,34 @@ export type onSuccessFunction<TResponse, TParams extends ParamsBase, TRequest> =
 ) => void | Promise<void>;
 
 export type onErrorFunction<TParams extends ParamsBase, TRequest> = (
-	error: Error,
+	error: AxiosError<BackendError>,
 	variables: GenericMutationVariables<TParams, TRequest>,
 	context: unknown
 ) => void | Promise<void>
 
 export type MutationConfig<TRequest, TResponse, TParams extends ParamsBase> = {
-	queriesToInvalidate?: QueryKey[],
+	queriesToInvalidate?: Array<string | readonly unknown[]>,
 	data?: TRequest,
 	onSuccess?: onSuccessFunction<TResponse, TParams, TRequest>, 
 	onError?: onErrorFunction<TParams, TRequest>,
+	onSettled?: (...args: unknown[]) => void | Promise<void>,
 	refetch?: boolean,
 	configAxios?: AxiosRequestConfig
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ApiMethodFunction = (url: string, ...args: any[]) => Promise<any>;
+
+export type BackendError = {
+    codigo: number;
+    descripcion_tecnica: string;
+    descripcion_usuario: string;
+    titulo: string;
+};
+
+export type Paginado<T> = {
+	count: number;
+	next: string | null;
+	previous: string | null;
+	results: T[];
+};

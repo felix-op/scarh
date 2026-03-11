@@ -1,6 +1,6 @@
 "use client";
 
-import useGet, { useDelete, usePatch, usePost, usePut } from "./queryHooks";
+import { useGet, useDelete, usePatch, usePost, usePut } from "./queryHooks";
 import { MutationConfig, ParamsBase, UseGetConfig } from "./types";
 
 const NEXT_PROXY_URL = "/api/proxy";
@@ -257,10 +257,15 @@ export type MedicionPaginatedResponse = {
 // ENDPOINT: GET-MEDICIONES
 
 type UseGetMedicionesParams = {
-	limnigrafo?: string, // ID del limnígrafo (debe ser string para query params)
-	limit?: string, // Cantidad de resultados por página
-	page?: string, // Número de página
-}
+	queryParams?: {
+		limnigrafo?: string, // ID del limnígrafo
+		fuente?: "manual" | "automatico", // Filtrar por origen
+		desde?: string, // Fecha/hora de inicio ISO 8601
+		hasta?: string, // Fecha/hora de fin ISO 8601
+		limit?: string, // Cantidad de resultados por página
+		page?: string, // Número de página
+	}
+} & ParamsBase
 
 type UseGetMedicionesOptions = {
 	params?: UseGetMedicionesParams,
@@ -274,195 +279,88 @@ export function useGetMediciones({ params, config }: UseGetMedicionesOptions = {
 	return useGet<UseGetMedicionesParams, MedicionPaginatedResponse>({
 		key: "useGetMediciones",
 		url: `${NEXT_PROXY_URL}/medicion/`,
-		params: params ?? {},
+		params: params ?? { queryParams: {} },
 		config: config ?? {},
+	});
+}
+
+// ENDPOINT: POST-MEDICION
+
+export type MedicionPostRequest = {
+	limnigrafo: number,
+	fecha_hora?: string,
+	altura_agua: number,
+	presion?: number | null,
+	temperatura?: number | null,
+	nivel_de_bateria?: number | null,
+};
+
+type UsePostMedicionOptions = {
+	params?: ParamsBase,
+	configuracion?: MutationConfig<
+		MedicionPostRequest,
+		MedicionResponse,
+		ParamsBase
+	>
+};
+
+export function usePostMedicion({ params, configuracion }: UsePostMedicionOptions = {}) {
+	const defaultConfig = {};
+
+	return usePost<MedicionPostRequest, MedicionResponse, ParamsBase>({
+		url: `${NEXT_PROXY_URL}/medicion/`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? {},
 	});
 }
 
 /*
 ************************
-	USUARIOS
+	ESTADISTICA
 ************************
 */
 
-// TIPOS
-export type UsuarioResponse = {
-	id: number,
-	nombre_usuario: string,
-	email: string,
-	first_name: string,
-	last_name: string,
-	estado: boolean,
+export type EstadisticaAtributo = "altura_agua" | "presion" | "temperatura";
+
+export type EstadisticaInput = {
+	limnigrafos: number[],
+	atributo: EstadisticaAtributo,
+	fecha_inicio: string,
+	fecha_fin: string,
 };
 
-export type UsuarioPostRequest = {
-	nombre_usuario: string,
-	email: string,
-	first_name: string,
-	last_name: string,
-	estado: boolean,
-	contraseña: string,
+export type EstadisticaOutputItem = {
+	id: number | null,
+	maximo: number,
+	minimo: number,
+	atributo: EstadisticaAtributo,
+	desvio_estandar: number,
+	percentil_90: number,
 };
 
-export type UsuarioPutRequest = {
-	nombre_usuario: string,
-	email: string,
-	first_name: string,
-	last_name: string,
-	estado: boolean,
-	contraseña: string,
-};
-
-export type UsuarioPatchRequest = {
-	nombre_usuario?: string,
-	email?: string,
-	first_name?: string,
-	last_name?: string,
-	estado?: boolean,
-	contraseña?: string,
-};
-
-// ENDPOINT: GET-USUARIOS
-
-type UseGetUsuariosOptions = {
-	params?: ParamsBase,
-	configuracion?: UseGetConfig,
-}
-
-export function useGetUsuarios({ params, configuracion }: UseGetUsuariosOptions) {
-	const defaultParams = {};
-	const defaultConfig = {};
-
-	return useGet({
-		key: "useGetUsuarios",
-		url: `${NEXT_PROXY_URL}/usuarios/`,
-		params: params ?? defaultParams,
-		config: configuracion ?? defaultConfig,
-	});
-}
-
-// ENDPOINT: GET-USUARIO
-
-type UseGetUsuarioOptions = {
-	params?: {
-		id: string,
-	}
-	configuracion?: UseGetConfig,
-}
-
-export function useGetUsuario({ params, configuracion }: UseGetUsuarioOptions) {
-	const defaultParams = {
-		id: "",
-	}
-	const defaultConfig = {};
-
-	return useGet({
-		key: "useGetUsuario",
-		url: `${NEXT_PROXY_URL}/usuarios/{id}`,
-		params: params ?? defaultParams,
-		config: configuracion ?? defaultConfig,
-	});
-}
-
-// ENDPOINT: POST-USUARIO
-
-type UsePostUsuarioOptions = {
+type UsePostEstadisticaOptions = {
 	params?: ParamsBase,
 	configuracion?: MutationConfig<
-		UsuarioPostRequest,
-		UsuarioResponse,
+		EstadisticaInput,
+		EstadisticaOutputItem[],
 		ParamsBase
 	>
 };
 
-export function usePostUsuario({ params, configuracion }: UsePostUsuarioOptions) {
-	const defaultParams = {};
+export function usePostEstadistica({ params, configuracion }: UsePostEstadisticaOptions = {}) {
 	const defaultConfig = {};
 
-	return usePost<UsuarioPostRequest, UsuarioResponse, ParamsBase>({
-		url: `${NEXT_PROXY_URL}/usuarios/`,
+	return usePost<EstadisticaInput, EstadisticaOutputItem[], ParamsBase>({
+		url: `${NEXT_PROXY_URL}/estadistica/`,
 		configuracion: configuracion ?? defaultConfig,
-		params: params ?? defaultParams,
+		params: params ?? {},
 	});
 }
 
-// ENDPOINT: PUT-USUARIO
 
-type UsePutUsuarioOptions = {
-	params?: {
-		id: string,
-	}
-	configuracion?: MutationConfig<
-		UsuarioPutRequest,
-		UsuarioResponse,
-		ParamsBase
-	>
-};
 
-export function usePutUsuario({ params, configuracion }: UsePutUsuarioOptions) {
-	const defaultParams = {
-		id: "",
-	}
-	const defaultConfig = {};
-	
-	return usePut({
-		url: `${NEXT_PROXY_URL}/usuarios/{id}`,
-		configuracion: configuracion ?? defaultConfig,
-		params: params ?? defaultParams,
-	});
-}
 
-// ENDPOINT: PATCH-USUARIO
 
-type UsePachtUsuarioOptions = {
-	params?: {
-		id: string,
-	}
-	configuracion?: MutationConfig<
-		UsuarioPutRequest,
-		UsuarioResponse,
-		ParamsBase
-	>
-};
-
-export function usePachtUsuario({ params, configuracion }: UsePachtUsuarioOptions) {
-	const defaultParams = {
-		id: "",
-	}
-	const defaultConfig = {};
-	
-	return usePatch({
-		url: `${NEXT_PROXY_URL}/usuarios/{id}`,
-		configuracion: configuracion ?? defaultConfig,
-		params: params ?? defaultParams,
-	});
-}
-
-// ENDPOINT: DELETE-USUARIO
-
-type UseDeleteUsuarioOptions = {
-	params?: {
-		id: string,
-	}
-	configuracion?: MutationConfig<
-		UsuarioPutRequest,
-		UsuarioResponse,
-		ParamsBase
-	>
-};
-
-export function useDeleteUsuario({ params, configuracion }: UseDeleteUsuarioOptions) {
-	const defaultParams = {
-		id: "",
-	}
-	const defaultConfig = {};
-	
-	return useDelete({
-		url: `${NEXT_PROXY_URL}/usuarios/{id}`,
-		configuracion: configuracion ?? defaultConfig,
-		params: params ?? defaultParams,
-	});
-}
 
 /*
 ************************
@@ -476,38 +374,56 @@ export type HistorialItem = {
 	id: number,
 	date: string,
 	type: string,
-	object_id: number,
+	object_id: string,
 	model_name: string,
 	username: string,
 	object_repr: string,
+	description: string,
+	status: string,
 }
 
 export type HistorialResponse = {
 	count: number,
-	next: string,
-	previous: string,
+	next: string | null,
+	previous: string | null,
 	results: HistorialItem[]
 };
 
-// ENDPOINT: GET-HISTORIALES
-
-type UseGetHistorialesOptions = {
-	params?: {
-		queryParams?: {
-			limit?: number,
-			page?: number,
-		}
-	},
-	configuracion?: UseGetConfig,
+export type HistorialDetailItem = HistorialItem & {
+	metadata: Record<string, unknown>,
 }
 
-export function useGetHistoriales({ params, configuracion }: UseGetHistorialesOptions) {
-	const defaultParams = {};
+// ENDPOINT: GET-HISTORIALES
+
+type UseGetHistorialesParams = {
+	queryParams?: {
+		limit?: string,
+		page?: string,
+		type?: string,
+		model?: string,
+		usuario?: string,
+		desde?: string,
+		hasta?: string,
+	}
+} & ParamsBase
+
+type UseGetHistorialesOptions = {
+	params?: UseGetHistorialesParams,
+	configuracion?: UseGetConfig<HistorialResponse>,
+}
+
+export function useGetHistoriales({ params, configuracion }: UseGetHistorialesOptions = {}) {
+	const defaultParams = {
+		queryParams: {
+			limit: "10",
+			page: "1",
+		},
+	};
 	const defaultConfig = {};
 
-	return useGet({
+	return useGet<UseGetHistorialesParams, HistorialResponse>({
 		key: "useGetHistoriales",
-		url: `${NEXT_PROXY_URL}/historial/?limit={limit}&page={page}`,
+		url: `${NEXT_PROXY_URL}/historial/`,
 		params: params ?? defaultParams,
 		config: configuracion ?? defaultConfig,
 	});
@@ -519,7 +435,7 @@ type UseGetHistorialOptions = {
 	params?: {
 		id: string,
 	}
-	configuracion?: UseGetConfig,
+	configuracion?: UseGetConfig<HistorialDetailItem>,
 }
 
 export function useGetHistorial({ params, configuracion }: UseGetHistorialOptions) {
@@ -528,7 +444,7 @@ export function useGetHistorial({ params, configuracion }: UseGetHistorialOption
 	}
 	const defaultConfig = {};
 
-	return useGet({
+	return useGet<{ id: string }, HistorialDetailItem>({
 		key: "useGetHistorial",
 		url: `${NEXT_PROXY_URL}/historial/{id}`,
 		params: params ?? defaultParams,

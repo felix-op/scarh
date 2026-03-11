@@ -11,3 +11,4 @@ pyproj
 django-simple-history
 djangorestframework-api-key
 pyyaml
+django-filter

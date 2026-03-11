@@ -41,7 +41,13 @@ func main() {
 
 	Success("Configuración cargada correctamente")
 	Info(fmt.Sprintf("Backend URL: %s", cfg.BackendURL))
-	Info(fmt.Sprintf("Intervalo: %d segundos", cfg.IntervalSeconds))
+	Info(fmt.Sprintf(
+		"Intervalo: %.2f a %.2f minutos (%.0f a %.0f segundos)",
+		cfg.IntervalMinMinutes,
+		cfg.IntervalMaxMinutes,
+		cfg.IntervalMinMinutes*60,
+		cfg.IntervalMaxMinutes*60,
+	))
 	Info(fmt.Sprintf("Limnígrafos configurados: %d", len(cfg.Limnigrafos)))
 
 	// Mostrar información de cada limnígrafo
@@ -73,60 +79,56 @@ func runLimnigrafo(wg *sync.WaitGroup, cfg LimnigrafoConfig, globalCfg *Config) 
 	enFalla := false
 	tiempoFinFalla := time.Now()
 
-	Info(fmt.Sprintf("Limnígrafo #%d iniciado (prob. falla: %.1f%%, duración: %dmin)", 
+	Info(fmt.Sprintf("Limnígrafo #%d iniciado (prob. falla: %.1f%%, duración: %dmin)",
 		cfg.ID, cfg.ProbabilidadFalla*100, cfg.DuracionFallaMin))
 
-	// Ticker para generar mediciones periódicamente
-	ticker := time.NewTicker(time.Duration(globalCfg.IntervalSeconds) * time.Second)
-	defer ticker.Stop()
-
 	for {
-		select {
-		case <-ticker.C:
-			// Verificar si está en periodo de falla
-			if enFalla {
-				if time.Now().Before(tiempoFinFalla) {
-					Warning(fmt.Sprintf("Limnígrafo #%d - En falla, no enviando datos (termina en %s)", 
-						cfg.ID, time.Until(tiempoFinFalla).Round(time.Second)))
-					continue
-				} else {
-					// Fin de la falla
-					enFalla = false
-					Success(fmt.Sprintf("Limnígrafo #%d - Recuperado de falla, reanudando envíos", cfg.ID))
-				}
-			}
+		wait := randomInterval(globalCfg.IntervalMinMinutes, globalCfg.IntervalMaxMinutes)
+		time.Sleep(wait)
 
-			// Probabilidad de entrar en falla
-			if !enFalla && rand.Float64() < cfg.ProbabilidadFalla {
-				enFalla = true
-				duracion := time.Duration(cfg.DuracionFallaMin) * time.Minute
-				tiempoFinFalla = time.Now().Add(duracion)
-				Warning(fmt.Sprintf("Limnígrafo #%d - INICIANDO FALLA por %d minutos", cfg.ID, cfg.DuracionFallaMin))
+		// Verificar si está en periodo de falla
+		if enFalla {
+			if time.Now().Before(tiempoFinFalla) {
+				Warning(fmt.Sprintf("Limnígrafo #%d - En falla, no enviando datos (termina en %s)",
+					cfg.ID, time.Until(tiempoFinFalla).Round(time.Second)))
 				continue
 			}
+			// Fin de la falla
+			enFalla = false
+			Success(fmt.Sprintf("Limnígrafo #%d - Recuperado de falla, reanudando envíos", cfg.ID))
+		}
 
-			// Generar medición
-			medicion := GenerateMeasurement(cfg, &state)
+		// Probabilidad de entrar en falla
+		if !enFalla && rand.Float64() < cfg.ProbabilidadFalla {
+			enFalla = true
+			duracion := time.Duration(cfg.DuracionFallaMin) * time.Minute
+			tiempoFinFalla = time.Now().Add(duracion)
+			Warning(fmt.Sprintf("Limnígrafo #%d - INICIANDO FALLA por %d minutos", cfg.ID, cfg.DuracionFallaMin))
+			continue
+		}
 
-			// Enviar medición al backend
-			err := SendMeasurement(globalCfg.BackendURL, cfg.Token, medicion)
+		// Generar medición
+		medicion := GenerateMeasurement(cfg, &state)
 
-			if err != nil {
-				Error(fmt.Sprintf("Limnígrafo #%d - Error al enviar medición: %v", cfg.ID, err))
+		// Enviar medición al backend
+		err := SendMeasurement(globalCfg.BackendURL, cfg.Token, medicion)
+
+		if err != nil {
+			Error(fmt.Sprintf("Limnígrafo #%d - Error al enviar medición: %v", cfg.ID, err))
+		} else {
+			// Construir mensaje de log formateado
+			msg := fmt.Sprintf("\n┌─────────────────────────────────────────────────────────┐\n")
+			msg += fmt.Sprintf("│ Limnígrafo #%-2d                                         │\n", cfg.ID)
+			msg += fmt.Sprintf("├─────────────────────────────────────────────────────────┤\n")
+			msg += fmt.Sprintf("│  Altura:      %6.2f m                                 │\n", medicion.Altura)
+
+			if medicion.Temperatura != nil {
+				msg += fmt.Sprintf("│  Temperatura: %6.1f °C                                │\n", *medicion.Temperatura)
 			} else {
-				// Construir mensaje de log formateado
-				msg := fmt.Sprintf("\n┌─────────────────────────────────────────────────────────┐\n")
-				msg += fmt.Sprintf("│ Limnígrafo #%-2d                                         │\n", cfg.ID)
-				msg += fmt.Sprintf("├─────────────────────────────────────────────────────────┤\n")
-				msg += fmt.Sprintf("│  Altura:      %6.2f m                                 │\n", medicion.Altura)
-				
-				if medicion.Temperatura != nil {
-					msg += fmt.Sprintf("│  Temperatura: %6.1f °C                                │\n", *medicion.Temperatura)
-				} else {
-					msg += fmt.Sprintf("│  Temperatura:    N/A                                   │\n")
-				}
+				msg += fmt.Sprintf("│  Temperatura:    N/A                                   │\n")
+			}
 
-				if medicion.Presion != nil {
+			if medicion.Presion != nil {
 				msg += fmt.Sprintf("│  Presión:     %6.0f hPa                               │\n", *medicion.Presion)
 			} else {
 				msg += fmt.Sprintf("│  Presión:        N/A                                   │\n")
@@ -137,7 +139,7 @@ func runLimnigrafo(wg *sync.WaitGroup, cfg LimnigrafoConfig, globalCfg *Config) 
 			} else {
 				msg += fmt.Sprintf("│  Batería:        N/A                                   │\n")
 			}
-			
+
 			msg += fmt.Sprintf("└─────────────────────────────────────────────────────────┘")
 
 			// Verificar si hay valores faltantes (error simulado)
@@ -145,10 +147,18 @@ func runLimnigrafo(wg *sync.WaitGroup, cfg LimnigrafoConfig, globalCfg *Config) 
 				Warning(msg + " [MEDICIÓN CON ERRORES]")
 			} else {
 				Success(msg)
-				}
 			}
 		}
 	}
+}
+
+func randomInterval(minMinutes, maxMinutes float64) time.Duration {
+	if maxMinutes <= minMinutes {
+		return time.Duration(minMinutes * float64(time.Minute))
+	}
+
+	randomMinutes := minMinutes + rand.Float64()*(maxMinutes-minMinutes)
+	return time.Duration(randomMinutes * float64(time.Minute))
 }
 
 // previewToken muestra una vista previa del token (primeros 3 y últimos 3 caracteres)
