@@ -33,7 +33,7 @@ import {
 	type MedicionPaginatedResponse,
 } from "@servicios/api/django.api";
 import { mapearEstado } from "@lib/transformers/limnigrafoTransformer";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { ComparativasFilters } from "../mediciones/secciones/types";
 import { toDatetimeLocalInputValue } from "../mediciones/utils";
@@ -298,6 +298,19 @@ export default function Home() {
 		return { desdeIso, hastaIso };
 	}, [comparativasFilters.desde, comparativasFilters.hasta]);
 
+	const estadisticasRequest = useMemo(() => {
+		if (limnigrafosSeleccionadosParaEstadisticas.length === 0 || !rangoEstadisticas.desdeIso || !rangoEstadisticas.hastaIso) {
+			return null;
+		}
+
+		return {
+			limnigrafos: limnigrafosSeleccionadosParaEstadisticas,
+			atributo: comparativasFilters.atributo,
+			fecha_inicio: rangoEstadisticas.desdeIso,
+			fecha_fin: rangoEstadisticas.hastaIso,
+		};
+	}, [comparativasFilters.atributo, limnigrafosSeleccionadosParaEstadisticas, rangoEstadisticas]);
+
 	const medicionesMap = useMemo(() => {
 		const map = new Map<number, MedicionResponse>();
 
@@ -495,6 +508,7 @@ export default function Home() {
 	const topError = limnigrafosError ?? medicionesRecientesError;
 	const atributoSeleccionado = ATRIBUTO_METADATA[comparativasFilters.atributo];
 	const hasChartError = Boolean(medicionesComparativasError);
+	const disableCalcularComparativas = !estadisticasRequest || isCalculandoEstadisticas;
 	const shouldShowEstadisticas = limnigrafosSeleccionadosParaEstadisticas.length > 0
 		&& Boolean(rangoEstadisticas.desdeIso && rangoEstadisticas.hastaIso);
 	const estadisticasVisibles = useMemo(
@@ -546,52 +560,38 @@ export default function Home() {
 		[],
 	);
 
-	useEffect(() => {
-		const { desdeIso, hastaIso } = rangoEstadisticas;
-
-		if (limnigrafosSeleccionadosParaEstadisticas.length === 0 || !desdeIso || !hastaIso) {
-			statsRequestIdRef.current += 1;
+	async function handleCalcularComparativas() {
+		if (!estadisticasRequest) {
 			return;
 		}
 
 		const requestId = statsRequestIdRef.current + 1;
 		statsRequestIdRef.current = requestId;
 
-		const timeoutId = window.setTimeout(async () => {
-			try {
-				setEstadisticasError(null);
-				const result = await calcularEstadistica({
-					data: {
-						limnigrafos: limnigrafosSeleccionadosParaEstadisticas,
-						atributo: comparativasFilters.atributo,
-						fecha_inicio: desdeIso,
-						fecha_fin: hastaIso,
-					},
-				});
+		try {
+			setEstadisticasError(null);
+			const result = await calcularEstadistica({
+				data: estadisticasRequest,
+			});
 
-				if (statsRequestIdRef.current !== requestId) {
-					return;
-				}
-
-				setEstadisticas(result);
-			} catch (error) {
-				if (statsRequestIdRef.current !== requestId) {
-					return;
-				}
-
-				setEstadisticas([]);
-				setEstadisticasError(
-					error instanceof Error
-						? error.message
-						: "No se pudieron calcular estadísticas para el rango seleccionado.",
-				);
+			if (statsRequestIdRef.current !== requestId) {
+				return;
 			}
-		}, 300);
 
-		return () => {
-			window.clearTimeout(timeoutId);
-		};
-	}, [calcularEstadistica, comparativasFilters.atributo, limnigrafosSeleccionadosParaEstadisticas, rangoEstadisticas]);
+			setEstadisticas(result);
+		} catch (error) {
+			if (statsRequestIdRef.current !== requestId) {
+				return;
+			}
+
+			setEstadisticas([]);
+			setEstadisticasError(
+				error instanceof Error
+					? error.message
+					: "No se pudieron calcular estadísticas para el rango seleccionado.",
+			);
+		}
+	}
 
 	function handleComparativasFilterChange<K extends keyof ComparativasFilters>(
 		field: K,
@@ -647,7 +647,7 @@ export default function Home() {
 									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Filtros</p>
 								</div>
 								<span className="rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1 text-[12px] font-semibold text-[#1D4ED8] dark:border-[#1D4ED8] dark:bg-[#102A43] dark:text-[#93C5FD]">
-									{isCalculandoEstadisticas ? "Actualizando estadísticas..." : "Actualización automática"}
+									{isCalculandoEstadisticas ? "Calculando comparativas..." : "Cálculo manual en comparativas"}
 								</span>
 							</div>
 
@@ -866,6 +866,17 @@ export default function Home() {
 									className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 								/>
 							</label>
+						</div>
+
+						<div className="mb-4 flex flex-wrap items-center justify-end gap-3">
+							<button
+								type="button"
+								onClick={handleCalcularComparativas}
+								disabled={disableCalcularComparativas}
+								className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#2563EB] dark:bg-[#0B2A43] dark:text-[#93C5FD]"
+							>
+								{isCalculandoEstadisticas ? "Calculando..." : "Calcular estadísticas"}
+							</button>
 						</div>
 
 						{estadisticasErrorVisible ? (
