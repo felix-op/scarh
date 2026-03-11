@@ -3,12 +3,21 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
+import { Bell, LogOut, UserCircle2 } from "lucide-react";
 
 import SwapContainer from "@componentes/animaciones/SwapContainer";
 import Icon from "@componentes/icons/Icon";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@componentes/components/ui/dialog";
-import { useGetUsuario, usePachtUsuario } from "@servicios/api";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@componentes/components/ui/dropdown-menu";
+import { useGetAlertas, useGetUsuario, usePachtUsuario, usePatchAlerta } from "@servicios/api";
+import VentanaNotificaciones from "../alertas/VentanaNotificaciones";
 
 type EstadoVariant = "activo" | "inactivo" | "pendiente" | "suspendido";
 
@@ -233,6 +242,7 @@ export default function ProfileCard({
 	const [profileData, setProfileData] = useState<ProfileFormState>(baseProfile);
 	const [editForm, setEditForm] = useState<ProfileFormState>(baseProfile);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 
 	useEffect(() => {
@@ -243,6 +253,15 @@ export default function ProfileCard({
 	const { data: usuarioApi } = useGetUsuario({
 		params: { id: resolvedLegajo ?? "" },
 		configuracion: { enabled: Boolean(resolvedLegajo) },
+	});
+	const { data: alertas } = useGetAlertas({
+		configuracion: { enabled: isNotificationsOpen },
+	});
+	const patchAlerta = usePatchAlerta({
+		params: { id: "" },
+		configuracion: {
+			queriesToInvalidate: ["useGetAlertas"],
+		},
 	});
 
 	useEffect(() => {
@@ -352,63 +371,116 @@ export default function ProfileCard({
 	const displayLastName = profileData.lastName || resolvedLastName || "";
 	const displayEmail = profileData.email || resolvedEmail || "No definido";
 	const displayLegajo = profileData.legajo || resolvedLegajo || "—";
-
+	const notificaciones = (alertas ?? []).map((alerta) => ({
+		id: alerta.id.toString(),
+		titulo: alerta.limnigrafo_codigo
+			? `Alerta en ${alerta.limnigrafo_codigo}`
+			: "Alerta del sistema",
+		descripcion: alerta.descripcion,
+		fecha: new Date(alerta.fecha_hora).toLocaleString("es-AR", {
+			dateStyle: "short",
+			timeStyle: "short",
+		}),
+		estado: alerta.estado,
+	}));
+	const handleMarcarNotificacionLeida = async (id: string) => {
+		await patchAlerta.mutateAsync({
+			params: { id },
+			data: { estado: "leido" },
+		});
+	};
 	if (variant === "sidebar") {
 		return (
-			<button
-				type="button"
-				onClick={() => router.push("/perfil")}
-				className="w-full border-0 bg-transparent p-0 cursor-pointer"
-				aria-label="Ver perfil"
-			>
-				<div
-					className={`
+			<div
+				className={`
 						w-full flex items-center gap-[6px]
 						rounded-[12px] p-[6px_4px] h-16 group
 						${isActive ? "bg-sidebar-link-active text-sidebar-foreground-active" : "bg-sidebar-link hover:bg-sidebar-link-hover text-sidebar-foreground"}
-						${collapsed ? "justify-center" : "pl-4 justify-between"}
+						${collapsed ? "justify-center" : "pl-4 pr-2 justify-between"}
 					`}
+			>
+				<button
+					type="button"
+					onClick={() => router.push("/perfil")}
+					className={`border-0 bg-transparent p-0 cursor-pointer flex items-center gap-3 min-w-0 ${collapsed ? "justify-center" : "flex-1"}`}
+					aria-label="Ver perfil"
 				>
-					<div className="flex items-center gap-3">
-						<UserAvatar
-							size="md"
-							avatarUrl={resolvedAvatar}
-							nombre={displayFirstName}
-							apellido={displayLastName}
-							username={displayUsername}
-						/>
-						<div
-							className={`
-								transition-all duration-300 ease-in-out
+					<UserAvatar
+						size="md"
+						avatarUrl={resolvedAvatar}
+						nombre={displayFirstName}
+						apellido={displayLastName}
+						username={displayUsername}
+					/>
+					<div
+						className={`
+								transition-all duration-300 ease-in-out overflow-hidden
 								${collapsed ? "max-w-0 opacity-0" : "max-w-xs opacity-100"} 
 							`}
-						>
-							<span className={`${isActive ? "text-sidebar-foreground-active" : "text-sidebar-foreground"} text-[18px] font-bold whitespace-nowrap`}>
-								{displayUsername}
-							</span>
-						</div>
+					>
+						<span className={`${isActive ? "text-sidebar-foreground-active" : "text-sidebar-foreground"} text-[18px] font-bold whitespace-nowrap`}>
+							{displayUsername}
+						</span>
 					</div>
+				</button>
 
-					{collapsed ? (
-						<div className="flex h-10 w-5">
-							<SwapContainer
-								defaultContent={<Icon variant="newNotification" className="text-md text-[#2982CB]"/>}
-								hoverContent={<Icon variant="rightArrow" className="text-md" />}
-								containerClassName="flex items-start w-5"
-							/>
-						</div>
-					) : (
-						<div className="flex items-center justify-between">
-							<div className={`flex h-10 w-10 items-center ${isActive ? "text-sidebar-primary-text-active" : "text-sidebar-primary-text"}`}>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<button
+							type="button"
+							className={`flex shrink-0 items-center justify-center rounded-[10px] border-0 bg-transparent p-2 cursor-pointer transition-colors hover:bg-black/5 dark:hover:bg-white/10 ${collapsed ? "h-10 w-10" : "h-10 w-10"}`}
+							aria-label="Abrir menú de usuario"
+						>
+							{collapsed ? (
 								<SwapContainer
-									defaultContent={<Icon variant="newNotification" className="text-xl text-[#2982CB]" />}
-									hoverContent={<Icon variant="rightArrow" className="text-xl" />}
+									defaultContent={<Icon variant="newNotification" className="text-md text-[#2982CB]" />}
+									hoverContent={<Icon variant="rightArrow" className="text-md" />}
+									containerClassName="flex items-start w-5"
 								/>
-							</div>
-						</div>
-					)}
-				</div>
-			</button>
+							) : (
+								<div className="flex items-center gap-1">
+									<Icon variant="newNotification" className="text-xl text-[#2982CB]" />
+									<Icon variant="rightArrow" className="text-xl" />
+								</div>
+							)}
+						</button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent
+						align="end"
+						className="min-w-52 rounded-2xl border border-neutral-200 bg-white/100 p-2 shadow-[0px_12px_30px_rgba(0,0,0,0.18)] dark:border-neutral-700 dark:bg-[rgb(32,36,44)]"
+					>
+						<DropdownMenuItem
+							onClick={() => router.push("/perfil")}
+							className="rounded-xl px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+						>
+							<UserCircle2 className="size-4" />
+							<span>Perfil</span>
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={() => setIsNotificationsOpen(true)}
+							className="rounded-xl px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+						>
+							<Bell className="size-4" />
+							<span>Notificaciones</span>
+						</DropdownMenuItem>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem
+							variant="destructive"
+							onClick={handleLogout}
+							className="rounded-xl px-3 py-2 hover:bg-red-50 dark:hover:bg-red-950/30"
+						>
+							<LogOut className="size-4" />
+							<span>Cerrar sesión</span>
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+				<VentanaNotificaciones
+					open={isNotificationsOpen}
+					onClose={() => setIsNotificationsOpen(false)}
+					notificaciones={notificaciones}
+					onMarcarLeida={handleMarcarNotificacionLeida}
+				/>
+			</div>
 		);
 	}
 
