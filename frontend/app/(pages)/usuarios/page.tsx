@@ -13,20 +13,15 @@ import { UsuarioResponse } from "types/usuarios";
 import { useGetUsuarios } from "@servicios/api";
 import BotonIconoEditar from "@componentes/botones/BotonIconoEditar";
 import VentanaEditarUsuario from "./componentes/VentanaEditarUsuario";
-import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
+import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 import VentanaEliminarUsuario from "./componentes/VentanaEliminarUsuario";
 import usePaginadoBackend from "@hooks/usePaginadoBackend";
 import FiltrosContenedor from "@componentes/filtros/FiltrosContenedor";
 import FiltroBusqueda from "@componentes/filtros/FiltroBusqueda";
 import FiltroOpciones from "@componentes/filtros/FiltroOpciones";
+import { useNotificar } from "@hooks/useNotificar";
 
 const queriesToInvalidate = ["useGetUsuarios"];
-
-const defaultMessage: VentanaAceptarOptions = {
-	title: "",
-	description: "",
-	variant: "info",
-};
 
 export default function UsersAdminPage() {
 	const [page, setPage] = useState(1);
@@ -45,9 +40,9 @@ export default function UsersAdminPage() {
 			},
 		}
 	});
-
+	
 	const [usuarioEditar, setUsuarioEditar] = useState<UsuarioResponse | null>(null);
-	const [message, setMesage] = useState(defaultMessage);
+	const notificar = useNotificar();
 
 	// --- Modal añadir ---
 	const [isAddOpen, setIsAddOpen] = useState(false);
@@ -56,10 +51,6 @@ export default function UsersAdminPage() {
 
 	// --- Modal editar ---
 	const [isEditOpen, setIsEditOpen] = useState(false);
-	const handleOpenEdit = (row: UsuarioResponse) => {
-		setUsuarioEditar(row);
-		setIsEditOpen(true);
-	}
 	const handleCancelEdit = () => {
 		setUsuarioEditar(null);
 		setIsEditOpen(false);
@@ -67,22 +58,19 @@ export default function UsersAdminPage() {
 
 	// --- Modal eliminar ---
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-	const handleOpenDelete = (row: UsuarioResponse) => {
-		setUsuarioEditar(row);
-		setIsDeleteOpen(true);
-	}
 	const handleCloseDelete = () => {
 		setUsuarioEditar(null);
 		setIsDeleteOpen(false);
 	}
 
-	// --- Modal informar ---
-	const [isOpenInfo, setIsOpenInfo] = useState(false);
 	const handleOpenInfo = (message: VentanaAceptarOptions) => {
-		setMesage(message);
-		setIsOpenInfo(true);
+		notificar({
+			titulo: message.title,
+			mensaje: message.description,
+			variante: message.variant,
+			desaparecerEnMS: message.variant === "error" || message.variant === "alerta" ? false : 2500,
+		});
 	};
-	const handleCloseInfo = () => setIsOpenInfo(false);
 
 	const renderEstadoPill = (variant: EstadoVariant, label: string) => {
 		return (
@@ -220,11 +208,6 @@ export default function UsersAdminPage() {
 				handleMessage={handleOpenInfo}
 				usuario={usuarioEditar}
 				queriesToInvalidate={queriesToInvalidate}
-			/>
-			<VentanaAceptar
-				open={isOpenInfo}
-				onClose={handleCloseInfo}
-				options={message}
 			/>
 		</PaginaBase>
 	);

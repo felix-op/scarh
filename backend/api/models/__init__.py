@@ -4,6 +4,7 @@ from .ubicacion import *
 from .ruta_acceso import *
 from .medicion import *
 from .alerta import *
+from .usuario_notificacion import *
 from .usuario import *
 from .accion import *
 
@@ -14,6 +15,7 @@ __all__ = [
     'RutaAcceso',
     'Medicion',
     'Alerta',
+    'UsuarioNotificacion',
     'Usuario',
     'Accion',
 ]

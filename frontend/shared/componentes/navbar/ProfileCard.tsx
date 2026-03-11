@@ -446,7 +446,9 @@ export default function ProfileCard({
 						</button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
-						align="end"
+						side="right"
+						align="start"
+						sideOffset={8}
 						className="min-w-52 rounded-2xl border border-neutral-200 bg-white/100 p-2 shadow-[0px_12px_30px_rgba(0,0,0,0.18)] dark:border-neutral-700 dark:bg-[rgb(32,36,44)]"
 					>
 						<DropdownMenuItem

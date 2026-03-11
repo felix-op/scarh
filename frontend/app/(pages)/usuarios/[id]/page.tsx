@@ -5,14 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
-import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
+import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 import { useGetUsuario, useGetUsuarios } from "@servicios/api";
 import { UsuarioResponse } from "types/usuarios";
 import VentanaEditarUsuario from "../componentes/VentanaEditarUsuario";
 import ResumenHistorialUsuario from "../componentes/ResumenHistorialUsuario";
 import VentanaEliminarUsuario from "../componentes/VentanaEliminarUsuario";
-import { Separator } from "@radix-ui/react-dropdown-menu";
 import Separador from "@componentes/Separador";
+import { useNotificar } from "@hooks/useNotificar";
 
 type UsuarioDetalle = {
 	nombre_usuario?: string;
@@ -24,16 +24,11 @@ type UsuarioDetalle = {
 	estado?: boolean;
 };
 
-const defaultMessage: VentanaAceptarOptions = {
-	title: "",
-	description: "",
-	variant: "info",
-};
-
 export default function UsuarioDetallePage() {
 	const params = useParams<{ id: string }>();
 	const router = useRouter();
 	const usuarioId = params?.id ?? "";
+	const notificar = useNotificar();
 
 	const { data: usuario } = useGetUsuario({ params: { id: usuarioId } });
 	const { data: usuarios } = useGetUsuarios({});
@@ -41,8 +36,6 @@ export default function UsuarioDetallePage() {
 	const username = (usuarioData.nombre_usuario ?? usuarioData.username ?? "").trim();
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
-	const [isOpenInfo, setIsOpenInfo] = useState(false);
-	const [message, setMessage] = useState(defaultMessage);
 
 	const toDisplayValue = (value?: string | null) => {
 		const normalized = value?.trim();
@@ -76,9 +69,13 @@ export default function UsuarioDetallePage() {
 	}
 
 	const handleOpenInfo = (newMessage: VentanaAceptarOptions) => {
-		setMessage(newMessage);
-		setIsOpenInfo(true);
-	}
+		notificar({
+			titulo: newMessage.title,
+			mensaje: newMessage.description,
+			variante: newMessage.variant,
+			desaparecerEnMS: newMessage.variant === "error" || newMessage.variant === "alerta" ? false : 2500,
+		});
+	};
 
 	const onSuccessDelete = () => {
 		router.push('/usuarios');
@@ -167,12 +164,6 @@ export default function UsuarioDetallePage() {
 				queriesToInvalidate={["useGetUsuarios"]}
 				onSuccess={onSuccessDelete}
 				usuario={usuario}
-			/>
-
-			<VentanaAceptar
-				open={isOpenInfo}
-				onClose={() => setIsOpenInfo(false)}
-				options={message}
 			/>
 		</PaginaBase>
 	);

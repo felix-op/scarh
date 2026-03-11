@@ -1,7 +1,7 @@
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from ..models import Alerta
+from ..models import UsuarioNotificacion
 from ..serializer import AlertaSerializer
 
 
@@ -16,9 +16,8 @@ class AlertaViewSet(
 
     def get_queryset(self):
         return (
-            Alerta.objects.filter(usuarios=self.request.user)
-            .select_related("limnigrafo", "medicion")
-            .prefetch_related("usuarios")
-            .order_by("-fecha_hora")
+            UsuarioNotificacion.objects.filter(usuario=self.request.user)
+            .select_related("alerta", "alerta__limnigrafo", "alerta__medicion", "usuario")
+            .order_by("-alerta__fecha_hora")
             .distinct()
         )
