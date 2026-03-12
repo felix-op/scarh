@@ -76,18 +76,18 @@ export default function ResumenHistorialUsuario({
 		<div className="flex flex-col gap-3">
 			<ul className="space-y-3">
 				{historialUsuario.map((item) => (
-					<li key={item.id} className="rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
-						<div className="grid gap-2 text-sm text-[#334155] md:grid-cols-3">
+					<li key={item.id} className="rounded-xl border border-border bg-table hover:bg-table-hover p-4 shadow-[0px_4px_10px_rgba(0,0,0,0.10)]">
+						<div className="grid gap-2 text-sm text-foreground md:grid-cols-3">
 							<p>
-								<span className="font-semibold text-[#0F172A]">Entidad:</span>{" "}
+								<span className="font-semibold text-foreground-title">Entidad:</span>{" "}
 								{item.model_name || "-"}
 							</p>
 							<p>
-								<span className="font-semibold text-[#0F172A]">Acción:</span>{" "}
+								<span className="font-semibold text-foreground-title]">Acción:</span>{" "}
 								{getActionLabel(item.type)}
 							</p>
 							<p>
-								<span className="font-semibold text-[#0F172A]">Hora:</span>{" "}
+								<span className="font-semibold text-foreground-title">Hora:</span>{" "}
 								{formatHour(item.date)}
 							</p>
 						</div>
