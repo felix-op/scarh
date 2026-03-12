@@ -127,7 +127,7 @@ export default function UsuarioDetallePage() {
 								<div className="shrink-0 whitespace-nowrap text-left text-[20px] font-normal leading-6">
 									{row.label}
 								</div>
-								<div className="min-w-0 text-[24px] font-semibold text-foreground leading-[28px] break-words [overflow-wrap:anywhere]">
+								<div className="min-w-0 text-[24px] font-semibold text-foreground leading-[28px] wrap-break-word">
 									{row.value}
 								</div>
 							</div>
