@@ -161,8 +161,8 @@ class MedicionTests(APITestCase):
         )
 
         response = self.client.get(self.list_url, {
-            'desde': '2024-01-01T09:00:00Z',
-            'hasta': '2024-01-01T11:00:00Z',
+            'fecha_desde': '2024-01-01T09:00:00Z',
+            'fecha_hasta': '2024-01-01T11:00:00Z',
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
