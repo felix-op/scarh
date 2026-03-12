@@ -31,9 +31,11 @@ class UsuarioTests(APITestCase):
     def test_list_usuarios(self):
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(response.data), 2)
+        # Because pagination is applied, the actual list of users is in response.data['results']
+        results = response.data.get('results', response.data)
+        self.assertGreaterEqual(len(results), 2)
         
-        user_data = next(u for u in response.data if u['nombre_usuario'] == 'existinguser')
+        user_data = next(u for u in results if u['nombre_usuario'] == 'existinguser')
         self.assertEqual(user_data['email'], 'existing@example.com')
         self.assertEqual(user_data['legajo'], 'L-0001')
 
