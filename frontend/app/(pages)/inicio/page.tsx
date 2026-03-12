@@ -41,9 +41,10 @@ import { toDatetimeLocalInputValue } from "../mediciones/utils";
 // Prioridad de estados para ordenamiento (menor = más urgente)
 const estadoPriority: Record<string, number> = {
 	fuera: 0,
-	advertencia: 1,
-	prueba: 2,
-	activo: 3,
+	peligro: 1,
+	advertencia: 2,
+	prueba: 3,
+	activo: 4,
 };
 
 const CHART_COLORS = [
@@ -381,6 +382,7 @@ export default function Home() {
 		() =>
 			homeLimnigrafos.filter(
 				(item) =>
+					item.estado.variante === "peligro" ||
 					item.estado.variante === "advertencia" ||
 					item.estado.variante === "fuera",
 			).length,
