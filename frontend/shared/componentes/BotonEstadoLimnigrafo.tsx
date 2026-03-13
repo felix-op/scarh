@@ -66,10 +66,10 @@ export function BotonEstadoLimnigrafo({ estado }: BotonEstadoProps) {
         items-center
         justify-center
         rounded-[36px]
-        bg-[#F0F0F0]/90 dark:bg-[#0F172A]/85
+        bg-[#F0F0F0]/90 dark:border dark:border-[#334155] dark:bg-[#1A2433]/95
         px-5
         py-1.5
-        opacity-70
+        opacity-70 dark:opacity-100
         shadow-[0px_4px_4px_rgba(0,0,0,0.25)]
       "
 		>

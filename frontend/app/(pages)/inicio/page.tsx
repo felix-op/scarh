@@ -628,13 +628,8 @@ export default function Home() {
 
 					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 						<div className="flex flex-col gap-5">
-							<div className="flex flex-wrap items-center justify-between gap-3">
-								<div className="space-y-1">
-									<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Filtros</p>
-								</div>
-								<span className="rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1 text-[12px] font-semibold text-[#1D4ED8] dark:border-[#1D4ED8] dark:bg-[#102A43] dark:text-[#93C5FD]">
-									{isCalculandoEstadisticas ? "Calculando comparativas..." : "Cálculo manual en comparativas"}
-								</span>
+							<div className="space-y-1">
+								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Filtros</p>
 							</div>
 
 							<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
