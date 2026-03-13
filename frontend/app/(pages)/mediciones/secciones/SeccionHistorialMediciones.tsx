@@ -80,8 +80,11 @@ type SeccionHistorialMedicionesProps = {
 	endRow: number;
 	currentPage: number;
 	totalPages: number;
+	pageSize: number;
+	pageSizeOptions: number[];
 	isFetching: boolean;
 	hasBusqueda: boolean;
+	onPageSizeChange: (value: number) => void;
 	onPrevPage: () => void;
 	onNextPage: () => void;
 };
@@ -106,8 +109,11 @@ export default function SeccionHistorialMediciones({
 	endRow,
 	currentPage,
 	totalPages,
+	pageSize,
+	pageSizeOptions,
 	isFetching,
 	hasBusqueda,
+	onPageSizeChange,
 	onPrevPage,
 	onNextPage,
 }: SeccionHistorialMedicionesProps) {
@@ -222,6 +228,24 @@ export default function SeccionHistorialMediciones({
 					No se pudieron cargar las mediciones. Verificá la conexión con el backend.
 				</p>
 			) : null}
+
+			<div className="mb-4 flex justify-end">
+				<label className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#94A3B8]">
+					<span>Filas por página</span>
+					<select
+						value={String(pageSize)}
+						onChange={(event) => onPageSizeChange(Number.parseInt(event.target.value, 10))}
+						disabled={isFetching}
+						className="h-9 rounded-xl border border-[#CBD5E1] bg-white px-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] disabled:opacity-60 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1] dark:focus:border-[#38BDF8]"
+					>
+						{pageSizeOptions.map((option) => (
+							<option key={option} value={option}>
+								{option}
+							</option>
+						))}
+					</select>
+				</label>
+			</div>
 
 			<DataTable
 				data={rows}

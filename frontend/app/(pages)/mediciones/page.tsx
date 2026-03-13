@@ -30,7 +30,8 @@ import {
 	toDatetimeLocalInputValue,
 } from "./utils";
 
-const PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 25;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 75, 100] as const;
 const EXPORT_PAGE_SIZE = 1000;
 
 const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
@@ -128,6 +129,7 @@ export default function MedicionesPage() {
 	const [historialFilters, setHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
 	const [appliedHistorialFilters, setAppliedHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
 	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [mensaje, setMensaje] = useState<string | null>(null);
 	const [errorAccion, setErrorAccion] = useState<string | null>(null);
 	const [isExporting, setIsExporting] = useState(false);
@@ -179,7 +181,7 @@ export default function MedicionesPage() {
 
 	const queryParams = useMemo(() => {
 		const params: Record<string, string> = {
-			limit: String(PAGE_SIZE),
+			limit: String(pageSize),
 			page: String(currentPage),
 		};
 
@@ -201,7 +203,7 @@ export default function MedicionesPage() {
 		}
 
 		return params;
-	}, [appliedHistorialFilters, currentPage]);
+	}, [appliedHistorialFilters, currentPage, pageSize]);
 
 	const {
 		data: medicionesData,
@@ -255,9 +257,9 @@ export default function MedicionesPage() {
 	);
 
 	const serverCount = medicionesData?.count ?? 0;
-	const totalPages = Math.max(1, Math.ceil(serverCount / PAGE_SIZE));
-	const startRow = serverCount === 0 ? 0 : ((currentPage - 1) * PAGE_SIZE) + 1;
-	const endRow = Math.min(currentPage * PAGE_SIZE, serverCount);
+	const totalPages = Math.max(1, Math.ceil(serverCount / pageSize));
+	const startRow = serverCount === 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+	const endRow = Math.min(currentPage * pageSize, serverCount);
 
 	const isLoading = isLoadingLimnigrafos || isLoadingMediciones;
 	const topError = limnigrafosError ?? medicionesError;
@@ -516,8 +518,14 @@ export default function MedicionesPage() {
 						endRow={endRow}
 						currentPage={currentPage}
 						totalPages={totalPages}
+						pageSize={pageSize}
+						pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
 						isFetching={isFetchingMediciones}
 						hasBusqueda={Boolean(appliedHistorialFilters.busqueda)}
+						onPageSizeChange={(value) => {
+							setPageSize(value);
+							setCurrentPage(1);
+						}}
 						onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
 						onNextPage={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
 					/>
