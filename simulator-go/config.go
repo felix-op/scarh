@@ -50,6 +50,7 @@ type LimnigrafoConfig struct {
 	PresionMax     float64 `yaml:"presion_max"`
 	BateriaMin     float64 `yaml:"bateria_min"`
 	BateriaMax     float64 `yaml:"bateria_max"`
+	BateriaInicial float64 `yaml:"bateria_inicial"`
 	// Probabilidad de falla (0.0 = nunca falla, 1.0 = siempre falla)
 	ProbabilidadFalla float64 `yaml:"probabilidad_falla"`
 	// Duración de la falla en minutos (cuánto tiempo sin enviar datos)
@@ -105,12 +106,31 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("debes definir al menos un limnigrafo")
 	}
 
-	for _, l := range cfg.Limnigrafos {
+	for i := range cfg.Limnigrafos {
+		l := &cfg.Limnigrafos[i]
+
 		if l.ID == 0 {
 			return nil, fmt.Errorf("limnigrafo con id 0 no es válido")
 		}
 		if l.Token == "" {
 			return nil, fmt.Errorf("limnigrafo %d no tiene token", l.ID)
+		}
+
+		// Compatibilidad con configs antiguas que usan bateria_inicial.
+		if l.BateriaMax <= 0 && l.BateriaInicial > 0 {
+			l.BateriaMax = l.BateriaInicial
+		}
+		if l.BateriaMax <= 0 {
+			l.BateriaMax = 100
+		}
+		if l.BateriaMin < 0 {
+			return nil, fmt.Errorf("limnigrafo %d tiene bateria_min negativa", l.ID)
+		}
+		if l.BateriaMin > l.BateriaMax {
+			return nil, fmt.Errorf(
+				"limnigrafo %d tiene bateria_min (%.2f) mayor que bateria_max (%.2f)",
+				l.ID, l.BateriaMin, l.BateriaMax,
+			)
 		}
 	}
 

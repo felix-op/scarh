@@ -2,8 +2,9 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from api.models.limnigrafo import Limnigrafo
-from datetime import time
+from datetime import time, timedelta
 from rest_framework_api_key.models import APIKey
 
 class LimnigrafoTests(APITestCase):
@@ -57,6 +58,17 @@ class LimnigrafoTests(APITestCase):
         response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['codigo'], self.limnigrafo.codigo)
+
+    def test_list_refreshes_estado_by_time_threshold(self):
+        self.limnigrafo.ultima_conexion = timezone.now() - timedelta(hours=2)
+        self.limnigrafo.estado = 'normal'
+        self.limnigrafo.save(update_fields=['ultima_conexion', 'estado'])
+
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.estado, 'peligro')
 
     def test_update_limnigrafo(self):
         update_data = {'descripcion': 'Descripcion actualizada'}

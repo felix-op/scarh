@@ -83,7 +83,7 @@ class MedicionTests(APITestCase):
         
         self.assertIsNotNone(self.limnigrafo.ultima_conexion)
         
-        self.assertEqual(self.limnigrafo.estado, 'fuera_de_servicio')
+        self.assertEqual(self.limnigrafo.estado, 'peligro')
 
     def test_retrieve_medicion(self):
         self.client.force_authenticate(user=self.user)

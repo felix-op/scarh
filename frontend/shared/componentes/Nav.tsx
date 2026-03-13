@@ -6,7 +6,6 @@ import type { ReactElement } from "react";
 import {
 	Map as MapIcon,
 	Chip as LimnigraphIcon,
-	Ruler as MeasuresIcon,
 	Documet as MeasurementsIcon,
 	Funcion as StatisticsIcon,
 	User as UserIcon,
@@ -15,7 +14,6 @@ import {
 	BurgerArrowLeftIcon,
 	BurgerArrowRightIcon,
 	ChevronRightIcon,
-	water as WaterIcon,
 } from "@componentes/icons/Icons";
 
 type IconComponent = (props: { size?: number; color?: string }) => ReactElement;
@@ -26,7 +24,6 @@ const NAV_ITEMS: NavItem[] = [
 	{ label: "Mapa", Icon: MapIcon, href: "/mapa" },
 	{ label: "Limnigrafo", Icon: LimnigraphIcon, href: "/limnigrafos" },
 	{ label: "Mediciones", Icon: MeasurementsIcon, href: "/mediciones" },
-	{ label: "Metricas", Icon: MeasuresIcon, href: "/metricas" },
 	{ label: "Estadisticas", Icon: StatisticsIcon, href: "/estadisticas" },
 	{ label: "Usuarios", Icon: UserIcon, href: "/usuarios" },
 	{ label: "Historial", Icon: HistoryIcon, href: "/historial" },

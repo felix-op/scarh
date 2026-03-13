@@ -19,7 +19,6 @@ const rutas: SidebarItem[] = [
 	{ label: "Mapa", icono: "mapa", href: "/mapa" },
 	{ label: "Limnigrafo", icono: "chip", href: "/limnigrafos" },
 	{ label: "Mediciones", icono: "documento", href: "/mediciones" },
-	{ label: "Metricas", icono: "regla", href: "/metricas" },
 	{ label: "Estadisticas", icono: "funcion", href: "/estadisticas" },
 	{ label: "Usuarios", icono: "user1", href: "/usuarios" },
 	{ label: "Historial", icono: "historial", href: "/historial" },

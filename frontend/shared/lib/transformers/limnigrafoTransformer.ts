@@ -12,13 +12,15 @@ import type { EstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
 /**
  * Convierte el estado del backend al formato del frontend
  * 
- * Backend: "normal" | "advertencia" | "critico"
- * Frontend: { variante: "activo" | "advertencia" | "fuera" | "prueba" }
+ * Backend: "normal" | "advertencia" | "peligro" | "fuera_de_servicio"
+ * Frontend: { variante: "activo" | "advertencia" | "peligro" | "fuera" | "prueba" }
  */
 export function mapearEstado(estadoBackend: string): EstadoLimnigrafo {
 	const mapeo: Record<string, EstadoLimnigrafo["variante"]> = {
 		"normal": "activo",
 		"advertencia": "advertencia",
+		"peligro": "peligro",
+		"fuera_de_servicio": "fuera",
 		"critico": "fuera",
 	};
 
