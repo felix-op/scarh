@@ -75,7 +75,7 @@ type LimnigrafoConfigSetup struct {
 	TemperaturaMax float64 `yaml:"temperatura_max"`
 	PresionMin     float64 `yaml:"presion_min"`
 	PresionMax     float64 `yaml:"presion_max"`
-	BateriaInicial float64 `yaml:"bateria_inicial"`
+	BateriaMax     float64 `yaml:"bateria_max"`
 	BateriaMin     float64 `yaml:"bateria_min"`
 }
 
@@ -99,6 +99,12 @@ type LimnigrafoAPI struct {
 	TemperaturaMax float64 `json:"temperatura_max"`
 	PresionMin     float64 `json:"presion_min"`
 	PresionMax     float64 `json:"presion_max"`
+	BateriaMax     float64 `json:"bateria_max"`
+	BateriaMin     float64 `json:"bateria_min"`
+}
+
+type LimnigrafoPaginatedResponse struct {
+	Results []LimnigrafoAPI `json:"results"`
 }
 
 type GenerateKeyResponse struct {
@@ -195,8 +201,8 @@ func main() {
 			TemperaturaMax: getOrDefault(lmg.TemperaturaMax, 25),
 			PresionMin:     getOrDefault(lmg.PresionMin, 950),
 			PresionMax:     getOrDefault(lmg.PresionMax, 1050),
-			BateriaInicial: 100,
-			BateriaMin:     10,
+			BateriaMax:     getOrDefault(lmg.BateriaMax, 100),
+			BateriaMin:     getOrDefault(lmg.BateriaMin, 10),
 		}
 
 		configLimnigrafos = append(configLimnigrafos, configLmg)
@@ -277,12 +283,22 @@ func getLimnigrafos(backendURL, token string) ([]LimnigrafoAPI, error) {
 		return nil, fmt.Errorf("status %d: %s", resp.StatusCode, string(body))
 	}
 
-	var limnigrafos []LimnigrafoAPI
-	if err := json.NewDecoder(resp.Body).Decode(&limnigrafos); err != nil {
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
 		return nil, err
 	}
 
-	return limnigrafos, nil
+	var direct []LimnigrafoAPI
+	if err := json.Unmarshal(body, &direct); err == nil && len(direct) > 0 {
+		return direct, nil
+	}
+
+	var paginated LimnigrafoPaginatedResponse
+	if err := json.Unmarshal(body, &paginated); err == nil && len(paginated.Results) > 0 {
+		return paginated.Results, nil
+	}
+
+	return nil, fmt.Errorf("respuesta de limnigrafos no reconocida: %s", string(body))
 }
 
 func generateKey(backendURL, token string, limnigrafoID int) (*GenerateKeyResponse, error) {

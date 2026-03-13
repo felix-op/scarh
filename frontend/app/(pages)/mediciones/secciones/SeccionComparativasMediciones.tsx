@@ -63,7 +63,7 @@ export default function SeccionComparativasMediciones({
 	limnigrafoNameById,
 }: SeccionComparativasMedicionesProps) {
 	return (
-		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
+		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 			<div className="flex flex-col gap-4">
 				<div className="flex flex-wrap items-center justify-between gap-3">
 					<div>
@@ -73,40 +73,40 @@ export default function SeccionComparativasMediciones({
 						type="button"
 						onClick={onCalcular}
 						disabled={isCalculando}
-						className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50"
+						className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50 dark:border-[#2563EB] dark:bg-[#0B2A43] dark:text-[#93C5FD]"
 					>
 						{isCalculando ? "Calculando..." : "Calcular estadísticas"}
 					</button>
 				</div>
 
-				<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+				<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 dark:border-[#334155] dark:bg-[#111923]">
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-						<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+						<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 							Desde
 							<input
 								type="datetime-local"
 								value={filters.desde}
 								onChange={(event) => onDesdeChange(event.target.value)}
-								className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+								className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 							/>
 						</label>
 
-						<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+						<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 							Hasta
 							<input
 								type="datetime-local"
 								value={filters.hasta}
 								onChange={(event) => onHastaChange(event.target.value)}
-								className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+								className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 							/>
 						</label>
 
-						<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B]">
+						<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 							Atributo
 							<select
 								value={filters.atributo}
 								onChange={(event) => onAtributoChange(event.target.value as EstadisticaAtributo)}
-								className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8]"
+								className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 							>
 								<option value="altura_agua">Altura del agua</option>
 								<option value="presion">Presión</option>
@@ -119,24 +119,24 @@ export default function SeccionComparativasMediciones({
 						<button
 							type="button"
 							onClick={onApplyFilters}
-							className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)]"
+							className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)] dark:bg-[#0369A1] dark:shadow-[0px_4px_12px_rgba(2,132,199,0.4)]"
 						>
 							Aplicar filtros de comparativas
 						</button>
 						<button
 							type="button"
 							onClick={onClearFilters}
-							className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155]"
+							className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]"
 						>
 							Limpiar
 						</button>
 					</div>
 				</div>
 
-				<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+				<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 dark:border-[#334155] dark:bg-[#111923]">
 					<div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 						<div className="flex w-full max-w-xl flex-col gap-1">
-							<label htmlFor="compare-search" className="text-[13px] font-semibold text-[#475569]">
+							<label htmlFor="compare-search" className="text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
 								Buscar limnígrafo
 							</label>
 							<input
@@ -145,7 +145,7 @@ export default function SeccionComparativasMediciones({
 								value={compareSearch}
 								onChange={(event) => onCompareSearchChange(event.target.value)}
 								placeholder="Buscar ..."
-								className="rounded-xl border border-[#D3D4D5] bg-white px-3 py-2 text-[14px] text-[#334155] outline-none focus:border-[#0982C8]"
+								className="rounded-xl border border-[#D3D4D5] bg-white px-3 py-2 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 							/>
 						</div>
 
@@ -154,7 +154,7 @@ export default function SeccionComparativasMediciones({
 								type="button"
 								onClick={onSelectAll}
 								disabled={limnigrafosTotales === 0}
-								className="rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-2 text-[13px] font-semibold text-[#1D4ED8] disabled:opacity-50"
+								className="rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-2 text-[13px] font-semibold text-[#1D4ED8] disabled:opacity-50 dark:border-[#1D4ED8] dark:bg-[#102A43] dark:text-[#93C5FD]"
 							>
 								Seleccionar todos
 							</button>
@@ -162,7 +162,7 @@ export default function SeccionComparativasMediciones({
 								type="button"
 								onClick={onSelectVisible}
 								disabled={filteredLimnigrafos.length === 0}
-								className="rounded-lg border border-[#BAE6FD] bg-[#ECFEFF] px-3 py-2 text-[13px] font-semibold text-[#0369A1] disabled:opacity-50"
+								className="rounded-lg border border-[#BAE6FD] bg-[#ECFEFF] px-3 py-2 text-[13px] font-semibold text-[#0369A1] disabled:opacity-50 dark:border-[#0891B2] dark:bg-[#083344] dark:text-[#67E8F9]"
 							>
 								Seleccionar visibles
 							</button>
@@ -170,27 +170,27 @@ export default function SeccionComparativasMediciones({
 								type="button"
 								onClick={onClearSelection}
 								disabled={compareIds.length === 0}
-								className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] disabled:opacity-50"
+								className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] disabled:opacity-50 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]"
 							>
 								Limpiar selección
 							</button>
 						</div>
 					</div>
 
-					<p className="mt-3 text-[13px] text-[#64748B]">
+					<p className="mt-3 text-[13px] text-[#64748B] dark:text-[#94A3B8]">
 						Seleccionados: {compareIds.length} de {limnigrafosTotales}
 						{compareSearch.trim() ? ` • Visibles: ${filteredLimnigrafos.length}` : ""}
 					</p>
 
-					<div className="mt-3 max-h-[220px] overflow-auto rounded-xl border border-[#E2E8F0] bg-white p-2">
+					<div className="mt-3 max-h-[220px] overflow-auto rounded-xl border border-[#E2E8F0] bg-white p-2 dark:border-[#475569] dark:bg-[#0F172A]">
 						{filteredLimnigrafos.length === 0 ? (
-							<p className="px-2 py-3 text-[13px] text-[#64748B]">No hay limnígrafos para ese filtro.</p>
+							<p className="px-2 py-3 text-[13px] text-[#64748B] dark:text-[#94A3B8]">No hay limnígrafos para ese filtro.</p>
 						) : (
 							<div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
 								{filteredLimnigrafos.map((limnigrafo) => {
 									const isChecked = compareIds.includes(String(limnigrafo.id));
 									return (
-										<label key={limnigrafo.id} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] px-3 py-2 text-[14px] text-[#334155]">
+										<label key={limnigrafo.id} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] px-3 py-2 text-[14px] text-[#334155] dark:border-[#475569] dark:text-[#CBD5E1]">
 											<input
 												type="checkbox"
 												checked={isChecked}
@@ -206,14 +206,14 @@ export default function SeccionComparativasMediciones({
 				</div>
 
 				{estadisticasError ? (
-					<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">
+					<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
 						{estadisticasError}
 					</p>
 				) : null}
 
-				<div className="overflow-x-auto rounded-xl border border-[#E2E8F0]">
-					<table className="min-w-full text-left text-[14px] text-[#334155]">
-						<thead className="bg-[#F8FAFC] text-[12px] uppercase tracking-wide text-[#64748B]">
+				<div className="overflow-x-auto rounded-xl border border-[#E2E8F0] dark:border-[#475569]">
+					<table className="min-w-full text-left text-[14px] text-[#334155] dark:text-[#CBD5E1]">
+						<thead className="bg-[#F8FAFC] text-[12px] uppercase tracking-wide text-[#64748B] dark:bg-[#0F172A] dark:text-[#94A3B8]">
 							<tr>
 								<th className="px-4 py-3">Limnígrafo</th>
 								<th className="px-4 py-3">Mínimo</th>
@@ -225,14 +225,14 @@ export default function SeccionComparativasMediciones({
 						<tbody>
 							{estadisticas.length === 0 ? (
 								<tr>
-									<td colSpan={5} className="px-4 py-5 text-center text-[#64748B]">
+									<td colSpan={5} className="px-4 py-5 text-center text-[#64748B] dark:text-[#94A3B8]">
 										Sin datos comparativos calculados.
 									</td>
 								</tr>
 							) : (
 								estadisticas.map((item, index) => (
-									<tr key={`estadistica-${item.id ?? "global"}-${index}`} className="border-t border-[#E2E8F0]">
-										<td className="px-4 py-3 font-semibold text-[#0F172A]">
+									<tr key={`estadistica-${item.id ?? "global"}-${index}`} className="border-t border-[#E2E8F0] dark:border-[#334155]">
+										<td className="px-4 py-3 font-semibold text-[#0F172A] dark:text-[#E2E8F0]">
 											{item.id === null ? "Global" : (limnigrafoNameById.get(item.id) ?? `ID ${item.id}`)}
 										</td>
 										<td className="px-4 py-3">{formatNumber(item.minimo, 2)}</td>

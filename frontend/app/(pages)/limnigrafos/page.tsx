@@ -1,18 +1,26 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import LimnigrafoTable from "@componentes/LimnigrafoTable";
-import type { LimnigrafoDetalleData } from "@data/limnigrafos";
-import type { VarianteEstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
+import { useRouter } from "next/navigation";
 import Boton from "@componentes/Boton";
+import {
+	BotonEstadoLimnigrafo,
+	type EstadoLimnigrafo,
+	type VarianteEstadoLimnigrafo,
+} from "@componentes/BotonEstadoLimnigrafo";
 import PaginaBase from "@componentes/base/PaginaBase";
+import DataTable from "@componentes/tabla/DataTable";
+import type { ActionConfig, ColumnConfig } from "@componentes/tabla/types";
+import FiltrosContenedor from "@componentes/filtros/FiltrosContenedor";
+import FiltroBusqueda from "@componentes/filtros/FiltroBusqueda";
+import FiltroOpciones from "@componentes/filtros/FiltroOpciones";
 import {
 	useGetLimnigrafos,
 	useGetMediciones,
 	usePostLimnigrafo,
 	usePutLimnigrafo,
 	type LimnigrafoPaginatedResponse,
-	type MedicionPaginatedResponse
+	type MedicionPaginatedResponse,
 } from "@servicios/api/django.api";
 import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
 import {
@@ -22,16 +30,7 @@ import {
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "@componentes/components/ui/dialog";
-
-const DATOS_EXTRA_PLACEHOLDER = [
-	{ label: "Dato 1", value: "N/A" },
-	{ label: "Dato 2", value: "N/A" },
-	{ label: "Dato 3", value: "N/A" },
-];
-
-const DEFAULT_ESTADO_VARIANTE: VarianteEstadoLimnigrafo = "activo";
 
 const FORM_STATE = {
 	codigo: "",
@@ -46,12 +45,53 @@ const FORM_STATE = {
 	ubicacion_id: "",
 };
 
-type LimnigrafoStorePayload = {
-	limnigrafos?: LimnigrafoDetalleData[];
+type LimnigrafoRowData = {
+	id: string;
+	nombre: string;
+	ubicacion: string;
+	bateria: string;
+	tiempoUltimoDato: string;
+	estado: EstadoLimnigrafo;
 };
 
+type EstadoFiltro = "todos" | VarianteEstadoLimnigrafo;
+
+type LimnigrafoUpsertPayload = {
+	codigo: string;
+	descripcion: string;
+	memoria: number;
+	tipo_comunicacion: string[];
+	bateria_max: number;
+	bateria_min: number;
+	tiempo_advertencia: string;
+	tiempo_peligro: string;
+	ultimo_mantenimiento?: string;
+	ubicacion_id?: number;
+};
+
+function formatServerError(data: unknown): string {
+	if (typeof data === "string") {
+		return data;
+	}
+
+	if (Array.isArray(data)) {
+		return data.map((item) => formatServerError(item)).join(", ");
+	}
+
+	if (data && typeof data === "object") {
+		return Object.entries(data as Record<string, unknown>)
+			.map(([key, value]) => `${key}: ${formatServerError(value)}`)
+			.join(", ");
+	}
+
+	return "Error desconocido";
+}
+
 export default function Home() {
+	const router = useRouter();
+	const [isOpenFiltros, setIsOpenFiltros] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
+	const [estadoFilter, setEstadoFilter] = useState<EstadoFiltro>("todos");
 	const [mostrarFormulario, setMostrarFormulario] = useState(false);
 	const [modoEdicion, setModoEdicion] = useState(false);
 	const [limnigrafoEditando, setLimnigrafoEditando] = useState<string | null>(null);
@@ -60,19 +100,22 @@ export default function Home() {
 	const [persistError, setPersistError] = useState<string | null>(null);
 	const [isPersisting, setIsPersisting] = useState(false);
 
-	// Consultar datos reales del backend con auto-refresh cada 5 minutos
-	const { data: limnigrafosData, isLoading: isLoadingLimnigrafos, refetch: refetchLimnigrafos } = useGetLimnigrafos({
+	const {
+		data: limnigrafosData,
+		isLoading: isLoadingLimnigrafos,
+		refetch: refetchLimnigrafos,
+	} = useGetLimnigrafos({
 		config: {
-			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
-		}
-	});
-	const { data: medicionesData, isLoading: isLoadingMediciones } = useGetMediciones({
-		config: {
-			refetchInterval: 300000, // 5 minutos (sincronizado con simulador)
-		}
+			refetchInterval: 300000,
+		},
 	});
 
-	// Hook para crear nuevos limnígrafos
+	const { data: medicionesData, isLoading: isLoadingMediciones } = useGetMediciones({
+		config: {
+			refetchInterval: 300000,
+		},
+	});
+
 	const postLimnigrafo = usePostLimnigrafo({
 		params: {},
 		configuracion: {
@@ -84,10 +127,9 @@ export default function Home() {
 			onError: (error: Error) => {
 				setPersistError(error.message || "Error al crear el limnígrafo");
 			},
-		}
+		},
 	});
 
-	// Hook para editar limnígrafos existentes
 	const putLimnigrafo = usePutLimnigrafo({
 		params: { id: limnigrafoEditando || "" },
 		configuracion: {
@@ -99,53 +141,87 @@ export default function Home() {
 			onError: (error: Error) => {
 				setPersistError(error.message || "Error al actualizar el limnígrafo");
 			},
-		}
+		},
 	});
 
-	// Cast explícito para TypeScript
 	const limnigrafos = limnigrafosData as LimnigrafoPaginatedResponse | undefined;
 	const mediciones = medicionesData as MedicionPaginatedResponse | undefined;
 
-	// Transformar datos del backend a formato frontend
-	const todosLimnigrafos = useMemo(() => {
-		// Manejar tanto respuesta paginada como array directo
-		const limnigrafosArray = Array.isArray(limnigrafos) 
-			? limnigrafos 
-			: limnigrafos?.results;
-			
-		const medicionesArray = mediciones?.results || [];
-		
-		if (!limnigrafosArray || limnigrafosArray.length === 0) {
+	const todosLimnigrafos = useMemo<LimnigrafoRowData[]>(() => {
+		const limnigrafosArray = Array.isArray(limnigrafos)
+			? limnigrafos
+			: (limnigrafos?.results ?? []);
+		const medicionesArray = mediciones?.results ?? [];
+
+		if (limnigrafosArray.length === 0) {
 			return [];
 		}
 
-		// Convertir array de mediciones a Map para búsqueda eficiente
-		const medicionesMap = new Map(
-			medicionesArray.map(m => [m.limnigrafo, m])
-		);
+		const medicionesMap = new Map<number, MedicionPaginatedResponse["results"][number]>();
+		medicionesArray.forEach((medicion) => {
+			const existing = medicionesMap.get(medicion.limnigrafo);
+			if (!existing || new Date(medicion.fecha_hora).getTime() > new Date(existing.fecha_hora).getTime()) {
+				medicionesMap.set(medicion.limnigrafo, medicion);
+			}
+		});
 
-		// Transformar formato backend a formato frontend
-		const transformados = transformarLimnigrafos(
-			limnigrafosArray,
-			medicionesMap
-		);
-		
-		return transformados;
+		return transformarLimnigrafos(limnigrafosArray, medicionesMap).map((item) => ({
+			id: item.id,
+			nombre: item.nombre,
+			ubicacion: item.ubicacion,
+			bateria: item.bateria,
+			tiempoUltimoDato: item.tiempoUltimoDato,
+			estado: item.estado,
+		}));
 	}, [limnigrafos, mediciones]);
 
 	const filteredData = useMemo(() => {
-		if (!searchValue) {
-			return todosLimnigrafos;
-		}
+		const normalizedSearch = searchValue.trim().toLowerCase();
 
-		const normalizedSearch = searchValue.toLowerCase();
+		return todosLimnigrafos.filter((item) => {
+			const matchesSearch = normalizedSearch.length === 0
+				|| [item.nombre, item.ubicacion].some((field) =>
+					field.toLowerCase().includes(normalizedSearch),
+				);
 
-		return todosLimnigrafos.filter((item) =>
-			[item.nombre, item.ubicacion].some((field) =>
-				field.toLowerCase().includes(normalizedSearch),
-			),
-		);
-	}, [searchValue, todosLimnigrafos]);
+			const matchesEstado = estadoFilter === "todos"
+				|| item.estado.variante === estadoFilter;
+
+			return matchesSearch && matchesEstado;
+		});
+	}, [estadoFilter, searchValue, todosLimnigrafos]);
+
+	const columns = useMemo<ColumnConfig<LimnigrafoRowData>[]>(() => [
+		{
+			id: "estado",
+			header: "Estado",
+			cell: (row) => <BotonEstadoLimnigrafo estado={row.estado} />,
+		},
+		{
+			id: "nombre",
+			header: "Limnígrafo",
+			cell: (row) => <span className="font-medium">{row.nombre}</span>,
+		},
+		{
+			id: "ubicacion",
+			header: "Ubicación de Limnígrafo",
+			accessorKey: "ubicacion",
+		},
+		{
+			id: "bateria",
+			header: "Batería",
+			accessorKey: "bateria",
+		},
+		{
+			id: "tiempoUltimoDato",
+			header: "Tiem. Último Dato",
+			accessorKey: "tiempoUltimoDato",
+		},
+	], []);
+
+	function handleViewMore(row: LimnigrafoRowData) {
+		router.push(`/limnigrafos/detalleLimnigrafo?id=${encodeURIComponent(row.id)}`);
+	}
 
 	function handleChange(field: keyof typeof FORM_STATE, value: string | string[]): void {
 		setFormValues((prev) => ({ ...prev, [field]: value }));
@@ -154,6 +230,7 @@ export default function Home() {
 	function resetForm() {
 		setFormValues(FORM_STATE);
 		setFormError(null);
+		setPersistError(null);
 		setModoEdicion(false);
 		setLimnigrafoEditando(null);
 	}
@@ -163,56 +240,112 @@ export default function Home() {
 		setMostrarFormulario(true);
 	}
 
-	function abrirFormularioEditar(limnigrafoRow: { id: string; nombre: string }) {
-		// Buscar el limnígrafo original del backend usando el ID
-		const limnigrafosArray = Array.isArray(limnigrafos) 
-			? limnigrafos 
-			: limnigrafos?.results;
-		
-		// Extraer el número del ID (ej: "lim-1" -> 1)
-		const idNumerico = parseInt(limnigrafoRow.id.replace(/\D/g, ''));
-		const limnigrafoBackend = limnigrafosArray?.find(l => l.id === idNumerico);
-		
-		if (limnigrafoBackend) {
-			setFormValues({
-				codigo: limnigrafoBackend.codigo,
-				descripcion: limnigrafoBackend.descripcion || "",
-				memoria: limnigrafoBackend.memoria.toString(),
-				tipo_comunicacion: [],
-				bateria_max: limnigrafoBackend.bateria_max.toString(),
-				bateria_min: limnigrafoBackend.bateria_min.toString(),
-				tiempo_advertencia: limnigrafoBackend.tiempo_advertencia.toString(),
-				tiempo_peligro: limnigrafoBackend.tiempo_peligro.toString(),
-				ultimo_mantenimiento: limnigrafoBackend.ultimo_mantenimiento || "",
-				ubicacion_id: limnigrafoBackend.ubicacion?.id?.toString() || "",
-			});
-			setLimnigrafoEditando(limnigrafoBackend.id.toString());
-			setModoEdicion(true);
-			setMostrarFormulario(true);
+	function abrirFormularioEditar(limnigrafoRow: LimnigrafoRowData) {
+		const limnigrafosArray = Array.isArray(limnigrafos)
+			? limnigrafos
+			: (limnigrafos?.results ?? []);
+
+		const idNumerico = Number.parseInt(limnigrafoRow.id, 10);
+		if (Number.isNaN(idNumerico)) {
+			return;
 		}
+
+		const limnigrafoBackend = limnigrafosArray.find((item) => item.id === idNumerico);
+		if (!limnigrafoBackend) {
+			return;
+		}
+
+		setFormValues({
+			codigo: limnigrafoBackend.codigo,
+			descripcion: limnigrafoBackend.descripcion || "",
+			memoria: limnigrafoBackend.memoria.toString(),
+			tipo_comunicacion: [],
+			bateria_max: limnigrafoBackend.bateria_max.toString(),
+			bateria_min: limnigrafoBackend.bateria_min.toString(),
+			tiempo_advertencia: limnigrafoBackend.tiempo_advertencia.toString(),
+			tiempo_peligro: limnigrafoBackend.tiempo_peligro.toString(),
+			ultimo_mantenimiento: limnigrafoBackend.ultimo_mantenimiento || "",
+			ubicacion_id: limnigrafoBackend.ubicacion?.id?.toString() || "",
+		});
+		setLimnigrafoEditando(limnigrafoBackend.id.toString());
+		setModoEdicion(true);
+		setMostrarFormulario(true);
 	}
+
+	const actionConfig: ActionConfig<LimnigrafoRowData> = {
+		typeAction: "fila",
+		actionColumns: (row) => (
+			<div className="flex w-full items-center justify-end gap-2 py-1 pr-3">
+				<Boton
+					type="button"
+					onClick={() => abrirFormularioEditar(row)}
+					className="
+						!mx-0
+						!h-[42px]
+						!rounded-[24px]
+						!px-[18px]
+						!bg-[#E8F4FB]
+						!text-[#0982C8]
+						dark:!bg-[#113149]
+						dark:!text-[#7DD3FC]
+						gap-2
+						border
+						border-[#0982C8]/20
+						dark:border-[#0EA5E9]/30
+						shadow-[0px_2px_6px_rgba(0,0,0,0.12)]
+						hover:!bg-[#D0E9F7]
+						dark:hover:!bg-[#16425F]
+					"
+				>
+					<span className="text-[16px] font-medium">Editar</span>
+				</Boton>
+				<Boton
+					type="button"
+					onClick={() => handleViewMore(row)}
+					className="
+						!mx-0
+						!h-[42px]
+						!rounded-[24px]
+						!px-[18px]
+						!bg-[#F3F3F3]
+						!text-[#7F7F7F]
+						dark:!bg-[#1E293B]
+						dark:!text-[#CBD5E1]
+						gap-2
+						border
+						border-[#E0E0E0]
+						dark:border-[#334155]
+						shadow-[0px_2px_6px_rgba(0,0,0,0.12)]
+						hover:!bg-[#E8E8E8]
+						dark:hover:!bg-[#334155]
+					"
+				>
+					<span className="text-[16px] font-medium">Ver más</span>
+				</Boton>
+			</div>
+		),
+	};
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		
-		// Validaciones
+
 		if (!formValues.codigo) {
 			setFormError("El código es obligatorio.");
 			return;
 		}
-		if (!formValues.memoria || parseInt(formValues.memoria) <= 0) {
+		if (!formValues.memoria || Number.parseInt(formValues.memoria, 10) <= 0) {
 			setFormError("La memoria debe ser un número positivo.");
 			return;
 		}
-		if (!formValues.bateria_max || parseFloat(formValues.bateria_max) <= 0) {
+		if (!formValues.bateria_max || Number.parseFloat(formValues.bateria_max) <= 0) {
 			setFormError("La batería máxima debe ser un número positivo.");
 			return;
 		}
-		if (!formValues.bateria_min || parseFloat(formValues.bateria_min) <= 0) {
+		if (!formValues.bateria_min || Number.parseFloat(formValues.bateria_min) <= 0) {
 			setFormError("La batería mínima debe ser un número positivo.");
 			return;
 		}
-		if (parseFloat(formValues.bateria_min) >= parseFloat(formValues.bateria_max)) {
+		if (Number.parseFloat(formValues.bateria_min) >= Number.parseFloat(formValues.bateria_max)) {
 			setFormError("La batería mínima debe ser menor que la máxima.");
 			return;
 		}
@@ -229,26 +362,23 @@ export default function Home() {
 		setPersistError(null);
 		setFormError(null);
 
-		const payload: any = {
+		const payload: LimnigrafoUpsertPayload = {
 			codigo: formValues.codigo,
 			descripcion: formValues.descripcion || "",
-			memoria: parseInt(formValues.memoria),
+			memoria: Number.parseInt(formValues.memoria, 10),
 			tipo_comunicacion: [],
-			bateria_max: parseFloat(formValues.bateria_max),
-			bateria_min: parseFloat(formValues.bateria_min),
+			bateria_max: Number.parseFloat(formValues.bateria_max),
+			bateria_min: Number.parseFloat(formValues.bateria_min),
 			tiempo_advertencia: formValues.tiempo_advertencia,
 			tiempo_peligro: formValues.tiempo_peligro,
 		};
 
-		// Agregar campos opcionales solo si tienen valor
 		if (formValues.ultimo_mantenimiento) {
 			payload.ultimo_mantenimiento = formValues.ultimo_mantenimiento;
 		}
 		if (formValues.ubicacion_id) {
-			payload.ubicacion_id = parseInt(formValues.ubicacion_id);
+			payload.ubicacion_id = Number.parseInt(formValues.ubicacion_id, 10);
 		}
-
-		console.log("Payload a enviar:", payload);
 
 		try {
 			if (modoEdicion) {
@@ -256,16 +386,18 @@ export default function Home() {
 			} else {
 				await postLimnigrafo.mutateAsync({ data: payload });
 			}
-			// onSuccess del hook se encargará de cerrar el modal y resetear el form
-		} catch (error: any) {
-			// onError del hook se encargará de mostrar el error
-			console.error("Error al crear limnígrafo:", error);
-			console.error("Respuesta del servidor:", error?.response?.data);
-			if (error?.response?.data) {
-				const errorMessages = Object.entries(error.response.data)
-					.map(([key, value]) => `${key}: ${value}`)
-					.join(', ');
-				setPersistError(`Error del servidor: ${errorMessages}`);
+		} catch (error: unknown) {
+			const errorInfo = error as {
+				message?: string;
+				response?: {
+					data?: unknown;
+				};
+			};
+
+			if (errorInfo.response?.data) {
+				setPersistError(`Error del servidor: ${formatServerError(errorInfo.response.data)}`);
+			} else {
+				setPersistError(errorInfo.message || "Error al guardar el limnígrafo.");
 			}
 		} finally {
 			setIsPersisting(false);
@@ -281,95 +413,118 @@ export default function Home() {
 
 	return (
 		<PaginaBase>
-			<div className="flex min-h-screen w-full bg-[#EEF4FB]">
-
+			<div className="flex min-h-screen w-full bg-[#EEF4FB] dark:bg-[#0B1220]">
 				<main className="flex flex-1 items-start justify-center px-6 py-10">
 					<div className="flex w-full max-w-[1568px] flex-col gap-6">
 						<header className="flex flex-col gap-1">
-							<h1 className="text-[34px] font-semibold text-[#011018]">
+							<h1 className="text-[34px] font-semibold text-[#011018] dark:text-[#E2E8F0]">
 								Limnigrafos
 							</h1>
-							<p className="text-base text-[#4D5562]">
-								Gestiona el inventario de limnigrafos, agrega nuevos equipos y
-								revisa su ubicacion y estado general.
+							<p className="text-base text-[#4D5562] dark:text-[#94A3B8]">
+								Gestiona el inventario de limnigrafos, agrega nuevos equipos y revisa su ubicacion y estado general.
 							</p>
 						</header>
-						<Dialog open={mostrarFormulario} onOpenChange={handleDialogOpenChange}>
-							<div className="flex justify-end">
-								<DialogTrigger asChild>
-									<Boton
-										type="button"
-										onClick={abrirFormularioCrear}
-										className="
-	                !mx-0
-	                !bg-[#F4F4F4]
-	                !text-[#6F6F6F]
-	                !h-[48px]
-	                !rounded-[28px]
-	                !px-8
-	                gap-3
-	                border border-[#E0E0E0]
-	                shadow-[0px_3px_12px_rgba(0,0,0,0.12)]
-	                hover:!bg-[#EAEAEA]
-	              "
-									>
-										<span className="text-[17px] font-semibold">
-											Añadir Limnígrafo
-										</span>
-									</Boton>
-								</DialogTrigger>
-							</div>
 
-							<DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto rounded-[24px] border-none bg-white shadow-[0px_4px_12px_rgba(0,0,0,0.15)]">
+						<FiltrosContenedor open={isOpenFiltros}>
+							<h4>Filtros</h4>
+							<div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+								<div className="flex-1">
+									<FiltroBusqueda
+										label="Buscar"
+										placeholder="Por código o ubicación"
+										initialSearch={searchValue}
+										onSearch={(value) => setSearchValue(value)}
+									/>
+								</div>
+								<div className="w-full lg:max-w-[240px]">
+									<FiltroOpciones
+										title="Estado"
+										options={[
+											{ label: "Todos", value: "todos" },
+											{ label: "Activo", value: "activo" },
+											{ label: "Advertencia", value: "advertencia" },
+											{ label: "Peligro", value: "peligro" },
+											{ label: "Fuera", value: "fuera" },
+										]}
+										onSelect={(value) => setEstadoFilter(value as EstadoFiltro)}
+									/>
+								</div>
+							</div>
+						</FiltrosContenedor>
+
+						<DataTable
+							data={filteredData}
+							columns={columns}
+							rowIdKey="id"
+							minWidth={1100}
+							onAdd={abrirFormularioCrear}
+							onFilter={() => setIsOpenFiltros((prev) => !prev)}
+							actionConfig={actionConfig}
+							isLoading={isLoadingLimnigrafos || isLoadingMediciones}
+							enableRowAnimation={false}
+							emptyStateContent={<span className="text-[#6B7280] dark:text-[#94A3B8]">No hay limnígrafos para mostrar.</span>}
+							styles={{
+								rootClassName: "pb-0",
+								cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)] dark:border-[#334155] dark:bg-[#1B1F25] dark:shadow-[0px_10px_20px_rgba(0,0,0,0.45)]",
+								scrollerClassName: "overflow-x-auto",
+								tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F] dark:text-[#CBD5E1]",
+								theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none dark:bg-[#111923] dark:text-[#94A3B8]",
+								headerCellClassName: "px-4 py-3",
+								tbodyClassName: "divide-y divide-[#EAEAEA] dark:divide-[#334155]",
+								rowClassName: "border-0 hover:bg-[#F9FBFF] dark:hover:bg-[#1E293B]",
+								cellClassName: "align-middle p-4",
+								emptyCellClassName: "px-4 py-8 text-center",
+							}}
+						/>
+
+						<Dialog open={mostrarFormulario} onOpenChange={handleDialogOpenChange}>
+							<DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto rounded-[24px] border border-[#E2E8F0] bg-white shadow-[0px_4px_12px_rgba(0,0,0,0.15)] dark:border-[#334155] dark:bg-[#0F172A]">
 								<DialogHeader className="text-left">
-									<DialogTitle className="text-[24px] text-[#333]">
+									<DialogTitle className="text-[24px] text-[#333] dark:text-[#E2E8F0]">
 										{modoEdicion ? "Editar Limnigrafo" : "Nuevo Limnigrafo"}
 									</DialogTitle>
-									<DialogDescription className="text-[16px] text-[#666]">
-										{modoEdicion 
+									<DialogDescription className="text-[16px] text-[#666] dark:text-[#94A3B8]">
+										{modoEdicion
 											? "Modifica los datos y presiona \"Actualizar Limnigrafo\"."
-											: "Completa los datos principales y presiona \"Crear Limnigrafo\"."
-										}
+											: "Completa los datos principales y presiona \"Crear Limnigrafo\"."}
 									</DialogDescription>
 								</DialogHeader>
+
 								{formError ? (
-									<p className="mt-1 text-[15px] text-red-500">{formError}</p>
+									<p className="mt-1 text-[15px] text-red-500 dark:text-red-400">{formError}</p>
 								) : null}
 								{persistError ? (
-									<p className="text-[15px] text-red-500">{persistError}</p>
+									<p className="text-[15px] text-red-500 dark:text-red-400">{persistError}</p>
 								) : null}
 
 								<form onSubmit={handleSubmit} className="mt-4 grid gap-4">
-									{/* Código (requerido, único) */}
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555] dark:text-[#CBD5E1]">
 										Código *
 										<input
 											type="text"
 											placeholder="Ej: LIM-001"
 											value={formValues.codigo}
 											onChange={(event) => handleChange("codigo", event.target.value)}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
+											className="rounded-xl border border-[#D3D4D5] bg-white p-2.5 text-[#0F172A] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#111827] dark:text-[#E2E8F0] dark:placeholder:text-[#94A3B8] dark:focus:border-[#38BDF8]"
 											required
 										/>
 									</label>
 
 									<div className="grid gap-4 md:grid-cols-2">
-										{/* Memoria (requerido) */}
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555] dark:text-[#CBD5E1]">
 											Memoria (MB) *
 											<input
 												type="number"
 												placeholder="Ej: 512"
 												value={formValues.memoria}
 												onChange={(event) => handleChange("memoria", event.target.value)}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												className="rounded-xl border border-[#D3D4D5] bg-white p-2.5 text-[#0F172A] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#111827] dark:text-[#E2E8F0] dark:placeholder:text-[#94A3B8] dark:focus:border-[#38BDF8]"
 												min="1"
 												required
 											/>
 										</label>
 
-										{/* Batería Máxima (requerido) */}
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555] dark:text-[#CBD5E1]">
 											Batería Máxima (V) *
 											<input
 												type="number"
@@ -377,14 +532,13 @@ export default function Home() {
 												placeholder="Ej: 12.6"
 												value={formValues.bateria_max}
 												onChange={(event) => handleChange("bateria_max", event.target.value)}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												className="rounded-xl border border-[#D3D4D5] bg-white p-2.5 text-[#0F172A] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#111827] dark:text-[#E2E8F0] dark:placeholder:text-[#94A3B8] dark:focus:border-[#38BDF8]"
 												min="0.01"
 												required
 											/>
 										</label>
 
-										{/* Batería Mínima (requerido) */}
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555] dark:text-[#CBD5E1]">
 											Batería Mínima (V) *
 											<input
 												type="number"
@@ -392,77 +546,77 @@ export default function Home() {
 												placeholder="Ej: 10.5"
 												value={formValues.bateria_min}
 												onChange={(event) => handleChange("bateria_min", event.target.value)}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												className="rounded-xl border border-[#D3D4D5] bg-white p-2.5 text-[#0F172A] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#111827] dark:text-[#E2E8F0] dark:placeholder:text-[#94A3B8] dark:focus:border-[#38BDF8]"
 												min="0.01"
 												required
 											/>
-										</label>								{/* Último Mantenimiento (opcional) */}
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										</label>
+
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555] dark:text-[#CBD5E1]">
 											Último Mantenimiento
 											<input
 												type="date"
 												value={formValues.ultimo_mantenimiento}
 												onChange={(event) => handleChange("ultimo_mantenimiento", event.target.value)}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												className="rounded-xl border border-[#D3D4D5] bg-white p-2.5 text-[#0F172A] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#111827] dark:text-[#E2E8F0] dark:placeholder:text-[#94A3B8] dark:focus:border-[#38BDF8]"
 											/>
 										</label>
 
-										{/* Ubicación ID (opcional) */}
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555] dark:text-[#CBD5E1]">
 											Ubicación (ID)
 											<input
 												type="number"
 												placeholder="ID ubicación (opcional)"
 												value={formValues.ubicacion_id}
 												onChange={(event) => handleChange("ubicacion_id", event.target.value)}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												className="rounded-xl border border-[#D3D4D5] bg-white p-2.5 text-[#0F172A] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#111827] dark:text-[#E2E8F0] dark:placeholder:text-[#94A3B8] dark:focus:border-[#38BDF8]"
 												min="1"
 											/>
 										</label>
 
-										{/* Tiempo Advertencia (requerido) */}
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555] dark:text-[#CBD5E1]">
 											Tiempo Advertencia (HH:MM:SS) *
 											<input
 												type="text"
 												placeholder="00:30:00"
 												value={formValues.tiempo_advertencia}
 												onChange={(event) => handleChange("tiempo_advertencia", event.target.value)}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												className="rounded-xl border border-[#D3D4D5] bg-white p-2.5 text-[#0F172A] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#111827] dark:text-[#E2E8F0] dark:placeholder:text-[#94A3B8] dark:focus:border-[#38BDF8]"
 												pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
 												required
 											/>
 										</label>
 
-										{/* Tiempo Peligro (requerido) */}
-										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+										<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555] dark:text-[#CBD5E1]">
 											Tiempo Peligro (HH:MM:SS) *
 											<input
 												type="text"
 												placeholder="01:00:00"
 												value={formValues.tiempo_peligro}
 												onChange={(event) => handleChange("tiempo_peligro", event.target.value)}
-												className="rounded-xl border border-[#D3D4D5] p-2.5"
+												className="rounded-xl border border-[#D3D4D5] bg-white p-2.5 text-[#0F172A] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#111827] dark:text-[#E2E8F0] dark:placeholder:text-[#94A3B8] dark:focus:border-[#38BDF8]"
 												pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
 												required
 											/>
 										</label>
-									</div>								{/* Descripción (opcional) - AL FINAL */}
-									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555]">
+									</div>
+
+									<label className="flex flex-col gap-1 text-[15px] font-medium text-[#555] dark:text-[#CBD5E1]">
 										Descripción
 										<textarea
 											value={formValues.descripcion}
 											onChange={(event) => handleChange("descripcion", event.target.value)}
 											rows={3}
-											className="rounded-xl border border-[#D3D4D5] p-2.5"
+											className="rounded-xl border border-[#D3D4D5] bg-white p-2.5 text-[#0F172A] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#111827] dark:text-[#E2E8F0] dark:placeholder:text-[#94A3B8] dark:focus:border-[#38BDF8]"
 											placeholder="Descripción del limnígrafo..."
 										/>
-									</label>									
+									</label>
+
 									<div className="mt-4 flex flex-wrap items-center justify-end gap-4">
 										<DialogClose asChild>
 											<Boton
 												type="button"
-												className="!mx-0 !bg-[#F6F6F6] !text-[#7F7F7F] !h-[44px] !px-8"
+												className="!mx-0 !h-[44px] !px-8 !bg-[#F6F6F6] !text-[#7F7F7F] dark:!bg-[#1E293B] dark:!text-[#CBD5E1] dark:border dark:border-[#334155]"
 											>
 												Cancelar
 											</Boton>
@@ -473,31 +627,14 @@ export default function Home() {
 											disabled={isPersisting}
 											className="!mx-0 !h-[44px] !px-8 disabled:opacity-60"
 										>
-											{isPersisting 
-												? (modoEdicion ? "Actualizando..." : "Guardando...") 
-												: (modoEdicion ? "Actualizar Limnigrafo" : "Crear Limnigrafo")
-											}
+											{isPersisting
+												? (modoEdicion ? "Actualizando..." : "Guardando...")
+												: (modoEdicion ? "Actualizar Limnigrafo" : "Crear Limnigrafo")}
 										</Boton>
 									</div>
 								</form>
 							</DialogContent>
 						</Dialog>
-
-						<LimnigrafoTable
-							data={filteredData}
-							searchValue={searchValue}
-							onSearchChange={setSearchValue}
-							onFilterClick={() => {
-								console.log("Filtro por aplicar");
-							}}
-							onEditClick={abrirFormularioEditar}
-							showActions
-						/>
-						{(isLoadingLimnigrafos || isLoadingMediciones) ? (
-							<p className="text-center text-sm text-[#6F6F6F]">
-								Cargando limnigrafos desde el backend...
-							</p>
-						) : null}
 					</div>
 				</main>
 			</div>

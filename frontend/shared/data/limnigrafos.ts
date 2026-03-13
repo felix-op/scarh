@@ -1,4 +1,13 @@
-import type { LimnigrafoRowData } from "@componentes/LimnigrafoTable";
+import type { EstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
+
+export type LimnigrafoRowData = {
+	id: string;
+	nombre: string;
+	ubicacion: string;
+	bateria: string;
+	tiempoUltimoDato: string;
+	estado: EstadoLimnigrafo;
+};
 
 export type LimnigrafoCoordenadas = {
 	lat: number;

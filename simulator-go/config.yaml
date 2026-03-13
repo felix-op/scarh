@@ -1,75 +1,88 @@
 backend_url: http://localhost:8000
 interval_seconds: 5
-interval_minutes_min: 2
-interval_minutes_max: 3
+interval_minutes_min: 0.05
+interval_minutes_max: 0.08
+
+# Escenario controlado:
+# - 1 fuera de servicio (se fuerza por backend, sin enviar desde simulador)
+# - 1 peligro
+# - 2 advertencia
+# - resto activos enviando datos
 limnigrafos:
-    - id: 2
-      token: 9hJBQda9.OP7NhAPkYQxIrh8qJM100igX3J50qQEn
-      altura_min: 0.5
-      altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
-      presion_min: 950
-      presion_max: 1050
-      bateria_inicial: 100
-      bateria_min: 10
-    - id: 4
-      token: Ntwxlu4O.sijHjroMvnKxJoetHJElDsJxe5NPNfkb
-      altura_min: 0.5
-      altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
-      presion_min: 950
-      presion_max: 1050
-      bateria_inicial: 100
-      bateria_min: 10
-    - id: 6
-      token: tuGauPLv.S6iOfYy4q2rRh48GlKHUSdgCn6eXlUds
-      altura_min: 0.5
-      altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
-      presion_min: 950
-      presion_max: 1050
-      bateria_inicial: 100
-      bateria_min: 10
-    - id: 1
-      token: 5WMrfCs3.zAZI9oMpnvX7wOCHiOlObbaKiFUxpLDy
-      altura_min: 0.5
-      altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
-      presion_min: 950
-      presion_max: 1050
-      bateria_inicial: 100
-      bateria_min: 10
-    - id: 3
-      token: 4ubtLvjJ.VVTLSq31XIyXpgQhuIaicfOuLhS2qAcd
-      altura_min: 0.5
-      altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
-      presion_min: 950
-      presion_max: 1050
-      bateria_inicial: 100
-      bateria_min: 10
-    - id: 5
-      token: dHXTqw8R.Si4HEDOoiATfS3mK7rkQlDAAMPIhpy6z
-      altura_min: 0.5
-      altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
-      presion_min: 950
-      presion_max: 1050
-      bateria_inicial: 100
-      bateria_min: 10
-    - id: 7
-      token: cNuRF72u.s3XKzfuxe8VqND8hdR5MwwgPzQlMTKIH
-      altura_min: 0.5
-      altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
-      presion_min: 950
-      presion_max: 1050
-      bateria_inicial: 100
-      bateria_min: 10
+  - id: 1
+    token: 5WMrfCs3.zAZI9oMpnvX7wOCHiOlObbaKiFUxpLDy
+    altura_min: 0.5
+    altura_max: 3.5
+    temperatura_min: -5
+    temperatura_max: 25
+    presion_min: 950
+    presion_max: 1050
+    bateria_min: 9.4
+    bateria_max: 9.7
+    probabilidad_falla: 0
+    duracion_falla_min: 1
+
+  - id: 2
+    token: 9hJBQda9.OP7NhAPkYQxIrh8qJM100igX3J50qQEn
+    altura_min: 0.5
+    altura_max: 3.5
+    temperatura_min: -5
+    temperatura_max: 25
+    presion_min: 950
+    presion_max: 1050
+    bateria_min: 11.0
+    bateria_max: 11.2
+    probabilidad_falla: 0
+    duracion_falla_min: 1
+
+  - id: 3
+    token: 4ubtLvjJ.VVTLSq31XIyXpgQhuIaicfOuLhS2qAcd
+    altura_min: 0.5
+    altura_max: 3.5
+    temperatura_min: -5
+    temperatura_max: 25
+    presion_min: 950
+    presion_max: 1050
+    bateria_min: 11.0
+    bateria_max: 11.2
+    probabilidad_falla: 0
+    duracion_falla_min: 1
+
+  - id: 4
+    token: Ntwxlu4O.sijHjroMvnKxJoetHJElDsJxe5NPNfkb
+    altura_min: 0.5
+    altura_max: 3.5
+    temperatura_min: -5
+    temperatura_max: 25
+    presion_min: 950
+    presion_max: 1050
+    bateria_min: 12.4
+    bateria_max: 12.6
+    probabilidad_falla: 0
+    duracion_falla_min: 1
+
+  - id: 5
+    token: dHXTqw8R.Si4HEDOoiATfS3mK7rkQlDAAMPIhpy6z
+    altura_min: 0.5
+    altura_max: 3.5
+    temperatura_min: -5
+    temperatura_max: 25
+    presion_min: 950
+    presion_max: 1050
+    bateria_min: 12.2
+    bateria_max: 12.5
+    probabilidad_falla: 0
+    duracion_falla_min: 1
+
+  - id: 6
+    token: tuGauPLv.S6iOfYy4q2rRh48GlKHUSdgCn6eXlUds
+    altura_min: 0.5
+    altura_max: 3.5
+    temperatura_min: -5
+    temperatura_max: 25
+    presion_min: 950
+    presion_max: 1050
+    bateria_min: 12.0
+    bateria_max: 12.4
+    probabilidad_falla: 0
+    duracion_falla_min: 1
