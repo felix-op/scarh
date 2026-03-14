@@ -19,25 +19,9 @@ export default function VentanaEditarUsuario({
 	open,
 	onClose,
 	usuario,
-	usuarios,
 	queriesToInvalidate,
 	handleMessage
 }: VentanaEditarUsuarioProps) {
-	const esNombreUsuarioDuplicado = (valor: string) => {
-		const valorNormalizado = valor.trim().toLowerCase();
-		return usuarios.some((usuarioExistente) => (
-			usuarioExistente.id !== usuario?.id
-			&& usuarioExistente.nombre_usuario.trim().toLowerCase() === valorNormalizado
-		));
-	};
-
-	const esLegajoDuplicado = (valor: string) => {
-		const valorNormalizado = valor.trim().toLowerCase();
-		return usuarios.some((usuarioExistente) => (
-			usuarioExistente.id !== usuario?.id
-			&& usuarioExistente.legajo.trim().toLowerCase() === valorNormalizado
-		));
-	};
 
 	const { mutate: editarUsuario, isPending } = usePutUsuario({
 		configuracion: {
@@ -76,24 +60,6 @@ export default function VentanaEditarUsuario({
 	});
 
 	const onSubmit: TEditarUsuario = (data) => {
-		if (esNombreUsuarioDuplicado(data.nombre_usuario)) {
-			handleMessage({
-				title: "Error al editar",
-				description: "El nombre de usuario ya existe",
-				variant: "error",
-			});
-			return;
-		}
-
-		if (esLegajoDuplicado(data.legajo)) {
-			handleMessage({
-				title: "Error al editar",
-				description: "El legajo ya existe",
-				variant: "error",
-			});
-			return;
-		}
-
 		editarUsuario({
 			params: { id: String(usuario?.id) },
 			data: {
@@ -144,7 +110,6 @@ export default function VentanaEditarUsuario({
 				name="nombre_usuario"
 				label="Nombre de usuario"
 				placeholder="Ingrese el nombre de usuario para acceder al sistema"
-				validate={(value) => !esNombreUsuarioDuplicado(value) || "El nombre de usuario ya existe"}
 				disabled={isPending}
 				required
 			/>
@@ -153,7 +118,6 @@ export default function VentanaEditarUsuario({
 				label="Legajo"
 				type="number"
 				placeholder="Ingrese el legajo del usuario"
-				validate={(value) => !esLegajoDuplicado(value) || "El legajo ya existe"}
 				disabled={isPending}
 				required
 			/>
