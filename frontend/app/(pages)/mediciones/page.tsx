@@ -3,12 +3,9 @@
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import PaginaBase from "@componentes/base/PaginaBase";
 import {
-	LimnigrafoPaginatedResponse,
-	LimnigrafoResponse,
 	MedicionPaginatedResponse,
 	MedicionPostRequest,
 	MedicionResponse,
-	useGetLimnigrafos,
 	useGetMediciones,
 	usePostMedicion,
 } from "@servicios/api/django.api";
@@ -29,6 +26,9 @@ import {
 	ParsedMedicionImportRow,
 	toDatetimeLocalInputValue,
 } from "./utils";
+import { LimnigrafoResponse } from "types/limnigrafos";
+import { Paginado } from "@servicios/api/types";
+import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
 
 const DEFAULT_PAGE_SIZE = 25;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 75, 100] as const;
@@ -161,7 +161,7 @@ export default function MedicionesPage() {
 		},
 	});
 
-	const limnigrafosPayload = limnigrafosData as LimnigrafoPaginatedResponse | LimnigrafoResponse[] | undefined;
+	const limnigrafosPayload = limnigrafosData as Paginado<LimnigrafoResponse> | LimnigrafoResponse[] | undefined;
 	const limnigrafos = useMemo(
 		() => (
 			Array.isArray(limnigrafosPayload)

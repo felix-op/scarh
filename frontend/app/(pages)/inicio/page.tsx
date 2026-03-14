@@ -23,12 +23,9 @@ import {
 } from "@componentes/components/ui/chart";
 import {
 	EstadisticaOutputItem,
-	useGetLimnigrafos,
 	useGetMediciones,
 	usePostEstadistica,
 	type EstadisticaAtributo,
-	type LimnigrafoResponse,
-	type LimnigrafoPaginatedResponse,
 	type MedicionResponse,
 	type MedicionPaginatedResponse,
 } from "@servicios/api/django.api";
@@ -37,6 +34,9 @@ import { useMemo, useRef, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { ComparativasFilters } from "../mediciones/secciones/types";
 import { toDatetimeLocalInputValue } from "../mediciones/utils";
+import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
+import { Paginado } from "@servicios/api/types";
+import { LimnigrafoResponse } from "types/limnigrafos";
 
 // Prioridad de estados para ordenamiento (menor = más urgente)
 const estadoPriority: Record<string, number> = {
@@ -250,7 +250,7 @@ export default function Home() {
 
 	const { mutateAsync: calcularEstadistica, isPending: isCalculandoEstadisticas } = usePostEstadistica();
 
-	const limnigrafosPayload = limnigrafosData as LimnigrafoPaginatedResponse | LimnigrafoResponse[] | undefined;
+	const limnigrafosPayload = limnigrafosData as Paginado<LimnigrafoResponse> | LimnigrafoResponse[] | undefined;
 	const limnigrafos = useMemo(
 		() => (
 			Array.isArray(limnigrafosPayload)

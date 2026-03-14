@@ -10,12 +10,13 @@ import {
 	LIMNIGRAFOS,
 } from "@data/limnigrafos";
 import {
-	useGetLimnigrafos,
 	useGetMediciones,
-	type LimnigrafoPaginatedResponse,
 	type MedicionPaginatedResponse,
 } from "@servicios/api/django.api";
 import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
+import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
+import { Paginado } from "@servicios/api/types";
+import { LimnigrafoResponse } from "types/limnigrafos";
 
 export type MapViewProps = {
 	resizeToken?: number;
@@ -69,7 +70,7 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 	});
 
 	const limnigrafosResponse =
-		limnigrafosData as LimnigrafoPaginatedResponse | undefined;
+		limnigrafosData as Paginado<LimnigrafoResponse> | undefined;
 	const medicionesResponse =
 		medicionesData as MedicionPaginatedResponse | undefined;
 

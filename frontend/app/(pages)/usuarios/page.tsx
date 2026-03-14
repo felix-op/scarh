@@ -5,20 +5,19 @@ import { useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import DataTable from "@componentes/tabla/DataTable";
 import { ActionConfig, ColumnConfig } from "@componentes/tabla/types";
-import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
 import ActionMenu from "@componentes/tabla/ActionMenu";
 import VentanaAgregrarUsuario from "./componentes/VentanaAgregarUsuario";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import { UsuarioResponse } from "types/usuarios";
 import { useGetUsuarios } from "@servicios/api";
 import BotonIconoEditar from "@componentes/botones/BotonIconoEditar";
-import VentanaEditarUsuario from "./componentes/VentanaEditarUsuario";
 import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
-import VentanaEliminarUsuario from "./componentes/VentanaEliminarUsuario";
 import usePaginadoBackend from "@hooks/usePaginadoBackend";
 import FiltrosContenedor from "@componentes/filtros/FiltrosContenedor";
 import FiltroBusqueda from "@componentes/filtros/FiltroBusqueda";
 import FiltroOpciones from "@componentes/filtros/FiltroOpciones";
+import { opcionesEstado } from "./constantes";
+import ChipEstadoUsuario from "@componentes/chips/ChipEstadoUsuario";
 
 const queriesToInvalidate = ["useGetUsuarios"];
 
@@ -33,7 +32,7 @@ export default function UsersAdminPage() {
 	const [lengthPages, setLengthPages] = useState(5);
 	const [isOpenFiltros, setIsOpenFiltros] = useState(false);
 	const [search, setSearch] = useState("");
-	const [estado, setEstado] = useState("true");
+	const [estado, setEstado] = useState("");
 	
 	const { data: usuarios, isLoading, isRefetching } = useGetUsuarios({
 		params: {
@@ -46,35 +45,12 @@ export default function UsersAdminPage() {
 		}
 	});
 
-	const [usuarioEditar, setUsuarioEditar] = useState<UsuarioResponse | null>(null);
 	const [message, setMesage] = useState(defaultMessage);
 
 	// --- Modal añadir ---
 	const [isAddOpen, setIsAddOpen] = useState(false);
 	const handleOpenAdd = () => setIsAddOpen(true);
 	const handleCancelAdd = () => setIsAddOpen(false);
-
-	// --- Modal editar ---
-	const [isEditOpen, setIsEditOpen] = useState(false);
-	const handleOpenEdit = (row: UsuarioResponse) => {
-		setUsuarioEditar(row);
-		setIsEditOpen(true);
-	}
-	const handleCancelEdit = () => {
-		setUsuarioEditar(null);
-		setIsEditOpen(false);
-	}
-
-	// --- Modal eliminar ---
-	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-	const handleOpenDelete = (row: UsuarioResponse) => {
-		setUsuarioEditar(row);
-		setIsDeleteOpen(true);
-	}
-	const handleCloseDelete = () => {
-		setUsuarioEditar(null);
-		setIsDeleteOpen(false);
-	}
 
 	// --- Modal informar ---
 	const [isOpenInfo, setIsOpenInfo] = useState(false);
@@ -83,14 +59,6 @@ export default function UsersAdminPage() {
 		setIsOpenInfo(true);
 	};
 	const handleCloseInfo = () => setIsOpenInfo(false);
-
-	const renderEstadoPill = (variant: EstadoVariant, label: string) => {
-		return (
-			<div className="p-2">
-				<EstadoChip variant={variant} label={label} />
-			</div>
-		);
-	};
 
 	const handleViewUser = (usuario: UsuarioResponse) => {
 		router.push(`/usuarios/${usuario.id}`);
@@ -101,7 +69,7 @@ export default function UsersAdminPage() {
 		{
 			id: "estado",
 			header: "Estado",
-			cell: (row) => renderEstadoPill(row.estado ? "activo" : "inactivo", row.estado ? "Activo" : "Inactivo"),
+			cell: (row) => <div className="px-4"><ChipEstadoUsuario estado={row.estado ? "activo" : "inactivo"} /></div>,
 		},
 		{
 			id: "nombre",
@@ -175,7 +143,7 @@ export default function UsersAdminPage() {
 						<div className="flex-1">
 							<FiltroOpciones
 								title="Estado"
-								options={[{ label: "Activo", value: "true"}, {label: "Inactivo", value: "false"}]}
+								options={opcionesEstado}
 								onSelect={(value) => {
 									setPage(1);
 									setEstado(value);
@@ -204,21 +172,6 @@ export default function UsersAdminPage() {
 				onClose={handleCancelAdd}
 				usuarios={[]}
 				handleMessage={handleOpenInfo}
-				queriesToInvalidate={queriesToInvalidate}
-			/>
-			<VentanaEditarUsuario
-				open={isEditOpen}
-				onClose={handleCancelEdit}
-				usuarios={[]}
-				handleMessage={handleOpenInfo}
-				usuario={usuarioEditar}
-				queriesToInvalidate={queriesToInvalidate}
-			/>
-			<VentanaEliminarUsuario
-				open={isDeleteOpen}
-				onClose={handleCloseDelete}
-				handleMessage={handleOpenInfo}
-				usuario={usuarioEditar}
 				queriesToInvalidate={queriesToInvalidate}
 			/>
 			<VentanaAceptar

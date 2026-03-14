@@ -7,6 +7,7 @@ const baseStyles = {
 	exito: "bg-exito-claro text-exito",
 	error: "bg-error-claro text-error",
 	default: "bg-default-claro text-default",
+	disabeld: "bg-default-claro text-[#999]",
 	principal: "bg-principal text-white",
 };
 
@@ -32,10 +33,8 @@ const variantConfig = {
 
 const baseButtonClass = `
 	relative overflow-hidden flex flex-row items-center justify-center gap-2 shrink-0
-	text-lg rounded-full py-2 px-4 shadow-md border hover:brightness-95
-	transition-all duration-100 select-none 
-	shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]
-	active:brightness-105 active:scale-95 
+	text-lg rounded-full py-2 px-4 shadow-md border
+	select-none shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] 
 `;
 
 const shineEffectClass = `
@@ -76,7 +75,13 @@ export default function BotonVariante({
 
 	return (
 		<button
-			className={`${baseButtonClass} ${disabled ? "cursor-not-allowed" : "cursor-pointer"} ${config.style} ${config.disableShine ? '' : shineEffectClass} ${className}`}
+			className={`
+				${baseButtonClass}
+				${disabled ? "cursor-not-allowed opacity-70 dark:opacity-50" : "cursor-pointer hover:brightness-95 active:brightness-105 active:scale-95 transition-all duration-100"}
+				${config.style}
+				${disabled || config.disableShine ? '' : shineEffectClass}
+				${className}
+			`}
 			onClick={onClick}
 			disabled={disabled}
 			type={type}
