@@ -34,8 +34,6 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
     def _refrescar_estados(self, limnigrafos):
         actualizados = []
         for limnigrafo in limnigrafos:
-            if limnigrafo.estado == "fuera_de_servicio":
-                continue
             nuevo_estado = calcular_estado_limnigrafo(limnigrafo)
             if nuevo_estado != limnigrafo.estado:
                 limnigrafo.estado = nuevo_estado
@@ -59,11 +57,10 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.estado != "fuera_de_servicio":
-            nuevo_estado = calcular_estado_limnigrafo(instance)
-            if nuevo_estado != instance.estado:
-                instance.estado = nuevo_estado
-                instance.save(update_fields=["estado"])
+        nuevo_estado = calcular_estado_limnigrafo(instance)
+        if nuevo_estado != instance.estado:
+            instance.estado = nuevo_estado
+            instance.save(update_fields=["estado"])
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 

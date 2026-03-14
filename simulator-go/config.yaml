@@ -1,13 +1,12 @@
 backend_url: http://localhost:8000
 interval_seconds: 5
-interval_minutes_min: 0.05
-interval_minutes_max: 0.08
+interval_minutes_min: 0.08
+interval_minutes_max: 0.15
 
-# Escenario controlado:
-# - 1 fuera de servicio (se fuerza por backend, sin enviar desde simulador)
-# - 1 peligro
-# - 2 advertencia
-# - resto activos enviando datos
+# Escenario dinámico y más real:
+# - Todos arrancan enviando datos (activos)
+# - Con el tiempo, algunos pueden entrar en cortes aleatorios
+# - Al recuperarse, vuelven a enviar mediciones
 limnigrafos:
   - id: 1
     token: 5WMrfCs3.zAZI9oMpnvX7wOCHiOlObbaKiFUxpLDy
@@ -17,10 +16,11 @@ limnigrafos:
     temperatura_max: 25
     presion_min: 950
     presion_max: 1050
-    bateria_min: 9.4
-    bateria_max: 9.7
-    probabilidad_falla: 0
-    duracion_falla_min: 1
+    bateria_min: 11.9
+    bateria_max: 12.9
+    probabilidad_falla: 0.0035
+    duracion_falla_min: 20
+    duracion_falla_max: 90
 
   - id: 2
     token: 9hJBQda9.OP7NhAPkYQxIrh8qJM100igX3J50qQEn
@@ -30,10 +30,11 @@ limnigrafos:
     temperatura_max: 25
     presion_min: 950
     presion_max: 1050
-    bateria_min: 11.0
-    bateria_max: 11.2
-    probabilidad_falla: 0
-    duracion_falla_min: 1
+    bateria_min: 11.8
+    bateria_max: 12.8
+    probabilidad_falla: 0.0028
+    duracion_falla_min: 15
+    duracion_falla_max: 60
 
   - id: 3
     token: 4ubtLvjJ.VVTLSq31XIyXpgQhuIaicfOuLhS2qAcd
@@ -43,10 +44,11 @@ limnigrafos:
     temperatura_max: 25
     presion_min: 950
     presion_max: 1050
-    bateria_min: 11.0
-    bateria_max: 11.2
-    probabilidad_falla: 0
-    duracion_falla_min: 1
+    bateria_min: 12.0
+    bateria_max: 13.0
+    probabilidad_falla: 0.0022
+    duracion_falla_min: 30
+    duracion_falla_max: 160
 
   - id: 4
     token: Ntwxlu4O.sijHjroMvnKxJoetHJElDsJxe5NPNfkb
@@ -56,10 +58,11 @@ limnigrafos:
     temperatura_max: 25
     presion_min: 950
     presion_max: 1050
-    bateria_min: 12.4
-    bateria_max: 12.6
-    probabilidad_falla: 0
-    duracion_falla_min: 1
+    bateria_min: 11.9
+    bateria_max: 12.9
+    probabilidad_falla: 0.0030
+    duracion_falla_min: 20
+    duracion_falla_max: 80
 
   - id: 5
     token: dHXTqw8R.Si4HEDOoiATfS3mK7rkQlDAAMPIhpy6z
@@ -69,10 +72,11 @@ limnigrafos:
     temperatura_max: 25
     presion_min: 950
     presion_max: 1050
-    bateria_min: 12.2
-    bateria_max: 12.5
-    probabilidad_falla: 0
-    duracion_falla_min: 1
+    bateria_min: 12.0
+    bateria_max: 13.0
+    probabilidad_falla: 0.0020
+    duracion_falla_min: 40
+    duracion_falla_max: 220
 
   - id: 6
     token: tuGauPLv.S6iOfYy4q2rRh48GlKHUSdgCn6eXlUds
@@ -82,7 +86,72 @@ limnigrafos:
     temperatura_max: 25
     presion_min: 950
     presion_max: 1050
+    bateria_min: 11.9
+    bateria_max: 12.9
+    probabilidad_falla: 0.0026
+    duracion_falla_min: 25
+    duracion_falla_max: 140
+
+  - id: 7
+    token: cW4Z6kSa.1gLx3NcvZDGFaO2cvwJfxcHs5Hbva6Jw
+    altura_min: 0.5
+    altura_max: 3.8
+    temperatura_min: -6
+    temperatura_max: 24
+    presion_min: 945
+    presion_max: 1048
     bateria_min: 12.0
-    bateria_max: 12.4
-    probabilidad_falla: 0
-    duracion_falla_min: 1
+    bateria_max: 13.0
+    interval_minutes_min: 0.30
+    interval_minutes_max: 0.55
+    probabilidad_falla: 0.0045
+    duracion_falla_min: 30
+    duracion_falla_max: 180
+
+  - id: 8
+    token: fg90BoVi.sE1qP4xyI0NQPGnq8u2j7HISjtMyLbGU
+    altura_min: 0.4
+    altura_max: 3.6
+    temperatura_min: -8
+    temperatura_max: 23
+    presion_min: 944
+    presion_max: 1046
+    bateria_min: 11.9
+    bateria_max: 13.0
+    interval_minutes_min: 0.35
+    interval_minutes_max: 0.60
+    probabilidad_falla: 0.0038
+    duracion_falla_min: 20
+    duracion_falla_max: 120
+
+  - id: 9
+    token: oXnCBOsl.b7UkYXoVHllAWjEVLbOt2OSEEEjYuNCO
+    altura_min: 0.6
+    altura_max: 4.0
+    temperatura_min: -5
+    temperatura_max: 22
+    presion_min: 947
+    presion_max: 1051
+    bateria_min: 12.1
+    bateria_max: 13.0
+    interval_minutes_min: 0.40
+    interval_minutes_max: 0.75
+    probabilidad_falla: 0.0050
+    duracion_falla_min: 45
+    duracion_falla_max: 240
+
+  - id: 10
+    token: 9wEcv3pA.OLbJmtenz44cMQIYy0BYJn1RzVzwaLou
+    altura_min: 0.5
+    altura_max: 3.7
+    temperatura_min: -7
+    temperatura_max: 24
+    presion_min: 946
+    presion_max: 1049
+    bateria_min: 12.0
+    bateria_max: 13.0
+    interval_minutes_min: 0.28
+    interval_minutes_max: 0.50
+    probabilidad_falla: 0.0042
+    duracion_falla_min: 25
+    duracion_falla_max: 150

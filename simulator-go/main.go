@@ -78,12 +78,30 @@ func runLimnigrafo(wg *sync.WaitGroup, cfg LimnigrafoConfig, globalCfg *Config) 
 	state := LimnigrafoState{}
 	enFalla := false
 	tiempoFinFalla := time.Now()
+	intervaloMin, intervaloMax, usaIntervaloPropio := resolverIntervalos(cfg, globalCfg)
+	origenIntervalo := "global+variacion"
+	if usaIntervaloPropio {
+		origenIntervalo = "por_limnigrafo"
+	}
+	duracionFallaInfo := fmt.Sprintf("%dmin", cfg.DuracionFallaMin)
+	if cfg.DuracionFallaMax > cfg.DuracionFallaMin {
+		duracionFallaInfo = fmt.Sprintf("%d-%dmin", cfg.DuracionFallaMin, cfg.DuracionFallaMax)
+	}
 
-	Info(fmt.Sprintf("Limnígrafo #%d iniciado (prob. falla: %.1f%%, duración: %dmin)",
-		cfg.ID, cfg.ProbabilidadFalla*100, cfg.DuracionFallaMin))
+	Info(fmt.Sprintf(
+		"Limnígrafo #%d iniciado (intervalo[%s]: %.2f-%.2f min, prob. falla: %.3f%%, duración: %s)",
+		cfg.ID, origenIntervalo, intervaloMin, intervaloMax, cfg.ProbabilidadFalla*100, duracionFallaInfo,
+	))
+
+	// Desfase inicial para evitar que todos reporten al mismo tiempo.
+	desfaseInicial := randomInterval(0, intervaloMax)
+	if desfaseInicial > 0 {
+		Info(fmt.Sprintf("Limnígrafo #%d - Desfase inicial: %s", cfg.ID, desfaseInicial.Round(time.Second)))
+		time.Sleep(desfaseInicial)
+	}
 
 	for {
-		wait := randomInterval(globalCfg.IntervalMinMinutes, globalCfg.IntervalMaxMinutes)
+		wait := randomInterval(intervaloMin, intervaloMax)
 		time.Sleep(wait)
 
 		// Verificar si está en periodo de falla
@@ -101,9 +119,10 @@ func runLimnigrafo(wg *sync.WaitGroup, cfg LimnigrafoConfig, globalCfg *Config) 
 		// Probabilidad de entrar en falla
 		if !enFalla && rand.Float64() < cfg.ProbabilidadFalla {
 			enFalla = true
-			duracion := time.Duration(cfg.DuracionFallaMin) * time.Minute
+			duracionMinutos := randomInt(cfg.DuracionFallaMin, cfg.DuracionFallaMax)
+			duracion := time.Duration(duracionMinutos) * time.Minute
 			tiempoFinFalla = time.Now().Add(duracion)
-			Warning(fmt.Sprintf("Limnígrafo #%d - INICIANDO FALLA por %d minutos", cfg.ID, cfg.DuracionFallaMin))
+			Warning(fmt.Sprintf("Limnígrafo #%d - INICIANDO FALLA por %d minutos", cfg.ID, duracionMinutos))
 			continue
 		}
 
@@ -159,6 +178,35 @@ func randomInterval(minMinutes, maxMinutes float64) time.Duration {
 
 	randomMinutes := minMinutes + rand.Float64()*(maxMinutes-minMinutes)
 	return time.Duration(randomMinutes * float64(time.Minute))
+}
+
+func randomInt(min, max int) int {
+	if max <= min {
+		return min
+	}
+	return min + rand.Intn(max-min+1)
+}
+
+func resolverIntervalos(cfg LimnigrafoConfig, globalCfg *Config) (float64, float64, bool) {
+	if cfg.IntervalMinMinutes > 0 || cfg.IntervalMaxMinutes > 0 {
+		return cfg.IntervalMinMinutes, cfg.IntervalMaxMinutes, true
+	}
+
+	// Si usa intervalo global, aplicar una variación por limnígrafo para desincronizar.
+	variacion := 0.8 + rand.Float64()*0.5 // [0.8, 1.3)
+	min := globalCfg.IntervalMinMinutes * variacion
+	max := globalCfg.IntervalMaxMinutes * variacion
+
+	if min <= 0 {
+		min = globalCfg.IntervalMinMinutes
+	}
+	if max <= 0 {
+		max = globalCfg.IntervalMaxMinutes
+	}
+	if min > max {
+		min, max = max, min
+	}
+	return min, max, false
 }
 
 // previewToken muestra una vista previa del token (primeros 3 y últimos 3 caracteres)

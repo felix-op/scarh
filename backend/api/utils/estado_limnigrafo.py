@@ -8,12 +8,10 @@ def calcular_estado_limnigrafo(limnigrafo, referencia=None):
     Determina el estado operativo del limnígrafo.
 
     Reglas:
+    - fuera_de_servicio: tiempo sin conexión mayor a (tiempo_peligro * 3)
     - peligro: batería crítica o tiempo sin conexión mayor a tiempo_peligro
     - advertencia: batería baja o tiempo sin conexión mayor a tiempo_advertencia
     - normal: caso contrario
-
-    El estado `fuera_de_servicio` se conserva para asignaciones explícitas
-    fuera de este cálculo automático.
     """
     referencia = referencia or timezone.now()
 
@@ -29,6 +27,7 @@ def calcular_estado_limnigrafo(limnigrafo, referencia=None):
         elif porcentaje_bateria <= porcentaje_min + 10:
             bateria_baja = True
 
+    tiempo_fuera_servicio_excedido = False
     tiempo_peligro_excedido = False
     tiempo_advertencia_excedido = False
 
@@ -48,12 +47,17 @@ def calcular_estado_limnigrafo(limnigrafo, referencia=None):
             minutes=limnigrafo.tiempo_peligro.minute,
             seconds=limnigrafo.tiempo_peligro.second,
         )
+        fuera_servicio_delta = peligro_delta * 3
 
-        if tiempo_transcurrido > peligro_delta:
+        if tiempo_transcurrido > fuera_servicio_delta:
+            tiempo_fuera_servicio_excedido = True
+        elif tiempo_transcurrido > peligro_delta:
             tiempo_peligro_excedido = True
         elif tiempo_transcurrido > advertencia_delta:
             tiempo_advertencia_excedido = True
 
+    if tiempo_fuera_servicio_excedido:
+        return "fuera_de_servicio"
     if bateria_critica or tiempo_peligro_excedido:
         return "peligro"
     if bateria_baja or tiempo_advertencia_excedido:

@@ -67,16 +67,21 @@ type ConfigSetup struct {
 }
 
 type LimnigrafoConfigSetup struct {
-	ID             int     `yaml:"id"`
-	Token          string  `yaml:"token"`
-	AlturaMin      float64 `yaml:"altura_min"`
-	AlturaMax      float64 `yaml:"altura_max"`
-	TemperaturaMin float64 `yaml:"temperatura_min"`
-	TemperaturaMax float64 `yaml:"temperatura_max"`
-	PresionMin     float64 `yaml:"presion_min"`
-	PresionMax     float64 `yaml:"presion_max"`
-	BateriaMax     float64 `yaml:"bateria_max"`
-	BateriaMin     float64 `yaml:"bateria_min"`
+	ID                 int     `yaml:"id"`
+	Token              string  `yaml:"token"`
+	AlturaMin          float64 `yaml:"altura_min"`
+	AlturaMax          float64 `yaml:"altura_max"`
+	TemperaturaMin     float64 `yaml:"temperatura_min"`
+	TemperaturaMax     float64 `yaml:"temperatura_max"`
+	PresionMin         float64 `yaml:"presion_min"`
+	PresionMax         float64 `yaml:"presion_max"`
+	BateriaMax         float64 `yaml:"bateria_max"`
+	BateriaMin         float64 `yaml:"bateria_min"`
+	IntervalMinMinutes float64 `yaml:"interval_minutes_min,omitempty"`
+	IntervalMaxMinutes float64 `yaml:"interval_minutes_max,omitempty"`
+	ProbabilidadFalla  float64 `yaml:"probabilidad_falla"`
+	DuracionFallaMin   int     `yaml:"duracion_falla_min"`
+	DuracionFallaMax   int     `yaml:"duracion_falla_max"`
 }
 
 type LoginRequest struct {
@@ -192,17 +197,23 @@ func main() {
 			continue
 		}
 
+		probabilidadFalla, duracionFallaMin, duracionFallaMax, intervaloMin, intervaloMax := defaultFailureProfile(lmg.ID)
 		configLmg := LimnigrafoConfigSetup{
-			ID:             lmg.ID,
-			Token:          keyResponse.SecretKey,
-			AlturaMin:      getOrDefault(lmg.AlturaMin, 0.5),
-			AlturaMax:      getOrDefault(lmg.AlturaMax, 3.5),
-			TemperaturaMin: getOrDefault(lmg.TemperaturaMin, -5),
-			TemperaturaMax: getOrDefault(lmg.TemperaturaMax, 25),
-			PresionMin:     getOrDefault(lmg.PresionMin, 950),
-			PresionMax:     getOrDefault(lmg.PresionMax, 1050),
-			BateriaMax:     getOrDefault(lmg.BateriaMax, 100),
-			BateriaMin:     getOrDefault(lmg.BateriaMin, 10),
+			ID:                 lmg.ID,
+			Token:              keyResponse.SecretKey,
+			AlturaMin:          getOrDefault(lmg.AlturaMin, 0.5),
+			AlturaMax:          getOrDefault(lmg.AlturaMax, 3.5),
+			TemperaturaMin:     getOrDefault(lmg.TemperaturaMin, -5),
+			TemperaturaMax:     getOrDefault(lmg.TemperaturaMax, 25),
+			PresionMin:         getOrDefault(lmg.PresionMin, 950),
+			PresionMax:         getOrDefault(lmg.PresionMax, 1050),
+			BateriaMax:         getOrDefault(lmg.BateriaMax, 100),
+			BateriaMin:         getOrDefault(lmg.BateriaMin, 10),
+			IntervalMinMinutes: intervaloMin,
+			IntervalMaxMinutes: intervaloMax,
+			ProbabilidadFalla:  probabilidadFalla,
+			DuracionFallaMin:   duracionFallaMin,
+			DuracionFallaMax:   duracionFallaMax,
 		}
 
 		configLimnigrafos = append(configLimnigrafos, configLmg)
@@ -345,4 +356,25 @@ func getOrDefault(value, defaultValue float64) float64 {
 		return defaultValue
 	}
 	return value
+}
+
+func defaultFailureProfile(limnigrafoID int) (
+	probabilidad float64,
+	duracionMin int,
+	duracionMax int,
+	intervaloMin float64,
+	intervaloMax float64,
+) {
+	// Perfil base para que los equipos estén normalmente activos,
+	// pero con cortes aleatorios de distinta severidad.
+	switch limnigrafoID % 4 {
+	case 1:
+		return 0.012, 15, 60, 0.0, 0.0
+	case 2:
+		return 0.006, 8, 25, 0.0, 0.0
+	case 3:
+		return 0.003, 20, 180, 0.35, 0.60
+	default:
+		return 0.008, 10, 30, 0.30, 0.50
+	}
 }
