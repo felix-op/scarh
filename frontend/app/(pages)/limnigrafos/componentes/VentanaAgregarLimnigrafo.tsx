@@ -1,7 +1,7 @@
 import CampoInput from "@componentes/formularios/CampoInput";
 import VentanaFormulario from "@componentes/ventanas/VentanaFormulario";
 import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
-import { defaultFormCrearLimnigrafo, opcionesEstado } from "../constantes";
+import { defaultFormCrearLimnigrafo, opcionesTipoComunicacion } from "../constantes";
 import type { TCrearLimnigrafo } from "../types";
 import CampoMultiCheckbox from "@componentes/formularios/CampoMultipleCheckBox";
 import { usePostLimnigrafo } from "@servicios/api/limnigrafos";
@@ -80,7 +80,7 @@ export default function VentanaAgregrarLimnigrafo({
 			/>
 			<CampoMultiCheckbox
 				name="tipo_de_comunicacion"
-				options={opcionesEstado}
+				options={opcionesTipoComunicacion}
 				className="md:grid-cols-2"
 				label="Tipo de comunicación"
 			/>

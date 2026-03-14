@@ -2,10 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-	BotonEstadoLimnigrafo,
-	type VarianteEstadoLimnigrafo,
-} from "@componentes/BotonEstadoLimnigrafo";
 import PaginaBase from "@componentes/base/PaginaBase";
 import DataTable from "@componentes/tabla/DataTable";
 import type { ActionConfig, ColumnConfig } from "@componentes/tabla/types";
@@ -15,14 +11,16 @@ import FiltroOpciones from "@componentes/filtros/FiltroOpciones";
 import ActionMenu from "@componentes/tabla/ActionMenu";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import BotonIconoEditar from "@componentes/botones/BotonIconoEditar";
-import { LimnigrafoResponse } from "types/limnigrafos";
+import { EstadoLimnigrafo, LimnigrafoResponse } from "types/limnigrafos";
 import usePaginadoBackend from "@hooks/usePaginadoBackend";
 import VentanaAgregrarLimnigrafo from "./componentes/VentanaAgregarLimnigrafo";
 import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
-import { defaultMessage } from "./constantes";
+import { defaultMessage, opcionesEstado } from "./constantes";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
+import ChipEstadoLimnigrafo from "@componentes/chips/ChipEstadoLimnigrafo";
+import FiltroFecha from "@componentes/filtros/FiltroFecha";
 
-type EstadoFiltro = "todos" | VarianteEstadoLimnigrafo;
+type EstadoFiltro = "" | EstadoLimnigrafo;
 
 const queriesToInvalidate = ["useGetLimnigrafos"];
 
@@ -32,7 +30,7 @@ export default function Home() {
 	const [page, setPage] = useState(1);
 	const [lengthPages, setLengthPages] = useState(5);
 	const [search, setSearch] = useState("");
-	const [estado, setEstadoFilter] = useState<EstadoFiltro>("todos");
+	const [estado, setEstadoFilter] = useState<EstadoFiltro>("");
 	const [message, setMessage] = useState(defaultMessage);
 	
 	// --- Modal añadir ---
@@ -69,13 +67,12 @@ export default function Home() {
 		lengthPages,
 		setLengthPages,
 	});
-	
 
 	const columns: ColumnConfig<LimnigrafoResponse>[] = [
 		{
 			id: "estado",
 			header: "Estado",
-			cell: (row) => <BotonEstadoLimnigrafo estado={row.estado} />,
+			cell: (row) => <div className="px-2"><ChipEstadoLimnigrafo estado={row.estado} /></div>,
 		},
 		{
 			id: "codigo",
@@ -84,15 +81,27 @@ export default function Home() {
 		},
 		{
 			id: "ubicacion",
-			header: "Ubicación de Limnígrafo",
+			header: "Ubicación",
+			cell: (row) => {
+				const ubicacion = row.ubicacion;
+				return (
+					<p className="p-4">{ubicacion ? ubicacion.nombre : "No asignada"}</p>
+				);
+			},
 		},
 		{
 			id: "bateria",
 			header: "Batería",
+			cell: (row) => (
+				<p className="p-4">{row.bateria || "No disponible"}</p>
+			),
 		},
 		{
 			id: "ultima_conexion",
 			header: "Tiem. Último Dato",
+			cell: (row) => (
+				<p className="p-4">{row.ultima_conexion || "No disponible"}</p>
+			),
 		},
 	];
 
@@ -123,33 +132,36 @@ export default function Home() {
 
 	return (
 		<PaginaBase>
-			<div className="flex flex-col gap-2">
+			<div className="flex flex-col gap-4">
 				<h1>Limnigrafos</h1>
 				<p>
 					Gestiona el inventario de limnigrafos, agrega nuevos equipos y revisa su ubicacion y estado general.
 				</p>
 				<FiltrosContenedor open={isOpenFiltros}>
 					<h4>Filtros</h4>
-					<div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-						<div className="flex-1">
-							<FiltroBusqueda
-								label="Buscar"
-								placeholder="Por código o ubicación"
-								initialSearch={search}
-								onSearch={(value) => setSearch(value)}
-							/>
+					<div className="flex flex-col gap-4">
+						<div className="flex flex-col md:flex-row gap-4">
+							<div className="flex-1">
+								<FiltroBusqueda
+									label="Buscar"
+									placeholder="Por código o ubicación"
+									initialSearch={search}
+									onSearch={(value) => setSearch(value)}
+								/>
+							</div>
+							<div className="w-full md:max-w-[240px]">
+								<FiltroOpciones
+									title="Estado"
+									options={opcionesEstado}
+									onSelect={(value) => setEstadoFilter(value as EstadoFiltro)}
+								/>
+							</div>
 						</div>
-						<div className="w-full lg:max-w-[240px]">
-							<FiltroOpciones
-								title="Estado"
-								options={[
-									{ label: "Todos", value: "todos" },
-									{ label: "Activo", value: "activo" },
-									{ label: "Advertencia", value: "advertencia" },
-									{ label: "Peligro", value: "peligro" },
-									{ label: "Fuera", value: "fuera" },
-								]}
-								onSelect={(value) => setEstadoFilter(value as EstadoFiltro)}
+						<div>
+							<FiltroFecha
+								title="Tiempo desde el último dato"
+								onChangeInicio={() => {}}
+								onChangeFin={() => {}}
 							/>
 						</div>
 					</div>

@@ -12,7 +12,7 @@ export const defaultMessage: VentanaAceptarOptions = {
 	variant: "info",
 };
 
-export const opcionesEstado = [
+export const opcionesTipoComunicacion = [
 	{ label: "Internet 2G", value: "internet-https-2G" },
 	{ label: "Internet 3G", value: "internet-https-3G" },
 	{ label: "Internet 4G", value: "internet-https-4G" },
@@ -20,4 +20,12 @@ export const opcionesEstado = [
 	{ label: "USB", value: "fisico-usb" },
 	{ label: "Mensajes SMS", value: "mensajes-sms" },
 	{ label: "Correos SMTP", value: "correos-smtp" },
+];
+
+export const opcionesEstado = [
+	{ label: "Todos", value: "" },
+	{ label: "Normal", value: "normal" },
+	{ label: "Advertencia", value: "advertencia" },
+	{ label: "Peligro", value: "peligro" },
+	{ label: "Fuera", value: "fuera" },
 ];

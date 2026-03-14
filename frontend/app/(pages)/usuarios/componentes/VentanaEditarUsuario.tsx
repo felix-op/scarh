@@ -104,7 +104,6 @@ export default function VentanaEditarUsuario({
 				label="Apellido"
 				placeholder="Ingrese el o los apellidos del usuario"
 				disabled={isPending}
-				required
 			/>
 			<CampoInput
 				name="nombre_usuario"
@@ -119,7 +118,6 @@ export default function VentanaEditarUsuario({
 				type="number"
 				placeholder="Ingrese el legajo del usuario"
 				disabled={isPending}
-				required
 			/>
 			<CampoInput
 				name="email"

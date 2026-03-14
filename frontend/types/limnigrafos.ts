@@ -6,7 +6,7 @@ export type Ubicacion = {
 }
 
 export type EstadoLimnigrafo =
-  | "activo"
+  | "normal"
   | "prueba"
   | "fuera"
   | "peligro"

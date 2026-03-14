@@ -13,7 +13,7 @@ export default function FiltroFecha({ title, onChangeInicio, onChangeFin }: Filt
 	return (
 		<div className="flex flex-col gap-2 justify-start w-full">
 			<Label name={`filtro-fecha-${title}`} text={title} />
-			<div className="flex items-center gap-2">
+			<div className="flex flex-col sm:flex-row items-center gap-2">
 				<Label name={nombreDesde} text="Desde:" />
 				<input
 					type='date'

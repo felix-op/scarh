@@ -25,3 +25,9 @@ export const defaultMessage: VentanaAceptarOptions = {
 	description: "",
 	variant: "info",
 };
+
+export const opcionesEstado = [
+	{ label: "Todos", value: "" },
+	{ label: "Activo", value: "true" },
+	{ label: "Inactivo", value: "false" },
+]
