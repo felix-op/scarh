@@ -234,12 +234,12 @@ export default function Home() {
 		const params: {
 			limit: string;
 			page: string;
-			desde?: string;
-			hasta?: string;
+			fecha_desde?: string;
+			fecha_hasta?: string;
 		} = {
 			limit: String(CHART_PAGE_SIZE),
 			page: "1",
-			desde: from.toISOString(),
+			fecha_desde: from.toISOString(),
 		};
 
 		return params;

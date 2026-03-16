@@ -194,12 +194,12 @@ export default function MedicionesPage() {
 
 		const desdeIso = toIsoString(appliedHistorialFilters.desde);
 		if (desdeIso) {
-			params.desde = desdeIso;
+			params.fecha_desde = desdeIso;
 		}
 
 		const hastaIso = toIsoString(appliedHistorialFilters.hasta);
 		if (hastaIso) {
-			params.hasta = hastaIso;
+			params.fecha_hasta = hastaIso;
 		}
 
 		return params;

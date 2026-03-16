@@ -37,8 +37,8 @@ type UseGetMedicionesParams = {
 	queryParams?: {
 		limnigrafo?: string, // ID del limnígrafo
 		fuente?: "manual" | "automatico", // Filtrar por origen
-		desde?: string, // Fecha/hora de inicio ISO 8601
-		hasta?: string, // Fecha/hora de fin ISO 8601
+		fecha_desde?: string, // Fecha/hora de inicio ISO 8601
+		fecha_hasta?: string, // Fecha/hora de fin ISO 8601
 		limit?: string, // Cantidad de resultados por página
 		page?: string, // Número de página
 	}
