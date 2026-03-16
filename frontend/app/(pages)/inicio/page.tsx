@@ -177,6 +177,17 @@ function formatNumber(value: number, decimals = 2): string {
 	});
 }
 
+function toNumericTooltipValue(value: unknown): number | null {
+	if (typeof value === "number" && Number.isFinite(value)) {
+		return value;
+	}
+	if (typeof value === "string") {
+		const parsed = Number(value);
+		return Number.isFinite(parsed) ? parsed : null;
+	}
+	return null;
+}
+
 function getStartDateFromRange(reference: Date, range: TimeRange): Date {
 	const start = new Date(reference);
 	start.setDate(start.getDate() - TIME_RANGE_DAYS[range]);
@@ -795,6 +806,24 @@ export default function Home() {
 														hour: "2-digit",
 														minute: "2-digit",
 													})}
+													formatter={(value, name, item) => {
+														const numericValue = toNumericTooltipValue(value);
+														const indicatorColor = typeof item?.color === "string" ? item.color : undefined;
+														return (
+															<div className="flex w-full items-center justify-between gap-3">
+																<span className="flex items-center gap-2 text-muted-foreground">
+																	<span
+																		className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+																		style={{ backgroundColor: indicatorColor }}
+																	/>
+																	<span>{String(name)}</span>
+																</span>
+																<span className="font-mono font-medium text-foreground tabular-nums">
+																	{formatAtributoValue(numericValue, comparativasFilters.atributo)}
+																</span>
+															</div>
+														);
+													}}
 													indicator="dot"
 												/>
 											)}
@@ -803,6 +832,7 @@ export default function Home() {
 											<Area
 												key={serie.dataKey}
 												dataKey={serie.dataKey}
+												name={serie.label}
 												type="natural"
 												fill={`url(#fill-${serie.dataKey})`}
 												stroke={`var(--color-${serie.dataKey})`}
