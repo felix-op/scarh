@@ -2,7 +2,7 @@ export type IconVariants =
 	"none" | "user1" | "rightArrow" | "newNotification" |
 	"mapa" | "chip" | "documento" | "funcion" | "regla" |
 	"menu_izquierda" | "menu_derecha" | "historial" | "documentacion" |
-	"luna" | "sol";
+	"luna" | "sol" | "dashboard";
 
 type IconProps = {
     className?: string;
@@ -26,6 +26,7 @@ export default function Icon({ className = "", variant = "none" }: IconProps) {
 		documentacion: "icon-[fluent--document-code-16-regular]",
 		luna: "icon-[solar--moon-broken]",
 		sol: "icon-[solar--sun-broken]",
+		dashboard: "icon-[mingcute--dashboard-line]",
 	};
 
 	return (
