@@ -9,7 +9,7 @@ import {
 	useGetLimnigrafo,
 	useDeleteLimnigrafo,
 	usePachtLimnigrafo,
-} from "@servicios/api/django.api";
+} from "@servicios/api/limnigrafos";
 import { transformarLimnigrafoConMedicion } from "@lib/transformers/limnigrafoTransformer";
 
 function DetalleLimnigrafoContent() {
@@ -237,7 +237,7 @@ function DetalleLimnigrafoContent() {
 
 	return (
 		<div className="flex flex-col w-full h-full">
-			<main className="flex flex-1 justify-center px-6 py-10 bg-[#EEF4FB]">
+			<main className="flex flex-1 justify-center bg-[#EEF4FB] px-6 py-10 dark:bg-[#0B1220]">
 				<div className="flex w-full max-w-[1350px] flex-col items-center gap-12">
 					<div className="flex w-full max-w-[1350px] justify-start">
 						<a href="/limnigrafos" className="inline-flex">
@@ -247,10 +247,14 @@ function DetalleLimnigrafoContent() {
                   !mx-0
                   !bg-white
                   !text-[#7F7F7F]
+                  dark:!bg-[#1E293B]
+                  dark:!text-[#CBD5E1]
                   !h-[44px]
                   !px-6
                   shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
                   hover:!bg-[#F6F6F6]
+                  dark:hover:!bg-[#334155]
+                  border border-[#E2E8F0] dark:border-[#334155]
                 "
 							>
 								← Volver
@@ -268,11 +272,15 @@ function DetalleLimnigrafoContent() {
 									!mx-0
 									!bg-[#F3F3F3]
 									!text-[#7F7F7F]
+									dark:!bg-[#1E293B]
+									dark:!text-[#CBD5E1]
 									!h-[40px]
 									!px-5
 									text-[14px]
 									shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
 									hover:!bg-[#e8e8e8]
+									dark:hover:!bg-[#334155]
+									border border-[#E2E8F0] dark:border-[#334155]
 									absolute
 									top-6
 									left-8
@@ -291,12 +299,16 @@ function DetalleLimnigrafoContent() {
 									!mx-0
 									!bg-[#FDECEC]
 									!text-[#B42318]
+									dark:!bg-[#3A1818]
+									dark:!text-[#FCA5A5]
 									!h-[40px]
 									!px-5
 									text-[14px]
 									shadow-[0px_3px_6px_rgba(0,0,0,0.15)]
 									hover:!bg-[#f8dede]
+									dark:hover:!bg-[#4B1D1D]
 									gap-2
+									border border-[#FECACA] dark:border-[#7F1D1D]
 									disabled:opacity-60
 									absolute
 									top-6
@@ -305,7 +317,8 @@ function DetalleLimnigrafoContent() {
 							>
 								{isDeleting ? "Eliminando..." : "Eliminar limnigrafo"}
 							</Boton>
-						)}								<LimnigrafoDetailsCard
+						)}
+						<LimnigrafoDetailsCard
 									title="Datos Limnigrafo"
 									identification={detalles.identification}
 									measurements={detalles.measurements}
@@ -343,17 +356,17 @@ function DetalleLimnigrafoContent() {
 								)}
 							</div>
 							{deleteError ? (
-								<p className="text-sm text-red-500">{deleteError}</p>
+								<p className="text-sm text-red-500 dark:text-red-400">{deleteError}</p>
 							) : null}
 
 							{/* Modal de confirmación de eliminación */}
 							{mostrarConfirmacionEliminar && (
 								<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-									<div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
-										<h3 className="text-2xl font-bold text-[#4B4B4B] mb-4">
+									<div className="mx-4 w-full max-w-md rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-2xl dark:border-[#334155] dark:bg-[#0F172A]">
+										<h3 className="mb-4 text-2xl font-bold text-[#4B4B4B] dark:text-[#E2E8F0]">
 											¿Eliminar limnígrafo?
 										</h3>
-										<p className="text-[#6B6B6B] mb-6">
+										<p className="mb-6 text-[#6B6B6B] dark:text-[#94A3B8]">
 											Esta acción no se puede deshacer. El limnígrafo <span className="font-semibold">{limnigrafo?.nombre}</span> será eliminado permanentemente.
 										</p>
 										<div className="flex gap-3 justify-end">
@@ -363,9 +376,13 @@ function DetalleLimnigrafoContent() {
 													!mx-0
 													!bg-[#F3F3F3]
 													!text-[#7F7F7F]
+													dark:!bg-[#1E293B]
+													dark:!text-[#CBD5E1]
 													!h-[44px]
 													!px-6
 													hover:!bg-[#e8e8e8]
+													dark:hover:!bg-[#334155]
+													border border-[#E2E8F0] dark:border-[#334155]
 												"
 											>
 												Cancelar
@@ -377,9 +394,12 @@ function DetalleLimnigrafoContent() {
 													!mx-0
 													!bg-[#B42318]
 													!text-white
+													dark:!bg-[#7F1D1D]
+													dark:!text-[#FECACA]
 													!h-[44px]
 													!px-6
 													hover:!bg-[#9a1e13]
+													dark:hover:!bg-[#991B1B]
 													disabled:opacity-60
 												"
 											>
@@ -397,15 +417,19 @@ function DetalleLimnigrafoContent() {
 										!mx-0
 										!bg-white
 										!text-[#898989]
+										dark:!bg-[#1E293B]
+										dark:!text-[#CBD5E1]
 										!h-[48px]
 										!px-8
 										!rounded-[28px]
 										shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
 										hover:!bg-[#F6F6F6]
+										dark:hover:!bg-[#334155]
+										border border-[#E2E8F0] dark:border-[#334155]
 										gap-2
 									"
 								>
-									<AddIcon size={20} color="#898989" />
+									<AddIcon size={20} color="currentColor" />
 									<span className="text-[16px] font-medium">Importar datos</span>
 								</Boton>
 
@@ -414,14 +438,18 @@ function DetalleLimnigrafoContent() {
 										!mx-0
 										!bg-white
 										!text-[#898989]
+										dark:!bg-[#1E293B]
+										dark:!text-[#CBD5E1]
 										!h-[48px]
 										!px-8
 										shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
 										hover:!bg-[#F6F6F6]
+										dark:hover:!bg-[#334155]
+										border border-[#E2E8F0] dark:border-[#334155]
 										gap-2
 									"
 								>
-									<Ruler size={24} color="#898989" />
+									<Ruler size={24} color="currentColor" />
 									<span className="text-[16px] font-medium">
 										Estadisticas Del Limnigrafo
 									</span>
@@ -433,14 +461,18 @@ function DetalleLimnigrafoContent() {
 										!mx-0
 										!bg-white
 										!text-[#898989]
+										dark:!bg-[#1E293B]
+										dark:!text-[#CBD5E1]
 										!h-[48px]
 										!px-8
 										shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
 										hover:!bg-[#F6F6F6]
+										dark:hover:!bg-[#334155]
+										border border-[#E2E8F0] dark:border-[#334155]
 										gap-2
 									"
 								>
-									<Ruler size={24} color="#898989" />
+									<Ruler size={24} color="currentColor" />
 									<span className="text-[16px] font-medium">
 										Ver mediciones
 									</span>
@@ -451,20 +483,24 @@ function DetalleLimnigrafoContent() {
 										!mx-0
 										!bg-white
 										!text-[#898989]
+										dark:!bg-[#1E293B]
+										dark:!text-[#CBD5E1]
 										!h-[48px]
 										!px-8
 										shadow-[0px_2px_4px_rgba(0,0,0,0.15)]
 										hover:!bg-[#F6F6F6]
+										dark:hover:!bg-[#334155]
+										border border-[#E2E8F0] dark:border-[#334155]
 										gap-2
 									"
 								>
-									<MapIcon size={24} color="#7F7F7F" />
+									<MapIcon size={24} color="currentColor" />
 									<span className="text-[16px] font-medium">Agregar ubicacion</span>
 								</Boton>
 							</div>
 						</>
 					) : (
-						<div className="w-full rounded-3xl bg-white p-10 text-center text-[#4B4B4B]">
+						<div className="w-full rounded-3xl border border-[#E2E8F0] bg-white p-10 text-center text-[#4B4B4B] dark:border-[#334155] dark:bg-[#1B1F25] dark:text-[#94A3B8]">
 							{isLoading
 								? "Cargando datos del limnigrafo..."
 								: "No hay limnigrafos disponibles para mostrar."}
@@ -480,7 +516,7 @@ export default function DetalleLimnigrafoPage() {
 	return (
 		<Suspense
 			fallback={
-				<div className="flex min-h-screen items-center justify-center bg-[#EEF4FB] text-xl text-[#4B4B4B]">
+				<div className="flex min-h-screen items-center justify-center bg-[#EEF4FB] text-xl text-[#4B4B4B] dark:bg-[#0B1220] dark:text-[#94A3B8]">
 					Cargando limnigrafo...
 				</div>
 			}

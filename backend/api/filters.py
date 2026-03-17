@@ -40,7 +40,8 @@ class MedicionFilter(django_filters.FilterSet):
     limnigrafo = django_filters.NumberFilter(field_name='limnigrafo__id')
     fecha_desde = django_filters.DateTimeFilter(field_name='fecha_hora', lookup_expr='gte')
     fecha_hasta = django_filters.DateTimeFilter(field_name='fecha_hora', lookup_expr='lte')
+    fuente = django_filters.CharFilter(field_name='fuente', lookup_expr='iexact')
 
     class Meta:
         model = Medicion
-        fields = ['limnigrafo']
+        fields = ['limnigrafo', 'fuente']

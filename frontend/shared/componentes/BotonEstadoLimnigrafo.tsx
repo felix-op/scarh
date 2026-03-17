@@ -4,6 +4,7 @@ export type VarianteEstadoLimnigrafo =
   | "activo"
   | "prueba"
   | "fuera"
+  | "peligro"
   | "advertencia";
 
 export const ESTILOS_ESTADO_LIMNIGRAFO: Record<
@@ -22,8 +23,13 @@ export const ESTILOS_ESTADO_LIMNIGRAFO: Record<
 	},
 	fuera: {
 		etiqueta: "Fuera",
-		indicadorColor: "#FF0C0C",
-		bordeColor: "#791010",
+		indicadorColor: "#64748B",
+		bordeColor: "#334155",
+	},
+	peligro: {
+		etiqueta: "Peligro",
+		indicadorColor: "#FF3B30",
+		bordeColor: "#9A1A14",
 	},
 	advertencia: {
 		etiqueta: "Advertencia",
@@ -60,21 +66,21 @@ export function BotonEstadoLimnigrafo({ estado }: BotonEstadoProps) {
         items-center
         justify-center
         rounded-[36px]
-        bg-[#F0F0F0]/90
+        bg-[#F0F0F0]/90 dark:border dark:border-[#334155] dark:bg-[#1A2433]/95
         px-5
         py-1.5
-        opacity-70
+        opacity-70 dark:opacity-100
         shadow-[0px_4px_4px_rgba(0,0,0,0.25)]
       "
 		>
 			<div className="flex items-center gap-2.5">
-				<span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0px_0px_4px_rgba(0,0,0,0.5)]">
+				<span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0px_0px_4px_rgba(0,0,0,0.5)] dark:bg-[#1E293B]">
 					<span
 						className="block h-[24px] w-[24px] rounded-full border"
 						style={{ backgroundColor: color, borderColor: bordeColor }}
 					/>
 				</span>
-				<span className="text-[20px] font-semibold text-black drop-shadow">
+				<span className="text-[20px] font-semibold text-black drop-shadow dark:text-[#E2E8F0]">
 					{etiqueta}
 				</span>
 			</div>

@@ -91,7 +91,7 @@ const historyColumns: ColumnConfig<HistoryRow>[] = [
 	{
 		id: "usuario",
 		header: "Usuario",
-		cell: (row) => <span className="px-4 py-3 font-semibold text-[#011018]">{row.usuario}</span>,
+		cell: (row) => <span className="px-4 py-3 font-semibold text-[#011018] dark:text-[#E2E8F0]">{row.usuario}</span>,
 	},
 	{
 		id: "accion",
@@ -101,20 +101,20 @@ const historyColumns: ColumnConfig<HistoryRow>[] = [
 	{
 		id: "entidad",
 		header: "Entidad afectada",
-		cell: (row) => <span className="px-4 py-3 text-[#0982C8]">{row.entidad}</span>,
+		cell: (row) => <span className="px-4 py-3 text-[#0982C8] dark:text-[#7DD3FC]">{row.entidad}</span>,
 	},
 	{
 		id: "descripcion",
 		header: "Descripción",
-		cell: (row) => <span className="px-4 py-3 text-[#4B4B4B]">{row.descripcion}</span>,
+		cell: (row) => <span className="px-4 py-3 text-[#4B4B4B] dark:text-[#CBD5E1]">{row.descripcion}</span>,
 	},
 	{
 		id: "fechaHora",
 		header: "Fecha y hora",
 		cell: (row) => (
-			<div className="px-4 py-3 text-[#4B4B4B]">
+			<div className="px-4 py-3 text-[#4B4B4B] dark:text-[#CBD5E1]">
 				<p className="leading-5">{row.fecha}</p>
-				<p className="text-[13px] text-[#64748B] leading-5">{row.hora}</p>
+				<p className="text-[13px] leading-5 text-[#64748B] dark:text-[#94A3B8]">{row.hora}</p>
 			</div>
 		),
 	},
@@ -133,6 +133,7 @@ export default function HistorialPage() {
 		usuario: usuarioParam,
 	});
 	const [currentPage, setCurrentPage] = useState(1);
+	const [isFilterOpen, setIsFilterOpen] = useState(true);
 
 	const historialQueryParams = useMemo(() => {
 		const params: Record<string, string> = {
@@ -264,37 +265,39 @@ export default function HistorialPage() {
 			<main className="flex flex-1 justify-center px-6 py-10">
 				<div className="flex w-full max-w-[1568px] flex-col gap-8">
 					<header className="flex flex-col gap-1">
-						<h1 className="text-[34px] font-semibold text-[#011018]">Historial</h1>
-						<p className="text-[16px] text-[#4B4B4B]">
+						<h1 className="text-[34px] font-semibold text-[#011018] dark:text-[#E2E8F0]">Historial</h1>
+						<p className="text-[16px] text-[#4B4B4B] dark:text-[#94A3B8]">
 							Registros de acciones sobre limnígrafos, métricas y usuarios.
 						</p>
 					</header>
 
-					<FilterBar
-						users={userOptions}
-						actions={ACTION_OPTIONS}
-						entities={entityOptions}
-						values={filters}
-						onChange={handleFilterChange}
-						onApply={handleApplyFilters}
-						onClear={handleClearFilters}
-						isLoading={isFetchingHistorial}
-					/>
+					{isFilterOpen ? (
+						<FilterBar
+							users={userOptions}
+							actions={ACTION_OPTIONS}
+							entities={entityOptions}
+							values={filters}
+							onChange={handleFilterChange}
+							onApply={handleApplyFilters}
+							onClear={handleClearFilters}
+							isLoading={isFetchingHistorial}
+						/>
+					) : null}
 
-					<section className="flex flex-col gap-4 rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
+					<section className="flex flex-col gap-4 rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 						<div className="flex flex-wrap items-center justify-between gap-3">
 							<div>
 								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
 									Historial de acciones
 								</p>
 							</div>
-							<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569]">
+							<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569] dark:bg-[#0F172A] dark:text-[#94A3B8]">
 								{isLoadingHistorial ? "Cargando..." : `${totalRecords} registros`}
 							</span>
 						</div>
 
 						{historialError ? (
-							<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">
+							<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
 								No se pudo cargar el historial. Intentalo nuevamente.
 							</p>
 						) : null}
@@ -303,30 +306,31 @@ export default function HistorialPage() {
 							data={rows}
 							columns={historyColumns}
 							rowIdKey="id"
-							showTopBar={false}
+							onFilter={() => setIsFilterOpen((previous) => !previous)}
 							enableRowAnimation={false}
 							loadingRows={6}
 							isLoading={isLoadingHistorial}
 							emptyStateContent={
-								<span className="text-[#6B7280]">
+								<span className="text-[#6B7280] dark:text-[#94A3B8]">
 									No hay acciones registradas con los filtros seleccionados.
 								</span>
 							}
 							styles={{
-								cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)]",
+								topBarClassName: "justify-end border-b border-[#EAEAEA] p-4 dark:border-[#334155]",
+								cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)] dark:border-[#334155] dark:bg-[#0F172A] dark:shadow-[0px_10px_20px_rgba(0,0,0,0.45)]",
 								scrollerClassName: "overflow-x-auto",
-								tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F]",
-								theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none",
+								tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F] dark:text-[#CBD5E1]",
+								theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none dark:bg-[#111923] dark:text-[#94A3B8]",
 								headerCellClassName: "px-4 py-3",
-								tbodyClassName: "divide-y divide-[#EAEAEA]",
-								rowClassName: "border-0 hover:bg-[#F9FBFF]",
+								tbodyClassName: "divide-y divide-[#EAEAEA] dark:divide-[#334155]",
+								rowClassName: "border-0 hover:bg-[#F9FBFF] dark:hover:bg-[#1E293B]",
 								cellClassName: "align-middle",
 								emptyCellClassName: "px-4 py-8",
 							}}
 						/>
 
 						<div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-							<p className="text-[13px] text-[#64748B]">
+							<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
 								Mostrando {startRow}-{endRow} de {totalRecords}. Página {currentPage} de {totalPages}
 							</p>
 							<div className="flex gap-2">
@@ -334,7 +338,7 @@ export default function HistorialPage() {
 									type="button"
 									onClick={handlePrevPage}
 									disabled={currentPage <= 1 || isFetchingHistorial}
-									className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40"
+									className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40 dark:border-[#334155] dark:text-[#CBD5E1] dark:hover:bg-[#1E293B]"
 								>
 									Anterior
 								</button>
@@ -342,7 +346,7 @@ export default function HistorialPage() {
 									type="button"
 									onClick={handleNextPage}
 									disabled={currentPage >= totalPages || isFetchingHistorial}
-									className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40"
+									className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40 dark:border-[#334155] dark:text-[#CBD5E1] dark:hover:bg-[#1E293B]"
 								>
 									Siguiente
 								</button>

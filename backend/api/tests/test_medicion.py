@@ -2,10 +2,11 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from api.models.limnigrafo import Limnigrafo
 from api.models.medicion import Medicion
 from rest_framework_api_key.models import APIKey
-from datetime import time
+from datetime import time, timedelta
 
 class MedicionTests(APITestCase):
     def setUp(self):
@@ -72,7 +73,7 @@ class MedicionTests(APITestCase):
             'limnigrafo': self.limnigrafo.id,
             'altura_agua': 3.0,
             'nivel_de_bateria': 9.0, 
-            'fecha_hora': '2024-01-01T10:00:00Z'
+            'fecha_hora': timezone.now().isoformat()
         }
         response = self.client.post(self.list_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -83,6 +84,21 @@ class MedicionTests(APITestCase):
         
         self.assertIsNotNone(self.limnigrafo.ultima_conexion)
         
+        self.assertEqual(self.limnigrafo.estado, 'peligro')
+
+    def test_create_medicion_sets_fuera_de_servicio_when_time_exceeds_triple_peligro(self):
+        self.client.force_authenticate(user=self.user)
+
+        data = {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 2.0,
+            'nivel_de_bateria': 11.0,
+            'fecha_hora': (timezone.now() - timedelta(hours=7)).isoformat()
+        }
+        response = self.client.post(self.list_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado, 'fuera_de_servicio')
 
     def test_retrieve_medicion(self):
@@ -161,8 +177,8 @@ class MedicionTests(APITestCase):
         )
 
         response = self.client.get(self.list_url, {
-            'desde': '2024-01-01T09:00:00Z',
-            'hasta': '2024-01-01T11:00:00Z',
+            'fecha_desde': '2024-01-01T09:00:00Z',
+            'fecha_hasta': '2024-01-01T11:00:00Z',
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)

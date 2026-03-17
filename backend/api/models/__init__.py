@@ -7,6 +7,7 @@ from .alerta import *
 from .usuario_notificacion import *
 from .usuario import *
 from .accion import *
+from .rol import *
 
 __all__ = [
     'Limnigrafo',
@@ -18,4 +19,5 @@ __all__ = [
     'UsuarioNotificacion',
     'Usuario',
     'Accion',
+    'Rol',
 ]

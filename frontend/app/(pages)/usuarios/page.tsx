@@ -5,20 +5,19 @@ import { useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import DataTable from "@componentes/tabla/DataTable";
 import { ActionConfig, ColumnConfig } from "@componentes/tabla/types";
-import { EstadoChip, EstadoVariant } from "@componentes/EstadoChip";
 import ActionMenu from "@componentes/tabla/ActionMenu";
 import VentanaAgregrarUsuario from "./componentes/VentanaAgregarUsuario";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import { UsuarioResponse } from "types/usuarios";
 import { useGetUsuarios } from "@servicios/api";
 import BotonIconoEditar from "@componentes/botones/BotonIconoEditar";
-import VentanaEditarUsuario from "./componentes/VentanaEditarUsuario";
 import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
-import VentanaEliminarUsuario from "./componentes/VentanaEliminarUsuario";
 import usePaginadoBackend from "@hooks/usePaginadoBackend";
 import FiltrosContenedor from "@componentes/filtros/FiltrosContenedor";
 import FiltroBusqueda from "@componentes/filtros/FiltroBusqueda";
 import FiltroOpciones from "@componentes/filtros/FiltroOpciones";
+import { opcionesEstado } from "./constantes";
+import ChipEstadoUsuario from "@componentes/chips/ChipEstadoUsuario";
 import { useNotificar } from "@hooks/useNotificar";
 
 const queriesToInvalidate = ["useGetUsuarios"];
@@ -28,7 +27,7 @@ export default function UsersAdminPage() {
 	const [lengthPages, setLengthPages] = useState(5);
 	const [isOpenFiltros, setIsOpenFiltros] = useState(false);
 	const [search, setSearch] = useState("");
-	const [estado, setEstado] = useState("true");
+	const [estado, setEstado] = useState("");
 	
 	const { data: usuarios, isLoading, isRefetching } = useGetUsuarios({
 		params: {
@@ -72,14 +71,6 @@ export default function UsersAdminPage() {
 		});
 	};
 
-	const renderEstadoPill = (variant: EstadoVariant, label: string) => {
-		return (
-			<div className="p-2">
-				<EstadoChip variant={variant} label={label} />
-			</div>
-		);
-	};
-
 	const handleViewUser = (usuario: UsuarioResponse) => {
 		router.push(`/usuarios/${usuario.id}`);
 	};
@@ -89,7 +80,7 @@ export default function UsersAdminPage() {
 		{
 			id: "estado",
 			header: "Estado",
-			cell: (row) => renderEstadoPill(row.estado ? "activo" : "inactivo", row.estado ? "Activo" : "Inactivo"),
+			cell: (row) => <div className="px-4"><ChipEstadoUsuario estado={row.estado ? "activo" : "inactivo"} /></div>,
 		},
 		{
 			id: "nombre",
@@ -163,7 +154,7 @@ export default function UsersAdminPage() {
 						<div className="flex-1">
 							<FiltroOpciones
 								title="Estado"
-								options={[{ label: "Activo", value: "true"}, {label: "Inactivo", value: "false"}]}
+								options={opcionesEstado}
 								onSelect={(value) => {
 									setPage(1);
 									setEstado(value);

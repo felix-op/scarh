@@ -3,24 +3,18 @@
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import PaginaBase from "@componentes/base/PaginaBase";
 import {
-	EstadisticaOutputItem,
-	LimnigrafoPaginatedResponse,
-	LimnigrafoResponse,
 	MedicionPaginatedResponse,
 	MedicionPostRequest,
 	MedicionResponse,
-	useGetLimnigrafos,
 	useGetMediciones,
-	usePostEstadistica,
 	usePostMedicion,
 } from "@servicios/api/django.api";
 import ModalCargaManualMedicion, {
 	ManualFormState,
 } from "@componentes/mediciones/ModalCargaManualMedicion";
 import ModalImportacionMediciones from "@componentes/mediciones/ModalImportacionMediciones";
-import SeccionComparativasMediciones from "./secciones/SeccionComparativasMediciones";
 import SeccionHistorialMediciones from "./secciones/SeccionHistorialMediciones";
-import { ComparativasFilters, HistorialFilters, MedicionRow } from "./secciones/types";
+import { HistorialFilters, MedicionRow } from "./secciones/types";
 import {
 	buildCsvContent,
 	downloadTextFile,
@@ -32,15 +26,19 @@ import {
 	ParsedMedicionImportRow,
 	toDatetimeLocalInputValue,
 } from "./utils";
+import { LimnigrafoResponse } from "types/limnigrafos";
+import { Paginado } from "@servicios/api/types";
+import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
 
-const PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 25;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 75, 100] as const;
 const EXPORT_PAGE_SIZE = 1000;
 
 const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70";
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#1D4ED8] dark:bg-[#0B2A43] dark:text-[#93C5FD] dark:hover:bg-[#12385B]";
 
 const HEADER_ACTION_SECONDARY_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70";
+	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#9D174D] dark:bg-[#3F1222] dark:text-[#FDA4AF] dark:hover:bg-[#4D162B]";
 
 function getDefaultDateRange() {
 	const now = new Date();
@@ -50,15 +48,6 @@ function getDefaultDateRange() {
 	return {
 		desde: toDatetimeLocalInputValue(from),
 		hasta: toDatetimeLocalInputValue(now),
-	};
-}
-
-function getDefaultComparativasFilters(): ComparativasFilters {
-	const { desde, hasta } = getDefaultDateRange();
-	return {
-		desde,
-		hasta,
-		atributo: "altura_agua",
 	};
 }
 
@@ -137,15 +126,10 @@ function mapMedicionToRow(medicion: MedicionResponse, limnigrafoName: string): M
 }
 
 export default function MedicionesPage() {
-	const [comparativasFilters, setComparativasFilters] = useState<ComparativasFilters>(getDefaultComparativasFilters);
-	const [appliedComparativasFilters, setAppliedComparativasFilters] = useState<ComparativasFilters>(getDefaultComparativasFilters);
 	const [historialFilters, setHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
 	const [appliedHistorialFilters, setAppliedHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
 	const [currentPage, setCurrentPage] = useState(1);
-	const [compareIds, setCompareIds] = useState<string[]>([]);
-	const [compareSearch, setCompareSearch] = useState("");
-	const [estadisticas, setEstadisticas] = useState<EstadisticaOutputItem[]>([]);
-	const [estadisticasError, setEstadisticasError] = useState<string | null>(null);
+	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [mensaje, setMensaje] = useState<string | null>(null);
 	const [errorAccion, setErrorAccion] = useState<string | null>(null);
 	const [isExporting, setIsExporting] = useState(false);
@@ -177,10 +161,15 @@ export default function MedicionesPage() {
 		},
 	});
 
-	const limnigrafosPayload = limnigrafosData as LimnigrafoPaginatedResponse | LimnigrafoResponse[] | undefined;
-	const limnigrafos = Array.isArray(limnigrafosPayload)
-		? limnigrafosPayload
-		: limnigrafosPayload?.results ?? [];
+	const limnigrafosPayload = limnigrafosData as Paginado<LimnigrafoResponse> | LimnigrafoResponse[] | undefined;
+	const limnigrafos = useMemo(
+		() => (
+			Array.isArray(limnigrafosPayload)
+				? limnigrafosPayload
+				: limnigrafosPayload?.results ?? []
+		),
+		[limnigrafosPayload],
+	);
 
 	const limnigrafoNameById = useMemo(() => {
 		const map = new Map<number, string>();
@@ -190,22 +179,9 @@ export default function MedicionesPage() {
 		return map;
 	}, [limnigrafos]);
 
-	const filteredCompareLimnigrafos = useMemo(() => {
-		const search = compareSearch.trim().toLowerCase();
-		if (!search) {
-			return limnigrafos;
-		}
-
-		return limnigrafos.filter((limnigrafo) => (
-			`${limnigrafo.codigo} ${limnigrafo.descripcion ?? ""} ${limnigrafo.id}`
-				.toLowerCase()
-				.includes(search)
-		));
-	}, [compareSearch, limnigrafos]);
-
 	const queryParams = useMemo(() => {
 		const params: Record<string, string> = {
-			limit: String(PAGE_SIZE),
+			limit: String(pageSize),
 			page: String(currentPage),
 		};
 
@@ -227,7 +203,7 @@ export default function MedicionesPage() {
 		}
 
 		return params;
-	}, [appliedHistorialFilters, currentPage]);
+	}, [appliedHistorialFilters, currentPage, pageSize]);
 
 	const {
 		data: medicionesData,
@@ -245,7 +221,6 @@ export default function MedicionesPage() {
 	});
 
 	const postMedicion = usePostMedicion();
-	const postEstadistica = usePostEstadistica();
 
 	const visibleMediciones = useMemo(() => {
 		const source = medicionesData?.results ?? [];
@@ -282,9 +257,9 @@ export default function MedicionesPage() {
 	);
 
 	const serverCount = medicionesData?.count ?? 0;
-	const totalPages = Math.max(1, Math.ceil(serverCount / PAGE_SIZE));
-	const startRow = serverCount === 0 ? 0 : ((currentPage - 1) * PAGE_SIZE) + 1;
-	const endRow = Math.min(currentPage * PAGE_SIZE, serverCount);
+	const totalPages = Math.max(1, Math.ceil(serverCount / pageSize));
+	const startRow = serverCount === 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+	const endRow = Math.min(currentPage * pageSize, serverCount);
 
 	const isLoading = isLoadingLimnigrafos || isLoadingMediciones;
 	const topError = limnigrafosError ?? medicionesError;
@@ -315,69 +290,6 @@ export default function MedicionesPage() {
 		}
 	}
 
-	async function handleCalcularEstadisticas() {
-		setEstadisticasError(null);
-
-		const selectedIds = compareIds;
-
-		if (selectedIds.length === 0) {
-			setEstadisticas([]);
-			setEstadisticasError("Seleccioná al menos un limnígrafo para calcular estadísticas.");
-			return;
-		}
-
-		const desdeIso = toIsoString(appliedComparativasFilters.desde);
-		const hastaIso = toIsoString(appliedComparativasFilters.hasta);
-
-		if (!desdeIso || !hastaIso) {
-			setEstadisticas([]);
-			setEstadisticasError("Definí un rango de fechas válido para calcular estadísticas.");
-			return;
-		}
-
-		try {
-			const result = await postEstadistica.mutateAsync({
-				data: {
-					limnigrafos: selectedIds.map((item) => Number.parseInt(item, 10)).filter((item) => !Number.isNaN(item)),
-					atributo: appliedComparativasFilters.atributo,
-					fecha_inicio: desdeIso,
-					fecha_fin: hastaIso,
-				},
-			});
-			setEstadisticas(result);
-		} catch (error) {
-			setEstadisticas([]);
-			setEstadisticasError(
-				error instanceof Error
-					? error.message
-					: "No se pudieron calcular estadísticas para el rango seleccionado.",
-			);
-		}
-	}
-
-	function handleComparativasFilterChange<K extends keyof ComparativasFilters>(
-		field: K,
-		value: ComparativasFilters[K],
-	) {
-		setComparativasFilters((prev) => ({ ...prev, [field]: value }));
-	}
-
-	function handleApplyComparativasFilters() {
-		setAppliedComparativasFilters(comparativasFilters);
-		setMensaje(null);
-		setErrorAccion(null);
-	}
-
-	function handleClearComparativasFilters() {
-		const reset = getDefaultComparativasFilters();
-		setComparativasFilters(reset);
-		setAppliedComparativasFilters(reset);
-		setCompareIds([]);
-		setCompareSearch("");
-		setEstadisticas([]);
-		setEstadisticasError(null);
-	}
-
 	function handleHistorialFilterChange<K extends keyof HistorialFilters>(field: K, value: HistorialFilters[K]) {
 		setHistorialFilters((prev) => ({ ...prev, [field]: value }));
 	}
@@ -400,33 +312,6 @@ export default function MedicionesPage() {
 
 	function handleManualFormChange<K extends keyof ManualFormState>(field: K, value: ManualFormState[K]) {
 		setManualForm((prev) => ({ ...prev, [field]: value }));
-	}
-
-	function handleToggleCompare(limnigrafoId: string, checked: boolean) {
-		setCompareIds((prev) => {
-			if (checked) {
-				return prev.includes(limnigrafoId) ? prev : [...prev, limnigrafoId];
-			}
-			return prev.filter((id) => id !== limnigrafoId);
-		});
-	}
-
-	function handleSelectAllCompare() {
-		setCompareIds(limnigrafos.map((limnigrafo) => String(limnigrafo.id)));
-	}
-
-	function handleSelectFilteredCompare() {
-		setCompareIds((prev) => {
-			const next = new Set(prev);
-			filteredCompareLimnigrafos.forEach((limnigrafo) => {
-				next.add(String(limnigrafo.id));
-			});
-			return Array.from(next);
-		});
-	}
-
-	function handleClearCompareSelection() {
-		setCompareIds([]);
 	}
 
 	async function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
@@ -587,9 +472,9 @@ export default function MedicionesPage() {
 				<div className="flex w-full max-w-[1568px] flex-col gap-8">
 					<header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
 						<div className="flex flex-col gap-1">
-							<h1 className="text-[34px] font-semibold text-[#011018]">Mediciones</h1>
-							<p className="text-base text-[#4D5562]">
-								Gestión operativa de mediciones históricas, análisis, comparación, exportación e importación.
+							<h1 className="text-[34px] font-semibold text-[#011018] dark:text-[#E2E8F0]">Mediciones</h1>
+							<p className="text-base text-[#4D5562] dark:text-[#94A3B8]">
+								Gestión operativa de mediciones históricas, análisis, exportación e importación.
 							</p>
 						</div>
 
@@ -613,29 +498,6 @@ export default function MedicionesPage() {
 						</div>
 					</header>
 
-					<SeccionComparativasMediciones
-						filters={comparativasFilters}
-						onDesdeChange={(value) => handleComparativasFilterChange("desde", value)}
-						onHastaChange={(value) => handleComparativasFilterChange("hasta", value)}
-						onAtributoChange={(value) => handleComparativasFilterChange("atributo", value)}
-						onApplyFilters={handleApplyComparativasFilters}
-						onClearFilters={handleClearComparativasFilters}
-						onCalcular={handleCalcularEstadisticas}
-						isCalculando={postEstadistica.isPending}
-						compareSearch={compareSearch}
-						onCompareSearchChange={setCompareSearch}
-						onSelectAll={handleSelectAllCompare}
-						onSelectVisible={handleSelectFilteredCompare}
-						onClearSelection={handleClearCompareSelection}
-						onToggleSelection={handleToggleCompare}
-						limnigrafosTotales={limnigrafos.length}
-						filteredLimnigrafos={filteredCompareLimnigrafos}
-						compareIds={compareIds}
-						estadisticasError={estadisticasError}
-						estadisticas={estadisticas}
-						limnigrafoNameById={limnigrafoNameById}
-					/>
-
 					<SeccionHistorialMediciones
 						filters={historialFilters}
 						limnigrafos={limnigrafos}
@@ -656,8 +518,14 @@ export default function MedicionesPage() {
 						endRow={endRow}
 						currentPage={currentPage}
 						totalPages={totalPages}
+						pageSize={pageSize}
+						pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
 						isFetching={isFetchingMediciones}
 						hasBusqueda={Boolean(appliedHistorialFilters.busqueda)}
+						onPageSizeChange={(value) => {
+							setPageSize(value);
+							setCurrentPage(1);
+						}}
 						onPrevPage={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
 						onNextPage={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
 					/>
@@ -686,10 +554,10 @@ export default function MedicionesPage() {
 					/>
 
 					{errorAccion ? (
-						<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B]">{errorAccion}</p>
+						<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">{errorAccion}</p>
 					) : null}
 					{mensaje ? (
-						<p className="rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 text-[14px] text-[#166534]">{mensaje}</p>
+						<p className="rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 text-[14px] text-[#166534] dark:border-[#14532D] dark:bg-[#0F2E1A] dark:text-[#86EFAC]">{mensaje}</p>
 					) : null}
 				</div>
 			</main>

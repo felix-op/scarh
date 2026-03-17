@@ -1,97 +1,92 @@
-/* eslint-disable indent */
-/* eslint-disable react/jsx-indent */
-/* eslint-disable react/jsx-indent-props */
 "use client";
 
+import DataTable from "@componentes/tabla/DataTable";
+import { ColumnConfig } from "@componentes/tabla/types";
 import {
-    BotonEstadoLimnigrafo,
-    type EstadoLimnigrafo,
+	BotonEstadoLimnigrafo,
+	type EstadoLimnigrafo,
 } from "./BotonEstadoLimnigrafo";
-import RenglonDatos, { type CeldaRenglonDatos } from "./RenglonDatos";
 
 type TablaHomeRow = {
-    id: string;
-    nombre: string;
-    bateria: string;
-    tiempoUltimoDato: string;
-    estado: EstadoLimnigrafo;
-    // puede venir también "ubicacion" pero acá no la usamos
+	id: string;
+	nombre: string;
+	nivel_de_bateria: string;
+	ultimoRegistro: string;
+	altura: string;
+	temperatura: string;
+	presion: string;
+	estado: EstadoLimnigrafo;
 };
 
 type TablaHomeProps = {
-    data: TablaHomeRow[];
-    className?: string;
+	data: TablaHomeRow[];
+	className?: string;
 };
 
-const baseColumnTitles = [
-    "Estados",
-    "Limnigrafo",
-    "Batería",
-    "Tiem. Último Dato",
+const tableColumns: ColumnConfig<TablaHomeRow>[] = [
+	{
+		id: "estado",
+		header: "Estado",
+		cell: (row) => <BotonEstadoLimnigrafo estado={row.estado} />,
+	},
+	{
+		id: "nombre",
+		header: "Limnígrafo",
+		cell: (row) => <span className="font-medium">{row.nombre}</span>,
+	},
+	{
+		id: "ultimoRegistro",
+		header: "Último registro",
+		accessorKey: "ultimoRegistro",
+	},
+	{
+		id: "altura",
+		header: "Altura",
+		accessorKey: "altura",
+	},
+	{
+		id: "temperatura",
+		header: "Temperatura",
+		accessorKey: "temperatura",
+	},
+	{
+		id: "presion",
+		header: "Presión",
+		accessorKey: "presion",
+	},
+	{
+		id: "nivel_de_bateria",
+		header: "Batería",
+		accessorKey: "nivel_de_bateria",
+	},
 ];
 
-// Estados + 3 columnas
-const columnasTablaBase = "200px repeat(3, minmax(0, 1fr))";
-
-export default function TablaHome({
-                                      data,
-                                      className = "",
-                                  }: TablaHomeProps) {
-    return (
-        <section
-            className={`
-        w-full max-w-[1568px]
-        rounded-[20px]
-        bg-white
-        shadow-[1px_6px_12px_rgba(0,0,0,0.25)]
-        overflow-hidden custom-scroll
-        font-outfit
-        ${className}
-      `}
-        >
-            <header
-                className="grid items-center gap-4 border-b border-[#6E6F72]/30 px-5 py-2"
-                style={{ gridTemplateColumns: columnasTablaBase }}
-            >
-                {baseColumnTitles.map((title) => (
-                    <div
-                        key={title}
-                        className="text-center text-[18px] font-medium text-[#605E5E]"
-                    >
-                        {title}
-                    </div>
-                ))}
-            </header>
-
-            <div className="flex flex-col divide-y divide-[#F0F0F0]">
-                {data.map((row) => (
-                    <TablaHomeRow
-                        key={row.id}
-                        data={row}
-                    />
-                ))}
-            </div>
-        </section>
-    );
-}
-
-type TablaHomeRowProps = {
-    data: TablaHomeRow;
-};
-
-function TablaHomeRow({ data }: TablaHomeRowProps) {
-    const celdas: CeldaRenglonDatos[] = [
-        { contenido: <BotonEstadoLimnigrafo estado={data.estado} /> },
-        { contenido: data.nombre, clase: "font-normal" },
-        { contenido: data.bateria },
-        { contenido: data.tiempoUltimoDato },
-    ];
-
-    return (
-        <RenglonDatos
-            celdas={celdas}
-            plantillaColumnas={columnasTablaBase}
-            claseBaseCelda="text-[18px] font-semibold text-black"
-        />
-    );
+export default function TablaHome({ data, className = "" }: TablaHomeProps) {
+	return (
+		<DataTable
+			data={data}
+			columns={tableColumns}
+			rowIdKey="id"
+			showTopBar={false}
+			enableRowAnimation={false}
+			minWidth={1100}
+			emptyStateContent={(
+				<span className="text-[#6B7280] dark:text-[#94A3B8]">
+					No hay limnígrafos para mostrar.
+				</span>
+			)}
+			styles={{
+				rootClassName: "pb-0",
+				cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)] dark:border-[#334155] dark:bg-[#0F172A] dark:shadow-[0px_10px_20px_rgba(0,0,0,0.45)]",
+				scrollerClassName: `relative overflow-x-auto ${className}`.trim(),
+				tableClassName: "min-w-full text-left text-[13px] text-[#2F2F2F] dark:text-[#CBD5E1]",
+				theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none dark:bg-[#111923] dark:text-[#94A3B8]",
+				headerCellClassName: "sticky top-0 z-10 px-3 py-2 bg-[#F7F9FB] dark:bg-[#111923]",
+				tbodyClassName: "divide-y divide-[#EAEAEA] dark:divide-[#334155]",
+				rowClassName: "border-0 hover:bg-[#F9FBFF] dark:hover:bg-[#1E293B]",
+				cellClassName: "align-middle px-3 py-2",
+				emptyCellClassName: "px-4 py-8 text-center",
+			}}
+		/>
+	);
 }

@@ -50,10 +50,16 @@ type LimnigrafoConfig struct {
 	PresionMax     float64 `yaml:"presion_max"`
 	BateriaMin     float64 `yaml:"bateria_min"`
 	BateriaMax     float64 `yaml:"bateria_max"`
+	BateriaInicial float64 `yaml:"bateria_inicial"`
+	// Intervalo opcional por limnígrafo (si no se define, usa el global)
+	IntervalMinMinutes float64 `yaml:"interval_minutes_min"`
+	IntervalMaxMinutes float64 `yaml:"interval_minutes_max"`
 	// Probabilidad de falla (0.0 = nunca falla, 1.0 = siempre falla)
 	ProbabilidadFalla float64 `yaml:"probabilidad_falla"`
-	// Duración de la falla en minutos (cuánto tiempo sin enviar datos)
+	// Duración mínima de la falla en minutos (cuánto tiempo sin enviar datos)
 	DuracionFallaMin int `yaml:"duracion_falla_min"`
+	// Duración máxima de la falla en minutos (si no está, se usa DuracionFallaMin)
+	DuracionFallaMax int `yaml:"duracion_falla_max"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -105,12 +111,66 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("debes definir al menos un limnigrafo")
 	}
 
-	for _, l := range cfg.Limnigrafos {
+	for i := range cfg.Limnigrafos {
+		l := &cfg.Limnigrafos[i]
+
 		if l.ID == 0 {
 			return nil, fmt.Errorf("limnigrafo con id 0 no es válido")
 		}
 		if l.Token == "" {
 			return nil, fmt.Errorf("limnigrafo %d no tiene token", l.ID)
+		}
+		if l.ProbabilidadFalla < 0 || l.ProbabilidadFalla > 1 {
+			return nil, fmt.Errorf(
+				"limnigrafo %d tiene probabilidad_falla inválida (%.4f). Debe estar entre 0 y 1",
+				l.ID, l.ProbabilidadFalla,
+			)
+		}
+
+		// Compatibilidad con configs antiguas que usan bateria_inicial.
+		if l.BateriaMax <= 0 && l.BateriaInicial > 0 {
+			l.BateriaMax = l.BateriaInicial
+		}
+		if l.BateriaMax <= 0 {
+			l.BateriaMax = 100
+		}
+		if l.BateriaMin < 0 {
+			return nil, fmt.Errorf("limnigrafo %d tiene bateria_min negativa", l.ID)
+		}
+		if l.BateriaMin > l.BateriaMax {
+			return nil, fmt.Errorf(
+				"limnigrafo %d tiene bateria_min (%.2f) mayor que bateria_max (%.2f)",
+				l.ID, l.BateriaMin, l.BateriaMax,
+			)
+		}
+		if l.IntervalMinMinutes < 0 || l.IntervalMaxMinutes < 0 {
+			return nil, fmt.Errorf("limnigrafo %d tiene intervalo negativo", l.ID)
+		}
+		if l.IntervalMinMinutes == 0 && l.IntervalMaxMinutes > 0 {
+			l.IntervalMinMinutes = l.IntervalMaxMinutes
+		}
+		if l.IntervalMaxMinutes == 0 && l.IntervalMinMinutes > 0 {
+			l.IntervalMaxMinutes = l.IntervalMinMinutes
+		}
+		if l.IntervalMinMinutes > l.IntervalMaxMinutes {
+			l.IntervalMinMinutes, l.IntervalMaxMinutes = l.IntervalMaxMinutes, l.IntervalMinMinutes
+		}
+
+		if l.DuracionFallaMin < 0 || l.DuracionFallaMax < 0 {
+			return nil, fmt.Errorf("limnigrafo %d tiene duración de falla negativa", l.ID)
+		}
+		if l.DuracionFallaMin == 0 && l.DuracionFallaMax > 0 {
+			l.DuracionFallaMin = l.DuracionFallaMax
+		}
+		if l.DuracionFallaMax == 0 && l.DuracionFallaMin > 0 {
+			l.DuracionFallaMax = l.DuracionFallaMin
+		}
+		if l.DuracionFallaMin == 0 && l.DuracionFallaMax == 0 {
+			l.DuracionFallaMin = 1
+			l.DuracionFallaMax = 1
+		}
+		if l.DuracionFallaMin > l.DuracionFallaMax {
+			l.DuracionFallaMin, l.DuracionFallaMax = l.DuracionFallaMax, l.DuracionFallaMin
 		}
 	}
 

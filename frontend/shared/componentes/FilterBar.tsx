@@ -32,8 +32,10 @@ export default function FilterBar({
 	onClear,
 	isLoading = false,
 }: FilterBarProps) {
+	const fieldClassName = "rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none transition focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]";
+
 	return (
-		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)]">
+		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 			<div className="flex flex-col gap-4">
 				<div className="flex flex-wrap items-start justify-between gap-3">
 					<div>
@@ -44,10 +46,10 @@ export default function FilterBar({
 				</div>
 
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
+					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Usuario
 						<select
-							className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none transition focus:border-[#0982C8]"
+							className={fieldClassName}
 							value={values.usuario}
 							onChange={(event) => onChange("usuario", event.target.value)}
 						>
@@ -58,10 +60,10 @@ export default function FilterBar({
 							))}
 						</select>
 					</label>
-					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
+					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Tipo de acción
 						<select
-							className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none transition focus:border-[#0982C8]"
+							className={fieldClassName}
 							value={values.accion}
 							onChange={(event) => onChange("accion", event.target.value)}
 						>
@@ -72,10 +74,10 @@ export default function FilterBar({
 							))}
 						</select>
 					</label>
-					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
+					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Entidad
 						<select
-							className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none transition focus:border-[#0982C8]"
+							className={fieldClassName}
 							value={values.entidad}
 							onChange={(event) => onChange("entidad", event.target.value)}
 						>
@@ -86,20 +88,20 @@ export default function FilterBar({
 							))}
 						</select>
 					</label>
-					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
+					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Fecha desde
 						<input
 							type="date"
-							className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none transition focus:border-[#0982C8]"
+							className={fieldClassName}
 							value={values.desde}
 							onChange={(event) => onChange("desde", event.target.value)}
 						/>
 					</label>
-					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B]">
+					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Fecha hasta
 						<input
 							type="date"
-							className="rounded-xl border border-[#D3D4D5] p-3 text-[15px] text-[#4B4B4B] outline-none transition focus:border-[#0982C8]"
+							className={fieldClassName}
 							value={values.hasta}
 							onChange={(event) => onChange("hasta", event.target.value)}
 						/>
@@ -118,7 +120,7 @@ export default function FilterBar({
 					<button
 						type="button"
 						onClick={onClear}
-						className="rounded-xl border border-[#0982C8] px-5 py-3 text-[15px] font-semibold text-[#0982C8] bg-white shadow-[0px_4px_10px_rgba(9,130,200,0.12)] transition hover:-translate-y-[1px] hover:border-[#0A76BB]"
+						className="rounded-xl border border-[#0982C8] bg-white px-5 py-3 text-[15px] font-semibold text-[#0982C8] shadow-[0px_4px_10px_rgba(9,130,200,0.12)] transition hover:-translate-y-[1px] hover:border-[#0A76BB] dark:bg-[#0F172A] dark:text-[#38BDF8] dark:border-[#0EA5E9]"
 					>
 						Limpiar
 					</button>

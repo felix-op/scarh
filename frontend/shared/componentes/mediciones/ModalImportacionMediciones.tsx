@@ -73,7 +73,7 @@ export default function ModalImportacionMediciones({
 				<div className="flex h-full flex-col">
 					<DialogHeader className="border-b border-ventana-secondary px-6 py-5 text-left">
 						<DialogTitle className="text-2xl font-bold text-ventana-foreground">Importación de datos</DialogTitle>
-						<DialogDescription className="text-sm text-foreground-secondary">
+						<DialogDescription className="text-sm text-foreground/80">
 							Cargá archivos JSON o CSV con columnas estándar de mediciones.
 						</DialogDescription>
 					</DialogHeader>
@@ -105,14 +105,14 @@ export default function ModalImportacionMediciones({
 						</label>
 
 						{importFileName ? (
-							<p className="text-sm text-foreground-secondary">
+							<p className="text-sm text-foreground/80">
 								Archivo: <span className="font-semibold text-foreground">{importFileName}</span>
 							</p>
 						) : null}
 
 						<div className="max-h-[320px] overflow-auto rounded-lg border border-border">
 							<table className="min-w-full text-left text-[13px] text-foreground">
-								<thead className="bg-campo-input text-[12px] uppercase tracking-wide text-foreground-secondary">
+								<thead className="bg-campo-input text-[12px] uppercase tracking-wide text-foreground/80">
 									<tr>
 										<th className="px-3 py-2">#</th>
 										<th className="px-3 py-2">Fecha</th>
@@ -124,7 +124,7 @@ export default function ModalImportacionMediciones({
 								<tbody>
 									{importRows.length === 0 ? (
 										<tr>
-											<td colSpan={5} className="px-3 py-4 text-center text-foreground-secondary">Sin filas cargadas.</td>
+											<td colSpan={5} className="px-3 py-4 text-center text-foreground/80">Sin filas cargadas.</td>
 										</tr>
 									) : (
 										importRows.slice(0, 20).map((row, index) => (

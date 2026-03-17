@@ -1,4 +1,4 @@
-export type EstadoUsuario = "activo" | "inactivo" | "pendiente" | "suspendido";
+export type EstadoUsuario = "activo" | "inactivo";
 
 export type UsuarioResponse = {
     id: number,

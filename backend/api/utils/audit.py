@@ -39,6 +39,11 @@ def registrar_accion_auditoria(
 
 
 def normalizar_valor_auditoria(valor: Any) -> Any:
+    from django.db.models.manager import Manager
+
+    if isinstance(valor, Manager):
+        return list(valor.values_list('pk', flat=True))
+
     if isinstance(valor, Model):
         if hasattr(valor, "codigo"):
             return getattr(valor, "codigo")
