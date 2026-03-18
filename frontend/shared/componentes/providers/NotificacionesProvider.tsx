@@ -120,7 +120,7 @@ export default function NotificacionesProvider({ children }: NotificacionesProvi
 	}, [status]);
 
 	useEffect(() => {
-		if (!alertas) return;
+		if (!Array.isArray(alertas)) return;
 
 		alertas.forEach((alerta) => {
 			if (seenAlertIdsRef.current.has(alerta.id)) {
