@@ -8,50 +8,22 @@ import {
 	CardTitle,
 } from "@componentes/components/ui/card";
 import {
-	type ChartConfig,
 	ChartContainer,
 	ChartLegend,
 	ChartLegendContent,
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@componentes/components/ui/chart";
-import {
-	type EstadisticaAtributo,
-	type MedicionPaginatedResponse,
-	type MedicionResponse,
-	useGetMediciones,
-} from "@servicios/api/django.api";
-import { useMemo } from "react";
+import { type EstadisticaAtributo } from "@servicios/api/django.api";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { type LimnigrafoResponse } from "types/limnigrafos";
-
-const CHART_COLORS = [
-	"#0EA5E9",
-	"#22C55E",
-	"#F97316",
-	"#A855F7",
-	"#E11D48",
-	"#14B8A6",
-	"#6366F1",
-	"#F59E0B",
-];
-
-const CHART_PAGE_SIZE = 2000;
-const MAX_CHART_POINTS = 140;
-
-type ChartSerie = {
-	limnigrafoId: number;
-	dataKey: string;
-	label: string;
-	color: string;
-};
-
-type ChartPoint = {
-	date: string;
-	[key: string]: string | number | null;
-};
-
-type SharedTimeRange = "1h" | "6h" | "24h" | "7d" | "30d" | "90d";
+import usePanelComparativasData from "../hooks/usePanelComparativasData";
+import {
+	type SharedTimeRange,
+	TIME_RANGE_LABEL,
+	formatAtributoValue,
+	toNumericTooltipValue,
+} from "../lib/panel-comparativas-domain";
 
 type PanelComparativasProps = {
 	limnigrafos: LimnigrafoResponse[];
@@ -61,79 +33,6 @@ type PanelComparativasProps = {
 	chartTimeRange: SharedTimeRange;
 };
 
-const WINDOW_DURATION_MS: Record<SharedTimeRange, number> = {
-	"1h": 60 * 60 * 1000,
-	"6h": 6 * 60 * 60 * 1000,
-	"24h": 24 * 60 * 60 * 1000,
-	"7d": 7 * 24 * 60 * 60 * 1000,
-	"30d": 30 * 24 * 60 * 60 * 1000,
-	"90d": 90 * 24 * 60 * 60 * 1000,
-};
-
-const TIME_RANGE_LABEL: Record<SharedTimeRange, string> = {
-	"1h": "Última hora",
-	"6h": "Últimas 6 horas",
-	"24h": "Últimas 24 horas",
-	"90d": "Últimos 90 días",
-	"30d": "Últimos 30 días",
-	"7d": "Últimos 7 días",
-};
-
-const ATRIBUTO_METADATA: Record<EstadisticaAtributo, { label: string; unit: string; decimals: number }> = {
-	altura_agua: {
-		label: "Altura del agua",
-		unit: "m",
-		decimals: 2,
-	},
-	presion: {
-		label: "Presión",
-		unit: "hPa",
-		decimals: 2,
-	},
-	temperatura: {
-		label: "Temperatura",
-		unit: "°C",
-		decimals: 2,
-	},
-};
-
-function getMedicionValueByAtributo(
-	medicion: MedicionResponse,
-	atributo: EstadisticaAtributo,
-): number | null {
-	if (atributo === "altura_agua") {
-		return medicion.altura_agua;
-	}
-	if (atributo === "presion") {
-		return medicion.presion;
-	}
-	return medicion.temperatura;
-}
-
-function formatAtributoValue(value: number | null, atributo: EstadisticaAtributo): string {
-	if (value === null || Number.isNaN(value)) {
-		return "-";
-	}
-
-	const { decimals, unit } = ATRIBUTO_METADATA[atributo];
-	return `${value.toFixed(decimals)} ${unit}`;
-}
-
-function toNumericTooltipValue(value: unknown): number | null {
-	if (typeof value === "number" && Number.isFinite(value)) {
-		return value;
-	}
-	if (typeof value === "string") {
-		const parsed = Number(value);
-		return Number.isFinite(parsed) ? parsed : null;
-	}
-	return null;
-}
-
-function getStartDateFromRange(reference: Date, range: SharedTimeRange): Date {
-	return new Date(reference.getTime() - WINDOW_DURATION_MS[range]);
-}
-
 export default function PanelComparativas({
 	limnigrafos,
 	limnigrafosError,
@@ -141,127 +40,20 @@ export default function PanelComparativas({
 	chartLimnigrafos,
 	chartTimeRange,
 }: PanelComparativasProps) {
-	const comparativasQueryParams = useMemo(() => {
-		const now = new Date();
-		const from = new Date(now.getTime() - WINDOW_DURATION_MS["90d"]);
-
-		return {
-			limit: String(CHART_PAGE_SIZE),
-			page: "1",
-			fecha_desde: from.toISOString(),
-		};
-	}, []);
-
 	const {
-		data: medicionesComparativasData,
-		isLoading: loadingComparativas,
-		error: medicionesComparativasError,
-	} = useGetMediciones({
-		params: {
-			queryParams: comparativasQueryParams,
-		},
-		config: {
-			placeholderData: (previous) => previous,
-			refetchInterval: 30000,
-		},
+		chartSeries,
+		chartConfig,
+		filteredChartData,
+		loadingComparativas,
+		hasChartError,
+		limnigrafosSeleccionados,
+		atributoSeleccionado,
+	} = usePanelComparativasData({
+		limnigrafos,
+		chartAtributo,
+		chartLimnigrafos,
+		chartTimeRange,
 	});
-
-	const limnigrafoNameById = useMemo(() => {
-		const map = new Map<number, string>();
-		limnigrafos.forEach((limnigrafo) => {
-			map.set(limnigrafo.id, limnigrafo.codigo);
-		});
-		return map;
-	}, [limnigrafos]);
-
-	const medicionesComparativas = useMemo(
-		() => ((medicionesComparativasData as MedicionPaginatedResponse | undefined)?.results ?? []),
-		[medicionesComparativasData],
-	);
-
-	const limnigrafosSeleccionados = useMemo(
-		() => chartLimnigrafos
-			.map((item) => Number.parseInt(item, 10))
-			.filter((item) => !Number.isNaN(item)),
-		[chartLimnigrafos],
-	);
-
-	const chartSeries = useMemo<ChartSerie[]>(() => {
-		return chartLimnigrafos
-			.map((id, index) => {
-				const parsedId = Number.parseInt(id, 10);
-				if (Number.isNaN(parsedId)) {
-					return null;
-				}
-				return {
-					limnigrafoId: parsedId,
-					dataKey: `limnigrafo_${parsedId}`,
-					label: limnigrafoNameById.get(parsedId) ?? `ID ${parsedId}`,
-					color: CHART_COLORS[index % CHART_COLORS.length],
-				};
-			})
-			.filter((item): item is ChartSerie => item !== null);
-	}, [chartLimnigrafos, limnigrafoNameById]);
-
-	const chartConfig = useMemo<ChartConfig>(() => {
-		const config: ChartConfig = {};
-		chartSeries.forEach((serie) => {
-			config[serie.dataKey] = {
-				label: serie.label,
-				color: serie.color,
-			};
-		});
-		return config;
-	}, [chartSeries]);
-
-	const chartData = useMemo<ChartPoint[]>(() => {
-		if (chartSeries.length === 0 || medicionesComparativas.length === 0) {
-			return [];
-		}
-
-		const allowedIds = new Set(chartSeries.map((serie) => serie.limnigrafoId));
-		const ordered = [...medicionesComparativas]
-			.filter((medicion) => allowedIds.has(medicion.limnigrafo))
-			.sort((a, b) => new Date(a.fecha_hora).getTime() - new Date(b.fecha_hora).getTime())
-			.slice(-MAX_CHART_POINTS);
-
-		const grouped = new Map<string, ChartPoint>();
-
-		ordered.forEach((medicion) => {
-			const value = getMedicionValueByAtributo(medicion, chartAtributo);
-			if (value === null || Number.isNaN(value)) {
-				return;
-			}
-
-			const existing = grouped.get(medicion.fecha_hora) ?? {
-				date: medicion.fecha_hora,
-			};
-
-			existing[`limnigrafo_${medicion.limnigrafo}`] = Number(value.toFixed(2));
-			grouped.set(medicion.fecha_hora, existing);
-		});
-
-		return Array.from(grouped.entries())
-			.sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-			.map((entry) => entry[1]);
-	}, [chartAtributo, chartSeries, medicionesComparativas]);
-
-	const filteredChartData = useMemo(() => {
-		if (chartData.length === 0) {
-			return [];
-		}
-
-		const referenceDate = new Date();
-		const startDate = getStartDateFromRange(referenceDate, chartTimeRange);
-
-		return chartData.filter((point) => {
-			const date = new Date(point.date);
-			return date >= startDate && date <= referenceDate;
-		});
-	}, [chartData, chartTimeRange]);
-
-	const atributoSeleccionado = ATRIBUTO_METADATA[chartAtributo];
-	const hasChartError = Boolean(medicionesComparativasError);
 
 	return (
 		<>

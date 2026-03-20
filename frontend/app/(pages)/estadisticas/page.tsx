@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import PaginaBase from "@componentes/base/PaginaBase";
 import EstadisticaCard from "@componentes/EstadisticaCard";
 import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
@@ -13,10 +13,6 @@ import {
 	ChartTooltipContent,
 } from "@componentes/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@componentes/components/ui/tabs";
-import {
-	type MedicionPaginatedResponse,
-	type MedicionResponse,
-} from "@servicios/api/django.api";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
 import { Paginado } from "@servicios/api/types";
 import { LimnigrafoResponse } from "types/limnigrafos";
@@ -31,84 +27,32 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
-import { toDatetimeLocalInputValue } from "../mediciones/utils";
 import PanelComparativas from "./componentes/PanelComparativas";
+import useEstadisticasMediciones from "./hooks/useEstadisticasMediciones";
+import useRateAnalysis from "./hooks/useRateAnalysis";
+import {
+	type EstadisticaAtributo,
+	type EstadisticasFilters,
+	type EstadisticasTab,
+	type ModoFiltro,
+	type TablaComparativaFilters,
+	type VentanaRealtime,
+	ATRIBUTO_METADATA,
+	MIN_RATE_INTERVAL_MS,
+	RATE_MAD_Z_THRESHOLD,
+	REALTIME_WINDOW_LABELS,
+	computeSummary,
+	formatDateTick,
+	formatDateTime,
+	formatMetricValue,
+	formatNumber,
+	formatVariation,
+	getDefaultFilters,
+	getDefaultTablaComparativaFilters,
+	getMedicionValueByAtributo,
+	toIsoString,
+} from "./lib/estadisticas-domain";
 import TablaComparativaEstadisticas from "./componentes/TablaComparativaEstadisticas";
-
-const FETCH_PAGE_SIZE = 1000;
-const MAX_FETCH_ROWS = 20000;
-const REALTIME_REFRESH_MS = 30000;
-const MIN_RATE_INTERVAL_MS = 60 * 1000;
-// Umbral de  z-score (cuantas desviaciones con desviación absoluta mediana) para descartar picos de tasa irrealmente altos o bajos.
-const RATE_MAD_Z_THRESHOLD = 6;
-
-type EstadisticaAtributo = "altura_agua" | "presion" | "temperatura";
-type ModoFiltro = "realtime" | "rango";
-type VentanaRealtime = "1h" | "6h" | "24h" | "7d" | "30d" | "90d";
-type EstadisticasTab = "graficos" | "tabla";
-
-type EstadisticasFilters = {
-	atributo: EstadisticaAtributo;
-	modo: ModoFiltro;
-	ventana: VentanaRealtime;
-	desde: string;
-	hasta: string;
-	limnigrafos: string[];
-};
-
-type TablaComparativaFilters = {
-	atributo: EstadisticaAtributo;
-	desde: string;
-	hasta: string;
-	limnigrafos: string[];
-};
-
-type ActiveRange = {
-	currentFrom: number;
-	currentTo: number;
-	previousFrom: number;
-	previousTo: number;
-};
-
-type ParsedMedicion = MedicionResponse & {
-	timestamp: number;
-};
-
-type Summary = {
-	registros: number;
-	promedio: number | null;
-	minimo: number | null;
-	maximo: number | null;
-	desvio: number | null;
-	p90: number | null;
-};
-
-const ATRIBUTO_METADATA: Record<EstadisticaAtributo, { label: string; unit: string; decimals: number }> = {
-	altura_agua: {
-		label: "Nivel del agua",
-		unit: "m",
-		decimals: 2,
-	},
-	presion: {
-		label: "Presión atmosférica",
-		unit: "hPa",
-		decimals: 2,
-	},
-	temperatura: {
-		label: "Temperatura",
-		unit: "°C",
-		decimals: 2,
-	},
-};
-
-const REALTIME_WINDOW_LABELS: Record<VentanaRealtime, string> = {
-	"1h": "Última hora",
-	"6h": "Últimas 6 horas",
-	"24h": "Últimas 24 horas",
-	"7d": "Últimos 7 días",
-	"30d": "Últimos 30 días",
-	"90d": "Últimos 90 días",
-};
 
 const CHART_COLORS = {
 	tasa: "#F97316",
@@ -125,314 +69,14 @@ const fuenteChartConfig: ChartConfig = {
 	manual: { label: "Manual", color: CHART_COLORS.manual },
 };
 
-function getDefaultDateRange() {
-	const now = new Date();
-	const from = new Date(now);
-	from.setDate(now.getDate() - 7);
-
-	return {
-		desde: toDatetimeLocalInputValue(from),
-		hasta: toDatetimeLocalInputValue(now),
-	};
-}
-
-function getDefaultFilters(): EstadisticasFilters {
-	const { desde, hasta } = getDefaultDateRange();
-	return {
-		atributo: "altura_agua",
-		modo: "realtime",
-		ventana: "24h",
-		desde,
-		hasta,
-		limnigrafos: [],
-	};
-}
-
-function getDefaultTablaComparativaFilters(): TablaComparativaFilters {
-	const { desde, hasta } = getDefaultDateRange();
-	return {
-		atributo: "altura_agua",
-		desde,
-		hasta,
-		limnigrafos: [],
-	};
-}
-
-function toIsoString(value: string): string | null {
-	if (!value) {
-		return null;
-	}
-
-	const parsed = new Date(value);
-	if (Number.isNaN(parsed.getTime())) {
-		return null;
-	}
-
-	return parsed.toISOString();
-}
-
-function getWindowDurationMs(window: VentanaRealtime): number {
-	if (window === "1h") {
-		return 60 * 60 * 1000;
-	}
-	if (window === "6h") {
-		return 6 * 60 * 60 * 1000;
-	}
-	if (window === "24h") {
-		return 24 * 60 * 60 * 1000;
-	}
-	if (window === "7d") {
-		return 7 * 24 * 60 * 60 * 1000;
-	}
-	if (window === "30d") {
-		return 30 * 24 * 60 * 60 * 1000;
-	}
-	return 90 * 24 * 60 * 60 * 1000;
-}
-
-function resolveCurrentRange(filters: EstadisticasFilters, reference: Date): { from: Date; to: Date } {
-	if (filters.modo === "realtime") {
-		const to = new Date(reference);
-		const from = new Date(to.getTime() - getWindowDurationMs(filters.ventana));
-		return { from, to };
-	}
-
-	const fromIso = toIsoString(filters.desde);
-	const toIso = toIsoString(filters.hasta);
-
-	if (!fromIso || !toIso) {
-		const to = new Date(reference);
-		const from = new Date(to.getTime() - getWindowDurationMs("24h"));
-		return { from, to };
-	}
-
-	const from = new Date(fromIso);
-	const to = new Date(toIso);
-	if (from.getTime() >= to.getTime()) {
-		const safeTo = new Date(reference);
-		const safeFrom = new Date(safeTo.getTime() - getWindowDurationMs("24h"));
-		return { from: safeFrom, to: safeTo };
-	}
-
-	return { from, to };
-}
-
-function getMedicionValueByAtributo(medicion: MedicionResponse, atributo: EstadisticaAtributo): number | null {
-	if (atributo === "altura_agua") {
-		return medicion.altura_agua;
-	}
-	if (atributo === "presion") {
-		return medicion.presion;
-	}
-	return medicion.temperatura;
-}
-
-function formatMetricValue(value: number | null, atributo: EstadisticaAtributo): string {
-	if (value === null || Number.isNaN(value)) {
-		return "-";
-	}
-
-	const { decimals, unit } = ATRIBUTO_METADATA[atributo];
-	return `${value.toFixed(decimals)} ${unit}`;
-}
-
-function formatNumber(value: number, decimals = 2): string {
-	if (Number.isNaN(value)) {
-		return "-";
-	}
-
-	return value.toLocaleString("es-AR", {
-		minimumFractionDigits: decimals,
-		maximumFractionDigits: decimals,
-	});
-}
-
-function computePercentile(values: number[], percentile: number): number | null {
-	if (values.length === 0) {
-		return null;
-	}
-
-	const sorted = [...values].sort((a, b) => a - b);
-	const k = ((sorted.length - 1) * percentile) / 100;
-	const floor = Math.floor(k);
-	const ceil = Math.ceil(k);
-
-	if (floor === ceil) {
-		return sorted[floor];
-	}
-
-	const d0 = sorted[floor] * (ceil - k);
-	const d1 = sorted[ceil] * (k - floor);
-	return d0 + d1;
-}
-
-function computeSummary(values: number[]): Summary {
-	if (values.length === 0) {
-		return {
-			registros: 0,
-			promedio: null,
-			minimo: null,
-			maximo: null,
-			desvio: null,
-			p90: null,
-		};
-	}
-
-	const promedio = values.reduce((acc, current) => acc + current, 0) / values.length;
-	const minimo = Math.min(...values);
-	const maximo = Math.max(...values);
-	const p90 = computePercentile(values, 90);
-	const variance = values.reduce((acc, current) => acc + ((current - promedio) ** 2), 0) / values.length;
-	const desvio = Math.sqrt(variance);
-
-	return {
-		registros: values.length,
-		promedio,
-		minimo,
-		maximo,
-		desvio,
-		p90,
-	};
-}
-
-function getRateBucketSizeMs(durationMs: number): number {
-	if (durationMs <= 2 * 60 * 60 * 1000) {
-		return 60 * 1000;
-	}
-	if (durationMs <= 6 * 60 * 60 * 1000) {
-		return 2 * 60 * 1000;
-	}
-	if (durationMs <= 24 * 60 * 60 * 1000) {
-		return 5 * 60 * 1000;
-	}
-	if (durationMs <= 7 * 24 * 60 * 60 * 1000) {
-		return 15 * 60 * 1000;
-	}
-	if (durationMs <= 30 * 24 * 60 * 60 * 1000) {
-		return 60 * 60 * 1000;
-	}
-	return 3 * 60 * 60 * 1000;
-}
-
-function formatDateTick(value: string, durationMs: number): string {
-	const date = new Date(value);
-	if (Number.isNaN(date.getTime())) {
-		return "";
-	}
-
-	if (durationMs <= 24 * 60 * 60 * 1000) {
-		return date.toLocaleTimeString("es-AR", {
-			hour: "2-digit",
-			minute: "2-digit",
-		});
-	}
-
-	if (durationMs <= 7 * 24 * 60 * 60 * 1000) {
-		return date.toLocaleDateString("es-AR", {
-			month: "short",
-			day: "2-digit",
-			hour: "2-digit",
-		});
-	}
-
-	return date.toLocaleDateString("es-AR", {
-		month: "short",
-		day: "2-digit",
-	});
-}
-
-function formatDateTime(value: number | string): string {
-	const date = new Date(value);
-	if (Number.isNaN(date.getTime())) {
-		return "-";
-	}
-
-	return date.toLocaleString("es-AR", {
-		year: "numeric",
-		month: "2-digit",
-		day: "2-digit",
-		hour: "2-digit",
-		minute: "2-digit",
-	});
-}
-
-function formatVariation(value: number | null): string {
-	if (value === null || !Number.isFinite(value)) {
-		return "Sin base de comparación";
-	}
-
-	const sign = value > 0 ? "+" : "";
-	return `${sign}${value.toFixed(2)} % vs período previo`;
-}
-
-function extractErrorMessage(payload: unknown): string {
-	if (typeof payload === "string" && payload.trim()) {
-		return payload;
-	}
-
-	if (payload && typeof payload === "object") {
-		const candidate = payload as Record<string, unknown>;
-		const detail = candidate.detail;
-		const error = candidate.error;
-		if (typeof detail === "string" && detail.trim()) {
-			return detail;
-		}
-		if (typeof error === "string" && error.trim()) {
-			return error;
-		}
-	}
-
-	return "No se pudieron cargar las mediciones para estadísticas.";
-}
-
-async function fetchAllMedicionesForStats(queryParams: Record<string, string>): Promise<MedicionResponse[]> {
-	let page = 1;
-	let allRows: MedicionResponse[] = [];
-
-	while (true) {
-		const currentParams = new URLSearchParams({
-			...queryParams,
-			limit: String(FETCH_PAGE_SIZE),
-			page: String(page),
-		});
-
-		const response = await fetch(`/api/proxy/medicion/?${currentParams.toString()}`, {
-			method: "GET",
-			cache: "no-store",
-		});
-
-		if (!response.ok) {
-			const errorBody = await response.json().catch(() => ({}));
-			throw new Error(extractErrorMessage(errorBody));
-		}
-
-		const payload = (await response.json()) as MedicionPaginatedResponse;
-		allRows = allRows.concat(payload.results ?? []);
-
-		if (!payload.next || allRows.length >= MAX_FETCH_ROWS) {
-			break;
-		}
-
-		page += 1;
-	}
-
-	return allRows;
-}
-
 export default function EstadisticasPage() {
 	const [activeTab, setActiveTab] = useState<EstadisticasTab>("graficos");
 	const [filters, setFilters] = useState<EstadisticasFilters>(getDefaultFilters);
 	const [appliedFilters, setAppliedFilters] = useState<EstadisticasFilters>(getDefaultFilters);
-	const [fetchError, setFetchError] = useState<string | null>(null);
 	const [filterError, setFilterError] = useState<string | null>(null);
 	const [tablaFilters, setTablaFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
 	const [tablaAppliedFilters, setTablaAppliedFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
 	const [tablaFilterError, setTablaFilterError] = useState<string | null>(null);
-	const [isLoadingData, setIsLoadingData] = useState(false);
-	const [refreshTick, setRefreshTick] = useState(0);
-	const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
-	const [rawMediciones, setRawMediciones] = useState<MedicionResponse[]>([]);
-	const [activeRange, setActiveRange] = useState<ActiveRange | null>(null);
 
 	const { data: limnigrafosData, error: limnigrafosError } = useGetLimnigrafos({
 		params: {
@@ -445,99 +89,15 @@ export default function EstadisticasPage() {
 			refetchInterval: 300000,
 		},
 	});
-
-	useEffect(() => {
-		if (appliedFilters.modo !== "realtime") {
-			return;
-		}
-
-		const intervalId = window.setInterval(() => {
-			setRefreshTick((previous) => previous + 1);
-		}, REALTIME_REFRESH_MS);
-
-		return () => {
-			window.clearInterval(intervalId);
-		};
-	}, [appliedFilters.modo, appliedFilters.ventana]);
-
-	useEffect(() => {
-		let cancelled = false;
-
-		async function loadMediciones() {
-			setIsLoadingData(true);
-			setFetchError(null);
-
-			const now = new Date();
-			const initialCurrentRange = resolveCurrentRange(appliedFilters, now);
-			const initialDurationMs = Math.max(60 * 1000, initialCurrentRange.to.getTime() - initialCurrentRange.from.getTime());
-			const effectiveCurrentRange = initialCurrentRange;
-			const effectivePreviousRange = {
-				from: new Date(initialCurrentRange.from.getTime() - initialDurationMs),
-				to: new Date(initialCurrentRange.from),
-			};
-
-			try {
-				let rows: MedicionResponse[] = [];
-
-				if (appliedFilters.modo === "realtime") {
-					rows = await fetchAllMedicionesForStats({
-						fecha_desde: effectivePreviousRange.from.toISOString(),
-						fecha_hasta: now.toISOString(),
-					});
-				} else {
-					rows = await fetchAllMedicionesForStats({
-						fecha_desde: effectivePreviousRange.from.toISOString(),
-						fecha_hasta: effectiveCurrentRange.to.toISOString(),
-					});
-				}
-
-				const boundedRows = rows.filter((item) => {
-					const timestamp = new Date(item.fecha_hora).getTime();
-					if (Number.isNaN(timestamp)) {
-						return false;
-					}
-
-					return timestamp >= effectivePreviousRange.from.getTime()
-						&& timestamp <= effectiveCurrentRange.to.getTime();
-				});
-
-				if (cancelled) {
-					return;
-				}
-
-				setRawMediciones(boundedRows);
-				setActiveRange({
-					currentFrom: effectiveCurrentRange.from.getTime(),
-					currentTo: effectiveCurrentRange.to.getTime(),
-					previousFrom: effectivePreviousRange.from.getTime(),
-					previousTo: effectivePreviousRange.to.getTime(),
-				});
-				setLastUpdatedAt(new Date().toISOString());
-			} catch (error) {
-				if (cancelled) {
-					return;
-				}
-				setRawMediciones([]);
-				setActiveRange({
-					currentFrom: effectiveCurrentRange.from.getTime(),
-					currentTo: effectiveCurrentRange.to.getTime(),
-					previousFrom: effectivePreviousRange.from.getTime(),
-					previousTo: effectivePreviousRange.to.getTime(),
-				});
-				setFetchError(error instanceof Error ? error.message : "No se pudieron cargar las mediciones para estadísticas.");
-			} finally {
-				if (!cancelled) {
-					setIsLoadingData(false);
-				}
-			}
-		}
-
-		loadMediciones();
-
-		return () => {
-			cancelled = true;
-		};
-	}, [appliedFilters, refreshTick]);
+	const {
+		isLoadingData,
+		fetchError,
+		lastUpdatedAt,
+		activeRange,
+		parsedMediciones,
+		currentRows,
+		previousRows,
+	} = useEstadisticasMediciones(appliedFilters);
 
 	const limnigrafosPayload = limnigrafosData as Paginado<LimnigrafoResponse> | LimnigrafoResponse[] | undefined;
 	const limnigrafos = useMemo(
@@ -557,58 +117,6 @@ export default function EstadisticasPage() {
 			})),
 		[limnigrafos],
 	);
-
-	const selectedLimnigrafoIds = useMemo(
-		() => appliedFilters.limnigrafos
-			.map((value) => Number.parseInt(value, 10))
-			.filter((value) => !Number.isNaN(value)),
-		[appliedFilters.limnigrafos],
-	);
-
-	const selectedLimnigrafoIdSet = useMemo(
-		() => new Set(selectedLimnigrafoIds),
-		[selectedLimnigrafoIds],
-	);
-
-	const parsedMediciones = useMemo<ParsedMedicion[]>(() => {
-		return rawMediciones
-			.map((medicion) => {
-				const timestamp = new Date(medicion.fecha_hora).getTime();
-				if (Number.isNaN(timestamp)) {
-					return null;
-				}
-				return {
-					...medicion,
-					timestamp,
-				};
-			})
-			.filter((item): item is ParsedMedicion => item !== null)
-			.sort((a, b) => a.timestamp - b.timestamp);
-	}, [rawMediciones]);
-
-	const currentRows = useMemo(() => {
-		if (!activeRange) {
-			return [] as ParsedMedicion[];
-		}
-
-		return parsedMediciones.filter((medicion) => {
-			const inCurrentRange = medicion.timestamp >= activeRange.currentFrom && medicion.timestamp <= activeRange.currentTo;
-			const inSelectedLimnigrafo = selectedLimnigrafoIdSet.size === 0 || selectedLimnigrafoIdSet.has(medicion.limnigrafo);
-			return inCurrentRange && inSelectedLimnigrafo;
-		});
-	}, [activeRange, parsedMediciones, selectedLimnigrafoIdSet]);
-
-	const previousRows = useMemo(() => {
-		if (!activeRange) {
-			return [] as ParsedMedicion[];
-		}
-
-		return parsedMediciones.filter((medicion) => {
-			const inPreviousRange = medicion.timestamp >= activeRange.previousFrom && medicion.timestamp < activeRange.previousTo;
-			const inSelectedLimnigrafo = selectedLimnigrafoIdSet.size === 0 || selectedLimnigrafoIdSet.has(medicion.limnigrafo);
-			return inPreviousRange && inSelectedLimnigrafo;
-		});
-	}, [activeRange, parsedMediciones, selectedLimnigrafoIdSet]);
 
 	const atributoMeta = ATRIBUTO_METADATA[appliedFilters.atributo];
 
@@ -637,138 +145,13 @@ export default function EstadisticasPage() {
 		return ((currentSummary.promedio - previousSummary.promedio) / Math.abs(previousSummary.promedio)) * 100;
 	}, [currentSummary.promedio, previousSummary.promedio]);
 
-	const activeDurationMs = useMemo(() => {
-		if (!activeRange) {
-			return getWindowDurationMs("24h");
-		}
-
-		return Math.max(60 * 1000, activeRange.currentTo - activeRange.currentFrom);
-	}, [activeRange]);
-
-	const rateComputation = useMemo(() => {
-		const grouped = new Map<number, ParsedMedicion[]>();
-		currentRows.forEach((medicion) => {
-			if (medicion.altura_agua === null || !Number.isFinite(medicion.altura_agua)) {
-				return;
-			}
-
-			const existing = grouped.get(medicion.limnigrafo) ?? [];
-			existing.push(medicion);
-			grouped.set(medicion.limnigrafo, existing);
-		});
-
-		const candidateRates: Array<{ timestamp: number; rate: number }> = [];
-		grouped.forEach((rows) => {
-			const ordered = [...rows].sort((a, b) => a.timestamp - b.timestamp);
-			for (let index = 1; index < ordered.length; index += 1) {
-				const previous = ordered[index - 1];
-				const current = ordered[index];
-				if (previous.altura_agua === null || current.altura_agua === null) {
-					continue;
-				}
-
-				const deltaMs = current.timestamp - previous.timestamp;
-				if (deltaMs < MIN_RATE_INTERVAL_MS) {
-					continue;
-				}
-
-				const deltaHours = deltaMs / (60 * 60 * 1000);
-				if (deltaHours <= 0) {
-					continue;
-				}
-
-				const rate = (current.altura_agua - previous.altura_agua) / deltaHours;
-				candidateRates.push({
-					timestamp: current.timestamp,
-					rate,
-				});
-			}
-		});
-
-		const orderedCandidates = candidateRates.sort((a, b) => a.timestamp - b.timestamp);
-		if (orderedCandidates.length === 0) {
-			return {
-				points: [] as Array<{ timestamp: number; rate: number }>,
-				totalIntervals: 0,
-			};
-		}
-
-		const rates = orderedCandidates.map((item) => item.rate);
-		const median = computePercentile(rates, 50);
-		const mad = median === null
-			? null
-			: computePercentile(rates.map((value) => Math.abs(value - median)), 50);
-
-		const filtered = median === null || mad === null || mad <= Number.EPSILON
-			? orderedCandidates
-			: orderedCandidates.filter((item) => {
-				const robustZ = (0.6745 * (item.rate - median)) / mad;
-				return Number.isFinite(robustZ) && Math.abs(robustZ) <= RATE_MAD_Z_THRESHOLD;
-			});
-
-		return {
-			points: filtered.map((item) => ({
-				timestamp: item.timestamp,
-				rate: Number(item.rate.toFixed(4)),
-			})),
-			totalIntervals: orderedCandidates.length,
-		};
-	}, [currentRows]);
-
-	const rawRatePoints = rateComputation.points;
-	const discardedRatePoints = Math.max(0, rateComputation.totalIntervals - rawRatePoints.length);
-
-	const rateSeriesData = useMemo(() => {
-		if (!activeRange || rawRatePoints.length === 0) {
-			return [] as Array<{ date: string; rate: number }>;
-		}
-
-		// Keep raw intervals when the series is manageable so the curve preserves local behavior.
-		if (rawRatePoints.length <= 180) {
-			return rawRatePoints.map((item) => ({
-				date: new Date(item.timestamp).toISOString(),
-				rate: item.rate,
-			}));
-		}
-
-		const durationMs = activeRange.currentTo - activeRange.currentFrom;
-		const bucketSizeMs = getRateBucketSizeMs(durationMs);
-		const bucketMap = new Map<number, { sum: number; count: number }>();
-
-		rawRatePoints.forEach((item) => {
-			const bucket = activeRange.currentFrom + (Math.floor((item.timestamp - activeRange.currentFrom) / bucketSizeMs) * bucketSizeMs);
-			const existing = bucketMap.get(bucket) ?? { sum: 0, count: 0 };
-			existing.sum += item.rate;
-			existing.count += 1;
-			bucketMap.set(bucket, existing);
-		});
-
-		return Array.from(bucketMap.entries())
-			.sort((a, b) => a[0] - b[0])
-			.map(([bucket, aggregate]) => ({
-				date: new Date(bucket).toISOString(),
-				rate: Number((aggregate.sum / aggregate.count).toFixed(4)),
-			}));
-	}, [activeRange, rawRatePoints]);
-
-	const rateSummary = useMemo(() => {
-		if (rawRatePoints.length === 0) {
-			return {
-				promedio: null as number | null,
-				maxSubida: null as number | null,
-				maxBajada: null as number | null,
-			};
-		}
-
-		const values = rawRatePoints.map((item) => item.rate);
-		const promedio = values.reduce((acc, current) => acc + current, 0) / values.length;
-
-		return {
-			promedio,
-			maxSubida: Math.max(...values),
-			maxBajada: Math.min(...values),
-		};
-	}, [rawRatePoints]);
+	const {
+		activeDurationMs,
+		rawRatePoints,
+		discardedRatePoints,
+		rateSeriesData,
+		rateSummary,
+	} = useRateAnalysis(currentRows, activeRange);
 
 	const fuenteStats = useMemo(() => {
 		let automatico = 0;
@@ -1049,6 +432,12 @@ export default function EstadisticasPage() {
 								</p>
 							) : null}
 
+							{noDataInRange ? (
+								<p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-[14px] text-[#475569] dark:border-[#334155] dark:bg-[#0F172A] dark:text-[#CBD5E1]">
+									No se encontraron mediciones en el período y filtros seleccionados.
+								</p>
+							) : null}
+
 							<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 								<div className="flex flex-wrap items-center justify-between gap-3">
 									<div>
@@ -1255,11 +644,6 @@ export default function EstadisticasPage() {
 								</div>
 							</section>
 
-							{noDataInRange ? (
-								<p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-[14px] text-[#475569] dark:border-[#334155] dark:bg-[#0F172A] dark:text-[#CBD5E1]">
-									No se encontraron mediciones en el período y filtros seleccionados.
-								</p>
-							) : null}
 						</TabsContent>
 
 						<TabsContent value="tabla" className="mt-0 flex flex-col gap-8">
