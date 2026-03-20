@@ -1,13 +1,10 @@
 "use client";
-import { useRouter } from "next/navigation";
-import ProfileCard from "./ProfileCard";
 import Icon, { IconVariants } from "@componentes/icons/Icon";
 import SidebarButton from "./SidebarButton";
 import Divider from "./Divider";
-import { useTheme } from "next-themes";
 import usePersistedState from "@hooks/usePersistedState";
 import useIsMounted from "@hooks/useIsMounted";
-import { useSession } from "next-auth/react";
+import ProfileMenu from "./ProfileMenu";
 
 type SidebarItem = {
 	label: string;
@@ -15,21 +12,23 @@ type SidebarItem = {
 	href: string
 };
 
-const rutas: SidebarItem[] = [
-	{ label: "Mapa", icono: "mapa", href: "/mapa" },
-	{ label: "Limnigrafo", icono: "chip", href: "/limnigrafos" },
-	{ label: "Mediciones", icono: "documento", href: "/mediciones" },
-	{ label: "Estadisticas", icono: "funcion", href: "/estadisticas" },
-	{ label: "Usuarios", icono: "user1", href: "/usuarios" },
-	{ label: "Historial", icono: "historial", href: "/historial" },
-	{ label: "Documentacion", icono: "documentacion", href: "/documentacion" },
-];
+const rutas: Record<string, SidebarItem[]> = {
+	general: [
+		{ label: "Dashboard", icono: "dashboard", href: "/inicio" },
+		{ label: "Mapa", icono: "mapa", href: "/mapa" },
+		{ label: "Limnigrafos", icono: "chip", href: "/limnigrafos" },
+		{ label: "Mediciones", icono: "documento", href: "/mediciones" },
+		{ label: "Estadisticas", icono: "funcion", href: "/estadisticas" },
+	],
+	admin: [
+		{ label: "Usuarios", icono: "user1", href: "/usuarios" },
+		{ label: "Historial", icono: "historial", href: "/historial" },
+		{ label: "Documentacion", icono: "documentacion", href: "/documentacion" },
+	],
+};
 
 export default function Sidebar() {
 	const mounted = useIsMounted();
-	const router = useRouter();
-	const { theme, setTheme } = useTheme();
-	const { data: session } = useSession();
 	
 	const [isCollapsed, setIsCollapsed] = usePersistedState("scarh-nav-collapsed", false);
 
@@ -37,46 +36,29 @@ export default function Sidebar() {
 		setIsCollapsed((prev) => !prev);
 	}
 
-	const toggleTheme = () => {
-		if (theme?.includes("dark")) {
-			setTheme("light");
-		} else {
-			setTheme("dark");
-		}
-	};
-
 	if (!mounted) {
 		return <div className="flex bg-sidebar font-outfit w-70 h-screen" />;
 	}
 
-	const userName =
-		session?.user?.username ||
-		session?.user?.name ||
-		session?.user?.email ||
-		"Usuario";
-
 	return (
 		<div className="flex bg-sidebar font-outfit">
 			<div
-				className={`
-					flex flex-col gap-3 transition-all duration-300 ease-in-out
-					${isCollapsed ? "w-30 items-center p-4" : "w-70 items-stretch p-4"}
-				`}
+				className="flex flex-col gap-3 transition-all duration-300 ease-in-out p-4"
+				style={{ alignItems: isCollapsed ? "" : "", width: isCollapsed ? "76px" : "240px" }}
 			>
-				<div
-					className={`
-						flex w-full
-						${isCollapsed ? "justify-center" : "justify-end"}
-					`}
-				>
-					<button
-						type="button"
-						onClick={toggleTheme}
-						className="border-0 bg-transparent p-[4px] rounded-[8px] cursor-pointer"
-						aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-					>
-						<Icon variant={theme?.includes("dark") ? "sol" : "luna"} className="text-2xl text-sidebar-secondary" />
-					</button>
+				<div className="flex w-full justify-between">
+					<div className="flex shrink-0 items-center gap-4 w-full overflow-hidden">
+						<img
+							src="/seaborn.png"
+							alt="Mapa de fondo"
+							className="h-10 w-10"
+						/>
+						<span
+							className="text-2xl font-bold text-logo letter-spacing-[1px] text-uppercase"
+						>
+							SCARH
+						</span>
+					</div>
 					<button
 						type="button"
 						onClick={toggleSidebar}
@@ -85,39 +67,42 @@ export default function Sidebar() {
 					>
 						<Icon variant={isCollapsed ? "menu_derecha" : "menu_izquierda"} className="text-2xl text-sidebar-secondary" />
 					</button>
+					{/* <span className="icon-[devicon--seaborn] h-10 w-10 text-2xl"/> */}
 				</div>
-
-				<div className={`flex justify-center w-full ${isCollapsed ? "p-[0_0_2px]" : "p-[0_0_4px]"}`}>
-					<button
-						type="button"
-						onClick={() => router.push("/inicio")}
-						className="border-0 bg-transparent p-0 cursor-pointer"
-						aria-label="Ir al home"
+				<Divider direccion="horizontal" />
+				<ProfileMenu isCollapsed={isCollapsed} />
+				<div className="flex justify-center w-full">
+					<span
+						className="text-lg font-bold text-logo letter-spacing-[1px] text-uppercase"
 					>
-						<span
-							className={`
-								${isCollapsed ? "text-[22px]" : "text-[30px]"}
-								font-bold text-logo letter-spacing-[1px] text-uppercase
-							`}
-						>
-							Inicio
-						</span>
-					</button>
+						General
+					</span>
 				</div>
 				<Divider direccion="horizontal" />
-				<ProfileCard
-					variant="sidebar"
-					collapsed={isCollapsed}
-					userName={userName}
-				/>
-				<Divider direccion="horizontal" />
-				<div className="flex flex-col gap-[12px] w-full">
-					{rutas.map(({ label, icono, href }) => (
+				<div className="flex flex-col gap-2 w-full">
+					{rutas.general.map(({ label, icono, href }) => (
 						<SidebarButton
 							key={label}
 							label={label}
 							icono={icono}
-							collapsed={isCollapsed}
+							href={href}
+						/>
+					))}
+				</div>
+				<div className="flex justify-center w-full">
+					<span
+						className="text-lg font-bold text-logo letter-spacing-[1px] text-uppercase"
+					>
+						Admin
+					</span>
+				</div>
+				<Divider direccion="horizontal" />
+				<div className="flex flex-col gap-2 w-full">
+					{rutas.admin.map(({ label, icono, href }) => (
+						<SidebarButton
+							key={label}
+							label={label}
+							icono={icono}
 							href={href}
 						/>
 					))}

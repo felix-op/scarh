@@ -11,21 +11,16 @@ import BotonVariante from "@componentes/botones/BotonVariante";
 import { UsuarioResponse } from "types/usuarios";
 import { useGetUsuarios } from "@servicios/api";
 import BotonIconoEditar from "@componentes/botones/BotonIconoEditar";
-import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
+import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 import usePaginadoBackend from "@hooks/usePaginadoBackend";
 import FiltrosContenedor from "@componentes/filtros/FiltrosContenedor";
 import FiltroBusqueda from "@componentes/filtros/FiltroBusqueda";
 import FiltroOpciones from "@componentes/filtros/FiltroOpciones";
 import { opcionesEstado } from "./constantes";
 import ChipEstadoUsuario from "@componentes/chips/ChipEstadoUsuario";
+import { useNotificar } from "@hooks/useNotificar";
 
 const queriesToInvalidate = ["useGetUsuarios"];
-
-const defaultMessage: VentanaAceptarOptions = {
-	title: "",
-	description: "",
-	variant: "info",
-};
 
 export default function UsersAdminPage() {
 	const [page, setPage] = useState(1);
@@ -44,21 +39,37 @@ export default function UsersAdminPage() {
 			},
 		}
 	});
-
-	const [message, setMesage] = useState(defaultMessage);
+	
+	const [usuarioEditar, setUsuarioEditar] = useState<UsuarioResponse | null>(null);
+	const notificar = useNotificar();
 
 	// --- Modal añadir ---
 	const [isAddOpen, setIsAddOpen] = useState(false);
 	const handleOpenAdd = () => setIsAddOpen(true);
 	const handleCancelAdd = () => setIsAddOpen(false);
 
-	// --- Modal informar ---
-	const [isOpenInfo, setIsOpenInfo] = useState(false);
+	// --- Modal editar ---
+	const [isEditOpen, setIsEditOpen] = useState(false);
+	const handleCancelEdit = () => {
+		setUsuarioEditar(null);
+		setIsEditOpen(false);
+	}
+
+	// --- Modal eliminar ---
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+	const handleCloseDelete = () => {
+		setUsuarioEditar(null);
+		setIsDeleteOpen(false);
+	}
+
 	const handleOpenInfo = (message: VentanaAceptarOptions) => {
-		setMesage(message);
-		setIsOpenInfo(true);
+		notificar({
+			titulo: message.title,
+			mensaje: message.description,
+			variante: message.variant,
+			desaparecerEnMS: message.variant === "error" || message.variant === "alerta" ? false : 2500,
+		});
 	};
-	const handleCloseInfo = () => setIsOpenInfo(false);
 
 	const handleViewUser = (usuario: UsuarioResponse) => {
 		router.push(`/usuarios/${usuario.id}`);
@@ -174,10 +185,20 @@ export default function UsersAdminPage() {
 				handleMessage={handleOpenInfo}
 				queriesToInvalidate={queriesToInvalidate}
 			/>
-			<VentanaAceptar
-				open={isOpenInfo}
-				onClose={handleCloseInfo}
-				options={message}
+			<VentanaEditarUsuario
+				open={isEditOpen}
+				onClose={handleCancelEdit}
+				usuarios={[]}
+				handleMessage={handleOpenInfo}
+				usuario={usuarioEditar}
+				queriesToInvalidate={queriesToInvalidate}
+			/>
+			<VentanaEliminarUsuario
+				open={isDeleteOpen}
+				onClose={handleCloseDelete}
+				handleMessage={handleOpenInfo}
+				usuario={usuarioEditar}
+				queriesToInvalidate={queriesToInvalidate}
 			/>
 		</PaginaBase>
 	);

@@ -7,3 +7,7 @@ export {
 	useDeleteUsuario
 } from "./usuarios";
 
+export {
+	useGetAlertas,
+	usePatchAlerta,
+} from "./alertas";
