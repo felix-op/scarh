@@ -251,12 +251,12 @@ export default function PanelComparativas({
 			return [];
 		}
 
-		const referenceDate = new Date(chartData[chartData.length - 1].date);
+		const referenceDate = new Date();
 		const startDate = getStartDateFromRange(referenceDate, chartTimeRange);
 
 		return chartData.filter((point) => {
 			const date = new Date(point.date);
-			return date >= startDate;
+			return date >= startDate && date <= referenceDate;
 		});
 	}, [chartData, chartTimeRange]);
 

@@ -38,6 +38,9 @@ import TablaComparativaEstadisticas from "./componentes/TablaComparativaEstadist
 const FETCH_PAGE_SIZE = 1000;
 const MAX_FETCH_ROWS = 20000;
 const REALTIME_REFRESH_MS = 30000;
+const MIN_RATE_INTERVAL_MS = 60 * 1000;
+// Umbral de  z-score (cuantas desviaciones con desviación absoluta mediana) para descartar picos de tasa irrealmente altos o bajos.
+const RATE_MAD_Z_THRESHOLD = 6;
 
 type EstadisticaAtributo = "altura_agua" | "presion" | "temperatura";
 type ModoFiltro = "realtime" | "rango";
@@ -467,8 +470,8 @@ export default function EstadisticasPage() {
 			const now = new Date();
 			const initialCurrentRange = resolveCurrentRange(appliedFilters, now);
 			const initialDurationMs = Math.max(60 * 1000, initialCurrentRange.to.getTime() - initialCurrentRange.from.getTime());
-			let effectiveCurrentRange = initialCurrentRange;
-			let effectivePreviousRange = {
+			const effectiveCurrentRange = initialCurrentRange;
+			const effectivePreviousRange = {
 				from: new Date(initialCurrentRange.from.getTime() - initialDurationMs),
 				to: new Date(initialCurrentRange.from),
 			};
@@ -477,33 +480,10 @@ export default function EstadisticasPage() {
 				let rows: MedicionResponse[] = [];
 
 				if (appliedFilters.modo === "realtime") {
-					// In realtime mode, anchor the window to the latest measurement available.
 					rows = await fetchAllMedicionesForStats({
+						fecha_desde: effectivePreviousRange.from.toISOString(),
 						fecha_hasta: now.toISOString(),
 					});
-
-					const latestTimestamp = rows.reduce<number | null>((latest, item) => {
-						const timestamp = new Date(item.fecha_hora).getTime();
-						if (Number.isNaN(timestamp)) {
-							return latest;
-						}
-						if (latest === null || timestamp > latest) {
-							return timestamp;
-						}
-						return latest;
-					}, null);
-
-					if (latestTimestamp !== null) {
-						const anchoredTo = new Date(latestTimestamp);
-						effectiveCurrentRange = {
-							from: new Date(anchoredTo.getTime() - initialDurationMs),
-							to: anchoredTo,
-						};
-						effectivePreviousRange = {
-							from: new Date(effectiveCurrentRange.from.getTime() - initialDurationMs),
-							to: new Date(effectiveCurrentRange.from),
-						};
-					}
 				} else {
 					rows = await fetchAllMedicionesForStats({
 						fecha_desde: effectivePreviousRange.from.toISOString(),
@@ -665,7 +645,7 @@ export default function EstadisticasPage() {
 		return Math.max(60 * 1000, activeRange.currentTo - activeRange.currentFrom);
 	}, [activeRange]);
 
-	const rawRatePoints = useMemo(() => {
+	const rateComputation = useMemo(() => {
 		const grouped = new Map<number, ParsedMedicion[]>();
 		currentRows.forEach((medicion) => {
 			if (medicion.altura_agua === null || !Number.isFinite(medicion.altura_agua)) {
@@ -677,7 +657,7 @@ export default function EstadisticasPage() {
 			grouped.set(medicion.limnigrafo, existing);
 		});
 
-		const rawRates: Array<{ timestamp: number; rate: number }> = [];
+		const candidateRates: Array<{ timestamp: number; rate: number }> = [];
 		grouped.forEach((rows) => {
 			const ordered = [...rows].sort((a, b) => a.timestamp - b.timestamp);
 			for (let index = 1; index < ordered.length; index += 1) {
@@ -687,21 +667,56 @@ export default function EstadisticasPage() {
 					continue;
 				}
 
-				const deltaHours = (current.timestamp - previous.timestamp) / (60 * 60 * 1000);
+				const deltaMs = current.timestamp - previous.timestamp;
+				if (deltaMs < MIN_RATE_INTERVAL_MS) {
+					continue;
+				}
+
+				const deltaHours = deltaMs / (60 * 60 * 1000);
 				if (deltaHours <= 0) {
 					continue;
 				}
 
 				const rate = (current.altura_agua - previous.altura_agua) / deltaHours;
-				rawRates.push({
+				candidateRates.push({
 					timestamp: current.timestamp,
-					rate: Number(rate.toFixed(4)),
+					rate,
 				});
 			}
 		});
 
-		return rawRates.sort((a, b) => a.timestamp - b.timestamp);
+		const orderedCandidates = candidateRates.sort((a, b) => a.timestamp - b.timestamp);
+		if (orderedCandidates.length === 0) {
+			return {
+				points: [] as Array<{ timestamp: number; rate: number }>,
+				totalIntervals: 0,
+			};
+		}
+
+		const rates = orderedCandidates.map((item) => item.rate);
+		const median = computePercentile(rates, 50);
+		const mad = median === null
+			? null
+			: computePercentile(rates.map((value) => Math.abs(value - median)), 50);
+
+		const filtered = median === null || mad === null || mad <= Number.EPSILON
+			? orderedCandidates
+			: orderedCandidates.filter((item) => {
+				const robustZ = (0.6745 * (item.rate - median)) / mad;
+				return Number.isFinite(robustZ) && Math.abs(robustZ) <= RATE_MAD_Z_THRESHOLD;
+			});
+
+		return {
+			points: filtered.map((item) => ({
+				timestamp: item.timestamp,
+				rate: Number(item.rate.toFixed(4)),
+			})),
+			totalIntervals: orderedCandidates.length,
+		};
 	}, [currentRows]);
+
+	const rawRatePoints = rateComputation.points;
+	const discardedRatePoints = Math.max(0, rateComputation.totalIntervals - rawRatePoints.length);
 
 	const rateSeriesData = useMemo(() => {
 		if (!activeRange || rawRatePoints.length === 0) {
@@ -795,6 +810,19 @@ export default function EstadisticasPage() {
 
 		return `${formatDateTime(activeRange.currentFrom)} - ${formatDateTime(activeRange.currentTo)}`;
 	}, [activeRange]);
+
+	const referenciaEstadisticasLabel = useMemo(() => {
+		if (appliedFilters.modo !== "realtime") {
+			return `Rango aplicado: ${activeRangeLabel}.`;
+		}
+
+		if (parsedMediciones.length === 0) {
+			return `Referencia temporal: sin mediciones disponibles, se usa hora actual. Rango actual: ${activeRangeLabel}.`;
+		}
+
+		const ultimaMedicion = parsedMediciones[parsedMediciones.length - 1];
+		return `Referencia temporal (última medición): ${formatDateTime(ultimaMedicion.timestamp)}. Rango actual: ${activeRangeLabel}.`;
+	}, [activeRangeLabel, appliedFilters.modo, parsedMediciones]);
 
 	const noDataInRange = !isLoadingData && currentRows.length === 0;
 	const shouldShowRateChart = appliedFilters.atributo === "altura_agua";
@@ -1030,6 +1058,9 @@ export default function EstadisticasPage() {
 										<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
 											Variable analizada: {atributoMeta.label}. Registros actuales: {currentSummary.registros}.
 										</p>
+										<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
+											{referenciaEstadisticasLabel}
+										</p>
 									</div>
 									<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
 										Última actualización: {lastUpdatedAt ? formatDateTime(lastUpdatedAt) : "-"}
@@ -1149,7 +1180,13 @@ export default function EstadisticasPage() {
 
 										<div className="mt-4 grid gap-2 text-[13px] text-[#475569] dark:text-[#CBD5E1]">
 											<p>
-												Intervalos válidos (tasas crudas): <span className="font-semibold">{rawRatePoints.length}</span>
+												Intervalos usados para calcular la tasa: <span className="font-semibold">{rawRatePoints.length}</span>
+											</p>
+											<p>
+												Intervalos excluidos por control de calidad: <span className="font-semibold">{discardedRatePoints}</span>
+											</p>
+											<p className="text-[12px] text-[#64748B] dark:text-[#94A3B8]">
+												Criterio de calidad: se omiten intervalos menores a {MIN_RATE_INTERVAL_MS / (60 * 1000)} min y valores extremos detectados con mediana + MAD (umbral robusto |z| &gt; {RATE_MAD_Z_THRESHOLD}) para evitar tasas irrealmente altas/bajas por saltos atípicos y proteger el promedio y los extremos mostrados.
 											</p>
 											<p>
 												Puntos graficados: <span className="font-semibold">{rateSeriesData.length}</span>
@@ -1281,9 +1318,6 @@ export default function EstadisticasPage() {
 								</div>
 
 								<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-									<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
-										Modo activo: rango personalizado.
-									</p>
 									<div className="flex flex-wrap items-center gap-3">
 										<button
 											type="button"
