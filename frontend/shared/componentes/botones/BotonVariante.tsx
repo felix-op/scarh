@@ -1,5 +1,3 @@
-"use client";
-
 import { ReactNode } from "react";
 
 const baseStyles = {
@@ -34,18 +32,18 @@ const variantConfig = {
 const baseButtonClass = `
 	relative overflow-hidden flex flex-row items-center justify-center gap-2 shrink-0
 	text-lg rounded-full py-2 px-4 shadow-md border
-	select-none shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] 
+	select-none shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]
 `;
 
 const shineEffectClass = `
-	after:content-[''] after:absolute after:top-0 after:-left-full 
+	after:content-[''] after:absolute after:top-0 after:-left-full
 	after:w-1/2 after:h-full after:skew-x-[-25deg]
 	after:bg-linear-to-r after:from-transparent after:via-white/40 after:to-transparent
 	hover:after:animate-shine
-	active:shadow-inner whitespace-nowrap 
+	active:shadow-inner whitespace-nowrap
 	before:content-[''] before:absolute before:inset-0 before:rounded-full
     before:transition-opacity before:duration-100 before:opacity-0
-    active:before:opacity-100 
+    active:before:opacity-100
     active:before:shadow-[inset_0px_4px_8px_rgba(0,0,0,0.2)]
 `;
 
