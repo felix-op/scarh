@@ -33,6 +33,7 @@ import {
 	YAxis,
 } from "recharts";
 import { toDatetimeLocalInputValue } from "../mediciones/utils";
+import PanelComparativas from "./componentes/PanelComparativas";
 
 const FETCH_PAGE_SIZE = 1000;
 const MAX_FETCH_ROWS = 20000;
@@ -1407,6 +1408,11 @@ export default function EstadisticasPage() {
 							No se encontraron mediciones en el período y filtros seleccionados.
 						</p>
 					) : null}
+
+					<PanelComparativas
+						limnigrafos={limnigrafos}
+						limnigrafosError={limnigrafosError}
+					/>
 				</div>
 			</main>
 		</PaginaBase>
