@@ -1,7 +1,5 @@
 "use client";
 
-import DataTable from "@componentes/tabla/DataTable";
-import { type ColumnConfig } from "@componentes/tabla/types";
 import {
 	Card,
 	CardContent,
@@ -9,7 +7,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@componentes/components/ui/card";
-import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
 import {
 	type ChartConfig,
 	ChartContainer,
@@ -20,15 +17,12 @@ import {
 } from "@componentes/components/ui/chart";
 import {
 	type EstadisticaAtributo,
-	type EstadisticaOutputItem,
 	type MedicionPaginatedResponse,
 	type MedicionResponse,
 	useGetMediciones,
-	usePostEstadistica,
 } from "@servicios/api/django.api";
-import { useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { toDatetimeLocalInputValue } from "../../mediciones/utils";
 import { type LimnigrafoResponse } from "types/limnigrafos";
 
 const CHART_COLORS = [
@@ -57,35 +51,29 @@ type ChartPoint = {
 	[key: string]: string | number | null;
 };
 
-type ComparativaTableRow = {
-	rowId: string;
-	limnigrafo: string;
-	minimo: string;
-	maximo: string;
-	desvioEstandar: string;
-	percentil90: string;
-};
-
-type TimeRange = "90d" | "30d" | "7d";
-
-type ComparativasFilters = {
-	desde: string;
-	hasta: string;
-	atributo: EstadisticaAtributo;
-};
+type SharedTimeRange = "1h" | "6h" | "24h" | "7d" | "30d" | "90d";
 
 type PanelComparativasProps = {
 	limnigrafos: LimnigrafoResponse[];
 	limnigrafosError: unknown;
+	chartAtributo: EstadisticaAtributo;
+	chartLimnigrafos: string[];
+	chartTimeRange: SharedTimeRange;
 };
 
-const TIME_RANGE_DAYS: Record<TimeRange, number> = {
-	"90d": 90,
-	"30d": 30,
-	"7d": 7,
+const WINDOW_DURATION_MS: Record<SharedTimeRange, number> = {
+	"1h": 60 * 60 * 1000,
+	"6h": 6 * 60 * 60 * 1000,
+	"24h": 24 * 60 * 60 * 1000,
+	"7d": 7 * 24 * 60 * 60 * 1000,
+	"30d": 30 * 24 * 60 * 60 * 1000,
+	"90d": 90 * 24 * 60 * 60 * 1000,
 };
 
-const TIME_RANGE_LABEL: Record<TimeRange, string> = {
+const TIME_RANGE_LABEL: Record<SharedTimeRange, string> = {
+	"1h": "Última hora",
+	"6h": "Últimas 6 horas",
+	"24h": "Últimas 24 horas",
 	"90d": "Últimos 90 días",
 	"30d": "Últimos 30 días",
 	"7d": "Últimos 7 días",
@@ -109,39 +97,6 @@ const ATRIBUTO_METADATA: Record<EstadisticaAtributo, { label: string; unit: stri
 	},
 };
 
-function getDefaultDateRange() {
-	const now = new Date();
-	const from = new Date(now);
-	from.setDate(now.getDate() - 7);
-
-	return {
-		desde: toDatetimeLocalInputValue(from),
-		hasta: toDatetimeLocalInputValue(now),
-	};
-}
-
-function getDefaultComparativasFilters(): ComparativasFilters {
-	const { desde, hasta } = getDefaultDateRange();
-	return {
-		desde,
-		hasta,
-		atributo: "altura_agua",
-	};
-}
-
-function toIsoString(value: string): string | null {
-	if (!value) {
-		return null;
-	}
-
-	const parsed = new Date(value);
-	if (Number.isNaN(parsed.getTime())) {
-		return null;
-	}
-
-	return parsed.toISOString();
-}
-
 function getMedicionValueByAtributo(
 	medicion: MedicionResponse,
 	atributo: EstadisticaAtributo,
@@ -164,17 +119,6 @@ function formatAtributoValue(value: number | null, atributo: EstadisticaAtributo
 	return `${value.toFixed(decimals)} ${unit}`;
 }
 
-function formatNumber(value: number, decimals = 2): string {
-	if (Number.isNaN(value)) {
-		return "-";
-	}
-
-	return value.toLocaleString("es-AR", {
-		minimumFractionDigits: decimals,
-		maximumFractionDigits: decimals,
-	});
-}
-
 function toNumericTooltipValue(value: unknown): number | null {
 	if (typeof value === "number" && Number.isFinite(value)) {
 		return value;
@@ -186,29 +130,20 @@ function toNumericTooltipValue(value: unknown): number | null {
 	return null;
 }
 
-function getStartDateFromRange(reference: Date, range: TimeRange): Date {
-	const start = new Date(reference);
-	start.setDate(start.getDate() - TIME_RANGE_DAYS[range]);
-	return start;
+function getStartDateFromRange(reference: Date, range: SharedTimeRange): Date {
+	return new Date(reference.getTime() - WINDOW_DURATION_MS[range]);
 }
 
 export default function PanelComparativas({
 	limnigrafos,
 	limnigrafosError,
+	chartAtributo,
+	chartLimnigrafos,
+	chartTimeRange,
 }: PanelComparativasProps) {
-	const [comparativasFilters, setComparativasFilters] = useState<ComparativasFilters>(getDefaultComparativasFilters);
-	const [compareIds, setCompareIds] = useState<string[]>([]);
-	const [timeRange, setTimeRange] = useState<TimeRange>("30d");
-	const [estadisticas, setEstadisticas] = useState<EstadisticaOutputItem[]>([]);
-	const [estadisticasError, setEstadisticasError] = useState<string | null>(null);
-	const statsRequestIdRef = useRef(0);
-
-	const { mutateAsync: calcularEstadistica, isPending: isCalculandoEstadisticas } = usePostEstadistica();
-
 	const comparativasQueryParams = useMemo(() => {
 		const now = new Date();
-		const from = new Date(now);
-		from.setDate(now.getDate() - TIME_RANGE_DAYS["90d"]);
+		const from = new Date(now.getTime() - WINDOW_DURATION_MS["90d"]);
 
 		return {
 			limit: String(CHART_PAGE_SIZE),
@@ -239,48 +174,20 @@ export default function PanelComparativas({
 		return map;
 	}, [limnigrafos]);
 
-	const chartLimnigrafoOptions = useMemo<MultiSelectOption[]>(
-		() =>
-			limnigrafos.map((limnigrafo) => ({
-				value: String(limnigrafo.id),
-				label: limnigrafo.codigo,
-			})),
-		[limnigrafos],
-	);
-
 	const medicionesComparativas = useMemo(
 		() => ((medicionesComparativasData as MedicionPaginatedResponse | undefined)?.results ?? []),
 		[medicionesComparativasData],
 	);
 
-	const limnigrafosSeleccionadosParaEstadisticas = useMemo(
-		() => compareIds
+	const limnigrafosSeleccionados = useMemo(
+		() => chartLimnigrafos
 			.map((item) => Number.parseInt(item, 10))
 			.filter((item) => !Number.isNaN(item)),
-		[compareIds],
+		[chartLimnigrafos],
 	);
 
-	const rangoEstadisticas = useMemo(() => {
-		const desdeIso = toIsoString(comparativasFilters.desde);
-		const hastaIso = toIsoString(comparativasFilters.hasta);
-		return { desdeIso, hastaIso };
-	}, [comparativasFilters.desde, comparativasFilters.hasta]);
-
-	const estadisticasRequest = useMemo(() => {
-		if (limnigrafosSeleccionadosParaEstadisticas.length === 0 || !rangoEstadisticas.desdeIso || !rangoEstadisticas.hastaIso) {
-			return null;
-		}
-
-		return {
-			limnigrafos: limnigrafosSeleccionadosParaEstadisticas,
-			atributo: comparativasFilters.atributo,
-			fecha_inicio: rangoEstadisticas.desdeIso,
-			fecha_fin: rangoEstadisticas.hastaIso,
-		};
-	}, [comparativasFilters.atributo, limnigrafosSeleccionadosParaEstadisticas, rangoEstadisticas]);
-
 	const chartSeries = useMemo<ChartSerie[]>(() => {
-		return compareIds
+		return chartLimnigrafos
 			.map((id, index) => {
 				const parsedId = Number.parseInt(id, 10);
 				if (Number.isNaN(parsedId)) {
@@ -294,7 +201,7 @@ export default function PanelComparativas({
 				};
 			})
 			.filter((item): item is ChartSerie => item !== null);
-	}, [compareIds, limnigrafoNameById]);
+	}, [chartLimnigrafos, limnigrafoNameById]);
 
 	const chartConfig = useMemo<ChartConfig>(() => {
 		const config: ChartConfig = {};
@@ -321,7 +228,7 @@ export default function PanelComparativas({
 		const grouped = new Map<string, ChartPoint>();
 
 		ordered.forEach((medicion) => {
-			const value = getMedicionValueByAtributo(medicion, comparativasFilters.atributo);
+			const value = getMedicionValueByAtributo(medicion, chartAtributo);
 			if (value === null || Number.isNaN(value)) {
 				return;
 			}
@@ -337,7 +244,7 @@ export default function PanelComparativas({
 		return Array.from(grouped.entries())
 			.sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
 			.map((entry) => entry[1]);
-	}, [chartSeries, comparativasFilters.atributo, medicionesComparativas]);
+	}, [chartAtributo, chartSeries, medicionesComparativas]);
 
 	const filteredChartData = useMemo(() => {
 		if (chartData.length === 0) {
@@ -345,179 +252,24 @@ export default function PanelComparativas({
 		}
 
 		const referenceDate = new Date(chartData[chartData.length - 1].date);
-		const startDate = getStartDateFromRange(referenceDate, timeRange);
+		const startDate = getStartDateFromRange(referenceDate, chartTimeRange);
 
 		return chartData.filter((point) => {
 			const date = new Date(point.date);
 			return date >= startDate;
 		});
-	}, [chartData, timeRange]);
+	}, [chartData, chartTimeRange]);
 
-	const atributoSeleccionado = ATRIBUTO_METADATA[comparativasFilters.atributo];
+	const atributoSeleccionado = ATRIBUTO_METADATA[chartAtributo];
 	const hasChartError = Boolean(medicionesComparativasError);
-	const disableCalcularComparativas = !estadisticasRequest || isCalculandoEstadisticas;
-	const shouldShowEstadisticas = limnigrafosSeleccionadosParaEstadisticas.length > 0
-		&& Boolean(rangoEstadisticas.desdeIso && rangoEstadisticas.hastaIso);
-	const estadisticasVisibles = useMemo(
-		() => (shouldShowEstadisticas ? estadisticas : []),
-		[estadisticas, shouldShowEstadisticas],
-	);
-	const estadisticasErrorVisible = shouldShowEstadisticas ? estadisticasError : null;
-	const comparativaRows = useMemo<ComparativaTableRow[]>(
-		() =>
-			estadisticasVisibles.map((item, index) => ({
-				rowId: `${item.id ?? "global"}-${index}`,
-				limnigrafo: item.id === null ? "Global" : (limnigrafoNameById.get(item.id) ?? `ID ${item.id}`),
-				minimo: formatNumber(item.minimo, 2),
-				maximo: formatNumber(item.maximo, 2),
-				desvioEstandar: formatNumber(item.desvio_estandar, 2),
-				percentil90: formatNumber(item.percentil_90, 2),
-			})),
-		[estadisticasVisibles, limnigrafoNameById],
-	);
-
-	const comparativaColumns = useMemo<ColumnConfig<ComparativaTableRow>[]>(
-		() => [
-			{
-				id: "limnigrafo",
-				header: "Limnígrafo",
-				cell: (row) => <span className="px-4 py-3 font-semibold text-[#0F172A] dark:text-[#E2E8F0]">{row.limnigrafo}</span>,
-			},
-			{
-				id: "minimo",
-				header: "Mínimo",
-				accessorKey: "minimo",
-			},
-			{
-				id: "maximo",
-				header: "Máximo",
-				accessorKey: "maximo",
-			},
-			{
-				id: "desvioEstandar",
-				header: "Desv. estándar",
-				accessorKey: "desvioEstandar",
-			},
-			{
-				id: "percentil90",
-				header: "Percentil 90",
-				accessorKey: "percentil90",
-			},
-		],
-		[],
-	);
-
-	async function handleCalcularComparativas() {
-		if (!estadisticasRequest) {
-			return;
-		}
-
-		const requestId = statsRequestIdRef.current + 1;
-		statsRequestIdRef.current = requestId;
-
-		try {
-			setEstadisticasError(null);
-			const result = await calcularEstadistica({
-				data: estadisticasRequest,
-			});
-
-			if (statsRequestIdRef.current !== requestId) {
-				return;
-			}
-
-			setEstadisticas(result);
-		} catch (error) {
-			if (statsRequestIdRef.current !== requestId) {
-				return;
-			}
-
-			setEstadisticas([]);
-			setEstadisticasError(
-				error instanceof Error
-					? error.message
-					: "No se pudieron calcular estadísticas para el rango seleccionado.",
-			);
-		}
-	}
-
-	function handleComparativasFilterChange<K extends keyof ComparativasFilters>(
-		field: K,
-		value: ComparativasFilters[K],
-	) {
-		setComparativasFilters((previous) => ({ ...previous, [field]: value }));
-	}
-
-	function handleTimeRangeChange(value: string) {
-		if (value === "90d" || value === "30d" || value === "7d") {
-			setTimeRange(value);
-		}
-	}
 
 	return (
 		<>
 			{limnigrafosError ? (
 				<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
-					No se pudieron cargar los limnígrafos para la comparativa del dashboard.
+					No se pudieron cargar los limnígrafos para la comparativa.
 				</p>
 			) : null}
-
-			<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
-				<div className="flex flex-col gap-5">
-					<div className="space-y-1">
-						<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Filtros de comparativa</p>
-					</div>
-
-					<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-						<label className="flex flex-col gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-							Atributo
-							<select
-								value={comparativasFilters.atributo}
-								onChange={(event) => handleComparativasFilterChange("atributo", event.target.value as EstadisticaAtributo)}
-								className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
-							>
-								<option value="altura_agua">Altura del agua</option>
-								<option value="presion">Presión</option>
-								<option value="temperatura">Temperatura</option>
-							</select>
-						</label>
-
-						<label htmlFor="dashboard-time-range" className="flex flex-col gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-							Ventana
-							<select
-								id="dashboard-time-range"
-								value={timeRange}
-								onChange={(event) => handleTimeRangeChange(event.target.value)}
-								className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
-							>
-								<option value="90d">Últimos 90 días</option>
-								<option value="30d">Últimos 30 días</option>
-								<option value="7d">Últimos 7 días</option>
-							</select>
-						</label>
-
-						<div className="flex flex-col gap-2">
-							<label htmlFor="dashboard-limnigrafos-trigger" className="text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-								Limnígrafos ({compareIds.length})
-							</label>
-							<MultiSelect
-								id="dashboard-limnigrafos-trigger"
-								options={chartLimnigrafoOptions}
-								selectedValues={compareIds}
-								onChange={setCompareIds}
-								placeholder="Seleccionar limnígrafos"
-								className="h-9 text-[12px]"
-								emptyText="No hay limnígrafos disponibles"
-							/>
-						</div>
-					</div>
-
-					<div className="flex flex-wrap items-center gap-3">
-						<span className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
-							Seleccionados: {compareIds.length} de {limnigrafos.length}
-						</span>
-					</div>
-				</div>
-			</section>
 
 			<Card className="rounded-[24px] border-none bg-white pt-0 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 				<CardHeader className="space-y-0 border-b border-[#E2E8F0] py-5 dark:border-[#334155]">
@@ -526,8 +278,8 @@ export default function PanelComparativas({
 							Evolución temporal
 						</CardTitle>
 						<CardDescription className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-							Serie de {atributoSeleccionado.label.toLowerCase()} para limnígrafos seleccionados ({compareIds.length}).
-							 Ventana actual: {TIME_RANGE_LABEL[timeRange]}. Actualización automática cada 30 segundos.
+							Serie de {atributoSeleccionado.label.toLowerCase()} para limnígrafos seleccionados ({limnigrafosSeleccionados.length}).
+							Ventana actual: {TIME_RANGE_LABEL[chartTimeRange]}. Actualización automática cada 30 segundos.
 						</CardDescription>
 					</div>
 				</CardHeader>
@@ -606,7 +358,7 @@ export default function PanelComparativas({
 															<span>{String(name)}</span>
 														</span>
 														<span className="font-mono font-medium text-foreground tabular-nums">
-															{formatAtributoValue(numericValue, comparativasFilters.atributo)}
+															{formatAtributoValue(numericValue, chartAtributo)}
 														</span>
 													</div>
 												);
@@ -634,77 +386,6 @@ export default function PanelComparativas({
 					)}
 				</CardContent>
 			</Card>
-
-			<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
-				<div className="mb-4">
-					<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-						Resultados comparativos
-					</p>
-					<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-						Seleccione el rango de fechas específico para calcular los resultados comparativos.
-					</p>
-				</div>
-
-				<div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-					<label className="flex flex-col gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-						Desde
-						<input
-							type="datetime-local"
-							value={comparativasFilters.desde}
-							onChange={(event) => handleComparativasFilterChange("desde", event.target.value)}
-							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
-						/>
-					</label>
-					<label className="flex flex-col gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-						Hasta
-						<input
-							type="datetime-local"
-							value={comparativasFilters.hasta}
-							onChange={(event) => handleComparativasFilterChange("hasta", event.target.value)}
-							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
-						/>
-					</label>
-				</div>
-
-				<div className="mb-4 flex flex-wrap items-center justify-end gap-3">
-					<button
-						type="button"
-						onClick={handleCalcularComparativas}
-						disabled={disableCalcularComparativas}
-						className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#2563EB] dark:bg-[#0B2A43] dark:text-[#93C5FD]"
-					>
-						{isCalculandoEstadisticas ? "Calculando..." : "Calcular estadísticas"}
-					</button>
-				</div>
-
-				{estadisticasErrorVisible ? (
-					<p className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
-						{estadisticasErrorVisible}
-					</p>
-				) : null}
-
-				<DataTable
-					data={comparativaRows}
-					columns={comparativaColumns}
-					rowIdKey="rowId"
-					showTopBar={false}
-					enableRowAnimation={false}
-					minWidth={760}
-					emptyStateContent={<span className="text-[#6B7280] dark:text-[#94A3B8]">Sin datos comparativos calculados.</span>}
-					styles={{
-						rootClassName: "pb-0",
-						cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)] dark:border-[#334155] dark:bg-[#0F172A] dark:shadow-[0px_10px_20px_rgba(0,0,0,0.45)]",
-						scrollerClassName: "overflow-x-auto",
-						tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F] dark:text-[#CBD5E1]",
-						theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none dark:bg-[#111923] dark:text-[#94A3B8]",
-						headerCellClassName: "px-4 py-3",
-						tbodyClassName: "divide-y divide-[#EAEAEA] dark:divide-[#334155]",
-						rowClassName: "border-0 hover:bg-[#F9FBFF] dark:hover:bg-[#1E293B]",
-						cellClassName: "align-middle p-4",
-						emptyCellClassName: "px-4 py-8 text-center",
-					}}
-				/>
-			</section>
 		</>
 	);
 }

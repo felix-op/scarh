@@ -67,6 +67,7 @@ class EstadisticaTests(APITestCase):
         result = response.data[0]
         self.assertEqual(result['minimo'], 2.0)
         self.assertEqual(result['maximo'], 10.0)
+        self.assertEqual(result['moda'], 2.0)
         self.assertAlmostEqual(result['desvio_estandar'], 3.16227766, places=4)
         
     def test_calculate_statistics_altura(self):
@@ -82,6 +83,7 @@ class EstadisticaTests(APITestCase):
         result = response.data[0]
         self.assertEqual(result['minimo'], 1.0) 
         self.assertEqual(result['maximo'], 5.0)
+        self.assertEqual(result['moda'], 1.0)
 
     def test_global_statistics(self):
         data = {
@@ -98,6 +100,27 @@ class EstadisticaTests(APITestCase):
         global_stat = next(r for r in response.data if r['id'] is None)
         self.assertEqual(global_stat['minimo'], 1.0)
         self.assertEqual(global_stat['maximo'], 20.0)
+        self.assertEqual(global_stat['moda'], 1.0)
+
+    def test_mode_statistics(self):
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=3.0,
+            fecha_hora='2024-01-01T16:00:00Z',
+            fuente='manual'
+        )
+
+        data = {
+            'limnigrafos': [self.limnigrafo.id],
+            'atributo': 'altura_agua',
+            'fecha_inicio': '2024-01-01T00:00:00Z',
+            'fecha_fin': '2024-01-02T00:00:00Z'
+        }
+        response = self.client.post(self.url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        result = response.data[0]
+        self.assertEqual(result['moda'], 3.0)
 
     def test_validation_dates(self):
         data = {

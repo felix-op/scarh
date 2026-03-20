@@ -111,6 +111,7 @@ export type EstadisticaOutputItem = {
 	maximo: number,
 	minimo: number,
 	atributo: EstadisticaAtributo,
+	moda: number | null,
 	desvio_estandar: number,
 	percentil_90: number,
 };

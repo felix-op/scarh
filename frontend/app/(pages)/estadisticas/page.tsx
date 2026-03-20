@@ -12,6 +12,7 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@componentes/components/ui/chart";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@componentes/components/ui/tabs";
 import {
 	type MedicionPaginatedResponse,
 	type MedicionResponse,
@@ -20,8 +21,6 @@ import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
 import { Paginado } from "@servicios/api/types";
 import { LimnigrafoResponse } from "types/limnigrafos";
 import {
-	Bar,
-	BarChart,
 	CartesianGrid,
 	Cell,
 	Line,
@@ -34,6 +33,7 @@ import {
 } from "recharts";
 import { toDatetimeLocalInputValue } from "../mediciones/utils";
 import PanelComparativas from "./componentes/PanelComparativas";
+import TablaComparativaEstadisticas from "./componentes/TablaComparativaEstadisticas";
 
 const FETCH_PAGE_SIZE = 1000;
 const MAX_FETCH_ROWS = 20000;
@@ -41,12 +41,20 @@ const REALTIME_REFRESH_MS = 30000;
 
 type EstadisticaAtributo = "altura_agua" | "presion" | "temperatura";
 type ModoFiltro = "realtime" | "rango";
-type VentanaRealtime = "1h" | "6h" | "24h" | "7d";
+type VentanaRealtime = "1h" | "6h" | "24h" | "7d" | "30d" | "90d";
+type EstadisticasTab = "graficos" | "tabla";
 
 type EstadisticasFilters = {
 	atributo: EstadisticaAtributo;
 	modo: ModoFiltro;
 	ventana: VentanaRealtime;
+	desde: string;
+	hasta: string;
+	limnigrafos: string[];
+};
+
+type TablaComparativaFilters = {
+	atributo: EstadisticaAtributo;
 	desde: string;
 	hasta: string;
 	limnigrafos: string[];
@@ -61,17 +69,6 @@ type ActiveRange = {
 
 type ParsedMedicion = MedicionResponse & {
 	timestamp: number;
-};
-
-type LimnigrafoMetricas = {
-	id: number;
-	nombre: string;
-	registros: number;
-	promedio: number;
-	minimo: number;
-	maximo: number;
-	desvio: number;
-	p90: number;
 };
 
 type Summary = {
@@ -106,28 +103,18 @@ const REALTIME_WINDOW_LABELS: Record<VentanaRealtime, string> = {
 	"6h": "Últimas 6 horas",
 	"24h": "Últimas 24 horas",
 	"7d": "Últimos 7 días",
+	"30d": "Últimos 30 días",
+	"90d": "Últimos 90 días",
 };
 
 const CHART_COLORS = {
-	histograma: "#22C55E",
 	tasa: "#F97316",
-	promedio: "#0EA5E9",
-	p90: "#14B8A6",
 	automatico: "#22C55E",
 	manual: "#F97316",
 };
 
-const histogramChartConfig: ChartConfig = {
-	count: { label: "Frecuencia", color: CHART_COLORS.histograma },
-};
-
 const rateChartConfig: ChartConfig = {
 	rate: { label: "Tasa de cambio", color: CHART_COLORS.tasa },
-};
-
-const compareChartConfig: ChartConfig = {
-	promedio: { label: "Promedio", color: CHART_COLORS.promedio },
-	p90: { label: "P90", color: CHART_COLORS.p90 },
 };
 
 const fuenteChartConfig: ChartConfig = {
@@ -158,6 +145,16 @@ function getDefaultFilters(): EstadisticasFilters {
 	};
 }
 
+function getDefaultTablaComparativaFilters(): TablaComparativaFilters {
+	const { desde, hasta } = getDefaultDateRange();
+	return {
+		atributo: "altura_agua",
+		desde,
+		hasta,
+		limnigrafos: [],
+	};
+}
+
 function toIsoString(value: string): string | null {
 	if (!value) {
 		return null;
@@ -181,7 +178,13 @@ function getWindowDurationMs(window: VentanaRealtime): number {
 	if (window === "24h") {
 		return 24 * 60 * 60 * 1000;
 	}
-	return 7 * 24 * 60 * 60 * 1000;
+	if (window === "7d") {
+		return 7 * 24 * 60 * 60 * 1000;
+	}
+	if (window === "30d") {
+		return 30 * 24 * 60 * 60 * 1000;
+	}
+	return 90 * 24 * 60 * 60 * 1000;
 }
 
 function resolveCurrentRange(filters: EstadisticasFilters, reference: Date): { from: Date; to: Date } {
@@ -308,80 +311,6 @@ function getRateBucketSizeMs(durationMs: number): number {
 	return 3 * 60 * 60 * 1000;
 }
 
-function buildHistogram(values: number[], decimals: number) {
-	if (values.length === 0) {
-		return [] as Array<{ bucket: string; count: number; from: number; to: number }>;
-	}
-
-	const min = Math.min(...values);
-	const max = Math.max(...values);
-
-	if (min === max) {
-		return [{
-			bucket: `${min.toFixed(decimals)}`,
-			count: values.length,
-			from: min,
-			to: max,
-		}];
-	}
-
-	const binCount = Math.min(12, Math.max(6, Math.round(Math.sqrt(values.length))));
-	const width = (max - min) / binCount;
-	const bins = Array.from({ length: binCount }, () => 0);
-
-	values.forEach((value) => {
-		const rawIndex = Math.floor((value - min) / width);
-		const index = Math.min(binCount - 1, Math.max(0, rawIndex));
-		bins[index] += 1;
-	});
-
-	return bins.map((count, index) => {
-		const from = min + (index * width);
-		const to = index === (binCount - 1) ? max : from + width;
-
-		return {
-			bucket: `${from.toFixed(decimals)}-${to.toFixed(decimals)}`,
-			count,
-			from,
-			to,
-		};
-	});
-}
-
-function detectOutliers(values: number[]) {
-	if (values.length < 4) {
-		return {
-			count: 0,
-			lower: null as number | null,
-			upper: null as number | null,
-			ratio: 0,
-		};
-	}
-
-	const q1 = computePercentile(values, 25);
-	const q3 = computePercentile(values, 75);
-	if (q1 === null || q3 === null) {
-		return {
-			count: 0,
-			lower: null,
-			upper: null,
-			ratio: 0,
-		};
-	}
-
-	const iqr = q3 - q1;
-	const lower = q1 - (1.5 * iqr);
-	const upper = q3 + (1.5 * iqr);
-	const count = values.filter((value) => value < lower || value > upper).length;
-
-	return {
-		count,
-		lower,
-		upper,
-		ratio: values.length > 0 ? (count / values.length) * 100 : 0,
-	};
-}
-
 function formatDateTick(value: string, durationMs: number): string {
 	const date = new Date(value);
 	if (Number.isNaN(date.getTime())) {
@@ -488,10 +417,14 @@ async function fetchAllMedicionesForStats(queryParams: Record<string, string>): 
 }
 
 export default function EstadisticasPage() {
+	const [activeTab, setActiveTab] = useState<EstadisticasTab>("graficos");
 	const [filters, setFilters] = useState<EstadisticasFilters>(getDefaultFilters);
 	const [appliedFilters, setAppliedFilters] = useState<EstadisticasFilters>(getDefaultFilters);
 	const [fetchError, setFetchError] = useState<string | null>(null);
 	const [filterError, setFilterError] = useState<string | null>(null);
+	const [tablaFilters, setTablaFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
+	const [tablaAppliedFilters, setTablaAppliedFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
+	const [tablaFilterError, setTablaFilterError] = useState<string | null>(null);
 	const [isLoadingData, setIsLoadingData] = useState(false);
 	const [refreshTick, setRefreshTick] = useState(0);
 	const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
@@ -636,14 +569,6 @@ export default function EstadisticasPage() {
 		[limnigrafosPayload],
 	);
 
-	const limnigrafoNameById = useMemo(() => {
-		const map = new Map<number, string>();
-		limnigrafos.forEach((limnigrafo) => {
-			map.set(limnigrafo.id, limnigrafo.codigo);
-		});
-		return map;
-	}, [limnigrafos]);
-
 	const limnigrafoOptions = useMemo<MultiSelectOption[]>(
 		() =>
 			limnigrafos.map((limnigrafo) => ({
@@ -732,8 +657,6 @@ export default function EstadisticasPage() {
 		return ((currentSummary.promedio - previousSummary.promedio) / Math.abs(previousSummary.promedio)) * 100;
 	}, [currentSummary.promedio, previousSummary.promedio]);
 
-	const outlierInfo = useMemo(() => detectOutliers(currentValues), [currentValues]);
-
 	const activeDurationMs = useMemo(() => {
 		if (!activeRange) {
 			return getWindowDurationMs("24h");
@@ -741,11 +664,6 @@ export default function EstadisticasPage() {
 
 		return Math.max(60 * 1000, activeRange.currentTo - activeRange.currentFrom);
 	}, [activeRange]);
-
-	const histogramData = useMemo(
-		() => buildHistogram(currentValues, atributoMeta.decimals),
-		[currentValues, atributoMeta.decimals],
-	);
 
 	const rawRatePoints = useMemo(() => {
 		const grouped = new Map<number, ParsedMedicion[]>();
@@ -837,46 +755,6 @@ export default function EstadisticasPage() {
 		};
 	}, [rawRatePoints]);
 
-	const comparativaPorLimnigrafo = useMemo<LimnigrafoMetricas[]>(() => {
-		const valuesByLimnigrafo = new Map<number, number[]>();
-
-		currentRows.forEach((medicion) => {
-			const value = getMedicionValueByAtributo(medicion, appliedFilters.atributo);
-			if (value === null || !Number.isFinite(value)) {
-				return;
-			}
-
-			const existing = valuesByLimnigrafo.get(medicion.limnigrafo) ?? [];
-			existing.push(value);
-			valuesByLimnigrafo.set(medicion.limnigrafo, existing);
-		});
-
-		return Array.from(valuesByLimnigrafo.entries())
-			.map(([limnigrafoId, values]) => {
-				const summary = computeSummary(values);
-				return {
-					id: limnigrafoId,
-					nombre: limnigrafoNameById.get(limnigrafoId) ?? `ID ${limnigrafoId}`,
-					registros: summary.registros,
-					promedio: summary.promedio ?? 0,
-					minimo: summary.minimo ?? 0,
-					maximo: summary.maximo ?? 0,
-					desvio: summary.desvio ?? 0,
-					p90: summary.p90 ?? 0,
-				};
-			})
-			.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
-	}, [currentRows, appliedFilters.atributo, limnigrafoNameById]);
-
-	const comparativaChartData = useMemo(
-		() => comparativaPorLimnigrafo.slice(0, 12).map((item) => ({
-			limnigrafo: item.nombre,
-			promedio: Number(item.promedio.toFixed(3)),
-			p90: Number(item.p90.toFixed(3)),
-		})),
-		[comparativaPorLimnigrafo],
-	);
-
 	const fuenteStats = useMemo(() => {
 		let automatico = 0;
 		let manual = 0;
@@ -919,6 +797,7 @@ export default function EstadisticasPage() {
 	}, [activeRange]);
 
 	const noDataInRange = !isLoadingData && currentRows.length === 0;
+	const shouldShowRateChart = appliedFilters.atributo === "altura_agua";
 
 	function handleApplyFilters() {
 		setFilterError(null);
@@ -948,6 +827,31 @@ export default function EstadisticasPage() {
 		setFilterError(null);
 	}
 
+	function handleApplyTablaFilters() {
+		setTablaFilterError(null);
+		const desdeIso = toIsoString(tablaFilters.desde);
+		const hastaIso = toIsoString(tablaFilters.hasta);
+
+		if (!desdeIso || !hastaIso) {
+			setTablaFilterError("Completá un rango de fechas válido para aplicar filtros.");
+			return;
+		}
+
+		if (new Date(desdeIso).getTime() >= new Date(hastaIso).getTime()) {
+			setTablaFilterError("La fecha desde debe ser anterior a la fecha hasta.");
+			return;
+		}
+
+		setTablaAppliedFilters(tablaFilters);
+	}
+
+	function handleResetTablaFilters() {
+		const reset = getDefaultTablaComparativaFilters();
+		setTablaFilters(reset);
+		setTablaAppliedFilters(reset);
+		setTablaFilterError(null);
+	}
+
 	return (
 		<PaginaBase>
 			<main className="flex flex-1 justify-center px-6 py-10">
@@ -959,460 +863,466 @@ export default function EstadisticasPage() {
 						</p>
 					</header>
 
-					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
-						<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-								Variable
-								<select
-									value={filters.atributo}
-									onChange={(event) => setFilters((previous) => ({
-										...previous,
-										atributo: event.target.value as EstadisticaAtributo,
-									}))}
-									className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+					<Tabs
+						value={activeTab}
+						onValueChange={(value) => setActiveTab(value as EstadisticasTab)}
+						className="gap-8"
+					>
+						<section className="rounded-[24px] bg-white p-3 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
+							<TabsList className="rounded-2xl bg-[#E2E8F0] p-1 dark:bg-[#0F172A]">
+								<TabsTrigger
+									value="graficos"
+									className="rounded-xl px-4 py-2 text-[14px] font-semibold text-[#475569] hover:text-[#1E293B] data-[state=active]:bg-white data-[state=active]:text-[#0F172A] data-[state=active]:shadow-[0px_4px_10px_rgba(15,23,42,0.12)] dark:text-[#94A3B8] dark:hover:text-[#E2E8F0] dark:data-[state=active]:bg-[#1E293B] dark:data-[state=active]:text-[#E2E8F0]"
 								>
-									<option value="altura_agua">Nivel del agua</option>
-									<option value="presion">Presión atmosférica</option>
-									<option value="temperatura">Temperatura</option>
-								</select>
-							</label>
-
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-								Modo de análisis
-								<select
-									value={filters.modo}
-									onChange={(event) => setFilters((previous) => ({
-										...previous,
-										modo: event.target.value as ModoFiltro,
-									}))}
-									className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+									Gráficos
+								</TabsTrigger>
+								<TabsTrigger
+									value="tabla"
+									className="rounded-xl px-4 py-2 text-[14px] font-semibold text-[#475569] hover:text-[#1E293B] data-[state=active]:bg-white data-[state=active]:text-[#0F172A] data-[state=active]:shadow-[0px_4px_10px_rgba(15,23,42,0.12)] dark:text-[#94A3B8] dark:hover:text-[#E2E8F0] dark:data-[state=active]:bg-[#1E293B] dark:data-[state=active]:text-[#E2E8F0]"
 								>
-									<option value="realtime">Tiempo real</option>
-									<option value="rango">Rango personalizado</option>
-								</select>
-							</label>
+									Tabla comparativa
+								</TabsTrigger>
+							</TabsList>
+						</section>
 
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-								Ventana en tiempo real
-								<select
-									value={filters.ventana}
-									disabled={filters.modo !== "realtime"}
-									onChange={(event) => setFilters((previous) => ({
-										...previous,
-										ventana: event.target.value as VentanaRealtime,
-									}))}
-									className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
-								>
-									<option value="1h">Última hora</option>
-									<option value="6h">Últimas 6 horas</option>
-									<option value="24h">Últimas 24 horas</option>
-									<option value="7d">Últimos 7 días</option>
-								</select>
-							</label>
-
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-								Fecha desde
-								<input
-									type="datetime-local"
-									value={filters.desde}
-									disabled={filters.modo !== "rango"}
-									onChange={(event) => setFilters((previous) => ({ ...previous, desde: event.target.value }))}
-									className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
-								/>
-							</label>
-
-							<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
-								Fecha hasta
-								<input
-									type="datetime-local"
-									value={filters.hasta}
-									disabled={filters.modo !== "rango"}
-									onChange={(event) => setFilters((previous) => ({ ...previous, hasta: event.target.value }))}
-									className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
-								/>
-							</label>
-
-							<div className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1] xl:col-span-1">
-								<label htmlFor="estadisticas-limnigrafos-trigger">
-									Limnígrafos ({filters.limnigrafos.length})
-								</label>
-								<MultiSelect
-									id="estadisticas-limnigrafos-trigger"
-									options={limnigrafoOptions}
-									selectedValues={filters.limnigrafos}
-									onChange={(values) => setFilters((previous) => ({ ...previous, limnigrafos: values }))}
-									placeholder="Seleccionar limnígrafos"
-									className="h-11 text-[13px]"
-									emptyText="No hay limnígrafos disponibles"
-								/>
-							</div>
-						</div>
-
-						<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-							<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
-								{appliedFilters.modo === "realtime"
-									? `Modo activo: ${REALTIME_WINDOW_LABELS[appliedFilters.ventana]} (refresco cada 30 segundos).`
-									: "Modo activo: rango personalizado."}
-								<br />
-								Período actual: {activeRangeLabel}
-							</p>
-
-							<div className="flex flex-wrap items-center gap-3">
-								<button
-									type="button"
-									onClick={handleApplyFilters}
-									className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)] hover:bg-[#0873B2]"
-								>
-									Aplicar filtros
-								</button>
-								<button
-									type="button"
-									onClick={() => setRefreshTick((previous) => previous + 1)}
-									className="rounded-xl border border-[#22C55E] bg-[#ECFDF3] px-5 py-3 text-[14px] font-semibold text-[#166534] shadow-[0px_4px_10px_rgba(22,163,74,0.18)] hover:bg-[#D9FBE8]"
-								>
-									Actualizar ahora
-								</button>
-								<button
-									type="button"
-									onClick={handleResetFilters}
-									className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] shadow-[0px_4px_10px_rgba(15,23,42,0.08)] hover:bg-[#F8FAFC]"
-								>
-									Restablecer
-								</button>
-							</div>
-						</div>
-					</section>
-
-					{filterError ? (
-						<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
-							{filterError}
-						</p>
-					) : null}
-					{fetchError ? (
-						<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
-							{fetchError}
-						</p>
-					) : null}
-					{limnigrafosError ? (
-						<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
-							No se pudieron cargar los limnígrafos para filtros.
-						</p>
-					) : null}
-
-					<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
-						<div className="flex flex-wrap items-center justify-between gap-3">
-							<div>
-								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-									Estadísticas descriptivas
-								</p>
-								<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-									Variable analizada: {atributoMeta.label}. Registros actuales: {currentSummary.registros}.
-								</p>
-							</div>
-							<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
-								Última actualización: {lastUpdatedAt ? formatDateTime(lastUpdatedAt) : "-"}
-							</p>
-						</div>
-
-						<div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-							<EstadisticaCard
-								title="Promedio"
-								value={formatMetricValue(currentSummary.promedio, appliedFilters.atributo)}
-								detail={formatVariation(averageVariation)}
-								accent="#0EA5E9"
-							/>
-							<EstadisticaCard
-								title="Mínimo"
-								value={formatMetricValue(currentSummary.minimo, appliedFilters.atributo)}
-								detail="Valor mínimo observado en el período actual"
-								accent="#22C55E"
-							/>
-							<EstadisticaCard
-								title="Máximo"
-								value={formatMetricValue(currentSummary.maximo, appliedFilters.atributo)}
-								detail="Valor máximo observado en el período actual"
-								accent="#F97316"
-							/>
-							<EstadisticaCard
-								title="Desvío estándar"
-								value={formatMetricValue(currentSummary.desvio, appliedFilters.atributo)}
-								detail="Nivel de variabilidad de la serie"
-								accent="#6366F1"
-							/>
-							<EstadisticaCard
-								title="Percentil 90"
-								value={formatMetricValue(currentSummary.p90, appliedFilters.atributo)}
-								detail="90% de los datos están por debajo de este valor"
-								accent="#14B8A6"
-							/>
-							<EstadisticaCard
-								title="Registros analizados"
-								value={String(currentSummary.registros)}
-								detail="Muestras válidas de la variable en el período actual"
-								accent="#A855F7"
-							/>
-						</div>
-					</section>
-
-					<section className="grid gap-6 lg:grid-cols-2">
-						<div className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
-							<div className="mb-4">
-								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-									Distribución e identificación de extremos
-								</p>
-								<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-									Histograma de {atributoMeta.label.toLowerCase()} para el período actual.
-								</p>
-							</div>
-
-							{histogramData.length === 0 ? (
-								<div className="flex h-[280px] items-center justify-center rounded-2xl border border-dashed border-[#D3D4D5] bg-[#F8FAFC] text-[14px] text-[#6B7280] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#94A3B8]">
-									No hay datos para construir la distribución.
-								</div>
-							) : (
-								<ChartContainer config={histogramChartConfig} className="h-[280px] w-full">
-									<BarChart data={histogramData}>
-										<CartesianGrid vertical={false} />
-										<XAxis
-											dataKey="bucket"
-											tickLine={false}
-											axisLine={false}
-											tickMargin={8}
-											minTickGap={20}
-										/>
-										<YAxis tickLine={false} axisLine={false} width={46} />
-										<ChartTooltip
-											cursor={false}
-											content={<ChartTooltipContent indicator="dot" />}
-										/>
-										<Bar dataKey="count" name="Frecuencia" fill="var(--color-count)" radius={[6, 6, 0, 0]} />
-									</BarChart>
-								</ChartContainer>
-							)}
-
-							<div className="mt-4 grid gap-2 text-[13px] text-[#475569] dark:text-[#CBD5E1]">
-								<p>
-									Extremos detectados (IQR): <span className="font-semibold">{outlierInfo.count}</span> ({outlierInfo.ratio.toFixed(2)} %)
-								</p>
-								<p>
-									Límites esperados: {formatMetricValue(outlierInfo.lower, appliedFilters.atributo)} - {formatMetricValue(outlierInfo.upper, appliedFilters.atributo)}
-								</p>
-							</div>
-						</div>
-
-						<div className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
-							<div className="mb-4">
-								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-									Tasa de cambio del nivel del agua
-								</p>
-								<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-									Cálculo de subida/bajada (m/h) entre mediciones consecutivas.
-								</p>
-							</div>
-
-							{rateSeriesData.length === 0 ? (
-								<div className="flex h-[280px] items-center justify-center rounded-2xl border border-dashed border-[#D3D4D5] bg-[#F8FAFC] text-[14px] text-[#6B7280] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#94A3B8]">
-									No hay datos suficientes de nivel para calcular tasas.
-								</div>
-							) : (
-								<ChartContainer config={rateChartConfig} className="h-[280px] w-full">
-									<LineChart data={rateSeriesData}>
-										<CartesianGrid vertical={false} />
-										<XAxis
-											dataKey="date"
-											tickLine={false}
-											axisLine={false}
-											tickMargin={8}
-											minTickGap={32}
-											tickFormatter={(value) => formatDateTick(String(value), activeDurationMs)}
-										/>
-										<YAxis tickLine={false} axisLine={false} width={58} />
-										<ReferenceLine y={0} stroke="#94A3B8" strokeDasharray="4 4" />
-										<ChartTooltip
-											cursor={false}
-											content={(
-												<ChartTooltipContent
-													indicator="dot"
-													labelFormatter={(value) => formatDateTime(String(value))}
-													formatter={(value) => {
-														const numeric = typeof value === "number" ? value : Number(value);
-														return (
-															<div className="flex w-full items-center justify-between gap-3">
-																<span className="text-muted-foreground">Tasa</span>
-																<span className="font-mono font-medium text-foreground tabular-nums">
-																	{formatNumber(numeric, 4)} m/h
-																</span>
-															</div>
-														);
-													}}
-												/>
-											)}
-										/>
-										<Line
-											dataKey="rate"
-											name="Tasa de cambio"
-											type="monotone"
-											stroke="var(--color-rate)"
-											strokeWidth={2.5}
-											dot={false}
-											isAnimationActive={false}
-										/>
-									</LineChart>
-								</ChartContainer>
-							)}
-
-							<div className="mt-4 grid gap-2 text-[13px] text-[#475569] dark:text-[#CBD5E1]">
-								<p>
-									Intervalos válidos (tasas crudas): <span className="font-semibold">{rawRatePoints.length}</span>
-								</p>
-								<p>
-									Puntos graficados: <span className="font-semibold">{rateSeriesData.length}</span>
-								</p>
-								<p>
-									Tasa promedio: <span className="font-semibold">{rateSummary.promedio === null ? "-" : `${formatNumber(rateSummary.promedio, 4)} m/h`}</span>
-								</p>
-								<p>
-									Subida máxima: <span className="font-semibold">{rateSummary.maxSubida === null ? "-" : `${formatNumber(rateSummary.maxSubida, 4)} m/h`}</span>
-								</p>
-								<p>
-									Bajada máxima: <span className="font-semibold">{rateSummary.maxBajada === null ? "-" : `${formatNumber(rateSummary.maxBajada, 4)} m/h`}</span>
-								</p>
-							</div>
-						</div>
-					</section>
-
-					<section className="grid gap-6 lg:grid-cols-2">
-						<div className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
-							<div className="mb-4">
-								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-									Comparación entre limnígrafos
-								</p>
-								<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-									Promedio y percentil 90 por limnígrafo para {atributoMeta.label.toLowerCase()}.
-								</p>
-							</div>
-
-							{comparativaChartData.length === 0 ? (
-								<div className="flex h-[280px] items-center justify-center rounded-2xl border border-dashed border-[#D3D4D5] bg-[#F8FAFC] text-[14px] text-[#6B7280] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#94A3B8]">
-									No hay datos comparativos por limnígrafo.
-								</div>
-							) : (
-								<ChartContainer config={compareChartConfig} className="h-[280px] w-full">
-									<BarChart data={comparativaChartData}>
-										<CartesianGrid vertical={false} />
-										<XAxis
-											dataKey="limnigrafo"
-											tickLine={false}
-											axisLine={false}
-											tickMargin={8}
-											interval={0}
-											angle={-20}
-											textAnchor="end"
-											height={64}
-										/>
-										<YAxis tickLine={false} axisLine={false} width={58} />
-										<ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-										<Bar dataKey="promedio" name="Promedio" fill="var(--color-promedio)" radius={[6, 6, 0, 0]} />
-										<Bar dataKey="p90" name="P90" fill="var(--color-p90)" radius={[6, 6, 0, 0]} />
-										<ChartLegend content={<ChartLegendContent />} />
-									</BarChart>
-								</ChartContainer>
-							)}
-
-							<div className="mt-4 overflow-auto rounded-2xl border border-[#E2E8F0] dark:border-[#334155]">
-								<table className="min-w-full text-left text-[13px] text-[#334155] dark:text-[#CBD5E1]">
-									<thead className="bg-[#F8FAFC] text-[12px] uppercase tracking-wide text-[#64748B] dark:bg-[#111923] dark:text-[#94A3B8]">
-										<tr>
-											<th className="px-3 py-2">Limnígrafo</th>
-											<th className="px-3 py-2">Registros</th>
-											<th className="px-3 py-2">Promedio</th>
-											<th className="px-3 py-2">Mín</th>
-											<th className="px-3 py-2">Máx</th>
-											<th className="px-3 py-2">P90</th>
-											<th className="px-3 py-2">Desvío</th>
-										</tr>
-									</thead>
-									<tbody className="divide-y divide-[#E2E8F0] dark:divide-[#334155]">
-										{comparativaPorLimnigrafo.map((row) => (
-											<tr key={row.id}>
-												<td className="px-3 py-2 font-semibold">{row.nombre}</td>
-												<td className="px-3 py-2">{row.registros}</td>
-												<td className="px-3 py-2">{formatMetricValue(row.promedio, appliedFilters.atributo)}</td>
-												<td className="px-3 py-2">{formatMetricValue(row.minimo, appliedFilters.atributo)}</td>
-												<td className="px-3 py-2">{formatMetricValue(row.maximo, appliedFilters.atributo)}</td>
-												<td className="px-3 py-2">{formatMetricValue(row.p90, appliedFilters.atributo)}</td>
-												<td className="px-3 py-2">{formatMetricValue(row.desvio, appliedFilters.atributo)}</td>
-											</tr>
-										))}
-										{comparativaPorLimnigrafo.length === 0 ? (
-											<tr>
-												<td className="px-3 py-6 text-center" colSpan={7}>Sin datos comparativos.</td>
-											</tr>
-										) : null}
-									</tbody>
-								</table>
-							</div>
-						</div>
-
-						<div className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
-							<div className="mb-4">
-								<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
-									Calidad operativa de carga
-								</p>
-								<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-									Distribución de registros automáticos y manuales en el período actual.
-								</p>
-							</div>
-
-							{fuenteStats.total === 0 ? (
-								<div className="flex h-[280px] items-center justify-center rounded-2xl border border-dashed border-[#D3D4D5] bg-[#F8FAFC] text-[14px] text-[#6B7280] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#94A3B8]">
-									No hay registros para analizar la fuente de carga.
-								</div>
-							) : (
-								<ChartContainer config={fuenteChartConfig} className="h-[280px] w-full">
-									<PieChart>
-										<Pie
-											data={fuenteChartData}
-											dataKey="value"
-											nameKey="label"
-											innerRadius={56}
-											outerRadius={90}
-											paddingAngle={2}
+						<TabsContent value="graficos" className="mt-0 flex flex-col gap-8">
+							<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
+								<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+										Variable
+										<select
+											value={filters.atributo}
+											onChange={(event) => setFilters((previous) => ({
+												...previous,
+												atributo: event.target.value as EstadisticaAtributo,
+											}))}
+											className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 										>
-											{fuenteChartData.map((entry) => (
-												<Cell key={entry.key} fill={entry.fill} />
-											))}
-										</Pie>
-										<ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-										<ChartLegend content={<ChartLegendContent />} />
-									</PieChart>
-								</ChartContainer>
-							)}
+											<option value="altura_agua">Nivel del agua</option>
+											<option value="presion">Presión atmosférica</option>
+											<option value="temperatura">Temperatura</option>
+										</select>
+									</label>
 
-							<div className="mt-4 grid gap-2 text-[13px] text-[#475569] dark:text-[#CBD5E1]">
-								<p>
-									Automático: <span className="font-semibold">{fuenteStats.automatico}</span> ({fuenteStats.automaticoPct.toFixed(2)} %)
-								</p>
-								<p>
-									Manual: <span className="font-semibold">{fuenteStats.manual}</span> ({fuenteStats.manualPct.toFixed(2)} %)
-								</p>
-								<p>
-									Total de eventos: <span className="font-semibold">{fuenteStats.total}</span>
-								</p>
-							</div>
-						</div>
-					</section>
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+										Modo de análisis
+										<select
+											value={filters.modo}
+											onChange={(event) => setFilters((previous) => ({
+												...previous,
+												modo: event.target.value as ModoFiltro,
+											}))}
+											className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+										>
+											<option value="realtime">Tiempo real</option>
+											<option value="rango">Rango personalizado</option>
+										</select>
+									</label>
 
-					{noDataInRange ? (
-						<p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-[14px] text-[#475569] dark:border-[#334155] dark:bg-[#0F172A] dark:text-[#CBD5E1]">
-							No se encontraron mediciones en el período y filtros seleccionados.
-						</p>
-					) : null}
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+										Ventana en tiempo real
+										<select
+											value={filters.ventana}
+											disabled={filters.modo !== "realtime"}
+											onChange={(event) => setFilters((previous) => ({
+												...previous,
+												ventana: event.target.value as VentanaRealtime,
+											}))}
+											className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+										>
+											<option value="1h">Última hora</option>
+											<option value="6h">Últimas 6 horas</option>
+											<option value="24h">Últimas 24 horas</option>
+											<option value="7d">Últimos 7 días</option>
+											<option value="30d">Últimos 30 días</option>
+											<option value="90d">Últimos 90 días</option>
+										</select>
+									</label>
 
-					<PanelComparativas
-						limnigrafos={limnigrafos}
-						limnigrafosError={limnigrafosError}
-					/>
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+										Fecha desde
+										<input
+											type="datetime-local"
+											value={filters.desde}
+											disabled={filters.modo !== "rango"}
+											onChange={(event) => setFilters((previous) => ({ ...previous, desde: event.target.value }))}
+											className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+										/>
+									</label>
+
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+										Fecha hasta
+										<input
+											type="datetime-local"
+											value={filters.hasta}
+											disabled={filters.modo !== "rango"}
+											onChange={(event) => setFilters((previous) => ({ ...previous, hasta: event.target.value }))}
+											className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+										/>
+									</label>
+
+									<div className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1] xl:col-span-1">
+										<label htmlFor="estadisticas-limnigrafos-trigger">
+											Limnígrafos ({filters.limnigrafos.length})
+										</label>
+										<MultiSelect
+											id="estadisticas-limnigrafos-trigger"
+											options={limnigrafoOptions}
+											selectedValues={filters.limnigrafos}
+											onChange={(values) => setFilters((previous) => ({ ...previous, limnigrafos: values }))}
+											placeholder="Seleccionar limnígrafos"
+											className="h-11 text-[13px]"
+											emptyText="No hay limnígrafos disponibles"
+										/>
+									</div>
+								</div>
+
+								<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+									<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
+										{appliedFilters.modo === "realtime"
+											? `Modo activo: ${REALTIME_WINDOW_LABELS[appliedFilters.ventana]} (refresco cada 30 segundos).`
+											: "Modo activo: rango personalizado."}
+										<br />
+										Período actual: {activeRangeLabel}
+									</p>
+
+									<div className="flex flex-wrap items-center gap-3">
+										<button
+											type="button"
+											onClick={handleApplyFilters}
+											className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)] hover:bg-[#0873B2]"
+										>
+											Aplicar filtros
+										</button>
+										<button
+											type="button"
+											onClick={handleResetFilters}
+											className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] shadow-[0px_4px_10px_rgba(15,23,42,0.08)] hover:bg-[#F8FAFC]"
+										>
+											Restablecer
+										</button>
+									</div>
+								</div>
+							</section>
+
+							{filterError ? (
+								<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
+									{filterError}
+								</p>
+							) : null}
+							{fetchError ? (
+								<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
+									{fetchError}
+								</p>
+							) : null}
+							{limnigrafosError ? (
+								<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
+									No se pudieron cargar los limnígrafos para filtros.
+								</p>
+							) : null}
+
+							<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
+								<div className="flex flex-wrap items-center justify-between gap-3">
+									<div>
+										<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+											Estadísticas descriptivas
+										</p>
+										<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
+											Variable analizada: {atributoMeta.label}. Registros actuales: {currentSummary.registros}.
+										</p>
+									</div>
+									<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
+										Última actualización: {lastUpdatedAt ? formatDateTime(lastUpdatedAt) : "-"}
+									</p>
+								</div>
+
+								<div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+									<EstadisticaCard
+										title="Promedio"
+										value={formatMetricValue(currentSummary.promedio, appliedFilters.atributo)}
+										detail={formatVariation(averageVariation)}
+										accent="#0EA5E9"
+									/>
+									<EstadisticaCard
+										title="Mínimo"
+										value={formatMetricValue(currentSummary.minimo, appliedFilters.atributo)}
+										detail="Valor mínimo observado en el período actual"
+										accent="#22C55E"
+									/>
+									<EstadisticaCard
+										title="Máximo"
+										value={formatMetricValue(currentSummary.maximo, appliedFilters.atributo)}
+										detail="Valor máximo observado en el período actual"
+										accent="#F97316"
+									/>
+									<EstadisticaCard
+										title="Desvío estándar"
+										value={formatMetricValue(currentSummary.desvio, appliedFilters.atributo)}
+										detail="Nivel de variabilidad de la serie"
+										accent="#6366F1"
+									/>
+									<EstadisticaCard
+										title="Percentil 90"
+										value={formatMetricValue(currentSummary.p90, appliedFilters.atributo)}
+										detail="90% de los datos están por debajo de este valor"
+										accent="#14B8A6"
+									/>
+									<EstadisticaCard
+										title="Registros analizados"
+										value={String(currentSummary.registros)}
+										detail="Muestras válidas de la variable en el período actual"
+										accent="#A855F7"
+									/>
+								</div>
+							</section>
+
+							<PanelComparativas
+								limnigrafos={limnigrafos}
+								limnigrafosError={limnigrafosError}
+								chartAtributo={appliedFilters.atributo}
+								chartLimnigrafos={appliedFilters.limnigrafos}
+								chartTimeRange={appliedFilters.ventana}
+							/>
+
+							{shouldShowRateChart ? (
+								<section className="grid gap-6 lg:grid-cols-1">
+									<div className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
+										<div className="mb-4">
+											<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+												Tasa de cambio del nivel del agua
+											</p>
+											<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
+												Cálculo de subida/bajada (m/h) entre mediciones consecutivas.
+											</p>
+										</div>
+
+										{rateSeriesData.length === 0 ? (
+											<div className="flex h-[280px] items-center justify-center rounded-2xl border border-dashed border-[#D3D4D5] bg-[#F8FAFC] text-[14px] text-[#6B7280] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#94A3B8]">
+												No hay datos suficientes de nivel para calcular tasas.
+											</div>
+										) : (
+											<ChartContainer config={rateChartConfig} className="h-[280px] w-full">
+												<LineChart data={rateSeriesData}>
+													<CartesianGrid vertical={false} />
+													<XAxis
+														dataKey="date"
+														tickLine={false}
+														axisLine={false}
+														tickMargin={8}
+														minTickGap={32}
+														tickFormatter={(value) => formatDateTick(String(value), activeDurationMs)}
+													/>
+													<YAxis tickLine={false} axisLine={false} width={58} />
+													<ReferenceLine y={0} stroke="#94A3B8" strokeDasharray="4 4" />
+													<ChartTooltip
+														cursor={false}
+														content={(
+															<ChartTooltipContent
+																indicator="dot"
+																labelFormatter={(value) => formatDateTime(String(value))}
+																formatter={(value) => {
+																	const numeric = typeof value === "number" ? value : Number(value);
+																	return (
+																		<div className="flex w-full items-center justify-between gap-3">
+																			<span className="text-muted-foreground">Tasa</span>
+																			<span className="font-mono font-medium text-foreground tabular-nums">
+																				{formatNumber(numeric, 4)} m/h
+																			</span>
+																		</div>
+																	);
+																}}
+															/>
+														)}
+													/>
+													<Line
+														dataKey="rate"
+														name="Tasa de cambio"
+														type="monotone"
+														stroke="var(--color-rate)"
+														strokeWidth={2.5}
+														dot={false}
+														isAnimationActive={false}
+													/>
+												</LineChart>
+											</ChartContainer>
+										)}
+
+										<div className="mt-4 grid gap-2 text-[13px] text-[#475569] dark:text-[#CBD5E1]">
+											<p>
+												Intervalos válidos (tasas crudas): <span className="font-semibold">{rawRatePoints.length}</span>
+											</p>
+											<p>
+												Puntos graficados: <span className="font-semibold">{rateSeriesData.length}</span>
+											</p>
+											<p>
+												Tasa promedio: <span className="font-semibold">{rateSummary.promedio === null ? "-" : `${formatNumber(rateSummary.promedio, 4)} m/h`}</span>
+											</p>
+											<p>
+												Subida máxima: <span className="font-semibold">{rateSummary.maxSubida === null ? "-" : `${formatNumber(rateSummary.maxSubida, 4)} m/h`}</span>
+											</p>
+											<p>
+												Bajada máxima: <span className="font-semibold">{rateSummary.maxBajada === null ? "-" : `${formatNumber(rateSummary.maxBajada, 4)} m/h`}</span>
+											</p>
+										</div>
+									</div>
+								</section>
+							) : null}
+
+							<section className="grid gap-6 lg:grid-cols-1">
+								<div className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
+									<div className="mb-4">
+										<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">
+											Calidad operativa de carga
+										</p>
+										<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
+											Distribución de registros automáticos y manuales en el período actual.
+										</p>
+									</div>
+
+									{fuenteStats.total === 0 ? (
+										<div className="flex h-[280px] items-center justify-center rounded-2xl border border-dashed border-[#D3D4D5] bg-[#F8FAFC] text-[14px] text-[#6B7280] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#94A3B8]">
+											No hay registros para analizar la fuente de carga.
+										</div>
+									) : (
+										<ChartContainer config={fuenteChartConfig} className="h-[280px] w-full">
+											<PieChart>
+												<Pie
+													data={fuenteChartData}
+													dataKey="value"
+													nameKey="label"
+													innerRadius={56}
+													outerRadius={90}
+													paddingAngle={2}
+												>
+													{fuenteChartData.map((entry) => (
+														<Cell key={entry.key} fill={entry.fill} />
+													))}
+												</Pie>
+												<ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+												<ChartLegend content={<ChartLegendContent />} />
+											</PieChart>
+										</ChartContainer>
+									)}
+
+									<div className="mt-4 grid gap-2 text-[13px] text-[#475569] dark:text-[#CBD5E1]">
+										<p>
+											Automático: <span className="font-semibold">{fuenteStats.automatico}</span> ({fuenteStats.automaticoPct.toFixed(2)} %)
+										</p>
+										<p>
+											Manual: <span className="font-semibold">{fuenteStats.manual}</span> ({fuenteStats.manualPct.toFixed(2)} %)
+										</p>
+										<p>
+											Total de eventos: <span className="font-semibold">{fuenteStats.total}</span>
+										</p>
+									</div>
+								</div>
+							</section>
+
+							{noDataInRange ? (
+								<p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-[14px] text-[#475569] dark:border-[#334155] dark:bg-[#0F172A] dark:text-[#CBD5E1]">
+									No se encontraron mediciones en el período y filtros seleccionados.
+								</p>
+							) : null}
+						</TabsContent>
+
+						<TabsContent value="tabla" className="mt-0 flex flex-col gap-8">
+							<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
+								<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+										Variable
+										<select
+											value={tablaFilters.atributo}
+											onChange={(event) => setTablaFilters((previous) => ({
+												...previous,
+												atributo: event.target.value as EstadisticaAtributo,
+											}))}
+											className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+										>
+											<option value="altura_agua">Nivel del agua</option>
+											<option value="presion">Presión atmosférica</option>
+											<option value="temperatura">Temperatura</option>
+										</select>
+									</label>
+
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+										Fecha desde
+										<input
+											type="datetime-local"
+											value={tablaFilters.desde}
+											onChange={(event) => setTablaFilters((previous) => ({ ...previous, desde: event.target.value }))}
+											className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+										/>
+									</label>
+
+									<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+										Fecha hasta
+										<input
+											type="datetime-local"
+											value={tablaFilters.hasta}
+											onChange={(event) => setTablaFilters((previous) => ({ ...previous, hasta: event.target.value }))}
+											className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+										/>
+									</label>
+
+									<div className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+										<label htmlFor="estadisticas-tabla-limnigrafos-trigger">
+											Limnígrafos ({tablaFilters.limnigrafos.length})
+										</label>
+										<MultiSelect
+											id="estadisticas-tabla-limnigrafos-trigger"
+											options={limnigrafoOptions}
+											selectedValues={tablaFilters.limnigrafos}
+											onChange={(values) => setTablaFilters((previous) => ({ ...previous, limnigrafos: values }))}
+											placeholder="Seleccionar limnígrafos"
+											className="h-11 text-[13px]"
+											emptyText="No hay limnígrafos disponibles"
+										/>
+									</div>
+								</div>
+
+								<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+									<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
+										Modo activo: rango personalizado.
+									</p>
+									<div className="flex flex-wrap items-center gap-3">
+										<button
+											type="button"
+											onClick={handleApplyTablaFilters}
+											className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)] hover:bg-[#0873B2]"
+										>
+											Aplicar filtros
+										</button>
+										<button
+											type="button"
+											onClick={handleResetTablaFilters}
+											className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] shadow-[0px_4px_10px_rgba(15,23,42,0.08)] hover:bg-[#F8FAFC]"
+										>
+											Restablecer
+										</button>
+									</div>
+								</div>
+							</section>
+
+							{tablaFilterError ? (
+								<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
+									{tablaFilterError}
+								</p>
+							) : null}
+							{limnigrafosError ? (
+								<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
+									No se pudieron cargar los limnígrafos para filtros.
+								</p>
+							) : null}
+
+							<TablaComparativaEstadisticas
+								atributo={tablaAppliedFilters.atributo}
+								desde={tablaAppliedFilters.desde}
+								hasta={tablaAppliedFilters.hasta}
+								limnigrafosSeleccionados={tablaAppliedFilters.limnigrafos}
+								limnigrafos={limnigrafos}
+							/>
+						</TabsContent>
+					</Tabs>
 				</div>
 			</main>
 		</PaginaBase>
