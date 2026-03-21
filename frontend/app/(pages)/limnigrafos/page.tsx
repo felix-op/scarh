@@ -19,6 +19,7 @@ import { defaultMessage, opcionesEstado } from "./constantes";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
 import ChipEstadoLimnigrafo from "@componentes/chips/ChipEstadoLimnigrafo";
 import FiltroFecha from "@componentes/filtros/FiltroFecha";
+import BotonIconoIr from "@componentes/botones/BotonIconoIr";
 
 type EstadoFiltro = "" | EstadoLimnigrafo;
 
@@ -26,13 +27,13 @@ const queriesToInvalidate = ["useGetLimnigrafos"];
 
 export default function Home() {
 	const router = useRouter();
-	
+
 	const [page, setPage] = useState(1);
 	const [lengthPages, setLengthPages] = useState(5);
 	const [search, setSearch] = useState("");
 	const [estado, setEstadoFilter] = useState<EstadoFiltro>("");
 	const [message, setMessage] = useState(defaultMessage);
-	
+
 	// --- Modal añadir ---
 	const [isAddOpen, setIsAddOpen] = useState(false);
 	const handleOpenAdd = () => setIsAddOpen(true);
@@ -45,9 +46,9 @@ export default function Home() {
 		setIsOpenInfo(true);
 	};
 	const handleCloseInfo = () => setIsOpenInfo(false);
-	
+
 	const [isOpenFiltros, setIsOpenFiltros] = useState(false);
-	
+
 	const { data: limnigrafos, isFetching: isLoadingLimnigrafos } = useGetLimnigrafos({
 		params: {
 			queryParams: {
@@ -105,8 +106,12 @@ export default function Home() {
 		},
 	];
 
+	const handleVerMas = (row: LimnigrafoResponse) => {
+		router.push(`/limnigrafos/${row.id}`);
+	}
+
 	const handleEdit = (row: LimnigrafoResponse) => {
-		router.push(`/limnigrafos/detalleLimnigrafo?id=${row.id}`);
+
 	}
 
 	const actionConfig: ActionConfig<LimnigrafoResponse> = {
@@ -115,15 +120,28 @@ export default function Home() {
 			<ActionMenu>
 				<BotonVariante
 					variant="editar"
-					className="hidden lg:flex"
+					className="hidden xl:flex"
 					onClick={() => {
 						handleEdit(row);
 					}}
 				/>
 				<BotonIconoEditar
-					className="lg:hidden"
+					className="xl:hidden"
 					onClick={() => {
 						handleEdit(row);
+					}}
+				/>
+				<BotonVariante
+					variant="ir"
+					className="hidden xl:flex"
+					onClick={() => {
+						handleVerMas(row);
+					}}
+				/>
+				<BotonIconoIr
+					className="xl:hidden"
+					onClick={() => {
+						handleVerMas(row);
 					}}
 				/>
 			</ActionMenu>

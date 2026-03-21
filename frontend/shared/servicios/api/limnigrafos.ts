@@ -34,7 +34,7 @@ export function useGetLimnigrafo({ params, configuracion }: UseGetLimnigrafoOpti
 	}
 	const defaultConfig = {};
 
-	return useGet({
+	return useGet<ParamsBase, LimnigrafoResponse>({
 		key: "useGetLimnigrafo",
 		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
 		params: params ?? defaultParams,
@@ -78,7 +78,7 @@ export function usePutLimnigrafo({ params, configuracion }: UsePutLimngrafoOptio
 		id: "",
 	}
 	const defaultConfig = {};
-	
+
 	return usePut({
 		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
 		configuracion: configuracion ?? defaultConfig,
@@ -102,7 +102,7 @@ export function usePachtLimnigrafo({ params, configuracion }: UsePachtLimngrafoO
 		id: "",
 	}
 	const defaultConfig = {};
-	
+
 	return usePatch({
 		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
 		configuracion: configuracion ?? defaultConfig,
@@ -126,7 +126,7 @@ export function useDeleteLimnigrafo({ params, configuracion }: UseDeleteLimngraf
 		id: "",
 	}
 	const defaultConfig = {};
-	
+
 	return useDelete({
 		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
 		configuracion: configuracion ?? defaultConfig,
