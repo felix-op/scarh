@@ -9,8 +9,7 @@ import { TEditarUsuario } from "../types";
 type VentanaEditarUsuarioProps = {
 	open: boolean,
 	onClose: () => void,
-	usuario: UsuarioResponse | null,
-	usuarios: UsuarioResponse[],
+	usuario?: UsuarioResponse | null,
 	queriesToInvalidate: string[],
 	handleMessage: (message: VentanaAceptarOptions) => void
 }

@@ -28,7 +28,7 @@ export default function UsersAdminPage() {
 	const [isOpenFiltros, setIsOpenFiltros] = useState(false);
 	const [search, setSearch] = useState("");
 	const [estado, setEstado] = useState("");
-	
+
 	const { data: usuarios, isLoading, isRefetching } = useGetUsuarios({
 		params: {
 			queryParams: {
@@ -39,28 +39,13 @@ export default function UsersAdminPage() {
 			},
 		}
 	});
-	
-	const [usuarioEditar, setUsuarioEditar] = useState<UsuarioResponse | null>(null);
+
 	const notificar = useNotificar();
 
 	// --- Modal añadir ---
 	const [isAddOpen, setIsAddOpen] = useState(false);
 	const handleOpenAdd = () => setIsAddOpen(true);
 	const handleCancelAdd = () => setIsAddOpen(false);
-
-	// --- Modal editar ---
-	const [isEditOpen, setIsEditOpen] = useState(false);
-	const handleCancelEdit = () => {
-		setUsuarioEditar(null);
-		setIsEditOpen(false);
-	}
-
-	// --- Modal eliminar ---
-	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-	const handleCloseDelete = () => {
-		setUsuarioEditar(null);
-		setIsDeleteOpen(false);
-	}
 
 	const handleOpenInfo = (message: VentanaAceptarOptions) => {
 		notificar({
@@ -183,21 +168,6 @@ export default function UsersAdminPage() {
 				onClose={handleCancelAdd}
 				usuarios={[]}
 				handleMessage={handleOpenInfo}
-				queriesToInvalidate={queriesToInvalidate}
-			/>
-			<VentanaEditarUsuario
-				open={isEditOpen}
-				onClose={handleCancelEdit}
-				usuarios={[]}
-				handleMessage={handleOpenInfo}
-				usuario={usuarioEditar}
-				queriesToInvalidate={queriesToInvalidate}
-			/>
-			<VentanaEliminarUsuario
-				open={isDeleteOpen}
-				onClose={handleCloseDelete}
-				handleMessage={handleOpenInfo}
-				usuario={usuarioEditar}
 				queriesToInvalidate={queriesToInvalidate}
 			/>
 		</PaginaBase>
