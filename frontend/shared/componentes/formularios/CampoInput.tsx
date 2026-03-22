@@ -2,19 +2,9 @@ import React from 'react';
 import { FieldValues, Path } from 'react-hook-form';
 import WrapperCampo from './WrapperCampo';
 import TextField from '@componentes/campos/TextField';
+import { DEFAULT_VALIDATIONS } from './constantes';
 
-const DEFAULT_VALIDATIONS = {
-	email: {
-		value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-		message: "Formato de correo electrónico inválido"
-	},
-	number: {
-		value: /^[0-9]+$/,
-		message: "Solo se permiten números"
-	}
-};
-
-type CampoInputProps<T extends FieldValues> = {
+export type CampoInputProps<T extends FieldValues> = {
 	name: Path<T>;
 	label?: string;
 	placeholder?: string;
@@ -27,7 +17,7 @@ type CampoInputProps<T extends FieldValues> = {
 		value: RegExp;
 		message: string;
 	};
-	validate?: (value: string) => boolean | string,
+	validate?: (value: string) => boolean | string;
 	endDecoration?: {
 		className: string;
 		onClick?: () => void;
@@ -63,6 +53,7 @@ export default function CampoInput<T extends FieldValues>({
 				<TextField
 					{...field}
 					type={type}
+					id={name}
 					placeholder={placeholder}
 					disabled={disabled || isLoading}
 					isLoading={isLoading}

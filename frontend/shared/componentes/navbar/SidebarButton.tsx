@@ -1,6 +1,7 @@
 "use client";
 
 import Icon, { IconVariants } from "@componentes/icons/Icon";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 type SidebarButtonProps = {
@@ -14,16 +15,14 @@ export default function SidebarButton({
 	icono,
 	href,
 }: SidebarButtonProps) {
-	const router = useRouter();
 	const pathname = usePathname();
 
 	const isActive = pathname.startsWith(href);
 
 	return (
 		<div className="w-full">
-			<button
-				type="button"
-				onClick={() => router.push(href)}
+			<Link
+				href={href}
 				className="block w-full border-0 bg-transparent p-0 cursor-pointer"
 			>
 				<div
@@ -51,7 +50,7 @@ export default function SidebarButton({
 						{label}
 					</span>
 				</div>
-			</button>
+			</Link>
 		</div>
 	);
 }

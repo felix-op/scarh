@@ -41,7 +41,6 @@ export default function CampoSelector<T extends FieldValues>({
 					disabled={disabled}
 					isLoading={isLoading}
 					error={fieldState.invalid}
-
 				>
 					{placeholder && (
 						<option value="" disabled>

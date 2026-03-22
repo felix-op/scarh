@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { InputProps } from "types/campos";
 
 export type TextFieldProps = {
@@ -11,39 +12,48 @@ export type TextFieldProps = {
 	};
 };
 
-export default function TextField({
-	icon,
-	error = false,
-	endDecoration,
-	disabled = false,
-	isLoading = false,
-	...rest
-}: InputProps & TextFieldProps) {
-	return (
-		<div className="relative flex flex-row items-center">
-			<span className={`absolute left-3 text-2xl ${icon}`} />
-			<input
-				{...rest}
-				className={`
+const TextField = forwardRef<HTMLInputElement, InputProps & TextFieldProps>(
+	(
+		{
+			icon,
+			error = false,
+			endDecoration,
+			disabled = false,
+			isLoading = false,
+			...rest
+		},
+		ref,
+	) => {
+		return (
+			<div className="relative flex flex-row items-center">
+				<span className={`absolute left-3 text-2xl ${icon}`} />
+				<input
+					{...rest}
+					ref={ref}
+					className={`
 					w-full p-3 px-4 text-base text-foreground
 					rounded-lg border-2 outline-none
-					${!!icon ? 'pl-10' : ''}
-					${isLoading || disabled ? 'bg-campo-input-disabled cursor-not-allowed' : 'bg-campo-input'}
-					${error ? 'border-red-500' : 'border-border hover:border-foreground focus:border-principal'}
-					${endDecoration ? 'pr-10' : ''}
+					${!!icon ? "pl-10" : ""}
+					${isLoading || disabled ? "bg-campo-input-disabled cursor-not-allowed" : "bg-campo-input"}
+					${error ? "border-red-500" : "border-border hover:border-foreground focus:border-principal"}
+					${endDecoration ? "pr-10" : ""}
 				`}
-			/>
-
-			{isLoading && (
-				<span className="loading-spinner">Cargando...</span>
-			)}
-
-			{endDecoration && (
-				<span
-					className={`absolute right-3 text-2xl ${endDecoration.className}`}
-					onClick={endDecoration.onClick}
 				/>
-			)}
-		</div>
-	);
-}
+
+				{isLoading && (
+					<span className="loading-spinner">Cargando...</span>
+				)}
+
+				{endDecoration && (
+					<span
+						className={`absolute right-3 text-2xl ${endDecoration.className}`}
+						onClick={endDecoration.onClick}
+					/>
+				)}
+			</div>
+		);
+	}
+)
+
+TextField.displayName = "TextField";
+export default TextField;
