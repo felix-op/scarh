@@ -2,24 +2,19 @@
 
 import PaginaBase from "@componentes/base/PaginaBase";
 import BotonVariante from "@componentes/botones/BotonVariante";
-import CampoHora from "@componentes/formularios/CampoHora";
-import CampoInput from "@componentes/formularios/CampoInput";
-import CampoMultiCheckbox from "@componentes/formularios/CampoMultipleCheckBox";
-import Formulario from "@componentes/formularios/Formulario";
 import SeccionInfo from "@componentes/secciones/SeccionInfo";
 import VentanaConfirmar from "@componentes/ventanas/VentanaConfirmar";
 import { useNotificar } from "@hooks/useNotificar";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { opcionesMemoria, opcionesTipoComunicacion } from "../../constantes";
+import { defaultFormEditarLimnigrafo } from "../../constantes";
 import { useGetLimnigrafo, usePutLimnigrafo } from "@servicios/api/limnigrafos";
-import CampoSelector from "@componentes/formularios/CampoSelector";
 import { normalizarMemoria } from "@lib/normalizarMemoria";
 import { TFormEditarLimnigrafo } from "../../types";
 import { obtenerMemoria } from "@lib/obtenerMemoria";
 import CargandoDatos from "@componentes/animaciones/CargandoDatos";
-import Separador from "@componentes/Separador";
-import CampoFecha from "@componentes/formularios/CampoFecha";
+import MensajeError from "@componentes/mensajes/MensajeError";
+import FormularioEditarLimnigrafo from "../../componentes/FormularioEditarLimnigrafo";
 
 export default function PaginaEditarLimnigrafo() {
 	const router = useRouter();
@@ -32,6 +27,7 @@ export default function PaginaEditarLimnigrafo() {
 		data: limnigrafo,
 		isFetching: isLoadingLimnigrafo,
 		isError: isErrorLimnigrafo,
+		refetch,
 	} = useGetLimnigrafo({
 		params: {
 			id: limnigrafoID,
@@ -59,10 +55,8 @@ export default function PaginaEditarLimnigrafo() {
 		router.back();
 	};
 
-	const handleGuardar = () => {};
-
-	const valoresIniciales = useMemo(() => {
-		if (!limnigrafo) return {};
+	const valoresIniciales: TFormEditarLimnigrafo = useMemo(() => {
+		if (!limnigrafo) return defaultFormEditarLimnigrafo;
 
 		const { value, unit } = normalizarMemoria(limnigrafo.memoria);
 
@@ -119,105 +113,25 @@ export default function PaginaEditarLimnigrafo() {
 			</div>
 			<br />
 
-			<SeccionInfo>
-				{isLoadingLimnigrafo ? (
+			{isLoadingLimnigrafo ? (
+				<SeccionInfo>
 					<CargandoDatos />
-				) : isErrorLimnigrafo ? (
-					<div>
-						Error: No se pudo obtener los datos del limnígrafo.
-					</div>
-				) : (
-					<Formulario
-						valoresIniciales={valoresIniciales}
-						onSubmit={onSubmit}
-						onDirty={(isDirty) => setEditado(isDirty)}
-					>
-						<div className="flex flex-col lg:flex-row gap-4">
-							<div className="flex flex-col gap-4 grow">
-								<h2>Datos del limnígrafo</h2>
-								<Separador direction="horizontal" />
-								<CampoInput
-									name="codigo"
-									label="Identificador:"
-									placeholder="Ingrese un identificador para el limnígrafo"
-									required
-								/>
-								<CampoInput
-									name="descripcion"
-									label="Descripción:"
-									placeholder="Información adicional para el limnígrafo"
-								/>
-								<h2>Mantenimiento</h2>
-								<hr />
-								<CampoFecha
-									name="ultimo_mantenimiento"
-									label="Último mantenimiento:"
-								/>
-								<CampoHora
-									name="tiempo_advertencia"
-									label="Tiempo máximo antes de advertencias:"
-									placeholder="HH:mm"
-								/>
-								<CampoHora
-									name="tiempo_peligro"
-									label="Tiempo máximo antes de peligro:"
-								/>
-							</div>
-							<Separador direction="vertical" />
-							<div className="flex flex-col gap-4 grow">
-								<h2>Especificaciones técnicas</h2>
-								<hr />
-								<div className="flex items-end gap-2 w-full">
-									<div className="grow">
-										<CampoInput
-											type="number"
-											name="memoria_value"
-											label="Máxima cantidad de memoria:"
-										/>
-									</div>
-									<div className="w-20">
-										<CampoSelector
-											name="memoria_unit"
-											options={opcionesMemoria}
-										/>
-									</div>
-								</div>
-								<CampoInput
-									type="number"
-									name="bateria_min"
-									label="Cantidad mínima de batería:"
-								/>
-								<CampoInput
-									type="number"
-									name="bateria_max"
-									label="Cantidad máxima de batería:"
-								/>
-								<CampoMultiCheckbox
-									name="tipo_comunicacion"
-									options={opcionesTipoComunicacion}
-									className="md:grid-cols-2"
-									label="Tipo de comunicación"
-								/>
-							</div>
-						</div>
-						<br />
-						<hr />
-						<br />
-						<div className="flex w-full justify-between">
-							<BotonVariante
-								variant="cancelar"
-								onClick={handleCancelar}
-							/>
-							<BotonVariante
-								variant="guardar"
-								type="submit"
-								onClick={handleGuardar}
-								loading={isPendingLimnigrafo}
-							/>
-						</div>
-					</Formulario>
-				)}
-			</SeccionInfo>
+				</SeccionInfo>
+			) : isErrorLimnigrafo ? (
+				<MensajeError titulo="Error" handleReintentar={() => refetch}>
+					No se pudo obtener los datos del limnígrafo. Inténtelo de
+					nuevo más tarde.
+				</MensajeError>
+			) : (
+				<FormularioEditarLimnigrafo
+					valoresIniciales={valoresIniciales}
+					handleCancelar={handleCancelar}
+					onSubmit={onSubmit}
+					onDirty={(dirty) => setEditado(dirty)}
+					isLoading={isPendingLimnigrafo}
+				/>
+			)}
+
 			<br />
 			<VentanaConfirmar
 				open={isOpenConfirmar}

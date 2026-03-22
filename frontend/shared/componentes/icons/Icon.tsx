@@ -17,6 +17,7 @@ const iconVariants = {
 	dashboard: "icon-[mingcute--dashboard-line]",
 	editar: "icon-[tabler--edit]",
 	eliminar: "icon-[line-md--trash]",
+	alerta: "icon-[mingcute--alert-line]",
 };
 
 export type IconVariants = keyof typeof iconVariants;

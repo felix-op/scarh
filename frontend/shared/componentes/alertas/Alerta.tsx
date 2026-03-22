@@ -1,10 +1,10 @@
 import { ReactNode } from "react";
 
 const baseClassNames = {
-	exito: "bg-exito-claro border-exito text-exito",
-	error: "bg-error-claro border-error text-error",
-	info: "bg-info-claro border-info text-info",
-	default: "bg-default-claro border-default text-default",
+	exito: "bg-exito-claro dark:bg-inherit border-exito text-exito",
+	error: "bg-error-claro dark:bg-inherit border-error text-error",
+	info: "bg-info-claro dark:bg-inherit border-info text-info",
+	default: "bg-default-claro dark:bg-inherit border-default text-default",
 };
 
 const variantConfig = {
