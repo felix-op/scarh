@@ -9,7 +9,7 @@ import {
 	useGetLimnigrafo,
 	useDeleteLimnigrafo,
 	usePachtLimnigrafo,
-} from "@servicios/api/django.api";
+} from "@servicios/api/limnigrafos";
 import { transformarLimnigrafoConMedicion } from "@lib/transformers/limnigrafoTransformer";
 
 function DetalleLimnigrafoContent() {

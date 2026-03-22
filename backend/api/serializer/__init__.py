@@ -7,6 +7,7 @@ from .estadisticaSerializer import EstadisticaInputSerializer, EstadisticaOutput
 from .customTokenRefreshView import CustomTokenRefreshSerializer
 from .changePasswordSerializer import ChangePasswordSerializer
 from .rolSerializer import RolSerializer
+from .alertaSerializer import AlertaSerializer
 __all__ = [
     "UsuarioSerializer",
     "LimnigrafoSerializer",
@@ -20,4 +21,5 @@ __all__ = [
     "CustomTokenRefreshSerializer",
     "ChangePasswordSerializer",
     "RolSerializer",
+    "AlertaSerializer",
 ]

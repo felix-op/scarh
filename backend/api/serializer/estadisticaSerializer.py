@@ -22,5 +22,6 @@ class EstadisticaOutputSerializer(serializers.Serializer):
     maximo = serializers.FloatField()
     minimo = serializers.FloatField()
     atributo = serializers.CharField()
+    moda = serializers.FloatField(allow_null=True)
     desvio_estandar = serializers.FloatField()
     percentil_90 = serializers.FloatField()

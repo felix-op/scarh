@@ -5,6 +5,7 @@ import WrapperCampo from './WrapperCampo';
 type CampoHoraProps<T extends FieldValues> = {
 	name: Path<T>;
 	label?: string;
+	placeholder?: string;
 	minTime?: string; // Formato "HH:mm"
 	maxTime?: string; // Formato "HH:mm"
 	step?: number; // En segundos
@@ -14,6 +15,7 @@ type CampoHoraProps<T extends FieldValues> = {
 export default function CampoHora<T extends FieldValues>({
 	name,
 	label,
+	placeholder,
 	minTime,
 	maxTime,
 	step = 60000,
@@ -49,9 +51,11 @@ export default function CampoHora<T extends FieldValues>({
 				<div className="relative">
 					<input
 						{...field}
+						placeholder={placeholder}
 						type="time"
 						step={step}
 						lang="es-AR"
+						id={name}
 						min={minTime}
 						max={maxTime}
 						className={`

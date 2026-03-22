@@ -87,6 +87,7 @@ export default function DataTable<T>({
 									/>
 									<Selector
 										name="data-table-page-length"
+										value={String(paginationConfig.lengthPages)}
 										onChange={(event) => paginationConfig.changeLength(Number(event.target.value))}
 										style={{ width: "80px" }}
 									>
@@ -94,7 +95,6 @@ export default function DataTable<T>({
 											<option
 												key={`data-table-page-length-option-${option}`}
 												value={String(option)}
-												selected={paginationConfig.lengthPages === option}
 											>
 												{option}
 											</option>

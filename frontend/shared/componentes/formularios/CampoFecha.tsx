@@ -54,6 +54,7 @@ export default function CampoFecha<T extends FieldValues>({
 				<div className="relative">
 					<input
 						{...field}
+						id={name}
 						type={precision === 'month-year' ? 'month' : 'date'}
 						min={formatDateForInput(minDate)}
 						max={formatDateForInput(maxDate)}

@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from ..models import Medicion
 from ..serializer import EstadisticaInputSerializer, EstadisticaOutputSerializer
+from collections import Counter
 import statistics
 import math
 
@@ -54,6 +55,7 @@ class EstadisticaViewSet(viewsets.GenericViewSet):
             return {
                 "maximo": 0.0,
                 "minimo": 0.0,
+                "moda": None,
                 "desvio_estandar": 0.0,
                 "percentil_90": 0.0
             }
@@ -78,11 +80,26 @@ class EstadisticaViewSet(viewsets.GenericViewSet):
             d1 = values[int(c)] * (k - f)
             percentil_90 = d0 + d1
 
+        moda = self._calcular_moda(values)
+
         return {
             "maximo": max_val,
             "minimo": min_val,
+            "moda": moda,
             "desvio_estandar": std_dev,
             "percentil_90": percentil_90
         }
-        
 
+    def _calcular_moda(self, values, decimales=2):
+        if not values:
+            return None
+
+        # Moda agrupada: agrupa valores por redondeo para evitar que pequeñas
+        # variaciones decimales de sensores anulen la moda.
+        valores_agrupados = [round(value, decimales) for value in values]
+        frecuencias = Counter(valores_agrupados)
+        max_frecuencia = max(frecuencias.values(), default=0)
+
+        modas = [value for value, frecuencia in frecuencias.items() if frecuencia == max_frecuencia]
+        return min(modas) if modas else None
+        

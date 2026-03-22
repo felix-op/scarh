@@ -70,6 +70,29 @@ class LimnigrafoTests(APITestCase):
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado, 'peligro')
 
+    def test_list_sets_fuera_de_servicio_when_time_exceeds_triple_peligro(self):
+        self.limnigrafo.ultima_conexion = timezone.now() - timedelta(hours=4)
+        self.limnigrafo.estado = 'normal'
+        self.limnigrafo.save(update_fields=['ultima_conexion', 'estado'])
+
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.estado, 'fuera_de_servicio')
+
+    def test_list_recovers_estado_from_fuera_de_servicio_when_sensor_recovers(self):
+        self.limnigrafo.ultima_conexion = timezone.now()
+        self.limnigrafo.bateria_actual = 12.0
+        self.limnigrafo.estado = 'fuera_de_servicio'
+        self.limnigrafo.save(update_fields=['ultima_conexion', 'bateria_actual', 'estado'])
+
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.estado, 'normal')
+
     def test_update_limnigrafo(self):
         update_data = {'descripcion': 'Descripcion actualizada'}
         response = self.client.patch(self.detail_url, update_data, format='json')

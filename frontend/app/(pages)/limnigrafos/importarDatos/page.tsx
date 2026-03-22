@@ -5,12 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Boton from "@componentes/Boton";
 import { LIMNIGRAFOS } from "@data/limnigrafos";
 import {
-	useGetLimnigrafos,
 	useGetMediciones,
-	type LimnigrafoPaginatedResponse,
 	type MedicionPaginatedResponse,
 } from "@servicios/api/django.api";
 import { transformarLimnigrafos } from "@lib/transformers/limnigrafoTransformer";
+import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
+import { Paginado } from "@servicios/api/types";
+import { LimnigrafoResponse } from "types/limnigrafos";
 
 type RegistroImportado = {
 	id: string;
@@ -138,7 +139,7 @@ function ImportarDatosContent() {
 		},
 	});
 	const limnigrafosResponse =
-		limnigrafosData as LimnigrafoPaginatedResponse | undefined;
+		limnigrafosData as Paginado<LimnigrafoResponse> | undefined;
 	const medicionesResponse =
 		medicionesData as MedicionPaginatedResponse | undefined;
 	const limnigrafosTransformados = useMemo(() => {

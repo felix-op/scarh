@@ -52,7 +52,7 @@ export default function VentanaFormulario<T extends FieldValues>({
 	return (
 		<>
 			<Drawer open={open} onClose={handleClose} direction="right" dismissible={!edited}>
-				<DrawerContent className={`bg-transparent border-none py-4 pr-2 lg:min-w-100 xl:min-w-150 ${classNameVentana}`}>
+				<DrawerContent className={`bg-transparent border-none py-4 pr-2 min-w-full md:min-w-100 xl:min-w-150 ${classNameVentana}`}>
 					<div className="flex flex-col bg-ventana dark:border w-full h-full rounded-lg">
 						<DrawerTitle className="flex justify-between items-center p-5 shrink-0">
 							<span className="text-2xl text-ventana-foreground font-bold">{titulo}</span>
