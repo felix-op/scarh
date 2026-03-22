@@ -39,14 +39,14 @@ export type LimnigrafoPostRequest = {
 export type LimnigrafoPutRequest = {
     codigo?: string
     descripcion?: string
-    ultimo_mantenimiento?: string
+	ultimo_mantenimiento?: string | null;
     tipo_comunicacion?: string[]
     bateria_max?: number
     bateria_min?: number
     memoria?: number
-    tiempo_advertencia?: string
-    tiempo_peligro?: string
-    ubicacion_id?: string
+	tiempo_advertencia?: string | null;
+	tiempo_peligro?: string | null;
+	ubicacion_id?: string | null;
 }
 
 export type LimnigrafoPatchtRequest = {

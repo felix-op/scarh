@@ -1,9 +1,24 @@
 import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
+import { MemoryUnit } from "@tipos/Memoria";
+import { TFormEditarLimnigrafo } from "./types";
 
 export const defaultFormCrearLimnigrafo = {
 	codigo: "",
 	memoria: 0,
 	tipo_de_comunicacion: [],
+};
+
+export const defaultFormEditarLimnigrafo: TFormEditarLimnigrafo = {
+	codigo: "",
+	descripcion: "",
+	ultimo_mantenimiento: "",
+	bateria_min: 0,
+	bateria_max: 0,
+	tiempo_advertencia: "",
+	tiempo_peligro: "",
+	memoria_value: 0,
+	memoria_unit: "MB",
+	tipo_comunicacion: [],
 };
 
 export const defaultMessage: VentanaAceptarOptions = {
@@ -29,3 +44,17 @@ export const opcionesEstado = [
 	{ label: "Peligro", value: "peligro" },
 	{ label: "Fuera", value: "fuera" },
 ];
+
+export const opcionesMemoria = [
+	{ label: "B", value: "B" },
+	{ label: "KB", value: "KB" },
+	{ label: "MB", value: "MB" },
+	{ label: "GB", value: "GB" },
+];
+
+export const MEMORY_MAP: Record<MemoryUnit, number> = {
+	B: 1,
+	KB: 1024,
+	MB: 1024 ** 2,
+	GB: 1024 ** 3,
+};

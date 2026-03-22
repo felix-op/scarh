@@ -100,13 +100,17 @@ export default function DetalleLimnigrafo() {
 		router.push("/limnigrafos");
 	};
 
+	const handleEditar = () => {
+		router.push(`/limnigrafos/editar/${limnigrafoID}`);
+	};
+
 	return (
 		<PaginaBase>
 			<BotonVariante variant="volver" onClick={handleVolver} />
 			<br />
 			<SeccionInfo>
 				<SeccionInfoHeader>
-					<BotonVariante variant="editar" />
+					<BotonVariante variant="editar" onClick={handleEditar} />
 					<LimnigrafoMenu />
 				</SeccionInfoHeader>
 				<div className="grid lg:grid-cols-2 gap-4">
@@ -169,6 +173,7 @@ export default function DetalleLimnigrafo() {
 					</SeccionInfoGroup>
 				</div>
 			</SeccionInfo>
+			<br />
 		</PaginaBase>
 	);
 }

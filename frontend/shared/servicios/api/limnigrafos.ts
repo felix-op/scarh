@@ -79,7 +79,7 @@ export function usePutLimnigrafo({ params, configuracion }: UsePutLimngrafoOptio
 	}
 	const defaultConfig = {};
 
-	return usePut({
+	return usePut<LimnigrafoPutRequest, LimnigrafoResponse, ParamsBase>({
 		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
 		configuracion: configuracion ?? defaultConfig,
 		params: params ?? defaultParams,

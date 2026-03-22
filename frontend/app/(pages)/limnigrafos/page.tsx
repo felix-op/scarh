@@ -111,7 +111,7 @@ export default function Home() {
 	}
 
 	const handleEdit = (row: LimnigrafoResponse) => {
-
+		router.push(`/limnigrafos/editar/${row.id}`);
 	}
 
 	const actionConfig: ActionConfig<LimnigrafoResponse> = {
