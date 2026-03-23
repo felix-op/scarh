@@ -6,7 +6,7 @@ from django.utils import timezone
 from api.models.limnigrafo import Limnigrafo
 from api.models.medicion import Medicion
 from rest_framework_api_key.models import APIKey
-from datetime import time, timedelta
+from datetime import timedelta
 
 class MedicionTests(APITestCase):
     def setUp(self):
@@ -21,8 +21,8 @@ class MedicionTests(APITestCase):
             bateria_max=12.0,
             bateria_min=10.0,
             bateria_actual=11.5,
-            tiempo_advertencia=time(1, 0),
-            tiempo_peligro=time(2, 0),
+            tiempo_advertencia=3600,
+            tiempo_peligro=7200,
             estado='normal'
         )
         
@@ -49,6 +49,19 @@ class MedicionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['fuente'], 'manual')
         self.assertEqual(Medicion.objects.count(), 1)
+
+    def test_create_medicion_import_csv(self):
+        self.client.force_authenticate(user=self.user)
+        data = {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 2.55,
+            'nivel_de_bateria': 11.6,
+            'fecha_hora': '2024-01-01T10:05:00Z',
+            'fuente': 'import_csv',
+        }
+        response = self.client.post(self.list_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['fuente'], 'import_csv')
 
     def test_create_medicion_automatico(self):
         self.client.force_authenticate(user=None)
@@ -124,8 +137,8 @@ class MedicionTests(APITestCase):
             bateria_max=12,
             bateria_min=10,
             bateria_actual=12,
-            tiempo_advertencia=time(1,0),
-            tiempo_peligro=time(2,0)
+            tiempo_advertencia=3600,
+            tiempo_peligro=7200,
         )
         Medicion.objects.create(limnigrafo=self.limnigrafo, altura_agua=1.0, fecha_hora='2024-01-01T10:00:00Z')
         Medicion.objects.create(limnigrafo=other_limnigrafo, altura_agua=2.0, fecha_hora='2024-01-01T11:00:00Z')

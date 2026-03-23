@@ -1,6 +1,6 @@
 import { EstadisticaAtributo } from "@servicios/api/django.api";
 
-export type FuenteFiltro = "" | "manual" | "automatico";
+export type FuenteFiltro = "" | "manual" | "automatico" | "import_csv" | "import_json";
 
 export type ComparativasFilters = {
 	desde: string;

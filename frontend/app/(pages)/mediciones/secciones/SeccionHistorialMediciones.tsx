@@ -5,6 +5,34 @@ import { ColumnConfig } from "@componentes/tabla/types";
 import { LimnigrafoResponse } from "@servicios/api/django.api";
 import { FuenteFiltro, HistorialFilters, MedicionRow } from "./types";
 
+function getFuenteChip(fuente: string): { label: string; className: string } {
+	if (fuente === "manual") {
+		return {
+			label: "Manual",
+			className: "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E] dark:border-[#A16207] dark:bg-[#422006] dark:text-[#FCD34D]",
+		};
+	}
+
+	if (fuente === "import_csv") {
+		return {
+			label: "Importación CSV",
+			className: "border-[#C4B5FD] bg-[#F5F3FF] text-[#5B21B6] dark:border-[#7C3AED] dark:bg-[#2A1457] dark:text-[#C4B5FD]",
+		};
+	}
+
+	if (fuente === "import_json") {
+		return {
+			label: "Importación JSON",
+			className: "border-[#A7F3D0] bg-[#ECFDF5] text-[#065F46] dark:border-[#047857] dark:bg-[#0A2E25] dark:text-[#6EE7B7]",
+		};
+	}
+
+	return {
+		label: "Automático",
+		className: "border-[#BFDBFE] bg-[#EFF6FF] text-[#1E40AF] dark:border-[#1D4ED8] dark:bg-[#0B2A43] dark:text-[#93C5FD]",
+	};
+}
+
 const tableColumns: ColumnConfig<MedicionRow>[] = [
 	{
 		id: "limnigrafo",
@@ -14,19 +42,16 @@ const tableColumns: ColumnConfig<MedicionRow>[] = [
 	{
 		id: "fuente",
 		header: "Fuente",
-		cell: (row) => (
-			<div className="px-4 py-3">
-				<span
-					className={`inline-flex rounded-full border px-2.5 py-1 text-[12px] font-semibold ${
-						row.fuente === "manual"
-							? "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E] dark:border-[#A16207] dark:bg-[#422006] dark:text-[#FCD34D]"
-							: "border-[#BFDBFE] bg-[#EFF6FF] text-[#1E40AF] dark:border-[#1D4ED8] dark:bg-[#0B2A43] dark:text-[#93C5FD]"
-					}`}
-				>
-					{row.fuente === "manual" ? "Manual" : "Automático"}
-				</span>
-			</div>
-		),
+		cell: (row) => {
+			const fuenteChip = getFuenteChip(row.fuente);
+			return (
+				<div className="px-4 py-3">
+					<span className={`inline-flex rounded-full border px-2.5 py-1 text-[12px] font-semibold ${fuenteChip.className}`}>
+						{fuenteChip.label}
+					</span>
+				</div>
+			);
+		},
 	},
 	{
 		id: "altura",
@@ -154,6 +179,8 @@ export default function SeccionHistorialMediciones({
 							<option value="">Todas</option>
 							<option value="manual">Manual</option>
 							<option value="automatico">Automática</option>
+							<option value="import_csv">Importación CSV</option>
+							<option value="import_json">Importación JSON</option>
 						</select>
 					</label>
 

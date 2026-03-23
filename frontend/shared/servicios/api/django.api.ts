@@ -19,7 +19,7 @@ export type MedicionResponse = {
 	presion: number | null, // Presión atmosférica en hPa
 	temperatura: number | null, // Temperatura en grados Celsius
 	nivel_de_bateria: number | null, // Nivel de batería en porcentaje (0-100)
-	fuente: "automatico" | "manual", // Origen de la medición
+	fuente: "automatico" | "manual" | "import_csv" | "import_json", // Origen de la medición
 	limnigrafo: number, // ID del limnígrafo que envió la medición
 };
 
@@ -36,7 +36,7 @@ export type MedicionPaginatedResponse = {
 type UseGetMedicionesParams = {
 	queryParams?: {
 		limnigrafo?: string, // ID del limnígrafo
-		fuente?: "manual" | "automatico", // Filtrar por origen
+		fuente?: "manual" | "automatico" | "import_csv" | "import_json", // Filtrar por origen
 		fecha_desde?: string, // Fecha/hora de inicio ISO 8601
 		fecha_hasta?: string, // Fecha/hora de fin ISO 8601
 		limit?: string, // Cantidad de resultados por página
@@ -70,6 +70,7 @@ export type MedicionPostRequest = {
 	presion?: number | null,
 	temperatura?: number | null,
 	nivel_de_bateria?: number | null,
+	fuente?: "manual" | "automatico" | "import_csv" | "import_json",
 };
 
 type UsePostMedicionOptions = {

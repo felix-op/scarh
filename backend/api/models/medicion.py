@@ -6,7 +6,16 @@ class Medicion(models.Model):
     presion = models.FloatField(null=True, blank=True)
     temperatura = models.FloatField(null=True, blank=True)
     nivel_de_bateria = models.FloatField(null=True, blank=True)
-    fuente = models.CharField(max_length=20, choices=[('manual', 'Manual'), ('automatico', 'Automático')], default='automatico')
+    fuente = models.CharField(
+        max_length=20,
+        choices=[
+            ('manual', 'Manual'),
+            ('automatico', 'Automático'),
+            ('import_csv', 'Importación CSV'),
+            ('import_json', 'Importación JSON'),
+        ],
+        default='automatico',
+    )
     limnigrafo = models.ForeignKey('Limnigrafo', on_delete=models.PROTECT, related_name='mediciones')
 
     def __str__(self):

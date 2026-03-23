@@ -40,6 +40,17 @@ const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
 const HEADER_ACTION_SECONDARY_BUTTON_CLASS =
 	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#9D174D] dark:bg-[#3F1222] dark:text-[#FDA4AF] dark:hover:bg-[#4D162B]";
 
+function inferImportFuenteByFileName(fileName: string): "import_csv" | "import_json" | null {
+	const lowerName = fileName.toLowerCase();
+	if (lowerName.endsWith(".csv")) {
+		return "import_csv";
+	}
+	if (lowerName.endsWith(".json")) {
+		return "import_json";
+	}
+	return null;
+}
+
 function getDefaultDateRange() {
 	const now = new Date();
 	const from = new Date(now);
@@ -138,6 +149,7 @@ export default function MedicionesPage() {
 	const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 	const [importRows, setImportRows] = useState<ParsedMedicionImportRow[]>([]);
 	const [importFileName, setImportFileName] = useState("");
+	const [importFuente, setImportFuente] = useState<"import_csv" | "import_json" | null>(null);
 	const [importFallbackLimnigrafo, setImportFallbackLimnigrafo] = useState("");
 	const [manualForm, setManualForm] = useState<ManualFormState>({
 		limnigrafo: "",
@@ -386,12 +398,14 @@ export default function MedicionesPage() {
 			if (rows.length === 0) {
 				setImportRows([]);
 				setImportFileName("");
+				setImportFuente(null);
 				setErrorAccion("No se encontraron filas válidas en el archivo.");
 				return;
 			}
 
 			setImportRows(rows);
 			setImportFileName(file.name);
+			setImportFuente(inferImportFuenteByFileName(file.name));
 			const rowsWithLimnigrafo = rows.filter((row) => Number.isInteger(row.limnigrafo)).length;
 			const rowsUsingFallback = rows.length - rowsWithLimnigrafo;
 			setMensaje(
@@ -402,6 +416,7 @@ export default function MedicionesPage() {
 		} catch (error) {
 			setImportRows([]);
 			setImportFileName("");
+			setImportFuente(null);
 			setErrorAccion(error instanceof Error ? error.message : "No se pudo procesar el archivo seleccionado.");
 		} finally {
 			event.target.value = "";
@@ -445,6 +460,7 @@ export default function MedicionesPage() {
 				presion: row.presion,
 				temperatura: row.temperatura,
 				nivel_de_bateria: row.nivel_de_bateria,
+				fuente: importFuente ?? undefined,
 			};
 
 			try {
@@ -485,6 +501,7 @@ export default function MedicionesPage() {
 		if (successCount > 0 && importErrors.length === 0) {
 			setImportRows([]);
 			setImportFileName("");
+			setImportFuente(null);
 			setIsImportModalOpen(false);
 		}
 	}
