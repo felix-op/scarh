@@ -19,6 +19,7 @@ import { LimnigrafoResponse } from "types/limnigrafos";
 import {
 	CartesianGrid,
 	Cell,
+	Label,
 	Line,
 	LineChart,
 	Pie,
@@ -58,6 +59,8 @@ const CHART_COLORS = {
 	tasa: "#F97316",
 	automatico: "#22C55E",
 	manual: "#F97316",
+	importCsv: "#8B5CF6",
+	importJson: "#0EA5E9",
 };
 
 const rateChartConfig: ChartConfig = {
@@ -67,6 +70,8 @@ const rateChartConfig: ChartConfig = {
 const fuenteChartConfig: ChartConfig = {
 	automatico: { label: "Automático", color: CHART_COLORS.automatico },
 	manual: { label: "Manual", color: CHART_COLORS.manual },
+	import_csv: { label: "Importación CSV", color: CHART_COLORS.importCsv },
+	import_json: { label: "Importación JSON", color: CHART_COLORS.importJson },
 };
 
 export default function EstadisticasPage() {
@@ -156,25 +161,44 @@ export default function EstadisticasPage() {
 	const fuenteStats = useMemo(() => {
 		let automatico = 0;
 		let manual = 0;
+		let importCsv = 0;
+		let importJson = 0;
 
 		currentRows.forEach((medicion) => {
 			if (medicion.fuente === "manual") {
 				manual += 1;
-			} else {
-				automatico += 1;
+				return;
 			}
+
+			if (medicion.fuente === "import_csv") {
+				importCsv += 1;
+				return;
+			}
+
+			if (medicion.fuente === "import_json") {
+				importJson += 1;
+				return;
+			}
+
+			automatico += 1;
 		});
 
-		const total = automatico + manual;
+		const total = automatico + manual + importCsv + importJson;
 		const automaticoPct = total > 0 ? (automatico / total) * 100 : 0;
 		const manualPct = total > 0 ? (manual / total) * 100 : 0;
+		const importCsvPct = total > 0 ? (importCsv / total) * 100 : 0;
+		const importJsonPct = total > 0 ? (importJson / total) * 100 : 0;
 
 		return {
 			automatico,
 			manual,
+			importCsv,
+			importJson,
 			total,
 			automaticoPct,
 			manualPct,
+			importCsvPct,
+			importJsonPct,
 		};
 	}, [currentRows]);
 
@@ -182,8 +206,10 @@ export default function EstadisticasPage() {
 		() => [
 			{ key: "automatico", label: "Automático", value: fuenteStats.automatico, fill: CHART_COLORS.automatico },
 			{ key: "manual", label: "Manual", value: fuenteStats.manual, fill: CHART_COLORS.manual },
+			{ key: "import_csv", label: "Importación CSV", value: fuenteStats.importCsv, fill: CHART_COLORS.importCsv },
+			{ key: "import_json", label: "Importación JSON", value: fuenteStats.importJson, fill: CHART_COLORS.importJson },
 		],
-		[fuenteStats.automatico, fuenteStats.manual],
+		[fuenteStats.automatico, fuenteStats.importCsv, fuenteStats.importJson, fuenteStats.manual],
 	);
 
 	const activeRangeLabel = useMemo(() => {
@@ -601,7 +627,7 @@ export default function EstadisticasPage() {
 											Calidad operativa de carga
 										</p>
 										<p className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
-											Distribución de registros automáticos y manuales en el período actual.
+											Distribución de registros por fuente (automática, manual e importaciones CSV/JSON) en el período actual.
 										</p>
 									</div>
 
@@ -616,15 +642,65 @@ export default function EstadisticasPage() {
 													data={fuenteChartData}
 													dataKey="value"
 													nameKey="label"
-													innerRadius={56}
-													outerRadius={90}
+													innerRadius={62}
+													outerRadius={92}
+													strokeWidth={4}
 													paddingAngle={2}
 												>
 													{fuenteChartData.map((entry) => (
 														<Cell key={entry.key} fill={entry.fill} />
 													))}
+													<Label
+														content={({ viewBox }) => {
+															if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+																return (
+																	<text
+																		x={viewBox.cx}
+																		y={viewBox.cy}
+																		textAnchor="middle"
+																		dominantBaseline="middle"
+																	>
+																		<tspan
+																			x={viewBox.cx}
+																			y={viewBox.cy}
+																			className="fill-[#0F172A] text-2xl font-bold dark:fill-[#E2E8F0]"
+																		>
+																			{fuenteStats.total.toLocaleString("es-AR")}
+																		</tspan>
+																		<tspan
+																			x={viewBox.cx}
+																			y={(viewBox.cy || 0) + 20}
+																			className="fill-[#64748B] text-[12px] dark:fill-[#94A3B8]"
+																		>
+																			Total
+																		</tspan>
+																	</text>
+																);
+															}
+															return null;
+														}}
+													/>
 												</Pie>
-												<ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+												<ChartTooltip
+													cursor={false}
+													content={(
+														<ChartTooltipContent
+															indicator="dot"
+															formatter={(value, name) => {
+																const numeric = typeof value === "number" ? value : Number(value);
+																const label = String(name);
+																return (
+																	<div className="flex w-full items-center justify-between gap-3">
+																		<span className="text-muted-foreground">{label}</span>
+																		<span className="font-mono font-medium text-foreground tabular-nums">
+																			{Number.isFinite(numeric) ? numeric.toLocaleString("es-AR") : "-"}
+																		</span>
+																	</div>
+																);
+															}}
+														/>
+													)}
+												/>
 												<ChartLegend content={<ChartLegendContent />} />
 											</PieChart>
 										</ChartContainer>
@@ -636,6 +712,12 @@ export default function EstadisticasPage() {
 										</p>
 										<p>
 											Manual: <span className="font-semibold">{fuenteStats.manual}</span> ({fuenteStats.manualPct.toFixed(2)} %)
+										</p>
+										<p>
+											Importación CSV: <span className="font-semibold">{fuenteStats.importCsv}</span> ({fuenteStats.importCsvPct.toFixed(2)} %)
+										</p>
+										<p>
+											Importación JSON: <span className="font-semibold">{fuenteStats.importJson}</span> ({fuenteStats.importJsonPct.toFixed(2)} %)
 										</p>
 										<p>
 											Total de eventos: <span className="font-semibold">{fuenteStats.total}</span>
