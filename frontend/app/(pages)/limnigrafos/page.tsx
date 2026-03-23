@@ -25,6 +25,33 @@ type EstadoFiltro = "" | EstadoLimnigrafo;
 
 const queriesToInvalidate = ["useGetLimnigrafos"];
 
+function formatUltimoRegistro(value?: string | null): string {
+	if (!value) {
+		return "Sin registros";
+	}
+
+	const fecha = new Date(value);
+	if (Number.isNaN(fecha.getTime())) {
+		return "Sin registros";
+	}
+
+	return `${fecha.toLocaleDateString("es-AR")} ${fecha.toLocaleTimeString("es-AR", {
+		hour: "2-digit",
+		minute: "2-digit",
+	})}`;
+}
+
+function formatBateria(value?: number | null): string {
+	if (value === null || value === undefined || Number.isNaN(value)) {
+		return "No disponible";
+	}
+
+	return `${value.toLocaleString("es-AR", {
+		minimumFractionDigits: 1,
+		maximumFractionDigits: 1,
+	})} %`;
+}
+
 export default function Home() {
 	const router = useRouter();
 
@@ -94,14 +121,14 @@ export default function Home() {
 			id: "bateria",
 			header: "Batería",
 			cell: (row) => (
-				<p className="p-4">{row.bateria || "No disponible"}</p>
+				<p className="p-4">{formatBateria(row.bateria)}</p>
 			),
 		},
 		{
 			id: "ultima_conexion",
 			header: "Tiem. Último Dato",
 			cell: (row) => (
-				<p className="p-4">{row.ultima_conexion || "No disponible"}</p>
+				<p className="p-4">{formatUltimoRegistro(row.ultima_conexion)}</p>
 			),
 		},
 	];
