@@ -2,21 +2,19 @@ import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 import { MemoryUnit } from "@tipos/Memoria";
 import { TFormEditarLimnigrafo } from "./types";
 
-export const defaultFormCrearLimnigrafo = {
-	codigo: "",
-	memoria: 0,
-	tipo_de_comunicacion: [],
-};
-
 export const defaultFormEditarLimnigrafo: TFormEditarLimnigrafo = {
 	codigo: "",
 	descripcion: "",
 	ultimo_mantenimiento: "",
 	bateria_min: 0,
 	bateria_max: 0,
-	tiempo_advertencia: "",
-	tiempo_peligro: "",
-	memoria_value: 0,
+	tiempo_advertencia_horas: null,
+	tiempo_advertencia_minutos: null,
+	tiempo_advertencia_segundos: null,
+	tiempo_peligro_horas: null,
+	tiempo_peligro_minutos: null,
+	tiempo_peligro_segundos: null,
+	memoria_value: null,
 	memoria_unit: "MB",
 	tipo_comunicacion: [],
 };

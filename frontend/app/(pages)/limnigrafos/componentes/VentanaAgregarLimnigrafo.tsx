@@ -1,10 +1,12 @@
 import CampoInput from "@componentes/formularios/CampoInput";
 import VentanaFormulario from "@componentes/ventanas/VentanaFormulario";
 import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
-import { defaultFormCrearLimnigrafo, opcionesTipoComunicacion } from "../constantes";
+import { opcionesMemoria, opcionesTipoComunicacion } from "../constantes";
 import type { TCrearLimnigrafo } from "../types";
 import CampoMultiCheckbox from "@componentes/formularios/CampoMultipleCheckBox";
 import { usePostLimnigrafo } from "@servicios/api/limnigrafos";
+import CampoSelector from "@componentes/formularios/CampoSelector";
+import { obtenerMemoria } from "@lib/obtenerMemoria";
 
 type VentanaAgregrarLimnigrafoProps = {
 	open: boolean,
@@ -43,14 +45,22 @@ export default function VentanaAgregrarLimnigrafo({
 		},
 	});
 
-	const valoresIniciales = defaultFormCrearLimnigrafo;
+	const valoresIniciales: TCrearLimnigrafo = {
+		codigo: "",
+		memoria_unit: "B",
+		memoria_value: "",
+		tipo_de_comunicacion: [],
+	};
 
 	const onSubmit = (data: TCrearLimnigrafo) => {
 		crearLimnigrafo({
 			data: {
 				codigo: data.codigo,
 				tipo_comunicacion: data.tipo_de_comunicacion,
-				memoria: data.memoria,
+				memoria: obtenerMemoria({
+					unit: data.memoria_unit,
+					value: Number(data.memoria_value),
+				}),
 			},
 		});
 	};
@@ -68,16 +78,28 @@ export default function VentanaAgregrarLimnigrafo({
 			<CampoInput
 				name="codigo"
 				label="Identificador del limnigrafo"
-				placeholder="Ingrese un nombre o código para identificar al limnigrafo"
+				placeholder="Nombre o código para identificar"
 				disabled={isPending}
 				required
 			/>
-			<CampoInput
-				name="memoria"
-				label="Memoria del dispositivo"
-				placeholder="Total de memoria del dispositivo"
-				disabled={isPending}
-			/>
+			<div className="flex items-start gap-2 w-full">
+				<div className="grow">
+					<CampoInput
+						type="integer"
+						name="memoria_value"
+						label="Memoria del dispositivo:"
+						placeholder="Total de memoria"
+						disabled={isPending}
+					/>
+				</div>
+				<div className="w-20">
+					<CampoSelector
+						name="memoria_unit"
+						label="Unidad:"
+						options={opcionesMemoria}
+					/>
+				</div>
+			</div>
 			<CampoMultiCheckbox
 				name="tipo_de_comunicacion"
 				options={opcionesTipoComunicacion}

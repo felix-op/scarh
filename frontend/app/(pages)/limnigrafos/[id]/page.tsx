@@ -13,12 +13,15 @@ import normalizarString from "@lib/normalizarString";
 import SeccionInfoData from "@componentes/secciones/SeccionInfoData";
 import { opcionesTipoComunicacion } from "../constantes";
 import { valuesToLabels } from "@lib/valuesToLabels";
+import { memoriaLegible } from "@lib/memoriaLegible";
+import { hmsLegibles } from "@lib/hmsLegibles";
+import { normalizarFechaAFormatoLatino } from "@lib/normalizarFechaAFormatoLatino";
 
 export default function DetalleLimnigrafo() {
 	const router = useRouter();
 	const params = useParams<{ id: string }>();
 	const limnigrafoID = params?.id || "";
-	const { data: limnigrafo } = useGetLimnigrafo({
+	const { data: limnigrafo, isFetching: isLoadingLimnigrafo } = useGetLimnigrafo({
 		params: { id: limnigrafoID },
 		configuracion: {
 			enabled: !!limnigrafoID,
@@ -33,32 +36,28 @@ export default function DetalleLimnigrafo() {
 	} = useMemo(() => {
 		const codigo = normalizarString(limnigrafo?.codigo);
 		const descripcion = normalizarString(limnigrafo?.descripcion);
-		const memoria = limnigrafo?.memoria
-			? `${limnigrafo.memoria} bytes`
-			: "-";
+		const memoria = memoriaLegible(limnigrafo?.memoria);
 		const tipo_comunicacion = valuesToLabels(
 			limnigrafo?.tipo_comunicacion,
 			opcionesTipoComunicacion,
 		);
 		const estado = normalizarString(limnigrafo?.estado);
-		const ultimo_mantenimiento = normalizarString(
+		const ultimo_mantenimiento = normalizarFechaAFormatoLatino(
 			limnigrafo?.ultimo_mantenimiento,
 		);
-		const tiempo_advertencia = normalizarString(
-			limnigrafo?.tiempo_advertencia,
-		);
-		const tiempo_peligro = normalizarString(limnigrafo?.tiempo_peligro);
+		const tiempo_advertencia = hmsLegibles(limnigrafo?.tiempo_advertencia);
+		const tiempo_peligro = hmsLegibles(limnigrafo?.tiempo_peligro);
 		const ultima_conexion = normalizarString(limnigrafo?.ultima_conexion);
 		const ultima_medicion = normalizarString(limnigrafo?.ultima_medicion);
 		const bateria =
-			limnigrafo?.bateria != null ? `${limnigrafo.bateria}%` : "-";
+			limnigrafo?.bateria != null ? `${limnigrafo.bateria}v` : "-";
 		const bateria_min =
 			limnigrafo?.bateria_min != null
-				? `${limnigrafo.bateria_min}%`
+				? `${limnigrafo.bateria_min}v`
 				: "-";
 		const bateria_max =
 			limnigrafo?.bateria_max != null
-				? `${limnigrafo.bateria_max}%`
+				? `${limnigrafo.bateria_max}v`
 				: "-";
 		const ubicacion = limnigrafo?.ubicacion
 			? limnigrafo.ubicacion.nombre
@@ -123,7 +122,9 @@ export default function DetalleLimnigrafo() {
 								label={item.label}
 								dir="column"
 							>
-								{item.value}
+								{isLoadingLimnigrafo ? (
+									<div className="h-4 w-full animate-pulse bg-foreground" />
+								) : item.value}
 							</SeccionInfoData>
 						))}
 					</SeccionInfoGroup>

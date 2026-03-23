@@ -9,12 +9,14 @@ import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { defaultFormEditarLimnigrafo } from "../../constantes";
 import { useGetLimnigrafo, usePutLimnigrafo } from "@servicios/api/limnigrafos";
-import { normalizarMemoria } from "@lib/normalizarMemoria";
 import { TFormEditarLimnigrafo } from "../../types";
 import { obtenerMemoria } from "@lib/obtenerMemoria";
 import CargandoDatos from "@componentes/animaciones/CargandoDatos";
 import MensajeError from "@componentes/mensajes/MensajeError";
 import FormularioEditarLimnigrafo from "../../componentes/FormularioEditarLimnigrafo";
+import { segundosAHMS } from "@lib/segundosAHMS";
+import { hmsASegundos } from "@lib/hmlsASegundos";
+import { normalizarMemoriaExacta } from "@lib/normalizarMemoriaExacta";
 
 export default function PaginaEditarLimnigrafo() {
 	const router = useRouter();
@@ -41,6 +43,28 @@ export default function PaginaEditarLimnigrafo() {
 			params: {
 				id: limnigrafoID,
 			},
+			configuracion: {
+				queriesToInvalidate: ["useGetLimnigrafo"],
+				onSuccess: (limn) => {
+					notificar({
+						titulo: "Edición Completada",
+						mensaje: `El limnígrafo ${limn.codigo} se editó correctamente`,
+						desaparecerEnMS: 5000,
+						variante: "exito",
+					});
+					router.back();
+				},
+				onError: (error) => {
+					const mensaje = error.response?.data.descripcion_usuario;
+					console.error("Error en usePutLimnigrafo en el componente PaginaEditarLimnigrafo ", error);
+					notificar({
+						titulo: "Error al editar",
+						mensaje: mensaje || "Ocurrió un error imprevisto",
+						desaparecerEnMS: 5000,
+						variante: "error",
+					});
+				},
+			}
 		});
 
 	const handleCancelar = () => {
@@ -58,7 +82,18 @@ export default function PaginaEditarLimnigrafo() {
 	const valoresIniciales: TFormEditarLimnigrafo = useMemo(() => {
 		if (!limnigrafo) return defaultFormEditarLimnigrafo;
 
-		const { value, unit } = normalizarMemoria(limnigrafo.memoria);
+		const { value, unit } = normalizarMemoriaExacta(limnigrafo.memoria);
+		const {
+			horas: tiempo_advertencia_horas,
+			minutos: tiempo_advertencia_minutos,
+			segundos: tiempo_advertencia_segundos,
+		} = segundosAHMS(limnigrafo.tiempo_advertencia);
+
+		const {
+			horas: tiempo_peligro_horas,
+			minutos: tiempo_peligro_minutos,
+			segundos: tiempo_peligro_segundos,
+		} = segundosAHMS(limnigrafo.tiempo_peligro);
 
 		return {
 			codigo: limnigrafo.codigo,
@@ -66,36 +101,46 @@ export default function PaginaEditarLimnigrafo() {
 			ultimo_mantenimiento: limnigrafo.ultimo_mantenimiento || "",
 			bateria_min: limnigrafo.bateria_min || 0,
 			bateria_max: limnigrafo.bateria_max || 0,
-			tiempo_advertencia: limnigrafo.tiempo_advertencia || "",
-			tiempo_peligro: limnigrafo.tiempo_peligro || "",
-			memoria_value: value,
+			tiempo_advertencia_horas,
+			tiempo_advertencia_minutos,
+			tiempo_advertencia_segundos,
+			tiempo_peligro_horas,
+			tiempo_peligro_minutos,
+			tiempo_peligro_segundos,
+			memoria_value: String(value),
 			memoria_unit: unit,
 			tipo_comunicacion: limnigrafo.tipo_comunicacion || [],
 		};
 	}, [limnigrafo]);
 
 	const onSubmit = (data: TFormEditarLimnigrafo) => {
+		const tiempo_advertencia = hmsASegundos({
+			horas: data.tiempo_advertencia_horas,
+			minutos: data.tiempo_advertencia_minutos,
+			segundos: data.tiempo_advertencia_segundos,
+		});
+
+		const tiempo_peligro = hmsASegundos({
+			horas: data.tiempo_peligro_horas,
+			minutos: data.tiempo_peligro_minutos,
+			segundos: data.tiempo_peligro_segundos,
+		});
+
 		editarLimnigrafo({
 			data: {
 				codigo: data.codigo,
 				descripcion: data.descripcion,
 				memoria: obtenerMemoria({
 					unit: data.memoria_unit,
-					value: data.memoria_value,
+					value: Number(data.memoria_value),
 				}),
 				bateria_min: data.bateria_min,
 				bateria_max: data.bateria_max,
 				tipo_comunicacion: data.tipo_comunicacion,
-				tiempo_advertencia: data.tiempo_advertencia || null,
-				tiempo_peligro: data.tiempo_peligro || null,
+				tiempo_advertencia,
+				tiempo_peligro,
 				ultimo_mantenimiento: data.ultimo_mantenimiento || null,
 			},
-		});
-		notificar({
-			titulo: "Datos enviados",
-			mensaje: JSON.stringify(data),
-			desaparecerEnMS: 5000,
-			variante: "info",
 		});
 	};
 

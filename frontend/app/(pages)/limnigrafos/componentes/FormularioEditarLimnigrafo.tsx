@@ -1,5 +1,4 @@
 import CampoFecha from "@componentes/formularios/CampoFecha";
-import CampoHora from "@componentes/formularios/CampoHora";
 import CampoSelector from "@componentes/formularios/CampoSelector";
 import Formulario from "@componentes/formularios/Formulario";
 import SeccionInfo from "@componentes/secciones/SeccionInfo";
@@ -9,6 +8,7 @@ import CampoMultiCheckbox from "@componentes/formularios/CampoMultipleCheckBox";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import CampoInput from "@componentes/formularios/CampoInput";
 import { TFormEditarLimnigrafo } from "../types";
+import Label from "@componentes/formularios/Label";
 
 type FormularioEditarLimnigrafoProps = {
 	valoresIniciales: TFormEditarLimnigrafo;
@@ -33,7 +33,7 @@ export default function FormularioEditarLimnigrafo({
 		>
 			<SeccionInfo>
 				<div className="flex flex-col lg:flex-row gap-4">
-					<div className="flex flex-col gap-4 grow">
+					<div className="flex flex-col gap-4 flex-1">
 						<h2>Datos del limnígrafo</h2>
 						<Separador direction="horizontal" />
 						<CampoInput
@@ -53,31 +53,65 @@ export default function FormularioEditarLimnigrafo({
 							name="ultimo_mantenimiento"
 							label="Último mantenimiento:"
 						/>
-						<CampoHora
-							name="tiempo_advertencia"
-							label="Tiempo máximo antes de advertencias:"
-							placeholder="HH:mm"
-						/>
-						<CampoHora
-							name="tiempo_peligro"
-							label="Tiempo máximo antes de peligro:"
-						/>
+						<Label text="Tiempo máximo antes de Advertencias:"  />
+						<div className="flex gap-2">
+							<CampoInput
+								name="tiempo_advertencia_horas"
+								placeholder="Horas"
+								label="Horas:"
+								type="number"
+							/>
+							<CampoInput
+								name="tiempo_advertencia_minutos"
+								placeholder="Minutos"
+								label="Minutos:"
+								type="number"
+							/>
+							<CampoInput
+								name="tiempo_advertencia_segundos"
+								placeholder="Segundos"
+								label="Segundos:"
+								type="number"
+							/>
+						</div>
+						<Label text="Tiempo máximo antes de Peligro:"  />
+						<div className="flex gap-2">
+							<CampoInput
+								name="tiempo_peligro_horas"
+								placeholder="Horas"
+								label="Horas:"
+								type="number"
+							/>
+							<CampoInput
+								name="tiempo_peligro_minutos"
+								placeholder="Minutos"
+								label="Minutos:"
+								type="number"
+							/>
+							<CampoInput
+								name="tiempo_peligro_segundos"
+								placeholder="Segundos"
+								label="Segundos:"
+								type="number"
+							/>
+						</div>
 					</div>
 					<Separador direction="vertical" />
-					<div className="flex flex-col gap-4 grow">
+					<div className="flex flex-col gap-4 flex-1">
 						<h2>Especificaciones técnicas</h2>
 						<hr />
-						<div className="flex items-end gap-2 w-full">
+						<div className="flex items-start gap-2 w-full">
 							<div className="grow">
 								<CampoInput
-									type="number"
+									type="integer"
 									name="memoria_value"
-									label="Máxima cantidad de memoria:"
+									label="Memoria del dispositivo:"
 								/>
 							</div>
 							<div className="w-20">
 								<CampoSelector
 									name="memoria_unit"
+									label="Unidad:"
 									options={opcionesMemoria}
 								/>
 							</div>

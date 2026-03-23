@@ -17,35 +17,35 @@ export type LimnigrafoResponse = {
     codigo: string
     estado: EstadoLimnigrafo
     descripcion: string
-    ultimo_mantenimiento: string
-    ultima_medicion: string
+    ultimo_mantenimiento: string // Fecha
+    ultima_medicion: string // Fecha
     tipo_comunicacion: string[]
-    tiempo_advertencia: string
-    tiempo_peligro: string
+    tiempo_advertencia: number | null // Segundos
+    tiempo_peligro: number | null // Segundos
     ultima_conexion: string
-    bateria_max: number
-    bateria_min: number
-    bateria: number
-    memoria: number
+    bateria_max: number // Voltios
+    bateria_min: number // Voltios
+    bateria: number // Voltios
+    memoria: number // Bytes
     ubicacion: Ubicacion
 }
 
 export type LimnigrafoPostRequest = {
     codigo: string
-    memoria?: number | null
+    memoria?: number | null // Bytes
     tipo_comunicacion?: string[] | null
 }
 
 export type LimnigrafoPutRequest = {
     codigo?: string
     descripcion?: string
-	ultimo_mantenimiento?: string | null;
+	ultimo_mantenimiento?: string | null; // Fecha
     tipo_comunicacion?: string[]
-    bateria_max?: number
-    bateria_min?: number
-    memoria?: number
-	tiempo_advertencia?: string | null;
-	tiempo_peligro?: string | null;
+    bateria_max?: number // Voltios
+    bateria_min?: number // Voltios
+    memoria?: number // Bytes
+	tiempo_advertencia?: number | null; // Segundos
+	tiempo_peligro?: number | null; // Segundos
 	ubicacion_id?: string | null;
 }
 
@@ -56,8 +56,8 @@ export type LimnigrafoPatchtRequest = {
     tipo_comunicacion?: string[]
     bateria_max?: number
     bateria_min?: number
-    memoria?: number
-    tiempo_advertencia?: string
-    tiempo_peligro?: string
+    memoria?: number // Bytes
+    tiempo_advertencia?: number
+    tiempo_peligro?: number
     ubicacion_id?: string
 }
