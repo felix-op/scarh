@@ -1,5 +1,5 @@
 type LabelProps = {
-	name: string,
+	name?: string,
 	text: string,
 	error?: boolean,
 	required?: boolean,
