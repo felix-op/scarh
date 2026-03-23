@@ -562,6 +562,8 @@ export default function MedicionesPage() {
 						pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
 						isFetching={isFetchingMediciones}
 						hasBusqueda={Boolean(appliedHistorialFilters.busqueda)}
+						actionError={errorAccion}
+						actionMessage={mensaje}
 						onPageSizeChange={(value) => {
 							setPageSize(value);
 							setCurrentPage(1);
@@ -592,13 +594,6 @@ export default function MedicionesPage() {
 						onFileChange={handleImportFileChange}
 						onImportSubmit={handleImportSubmit}
 					/>
-
-					{errorAccion ? (
-						<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">{errorAccion}</p>
-					) : null}
-					{mensaje ? (
-						<p className="rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 text-[14px] text-[#166534] dark:border-[#14532D] dark:bg-[#0F2E1A] dark:text-[#86EFAC]">{mensaje}</p>
-					) : null}
 				</div>
 			</main>
 		</PaginaBase>

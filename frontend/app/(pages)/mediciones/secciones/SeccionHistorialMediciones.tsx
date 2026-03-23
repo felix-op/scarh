@@ -112,6 +112,8 @@ type SeccionHistorialMedicionesProps = {
 	onPageSizeChange: (value: number) => void;
 	onPrevPage: () => void;
 	onNextPage: () => void;
+	actionError: string | null;
+	actionMessage: string | null;
 };
 
 export default function SeccionHistorialMediciones({
@@ -141,6 +143,8 @@ export default function SeccionHistorialMediciones({
 	onPageSizeChange,
 	onPrevPage,
 	onNextPage,
+	actionError,
+	actionMessage,
 }: SeccionHistorialMedicionesProps) {
 	return (
 		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
@@ -249,6 +253,17 @@ export default function SeccionHistorialMediciones({
 					</button>
 				</div>
 			</div>
+
+			{actionError ? (
+				<p className="mb-4 mt-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
+					{actionError}
+				</p>
+			) : null}
+			{actionMessage ? (
+				<p className="mb-4 mt-4 rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 text-[14px] text-[#166534] dark:border-[#14532D] dark:bg-[#0F2E1A] dark:text-[#86EFAC]">
+					{actionMessage}
+				</p>
+			) : null}
 
 			{hasTopError ? (
 				<p className="mb-4 mt-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
