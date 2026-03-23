@@ -392,7 +392,13 @@ export default function MedicionesPage() {
 
 			setImportRows(rows);
 			setImportFileName(file.name);
-			setMensaje(`Archivo cargado: ${rows.length} filas listas para importar.`);
+			const rowsWithLimnigrafo = rows.filter((row) => Number.isInteger(row.limnigrafo)).length;
+			const rowsUsingFallback = rows.length - rowsWithLimnigrafo;
+			setMensaje(
+				`Archivo cargado: ${rows.length} filas listas para importar. `
+				+ `${rowsWithLimnigrafo} con limnígrafo desde archivo`
+				+ (rowsUsingFallback > 0 ? ` y ${rowsUsingFallback} usarán limnígrafo por defecto.` : "."),
+			);
 		} catch (error) {
 			setImportRows([]);
 			setImportFileName("");
@@ -420,10 +426,12 @@ export default function MedicionesPage() {
 
 		let successCount = 0;
 		const importErrors: string[] = [];
+		const importedByLimnigrafo = new Map<number, number>();
 
 		for (let index = 0; index < importRows.length; index += 1) {
 			const row = importRows[index];
-			const limnigrafoId = row.limnigrafo ?? fallbackLimnigrafoId;
+			const limnigrafoIdFromRow = row.limnigrafo;
+			const limnigrafoId = limnigrafoIdFromRow ?? fallbackLimnigrafoId;
 
 			if (!limnigrafoId || Number.isNaN(limnigrafoId)) {
 				importErrors.push(`Fila ${index + 1}: falta limnígrafo válido.`);
@@ -442,6 +450,10 @@ export default function MedicionesPage() {
 			try {
 				await postMedicion.mutateAsync({ data: payload });
 				successCount += 1;
+				importedByLimnigrafo.set(
+					limnigrafoId,
+					(importedByLimnigrafo.get(limnigrafoId) ?? 0) + 1,
+				);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : "Error desconocido";
 				importErrors.push(`Fila ${index + 1}: ${message}`);
@@ -452,7 +464,18 @@ export default function MedicionesPage() {
 		await refetchMediciones();
 
 		if (successCount > 0) {
-			setMensaje(`Importación finalizada. Filas guardadas: ${successCount}.`);
+			const distribution = [...importedByLimnigrafo.entries()]
+				.sort(([leftId], [rightId]) => leftId - rightId)
+				.map(([limnigrafoId, count]) => {
+					const limnigrafoLabel = limnigrafoNameById.get(limnigrafoId) ?? `ID ${limnigrafoId}`;
+					return `${limnigrafoLabel}: ${count}`;
+				})
+				.join(", ");
+
+			setMensaje(
+				`Importación finalizada. Filas guardadas: ${successCount}.`
+				+ (distribution ? ` Distribución por limnígrafo: ${distribution}.` : ""),
+			);
 		}
 
 		if (importErrors.length > 0) {

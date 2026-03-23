@@ -54,7 +54,7 @@ export function parseNumeric(value: string): number | null {
 		return null;
 	}
 
-	const normalized = trimmed.replace(",", ".");
+	const normalized = trimWrappingQuotes(trimmed).replace(",", ".");
 	const parsed = Number.parseFloat(normalized);
 	return Number.isFinite(parsed) ? parsed : null;
 }
@@ -73,11 +73,33 @@ function normalizeHeader(value: string): string {
 		.replace(/\s+/g, "_");
 }
 
+function trimWrappingQuotes(value: string): string {
+	const trimmed = value.trim();
+	if (trimmed.length >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+		return trimmed.slice(1, -1);
+	}
+	return trimmed;
+}
+
+function isEmptyRawValue(value: unknown): boolean {
+	return value === null || value === undefined || (typeof value === "string" && value.trim() === "");
+}
+
+function pickRawValue(item: Record<string, unknown>, keys: string[]): unknown {
+	for (const key of keys) {
+		const raw = item[key];
+		if (!isEmptyRawValue(raw)) {
+			return raw;
+		}
+	}
+	return undefined;
+}
+
 function parseRawDate(raw: unknown): string | undefined {
 	if (typeof raw !== "string" || !raw.trim()) {
 		return undefined;
 	}
-	const parsed = new Date(raw);
+	const parsed = new Date(trimWrappingQuotes(raw));
 	if (Number.isNaN(parsed.getTime())) {
 		return undefined;
 	}
@@ -95,19 +117,35 @@ function parseRawNumber(raw: unknown): number | null {
 }
 
 function mapRawImportObject(item: Record<string, unknown>): ParsedMedicionImportRow | null {
-	const altura = parseRawNumber(item.altura_agua ?? item.altura);
+	const altura = parseRawNumber(
+		pickRawValue(item, ["altura_agua", "altura", "alturaagua", "alturaAgua"]),
+	);
 	if (altura === null) {
 		return null;
 	}
 
-	const limnigrafo = parseRawNumber(item.limnigrafo ?? item.limnigrafo_id ?? item.limnigrafoid);
+	const limnigrafo = parseRawNumber(
+		pickRawValue(item, [
+			"limnigrafo",
+			"limnigrafo_id",
+			"limnigrafoid",
+			"limnigrafoId",
+			"id_limnigrafo",
+			"idLimnigrafo",
+		]),
+	);
+	const fechaHora = parseRawDate(
+		pickRawValue(item, ["fecha_hora", "fechaHora", "fecha", "fecha_utc"]),
+	);
 
 	return {
-		fecha_hora: parseRawDate(item.fecha_hora ?? item.fecha),
+		fecha_hora: fechaHora,
 		altura_agua: altura,
-		presion: parseRawNumber(item.presion),
-		temperatura: parseRawNumber(item.temperatura),
-		nivel_de_bateria: parseRawNumber(item.nivel_de_bateria ?? item.bateria),
+		presion: parseRawNumber(pickRawValue(item, ["presion"])),
+		temperatura: parseRawNumber(pickRawValue(item, ["temperatura"])),
+		nivel_de_bateria: parseRawNumber(
+			pickRawValue(item, ["nivel_de_bateria", "nivelBateria", "bateria", "battery"]),
+		),
 		limnigrafo: limnigrafo !== null ? Math.trunc(limnigrafo) : undefined,
 	};
 }
@@ -126,17 +164,17 @@ function parseCsvImport(content: string): ParsedMedicionImportRow[] {
 	const lines = content
 		.split(/\r?\n/)
 		.map((line) => line.trim())
-		.filter(Boolean);
+		.filter((line) => Boolean(line) && !line.startsWith("#"));
 
 	if (lines.length < 2) {
 		return [];
 	}
 
-	const headers = lines[0].split(",").map(normalizeHeader);
+	const headers = parseCsvLine(lines[0]).map(normalizeHeader);
 	const rows: ParsedMedicionImportRow[] = [];
 
 	for (let index = 1; index < lines.length; index += 1) {
-		const values = lines[index].split(",").map((value) => value.trim());
+		const values = parseCsvLine(lines[index]);
 		const item: Record<string, string> = {};
 
 		headers.forEach((header, headerIndex) => {
@@ -150,6 +188,39 @@ function parseCsvImport(content: string): ParsedMedicionImportRow[] {
 	}
 
 	return rows;
+}
+
+function parseCsvLine(line: string): string[] {
+	const values: string[] = [];
+	let current = "";
+	let inQuotes = false;
+
+	for (let index = 0; index < line.length; index += 1) {
+		const char = line[index];
+		const nextChar = line[index + 1];
+
+		if (char === "\"") {
+			if (inQuotes && nextChar === "\"") {
+				current += "\"";
+				index += 1;
+				continue;
+			}
+
+			inQuotes = !inQuotes;
+			continue;
+		}
+
+		if (char === "," && !inQuotes) {
+			values.push(current.trim());
+			current = "";
+			continue;
+		}
+
+		current += char;
+	}
+
+	values.push(current.trim());
+	return values.map(trimWrappingQuotes);
 }
 
 export function parseImportRowsByFilename(content: string, fileName: string): ParsedMedicionImportRow[] {
