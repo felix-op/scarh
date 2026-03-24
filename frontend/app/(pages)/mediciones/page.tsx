@@ -143,6 +143,10 @@ export default function MedicionesPage() {
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [mensaje, setMensaje] = useState<string | null>(null);
 	const [errorAccion, setErrorAccion] = useState<string | null>(null);
+	const [manualModalMessage, setManualModalMessage] = useState<string | null>(null);
+	const [manualModalError, setManualModalError] = useState<string | null>(null);
+	const [importModalMessage, setImportModalMessage] = useState<string | null>(null);
+	const [importModalError, setImportModalError] = useState<string | null>(null);
 	const [isExporting, setIsExporting] = useState(false);
 	const [isImporting, setIsImporting] = useState(false);
 	const [isManualModalOpen, setIsManualModalOpen] = useState(false);
@@ -306,6 +310,22 @@ export default function MedicionesPage() {
 		setHistorialFilters((prev) => ({ ...prev, [field]: value }));
 	}
 
+	function handleManualModalOpenChange(open: boolean) {
+		setIsManualModalOpen(open);
+		if (!open) {
+			setManualModalError(null);
+			setManualModalMessage(null);
+		}
+	}
+
+	function handleImportModalOpenChange(open: boolean) {
+		setIsImportModalOpen(open);
+		if (!open) {
+			setImportModalError(null);
+			setImportModalMessage(null);
+		}
+	}
+
 	function handleApplyHistorialFilters() {
 		setAppliedHistorialFilters(historialFilters);
 		setCurrentPage(1);
@@ -328,21 +348,21 @@ export default function MedicionesPage() {
 
 	async function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		setErrorAccion(null);
-		setMensaje(null);
+		setManualModalError(null);
+		setManualModalMessage(null);
 
 		const limnigrafoId = Number.parseInt(
 			manualForm.limnigrafo || appliedHistorialFilters.limnigrafo[0] || "",
 			10,
 		);
 		if (Number.isNaN(limnigrafoId)) {
-			setErrorAccion("Seleccioná un limnígrafo para cargar la medición manual.");
+			setManualModalError("Seleccioná un limnígrafo para cargar la medición manual.");
 			return;
 		}
 
 		const altura = parseNumeric(manualForm.altura_agua);
 		if (altura === null) {
-			setErrorAccion("La altura del agua es obligatoria y debe ser numérica.");
+			setManualModalError("La altura del agua es obligatoria y debe ser numérica.");
 			return;
 		}
 
@@ -350,7 +370,7 @@ export default function MedicionesPage() {
 		const temperatura = parseNumeric(manualForm.temperatura);
 		const bateria = parseNumeric(manualForm.nivel_de_bateria);
 		if (bateria !== null && (bateria < 0 || bateria > 100)) {
-			setErrorAccion("El nivel de batería debe estar entre 0 y 100.");
+			setManualModalError("El nivel de batería debe estar entre 0 y 100.");
 			return;
 		}
 
@@ -369,7 +389,7 @@ export default function MedicionesPage() {
 			await postMedicion.mutateAsync({ data: payload });
 			await refetchMediciones();
 			setMensaje("Medición manual registrada correctamente.");
-			setIsManualModalOpen(false);
+			handleManualModalOpenChange(false);
 			setManualForm((prev) => ({
 				...prev,
 				altura_agua: "",
@@ -379,13 +399,13 @@ export default function MedicionesPage() {
 				fecha_hora: toDatetimeLocalInputValue(new Date()),
 			}));
 		} catch (error) {
-			setErrorAccion(error instanceof Error ? error.message : "No se pudo registrar la medición manual.");
+			setManualModalError(error instanceof Error ? error.message : "No se pudo registrar la medición manual.");
 		}
 	}
 
 	async function handleImportFileChange(event: ChangeEvent<HTMLInputElement>) {
-		setErrorAccion(null);
-		setMensaje(null);
+		setImportModalError(null);
+		setImportModalMessage(null);
 
 		const file = event.target.files?.[0];
 		if (!file) {
@@ -399,7 +419,7 @@ export default function MedicionesPage() {
 				setImportRows([]);
 				setImportFileName("");
 				setImportFuente(null);
-				setErrorAccion("No se encontraron filas válidas en el archivo.");
+				setImportModalError("No se encontraron filas válidas en el archivo.");
 				return;
 			}
 
@@ -408,7 +428,7 @@ export default function MedicionesPage() {
 			setImportFuente(inferImportFuenteByFileName(file.name));
 			const rowsWithLimnigrafo = rows.filter((row) => Number.isInteger(row.limnigrafo)).length;
 			const rowsUsingFallback = rows.length - rowsWithLimnigrafo;
-			setMensaje(
+			setImportModalMessage(
 				`Archivo cargado: ${rows.length} filas listas para importar. `
 				+ `${rowsWithLimnigrafo} con limnígrafo desde archivo`
 				+ (rowsUsingFallback > 0 ? ` y ${rowsUsingFallback} usarán limnígrafo por defecto.` : "."),
@@ -417,7 +437,7 @@ export default function MedicionesPage() {
 			setImportRows([]);
 			setImportFileName("");
 			setImportFuente(null);
-			setErrorAccion(error instanceof Error ? error.message : "No se pudo procesar el archivo seleccionado.");
+			setImportModalError(error instanceof Error ? error.message : "No se pudo procesar el archivo seleccionado.");
 		} finally {
 			event.target.value = "";
 		}
@@ -425,7 +445,7 @@ export default function MedicionesPage() {
 
 	async function handleImportSubmit() {
 		if (importRows.length === 0) {
-			setErrorAccion("Cargá un archivo con mediciones antes de importar.");
+			setImportModalError("Cargá un archivo con mediciones antes de importar.");
 			return;
 		}
 
@@ -436,8 +456,8 @@ export default function MedicionesPage() {
 			10,
 		);
 		setIsImporting(true);
-		setErrorAccion(null);
-		setMensaje(null);
+		setImportModalError(null);
+		setImportModalMessage(null);
 
 		let successCount = 0;
 		const importErrors: string[] = [];
@@ -488,21 +508,22 @@ export default function MedicionesPage() {
 				})
 				.join(", ");
 
-			setMensaje(
+			const importSummary =
 				`Importación finalizada. Filas guardadas: ${successCount}.`
-				+ (distribution ? ` Distribución por limnígrafo: ${distribution}.` : ""),
-			);
+				+ (distribution ? ` Distribución por limnígrafo: ${distribution}.` : "");
+			setImportModalMessage(importSummary);
+			setMensaje(importSummary);
 		}
 
 		if (importErrors.length > 0) {
-			setErrorAccion(importErrors.slice(0, 4).join(" "));
+			setImportModalError(importErrors.slice(0, 4).join(" "));
 		}
 
 		if (successCount > 0 && importErrors.length === 0) {
 			setImportRows([]);
 			setImportFileName("");
 			setImportFuente(null);
-			setIsImportModalOpen(false);
+			handleImportModalOpenChange(false);
 		}
 	}
 
@@ -521,7 +542,7 @@ export default function MedicionesPage() {
 						<div className="flex flex-wrap items-center gap-3 lg:justify-end">
 							<button
 								type="button"
-								onClick={() => setIsManualModalOpen(true)}
+								onClick={() => handleManualModalOpenChange(true)}
 								className={HEADER_ACTION_PRIMARY_BUTTON_CLASS}
 							>
 								<span className="icon-[mdi--pencil] text-base" aria-hidden="true" />
@@ -529,7 +550,7 @@ export default function MedicionesPage() {
 							</button>
 							<button
 								type="button"
-								onClick={() => setIsImportModalOpen(true)}
+								onClick={() => handleImportModalOpenChange(true)}
 								className={HEADER_ACTION_SECONDARY_BUTTON_CLASS}
 							>
 								<span className="icon-[mdi--upload] text-base" aria-hidden="true" />
@@ -574,23 +595,27 @@ export default function MedicionesPage() {
 
 					<ModalCargaManualMedicion
 						open={isManualModalOpen}
-						onOpenChange={setIsManualModalOpen}
+						onOpenChange={handleManualModalOpenChange}
 						manualForm={manualForm}
 						limnigrafos={limnigrafos}
 						isSubmitting={postMedicion.isPending}
+						actionError={manualModalError}
+						actionMessage={manualModalMessage}
 						onManualFormChange={handleManualFormChange}
 						onSubmit={handleManualSubmit}
 					/>
 
 					<ModalImportacionMediciones
 						open={isImportModalOpen}
-						onOpenChange={setIsImportModalOpen}
+						onOpenChange={handleImportModalOpenChange}
 						limnigrafos={limnigrafos}
 						importFallbackLimnigrafo={importFallbackLimnigrafo}
 						onImportFallbackChange={setImportFallbackLimnigrafo}
 						importFileName={importFileName}
 						importRows={importRows}
 						isImporting={isImporting}
+						actionError={importModalError}
+						actionMessage={importModalMessage}
 						onFileChange={handleImportFileChange}
 						onImportSubmit={handleImportSubmit}
 					/>

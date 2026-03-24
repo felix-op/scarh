@@ -34,6 +34,8 @@ type ModalImportacionMedicionesProps = {
 	importFileName: string;
 	importRows: ParsedMedicionImportRow[];
 	isImporting: boolean;
+	actionError?: string | null;
+	actionMessage?: string | null;
 	onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
 	onImportSubmit: () => void;
 };
@@ -66,6 +68,8 @@ export default function ModalImportacionMediciones({
 	importFileName,
 	importRows,
 	isImporting,
+	actionError = null,
+	actionMessage = null,
 	onFileChange,
 	onImportSubmit,
 }: ModalImportacionMedicionesProps) {
@@ -109,6 +113,16 @@ export default function ModalImportacionMediciones({
 					<hr className="h-[2px] bg-ventana-secondary" />
 
 					<div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
+						{actionError ? (
+							<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
+								{actionError}
+							</p>
+						) : null}
+						{actionMessage ? (
+							<p className="rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 text-[14px] text-[#166534] dark:border-[#14532D] dark:bg-[#0F2E1A] dark:text-[#86EFAC]">
+								{actionMessage}
+							</p>
+						) : null}
 						<label className="flex flex-col gap-2 text-sm font-semibold text-foreground">
 							Limnígrafo por defecto (opcional)
 							<Selector
