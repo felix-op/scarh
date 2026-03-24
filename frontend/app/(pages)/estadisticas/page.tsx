@@ -79,6 +79,25 @@ export default function EstadisticasPage() {
 			})),
 		[limnigrafos],
 	);
+	const limnigrafoLabels = useMemo<Record<number, string>>(
+		() => limnigrafos.reduce<Record<number, string>>((acc, limnigrafo) => {
+			acc[limnigrafo.id] = limnigrafo.codigo;
+			return acc;
+		}, {}),
+		[limnigrafos],
+	);
+	const rateCandidateLimnigrafoIds = useMemo<number[]>(
+		() => {
+			const selected = appliedFilters.limnigrafos
+				.map((value) => Number.parseInt(value, 10))
+				.filter((value) => !Number.isNaN(value));
+			const source = selected.length > 0
+				? selected
+				: limnigrafos.map((limnigrafo) => limnigrafo.id);
+			return Array.from(new Set(source));
+		},
+		[appliedFilters.limnigrafos, limnigrafos],
+	);
 
 	const atributoMeta = ATRIBUTO_METADATA[appliedFilters.atributo];
 
@@ -113,6 +132,7 @@ export default function EstadisticasPage() {
 		discardedRatePoints,
 		rateSeriesData,
 		rateSummary,
+		rateByLimnigrafo,
 	} = useRateAnalysis(currentRows, activeRange);
 
 	const fuenteStats = useMemo(() => {
@@ -385,6 +405,9 @@ export default function EstadisticasPage() {
 									discardedRatePoints={discardedRatePoints}
 									rateSeriesData={rateSeriesData}
 									rateSummary={rateSummary}
+									rateByLimnigrafo={rateByLimnigrafo}
+									limnigrafoLabels={limnigrafoLabels}
+									candidateLimnigrafoIds={rateCandidateLimnigrafoIds}
 								/>
 							) : null}
 

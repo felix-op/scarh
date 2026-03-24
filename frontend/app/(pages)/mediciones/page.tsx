@@ -65,7 +65,7 @@ function getDefaultDateRange() {
 function getDefaultHistorialFilters(): HistorialFilters {
 	const { desde, hasta } = getDefaultDateRange();
 	return {
-		limnigrafo: "",
+		limnigrafo: [],
 		fuente: "",
 		desde,
 		hasta,
@@ -197,8 +197,8 @@ export default function MedicionesPage() {
 			page: String(currentPage),
 		};
 
-		if (appliedHistorialFilters.limnigrafo) {
-			params.limnigrafo = appliedHistorialFilters.limnigrafo;
+		if (appliedHistorialFilters.limnigrafo.length > 0) {
+			params.limnigrafo = appliedHistorialFilters.limnigrafo.join(",");
 		}
 		if (appliedHistorialFilters.fuente) {
 			params.fuente = appliedHistorialFilters.fuente;
@@ -332,7 +332,7 @@ export default function MedicionesPage() {
 		setMensaje(null);
 
 		const limnigrafoId = Number.parseInt(
-			manualForm.limnigrafo || appliedHistorialFilters.limnigrafo,
+			manualForm.limnigrafo || appliedHistorialFilters.limnigrafo[0] || "",
 			10,
 		);
 		if (Number.isNaN(limnigrafoId)) {
@@ -431,7 +431,7 @@ export default function MedicionesPage() {
 
 		const fallbackLimnigrafoId = Number.parseInt(
 			importFallbackLimnigrafo
-				|| appliedHistorialFilters.limnigrafo
+				|| appliedHistorialFilters.limnigrafo[0]
 				|| manualForm.limnigrafo,
 			10,
 		);

@@ -1,5 +1,6 @@
 "use client";
 
+import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
 import DataTable from "@componentes/tabla/DataTable";
 import { ColumnConfig } from "@componentes/tabla/types";
 import { LimnigrafoResponse } from "@servicios/api/django.api";
@@ -88,7 +89,7 @@ const tableColumns: ColumnConfig<MedicionRow>[] = [
 type SeccionHistorialMedicionesProps = {
 	filters: HistorialFilters;
 	limnigrafos: LimnigrafoResponse[];
-	onLimnigrafoChange: (value: string) => void;
+	onLimnigrafoChange: (value: string[]) => void;
 	onFuenteChange: (value: FuenteFiltro) => void;
 	onDesdeChange: (value: string) => void;
 	onHastaChange: (value: string) => void;
@@ -146,6 +147,11 @@ export default function SeccionHistorialMediciones({
 	actionError,
 	actionMessage,
 }: SeccionHistorialMedicionesProps) {
+	const limnigrafoOptions: MultiSelectOption[] = limnigrafos.map((limnigrafo) => ({
+		value: String(limnigrafo.id),
+		label: limnigrafo.codigo,
+	}));
+
 	return (
 		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 			<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -157,21 +163,21 @@ export default function SeccionHistorialMediciones({
 
 			<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 dark:border-[#334155] dark:bg-[#111923]">
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
-						Limnígrafo
-						<select
-							value={filters.limnigrafo}
-							onChange={(event) => onLimnigrafoChange(event.target.value)}
-							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
-						>
-							<option value="">Todos</option>
-							{limnigrafos.map((limnigrafo) => (
-								<option key={limnigrafo.id} value={String(limnigrafo.id)}>
-									{limnigrafo.codigo}
-								</option>
-							))}
-						</select>
-					</label>
+					<div className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
+						<label htmlFor="mediciones-limnigrafos-historial">
+							Limnígrafos ({filters.limnigrafo.length})
+						</label>
+						<MultiSelect
+							id="mediciones-limnigrafos-historial"
+							options={limnigrafoOptions}
+							selectedValues={filters.limnigrafo}
+							onChange={onLimnigrafoChange}
+							placeholder="Todos"
+							className="h-[50px] text-[15px]"
+							emptyText="No hay limnígrafos disponibles"
+							maxVisibleLabels={2}
+						/>
+					</div>
 
 					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Fuente

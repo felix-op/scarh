@@ -9,7 +9,7 @@ export type ComparativasFilters = {
 };
 
 export type HistorialFilters = {
-	limnigrafo: string;
+	limnigrafo: string[];
 	fuente: FuenteFiltro;
 	desde: string;
 	hasta: string;

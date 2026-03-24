@@ -2,6 +2,9 @@ import django_filters
 from django.db.models import Q
 from .models import Usuario, Limnigrafo, Medicion
 
+class NumberInFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
+    pass
+
 class UsuarioFilter(django_filters.FilterSet):
     search = django_filters.CharFilter(method='filter_search', label='Búsqueda general (username, email, nombres, legajo)')
     is_active = django_filters.BooleanFilter(field_name='is_active')
@@ -37,7 +40,7 @@ class LimnigrafoFilter(django_filters.FilterSet):
         return queryset
 
 class MedicionFilter(django_filters.FilterSet):
-    limnigrafo = django_filters.NumberFilter(field_name='limnigrafo__id')
+    limnigrafo = NumberInFilter(field_name='limnigrafo__id', lookup_expr='in')
     fecha_desde = django_filters.DateTimeFilter(field_name='fecha_hora', lookup_expr='gte')
     fecha_hasta = django_filters.DateTimeFilter(field_name='fecha_hora', lookup_expr='lte')
     fuente = django_filters.CharFilter(field_name='fuente', lookup_expr='iexact')

@@ -148,6 +148,42 @@ class MedicionTests(APITestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['limnigrafo'], self.limnigrafo.id)
 
+    def test_filter_medicion_by_multiple_limnigrafos(self):
+        self.client.force_authenticate(user=self.user)
+
+        other_limnigrafo = Limnigrafo.objects.create(
+            codigo='LMG-003',
+            descripcion='Other multi',
+            memoria=1024,
+            bateria_max=12,
+            bateria_min=10,
+            bateria_actual=12,
+            tiempo_advertencia=3600,
+            tiempo_peligro=7200,
+        )
+        another_limnigrafo = Limnigrafo.objects.create(
+            codigo='LMG-004',
+            descripcion='Other excluded',
+            memoria=1024,
+            bateria_max=12,
+            bateria_min=10,
+            bateria_actual=12,
+            tiempo_advertencia=3600,
+            tiempo_peligro=7200,
+        )
+
+        Medicion.objects.create(limnigrafo=self.limnigrafo, altura_agua=1.0, fecha_hora='2024-01-01T10:00:00Z')
+        Medicion.objects.create(limnigrafo=other_limnigrafo, altura_agua=2.0, fecha_hora='2024-01-01T11:00:00Z')
+        Medicion.objects.create(limnigrafo=another_limnigrafo, altura_agua=3.0, fecha_hora='2024-01-01T12:00:00Z')
+
+        response = self.client.get(self.list_url, {'limnigrafo': f'{self.limnigrafo.id},{other_limnigrafo.id}'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+        self.assertSetEqual(
+            {row['limnigrafo'] for row in response.data['results']},
+            {self.limnigrafo.id, other_limnigrafo.id},
+        )
+
     def test_filter_medicion_by_fuente(self):
         self.client.force_authenticate(user=self.user)
         Medicion.objects.create(
