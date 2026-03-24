@@ -80,6 +80,12 @@ export default function ModalImportacionMediciones({
 		});
 		return map;
 	}, [limnigrafos]);
+	const rowsWithLimnigrafo = useMemo(
+		() => importRows.filter((row) => typeof row.limnigrafo === "number" && Number.isInteger(row.limnigrafo)).length,
+		[importRows],
+	);
+	const rowsWithoutLimnigrafo = importRows.length - rowsWithLimnigrafo;
+	const isFallbackSelected = importFallbackLimnigrafo.trim() !== "";
 
 	const handleClose = () => {
 		if (isImporting) {
@@ -155,6 +161,33 @@ export default function ModalImportacionMediciones({
 							<p className="text-sm text-foreground/80">
 								Archivo: <span className="font-semibold text-foreground">{importFileName}</span>
 							</p>
+						) : null}
+						{importRows.length > 0 ? (
+							<div className="rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-3 dark:border-[#475569] dark:bg-[#0F172A]">
+								<p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#475569] dark:text-[#94A3B8]">
+									Resumen del archivo
+								</p>
+								<div className="mt-2 grid gap-2 text-[13px] text-foreground sm:grid-cols-2">
+									<p>
+										Con limnígrafo en archivo: <span className="font-semibold">{rowsWithLimnigrafo}</span>
+									</p>
+									<p>
+										Sin limnígrafo (usan por defecto): <span className="font-semibold">{rowsWithoutLimnigrafo}</span>
+									</p>
+								</div>
+								{rowsWithoutLimnigrafo > 0 ? (
+									isFallbackSelected ? (
+										<p className="mt-2 rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] px-3 py-2 text-xs text-[#166534] dark:border-[#14532D] dark:bg-[#0F2E1A] dark:text-[#86EFAC]">
+											Las filas sin limnígrafo se guardarán usando el limnígrafo por defecto seleccionado.
+										</p>
+									) : (
+										<p className="mt-2 rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
+											Hay filas sin limnígrafo y está en <span className="font-semibold">Sin selección</span>:
+											esas filas <span className="font-semibold">no se guardarán</span>.
+										</p>
+									)
+								) : null}
+							</div>
 						) : null}
 
 						<div className="max-h-[460px] overflow-auto rounded-lg border border-border">

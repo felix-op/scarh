@@ -426,13 +426,7 @@ export default function MedicionesPage() {
 			setImportRows(rows);
 			setImportFileName(file.name);
 			setImportFuente(inferImportFuenteByFileName(file.name));
-			const rowsWithLimnigrafo = rows.filter((row) => Number.isInteger(row.limnigrafo)).length;
-			const rowsUsingFallback = rows.length - rowsWithLimnigrafo;
-			setImportModalMessage(
-				`Archivo cargado: ${rows.length} filas listas para importar. `
-				+ `${rowsWithLimnigrafo} con limnígrafo desde archivo`
-				+ (rowsUsingFallback > 0 ? ` y ${rowsUsingFallback} usarán limnígrafo por defecto.` : "."),
-			);
+			setImportModalMessage(`Archivo cargado: ${rows.length} filas listas para importar.`);
 		} catch (error) {
 			setImportRows([]);
 			setImportFileName("");
