@@ -58,6 +58,40 @@ class MedicionesPermission(RoleBasedPermission):
     resource_name = 'mediciones'
 
 
+class MedicionesPermissionWithAPIKey(permissions.BasePermission):
+    """
+    Permiso especial para mediciones que permite:
+    - API Keys (limnígrafos automáticos) sin validar roles
+    - Usuarios autenticados con roles mediciones-visualizar/editar
+    """
+    def has_permission(self, request, view):
+        # Si tiene API key válida, permitir sin validar roles
+        if HasAPIKey().has_permission(request, view):
+            return True
+        
+        # Si no tiene API key, debe ser usuario autenticado con roles
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        # Superusuarios siempre tienen acceso
+        if request.user.is_superuser:
+            return True
+        
+        # Validar roles mediciones-visualizar/editar
+        user_roles = set(request.user.roles.values_list('nombre', flat=True))
+        action = getattr(view, 'action', None)
+        
+        # Lectura requiere mediciones-visualizar
+        if action in ['list', 'retrieve'] or request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return 'mediciones-visualizar' in user_roles
+        
+        # Escritura requiere mediciones-editar
+        elif action in ['create', 'update', 'partial_update', 'destroy'] or request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            return 'mediciones-editar' in user_roles
+        
+        return False
+
+
 class UsuariosPermission(RoleBasedPermission):
     resource_name = 'usuarios'
 
