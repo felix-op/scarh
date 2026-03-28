@@ -7,6 +7,7 @@ from ..definicionRoles import PREDEFINED_ROLE_NAMES
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+from ..permissions import UsuariosPermission
 from rest_framework.response import Response
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
@@ -24,7 +25,7 @@ class UsuarioPagination(PageNumberPagination):
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all().order_by('id')
     serializer_class = UsuarioSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, UsuariosPermission]
     pagination_class = UsuarioPagination
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = UsuarioFilter

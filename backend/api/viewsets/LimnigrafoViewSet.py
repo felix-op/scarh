@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_api_key.models import APIKey
+from ..permissions import LimnigrafosPermission
 from ..utils.estado_limnigrafo import calcular_estado_limnigrafo
 from ..utils.audit import (
     registrar_accion_auditoria,
@@ -24,7 +25,7 @@ class LimnigrafoPagination(PageNumberPagination):
 class LimnigrafoViewSet(viewsets.ModelViewSet):
     queryset = Limnigrafo.objects.all().order_by('id')
     serializer_class = LimnigrafoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, LimnigrafosPermission]
     pagination_class = LimnigrafoPagination
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = LimnigrafoFilter

@@ -4,6 +4,7 @@ from django.utils.dateparse import parse_date
 from ..models import Accion
 from ..serializer import HistorialListSerializer, HistorialDetailSerializer
 from rest_framework.permissions import IsAuthenticated
+from ..permissions import HistorialPermission
 
 class HistorialPagination(PageNumberPagination):
     page_size = 50               
@@ -13,7 +14,7 @@ class HistorialPagination(PageNumberPagination):
 class HistorialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Accion.objects.select_related("usuario").all().order_by("-fecha_hora")
     pagination_class = HistorialPagination
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HistorialPermission]
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
