@@ -1,8 +1,9 @@
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from ..serializer import UsuarioSerializer, ChangePasswordSerializer
-from ..models import Usuario
+from ..models import Usuario, Rol
 from ..filters import UsuarioFilter
+from ..definicionRoles import PREDEFINED_ROLE_NAMES
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
@@ -97,3 +98,75 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             return Response({"message": "Contraseña actualizada correctamente."}, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['put'], url_path='roles')
+    def asignar_roles(self, request, pk=None):
+        """Endpoint PUT /usuarios/{id}/roles/ para modificar roles de un usuario."""
+        usuario = self.get_object()
+        
+        # Validar que venga el campo 'roles'
+        roles_nombres = request.data.get('roles', None)
+        if roles_nombres is None:
+            return Response(
+                {"error": "El campo 'roles' es requerido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validar que sea una lista
+        if not isinstance(roles_nombres, list):
+            return Response(
+                {"error": "El campo 'roles' debe ser una lista de strings."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validar que todos los roles sean predefinidos
+        roles_set = set(roles_nombres)
+        roles_invalidos = roles_set - PREDEFINED_ROLE_NAMES
+        if roles_invalidos:
+            return Response(
+                {"error": f"Roles inválidos: {sorted(roles_invalidos)}. Solo se permiten roles predefinidos."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Obtener los objetos Rol de la base de datos
+        roles_objetos = Rol.objects.filter(nombre__in=roles_nombres)
+        
+        # Validar que todos los roles existan en la DB
+        if roles_objetos.count() != len(roles_set):
+            roles_encontrados = set(roles_objetos.values_list('nombre', flat=True))
+            roles_faltantes = roles_set - roles_encontrados
+            return Response(
+                {"error": f"Roles no encontrados en la base de datos: {sorted(roles_faltantes)}. Ejecutá: python manage.py loaddata roles.json"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Guardar roles anteriores para auditoría
+        roles_anteriores = sorted(set(usuario.roles.values_list('nombre', flat=True)))
+        
+        # Reemplazar roles del usuario
+        usuario.roles.set(roles_objetos)
+        
+        # Obtener nuevos roles
+        roles_nuevos = sorted(set(usuario.roles.values_list('nombre', flat=True)))
+        
+        # Registrar en auditoría
+        registrar_accion_auditoria(
+            request=self.request,
+            tipo_accion="modified",
+            entidad="Usuario",
+            entidad_id=usuario.id,
+            descripcion=f"Modificó los roles del usuario '{usuario.username}'.",
+            metadata={
+                "target_username": usuario.username,
+                "roles_anteriores": roles_anteriores,
+                "roles_nuevos": roles_nuevos,
+            },
+        )
+        
+        return Response(
+            {
+                "message": "Roles actualizados correctamente.",
+                "roles": roles_nuevos
+            },
+            status=status.HTTP_200_OK
+        )
