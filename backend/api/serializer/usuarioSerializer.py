@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from ..models import Usuario, Rol
-from .rolSerializer import RolSerializer
+
 
 class UsuarioSerializer(serializers.ModelSerializer):
 
@@ -18,11 +18,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
     # For reading, we want the full object. For writing, we want a list of IDs.
     # To use the same name "roles" for both without conflicts, we use a PrimaryKeyRelatedField
     # for input, and override to_representation for output.
-    roles = serializers.PrimaryKeyRelatedField(
-        many=True, 
-        queryset=Rol.objects.all(), 
-        required=False
-    )
+    roles = serializers.SerializerMethodField() #lo calcula como un metodo y devuelve string 
 
     class Meta:
         model = Usuario
@@ -41,45 +37,28 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'email': {'required': True},
         }
 
-    def to_representation(self, instance):
-        # Default serialization gets us the list of IDs from the PrimaryKeyRelatedField
-        # We override this to return the fully serialized Rol objects instead.
-        representation = super().to_representation(instance)
-        
-        if hasattr(instance, 'roles') and instance.pk is not None:
-            roles_queryset = instance.roles.all()
-            representation['roles'] = RolSerializer(roles_queryset, many=True).data
-        else:
-            representation['roles'] = []
-            
-        return representation
+    def get_roles(self, instance):
+        if not instance.pk:
+            return []
+        return sorted(set(instance.roles.values_list('nombre', flat=True)))
+
 
     def create(self, validated_data):
         if 'password' not in validated_data:
             raise serializers.ValidationError(
                 {"contraseña": "Este campo es requerido."}
             )
-
         password = validated_data.pop('password')
-        roles = validated_data.pop('roles', [])
-
-        user = Usuario(**validated_data)
-        user.set_password(password)
-        user.save()
-
-        if roles:
-            user.roles.set(roles)
-
-        return user
+        usuario = Usuario.objects.create(**validated_data)
+        usuario.set_password(password)
+        usuario.save()
+        return usuario
 
     def update(self, instance, validated_data):
-        # Eliminamos password de validated_data por seguridad si llegara a venir
-        validated_data.pop('password', None)
-        roles = validated_data.pop('roles', None)
-        
-        user = super().update(instance, validated_data)
-        
-        if roles is not None:
-            user.roles.set(roles)
-            
-        return user
+        password = validated_data.pop('password', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
