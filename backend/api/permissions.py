@@ -33,6 +33,10 @@ class RoleBasedPermission(permissions.BasePermission):
         # Obtener roles del usuario
         user_roles = set(request.user.roles.values_list('nombre', flat=True))
         
+        # Rol administracion tiene acceso completo
+        if 'administracion' in user_roles:
+            return True
+        
         # Determinar qué rol se requiere según la acción
         action = getattr(view, 'action', None)
         
@@ -79,6 +83,11 @@ class MedicionesPermissionWithAPIKey(permissions.BasePermission):
         
         # Validar roles mediciones-visualizar/editar
         user_roles = set(request.user.roles.values_list('nombre', flat=True))
+        
+        # Rol administracion tiene acceso completo
+        if 'administracion' in user_roles:
+            return True
+        
         action = getattr(view, 'action', None)
         
         # Lectura requiere mediciones-visualizar
@@ -122,6 +131,11 @@ class HistorialPermission(permissions.BasePermission):
         
         # Verificar rol historial-visualizar
         user_roles = set(request.user.roles.values_list('nombre', flat=True))
+        
+        # Rol administracion tiene acceso completo
+        if 'administracion' in user_roles:
+            return True
+        
         return 'historial-visualizar' in user_roles
 
 
@@ -143,4 +157,9 @@ class EstadisticasPermission(permissions.BasePermission):
         
         # Verificar rol estadisticas-visualizar
         user_roles = set(request.user.roles.values_list('nombre', flat=True))
+        
+        # Rol administracion tiene acceso completo
+        if 'administracion' in user_roles:
+            return True
+        
         return 'estadisticas-visualizar' in user_roles

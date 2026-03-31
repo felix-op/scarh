@@ -11,6 +11,7 @@ PREDEFINED_ROLES = {
 "mapa-visualizar": "Permite visualizar mapa.",
 "mapa-editar": "Permite editar configuraciones relacionadas al mapa.",
 "estadisticas-visualizar": "Permite consultar estadisticas no persistidas.",
+"administracion": "Permite acceso total a todas las funcionalidades de administración (incluye todos los permisos anteriores).",
 }
 
 PREDEFINED_ROLE_NAMES = set(PREDEFINED_ROLES.keys())
