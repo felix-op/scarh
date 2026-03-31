@@ -43,7 +43,7 @@ export default function Error({
 						Intentar de nuevo
 					</button>
 					<Link
-						href="/inicio"
+						href="/"
 						className="inline-flex items-center justify-center rounded-xl bg-white hover:bg-gray-50 dark:bg-transparent dark:hover:bg-white/5 text-[#0170b0] border border-[#0170b0] dark:text-[#0da2f8] dark:border-[#0da2f8] font-medium px-8 py-3 transition-colors duration-200 shadow-sm"
 					>
 						Volver al inicio

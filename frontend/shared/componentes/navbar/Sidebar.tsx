@@ -14,7 +14,7 @@ type SidebarItem = {
 
 const rutas: Record<string, SidebarItem[]> = {
 	general: [
-		{ label: "Dashboard", icono: "dashboard", href: "/inicio" },
+		{ label: "Dashboard", icono: "dashboard", href: "/" },
 		{ label: "Mapa", icono: "mapa", href: "/mapa" },
 		{ label: "Limnigrafos", icono: "chip", href: "/limnigrafos" },
 		{ label: "Mediciones", icono: "documento", href: "/mediciones" },

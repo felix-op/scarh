@@ -2,10 +2,6 @@ const nextConfig = {
 	async rewrites() {
 		return [
 			{
-				source: '/',
-				destination: '/auth/login',
-			},
-			{
 				source: '/login',
 				destination: '/auth/login',
 			},

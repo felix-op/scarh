@@ -17,7 +17,7 @@ export default function SidebarButton({
 }: SidebarButtonProps) {
 	const pathname = usePathname();
 
-	const isActive = pathname.startsWith(href);
+	const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
 	return (
 		<div className="w-full">
