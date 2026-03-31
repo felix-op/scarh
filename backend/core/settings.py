@@ -186,3 +186,15 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+# Email Configuration
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+
+# Password Recovery Config
+PASSWORD_RECOVERY_CODE_EXPIRATION_MINUTES = int(os.getenv('PASSWORD_RECOVERY_CODE_EXPIRATION_MINUTES', 15))
+PASSWORD_RECOVERY_BLOCK_MINUTES = int(os.getenv('PASSWORD_RECOVERY_BLOCK_MINUTES', 30))

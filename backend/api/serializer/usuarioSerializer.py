@@ -41,6 +41,11 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'email': {'required': True},
         }
 
+    def validate_legajo(self, value):
+        if value == "" or value is None:
+            return None
+        return value
+
     def to_representation(self, instance):
         # Default serialization gets us the list of IDs from the PrimaryKeyRelatedField
         # We override this to return the fully serialized Rol objects instead.
