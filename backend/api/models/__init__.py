@@ -8,6 +8,7 @@ from .usuario_notificacion import *
 from .usuario import *
 from .accion import *
 from .rol import *
+from .password_recovery import *
 
 __all__ = [
     'Limnigrafo',
@@ -20,4 +21,5 @@ __all__ = [
     'Usuario',
     'Accion',
     'Rol',
+    'PasswordRecoveryCode',
 ]

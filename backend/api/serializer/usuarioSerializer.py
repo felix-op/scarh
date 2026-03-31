@@ -37,11 +37,15 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'email': {'required': True},
         }
 
+    def validate_legajo(self, value):
+        if value == "" or value is None:
+            return None
+        return value
+
     def get_roles(self, instance):
         if not instance.pk:
             return []
         return sorted(set(instance.roles.values_list('nombre', flat=True)))
-
 
     def create(self, validated_data):
         if 'password' not in validated_data:
