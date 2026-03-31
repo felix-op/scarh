@@ -27,7 +27,7 @@ export default function Page() {
 
 		if (result?.ok) {
 			setError(null);
-			router.push('/inicio');
+			router.push('/');
 		}
 
 		setLoading(false);

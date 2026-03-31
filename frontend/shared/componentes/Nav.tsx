@@ -328,9 +328,9 @@ export function Nav({ userName, userEmail, onCollapseChange, onProfileClick }: N
 						type="button"
 						onClick={() => {
 							try {
-								router.push("/inicio");
+								router.push("/");
 							} catch {
-								window.location.href = "/inicio";
+								window.location.href = "/";
 							}
 						}}
 						className="border-0 bg-transparent p-0"
