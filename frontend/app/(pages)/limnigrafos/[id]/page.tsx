@@ -8,7 +8,7 @@ import SeccionInfoHeader from "@componentes/secciones/SeccionInfoHeader";
 import { useParams, useRouter } from "next/navigation";
 import LimnigrafoMenu from "../componentes/LimnigrafoMenu";
 import { useGetLimnigrafo } from "@servicios/api/limnigrafos";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import normalizarString from "@lib/normalizarString";
 import SeccionInfoData from "@componentes/secciones/SeccionInfoData";
 import { opcionesTipoComunicacion } from "../constantes";
@@ -16,12 +16,15 @@ import { valuesToLabels } from "@lib/valuesToLabels";
 import { memoriaLegible } from "@lib/memoriaLegible";
 import { hmsLegibles } from "@lib/hmsLegibles";
 import { normalizarFechaAFormatoLatino } from "@lib/normalizarFechaAFormatoLatino";
+import Tabs from "@componentes/tabs/Tabs";
+import CargandoDatos from "@componentes/animaciones/CargandoDatos";
+import MensajeError from "@componentes/mensajes/MensajeError";
 
 export default function DetalleLimnigrafo() {
 	const router = useRouter();
 	const params = useParams<{ id: string }>();
 	const limnigrafoID = params?.id || "";
-	const { data: limnigrafo, isFetching: isLoadingLimnigrafo } = useGetLimnigrafo({
+	const { data: limnigrafo, isFetching: isLoadingLimnigrafo, isError: isErrorLimnigrafo, refetch } = useGetLimnigrafo({
 		params: { id: limnigrafoID },
 		configuracion: {
 			enabled: !!limnigrafoID,
@@ -103,77 +106,94 @@ export default function DetalleLimnigrafo() {
 		router.push(`/limnigrafos/editar/${limnigrafoID}`);
 	};
 
+	const [tab, setTab] = useState(1);
+	const handleChange = (t: number) => setTab(t);
+	const opciones = [
+		{ label: "Detalles", value: 1 },
+		{ label: "Importar Datos", value: 2 },
+	];
+
 	return (
 		<PaginaBase>
 			<BotonVariante variant="volver" onClick={handleVolver} />
+			<Tabs tab={tab} handleChange={handleChange} options={opciones} />
 			<br />
-			<SeccionInfo>
-				<SeccionInfoHeader>
-					<BotonVariante variant="editar" onClick={handleEditar} />
-					<LimnigrafoMenu />
-				</SeccionInfoHeader>
-				<div className="grid lg:grid-cols-2 gap-4">
-					<SeccionInfoGroup>
-						<h2 className="text-center">Detalles del Limnígrafo</h2>
-						<hr />
-						{datosGenerales.map((item) => (
-							<SeccionInfoData
-								key={item.label}
-								label={item.label}
-								dir="column"
-							>
-								{isLoadingLimnigrafo ? (
-									<div className="h-4 w-full animate-pulse bg-foreground" />
-								) : item.value}
-							</SeccionInfoData>
-						))}
-					</SeccionInfoGroup>
+			{tab === 1 && (
+				<SeccionInfo>
+					<SeccionInfoHeader>
+						<BotonVariante variant="editar" onClick={handleEditar} />
+						<LimnigrafoMenu />
+					</SeccionInfoHeader>
+					{isLoadingLimnigrafo ? (
+						<CargandoDatos />
+					) : isErrorLimnigrafo ? (
+						<MensajeError titulo="Error" handleReintentar={() => refetch()}>
+							No se pudo obtener los datos del limnígrafo. Inténtelo de
+							nuevo más tarde.
+						</MensajeError>
+					) : (
+						<div className="grid lg:grid-cols-2 gap-4">
+							<SeccionInfoGroup>
+								<h2 className="text-center">Detalles del Limnígrafo</h2>
+								<hr />
+								{datosGenerales.map((item) => (
+									<SeccionInfoData
+										key={item.label}
+										label={item.label}
+										dir="column"
+									>
+										{item.value}
+									</SeccionInfoData>
+								))}
+							</SeccionInfoGroup>
 
-					<SeccionInfoGroup>
-						<h2 className="text-center">Mantenimiento</h2>
-						<hr />
-						{mantenimiento.map((item) => (
-							<SeccionInfoData
-								key={item.label}
-								label={item.label}
-								dir="column"
-							>
-								{item.value}
-							</SeccionInfoData>
-						))}
-					</SeccionInfoGroup>
+							<SeccionInfoGroup>
+								<h2 className="text-center">Mantenimiento</h2>
+								<hr />
+								{mantenimiento.map((item) => (
+									<SeccionInfoData
+										key={item.label}
+										label={item.label}
+										dir="column"
+									>
+										{item.value}
+									</SeccionInfoData>
+								))}
+							</SeccionInfoGroup>
 
-					<SeccionInfoGroup>
-						<h2 className="text-center">
-							Especificaciones técnicas
-						</h2>
-						<hr />
-						{especificacionesTecnicas.map((item) => (
-							<SeccionInfoData
-								key={item.label}
-								label={item.label}
-								dir="column"
-							>
-								{item.value}
-							</SeccionInfoData>
-						))}
-					</SeccionInfoGroup>
+							<SeccionInfoGroup>
+								<h2 className="text-center">
+									Especificaciones técnicas
+								</h2>
+								<hr />
+								{especificacionesTecnicas.map((item) => (
+									<SeccionInfoData
+										key={item.label}
+										label={item.label}
+										dir="column"
+									>
+										{item.value}
+									</SeccionInfoData>
+								))}
+							</SeccionInfoGroup>
 
-					<SeccionInfoGroup>
-						<h2 className="text-center">Estado actual</h2>
-						<hr />
-						{estadoActual.map((item) => (
-							<SeccionInfoData
-								key={item.label}
-								label={item.label}
-								dir="column"
-							>
-								{item.value}
-							</SeccionInfoData>
-						))}
-					</SeccionInfoGroup>
-				</div>
-			</SeccionInfo>
+							<SeccionInfoGroup>
+								<h2 className="text-center">Estado actual</h2>
+								<hr />
+								{estadoActual.map((item) => (
+									<SeccionInfoData
+										key={item.label}
+										label={item.label}
+										dir="column"
+									>
+										{item.value}
+									</SeccionInfoData>
+								))}
+							</SeccionInfoGroup>
+						</div>
+					)}
+				</SeccionInfo>
+			)}
 			<br />
 		</PaginaBase>
 	);
