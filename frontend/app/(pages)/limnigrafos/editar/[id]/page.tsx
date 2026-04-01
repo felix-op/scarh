@@ -163,7 +163,7 @@ export default function PaginaEditarLimnigrafo() {
 					<CargandoDatos />
 				</SeccionInfo>
 			) : isErrorLimnigrafo ? (
-				<MensajeError titulo="Error" handleReintentar={() => refetch}>
+				<MensajeError titulo="Error" handleReintentar={() => refetch()}>
 					No se pudo obtener los datos del limnígrafo. Inténtelo de
 					nuevo más tarde.
 				</MensajeError>
