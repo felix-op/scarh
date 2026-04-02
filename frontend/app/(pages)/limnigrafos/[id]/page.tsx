@@ -3,14 +3,12 @@
 import PaginaBase from "@componentes/base/PaginaBase";
 import BotonVariante from "@componentes/botones/BotonVariante";
 import SeccionInfo from "@componentes/secciones/SeccionInfo";
-import SeccionInfoGroup from "@componentes/secciones/SeccionInfoGroup";
 import SeccionInfoHeader from "@componentes/secciones/SeccionInfoHeader";
 import { useParams, useRouter } from "next/navigation";
 import LimnigrafoMenu from "../componentes/LimnigrafoMenu";
 import { useGetLimnigrafo } from "@servicios/api/limnigrafos";
 import { useMemo, useState } from "react";
 import normalizarString from "@lib/normalizarString";
-import SeccionInfoData from "@componentes/secciones/SeccionInfoData";
 import { opcionesTipoComunicacion } from "../constantes";
 import { valuesToLabels } from "@lib/valuesToLabels";
 import { memoriaLegible } from "@lib/memoriaLegible";
@@ -19,6 +17,8 @@ import { normalizarFechaAFormatoLatino } from "@lib/normalizarFechaAFormatoLatin
 import Tabs from "@componentes/tabs/Tabs";
 import CargandoDatos from "@componentes/animaciones/CargandoDatos";
 import MensajeError from "@componentes/mensajes/MensajeError";
+import DetallesLimnigrafo from "../componentes/DetallesLimnigrafo";
+import ImportarDatos from "app/(pages)/componentes/ImportarDatos";
 
 export default function DetalleLimnigrafo() {
 	const router = useRouter();
@@ -132,67 +132,17 @@ export default function DetalleLimnigrafo() {
 							nuevo más tarde.
 						</MensajeError>
 					) : (
-						<div className="grid lg:grid-cols-2 gap-4">
-							<SeccionInfoGroup>
-								<h2 className="text-center">Detalles del Limnígrafo</h2>
-								<hr />
-								{datosGenerales.map((item) => (
-									<SeccionInfoData
-										key={item.label}
-										label={item.label}
-										dir="column"
-									>
-										{item.value}
-									</SeccionInfoData>
-								))}
-							</SeccionInfoGroup>
-
-							<SeccionInfoGroup>
-								<h2 className="text-center">Mantenimiento</h2>
-								<hr />
-								{mantenimiento.map((item) => (
-									<SeccionInfoData
-										key={item.label}
-										label={item.label}
-										dir="column"
-									>
-										{item.value}
-									</SeccionInfoData>
-								))}
-							</SeccionInfoGroup>
-
-							<SeccionInfoGroup>
-								<h2 className="text-center">
-									Especificaciones técnicas
-								</h2>
-								<hr />
-								{especificacionesTecnicas.map((item) => (
-									<SeccionInfoData
-										key={item.label}
-										label={item.label}
-										dir="column"
-									>
-										{item.value}
-									</SeccionInfoData>
-								))}
-							</SeccionInfoGroup>
-
-							<SeccionInfoGroup>
-								<h2 className="text-center">Estado actual</h2>
-								<hr />
-								{estadoActual.map((item) => (
-									<SeccionInfoData
-										key={item.label}
-										label={item.label}
-										dir="column"
-									>
-										{item.value}
-									</SeccionInfoData>
-								))}
-							</SeccionInfoGroup>
-						</div>
+						<DetallesLimnigrafo
+							datosGenerales={datosGenerales}
+							mantenimiento={mantenimiento}
+							especificacionesTecnicas={especificacionesTecnicas}
+							estadoActual={estadoActual}
+						/>
 					)}
 				</SeccionInfo>
+			)}
+			{tab === 2 && (
+				<ImportarDatos />
 			)}
 			<br />
 		</PaginaBase>
