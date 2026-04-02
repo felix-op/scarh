@@ -1,4 +1,5 @@
 import authorize from "@servicios/autenticacion/authorize";
+import authorizeRecuperacion from "@servicios/autenticacion/authorizeRecuperacion";
 import jwt from "@servicios/autenticacion/jwt";
 import session from "@servicios/autenticacion/session";
 import { AuthOptions } from "next-auth";
@@ -13,6 +14,15 @@ export const authOptions: AuthOptions = {
 				password: { label: "Contraseña", type: "password" },
 			},
 			authorize,
+		}),
+		CredentialsProvider({
+			id: "recuperar-password",
+			name: "Recuperar Password",
+			credentials: {
+				email: { label: "Correo", type: "email" },
+				codigo: { label: "Código", type: "text" },
+			},
+			authorize: authorizeRecuperacion,
 		}),
 	],
 	callbacks: {
