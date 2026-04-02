@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import Usuario, PasswordRecoveryCode
-from .serializer.password_recovery_serializer import SolicitarRecuperacionSerializer, ValidarCodigoRecuperacionSerializer
+from .serializer.password_recovery_serializer import SolicitarRecuperacionSerializer, ValidarCodigoRecuperacionSerializer, NuevaPasswordRecoverySerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from datetime import timedelta
@@ -42,14 +42,22 @@ class SolicitarRecuperacionPasswordView(APIView):
                 codigo=codigo
             )
 
+            print(f"==========================================")
+            print(f"CÓDIGO DE RECUPERACIÓN PARA {email}: {codigo}")
+            print(f"==========================================")
+
             # Enviar correo
-            send_mail(
-                subject='Código de recuperación de contraseña',
-                message=f'Tu código de recuperación es: {codigo}. Este código expirará pronto.',
-                from_email=getattr(settings, 'EMAIL_HOST_USER', 'noreply@tudominio.com'),
-                recipient_list=[email],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    subject='Código de recuperación de contraseña',
+                    message=f'Tu código de recuperación es: {codigo}. Este código expirará pronto.',
+                    from_email=getattr(settings, 'EMAIL_HOST_USER', 'noreply@tudominio.com'),
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f"Advertencia: No se pudo enviar el correo a través de SMTP: {e}")
+                # En desarrollo, permitimos que el flujo continúe
 
         except Usuario.DoesNotExist:
             # Por razones de seguridad, se envía el mismo mensaje para no revelar si el mail existe.
@@ -150,3 +158,24 @@ class ValidarCodigoRecuperacionView(APIView):
             "accessToken": str(refresh.access_token),
             "refreshToken": str(refresh)
         })
+
+class NuevaPasswordRecoveryView(APIView):
+    # Requiere estar autenticado. Nuestro JWT emitido en validar será el permiso.
+    permission_classes = [] 
+
+    def post(self, request):
+        if not request.user or not request.user.is_authenticated:
+            return Response({"error": "No autorizado"}, status=401)
+            
+        serializer = NuevaPasswordRecoverySerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+            
+        password_nueva = serializer.validated_data['password']
+        
+        # Establecemos la nueva contraseña 
+        user = request.user
+        user.set_password(password_nueva)
+        user.save()
+        
+        return Response({"mensaje": "Contraseña actualizada exitosamente."})

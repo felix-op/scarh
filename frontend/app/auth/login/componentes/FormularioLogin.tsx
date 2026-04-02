@@ -4,6 +4,8 @@ import BotonBase from "@componentes/botones/BotonBase";
 import CampoInput from "@componentes/campos/CampoInput";
 import Seccion from "@componentes/secciones/Seccion";
 import LoginCredentials from "@tipos/LoginCredentials";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
@@ -15,6 +17,7 @@ type FormularioLoginProps = {
 
 export default function FormularioLogin({onSubmit, loading, error}: FormularioLoginProps) {
 	const [showPassword, setShowPassword] = useState(false);
+	const router = useRouter();
 
 	const form = useForm<LoginCredentials>({
 		defaultValues: {
@@ -52,6 +55,18 @@ export default function FormularioLogin({onSubmit, loading, error}: FormularioLo
 						]}
 						required
 					/>
+					<div className="flex justify-end text-sm mt-[-8px]">
+						<button 
+							type="button"
+							onClick={(e) => {
+								e.preventDefault();
+								router.push("/auth/recuperar-password");
+							}} 
+							className="text-[#0982C8] hover:underline font-medium cursor-pointer bg-transparent border-none p-0"
+						>
+							¿Olvidaste tu contraseña?
+						</button>
+					</div>
 					{error && <p className="text-red-500">{error.message}</p>}
 					<BotonBase
 						disabled={loading}

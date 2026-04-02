@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import LogoutView
 from rest_framework.routers import DefaultRouter
 from .viewsets import UsuarioViewSet, LimnigrafoViewSet, HistorialViewSet, MedicionViewSet, UbicacionViewSet, EstadisticaViewSet, AlertaViewSet
-from .views_recovery import SolicitarRecuperacionPasswordView, ValidarCodigoRecuperacionView
+from .views_recovery import SolicitarRecuperacionPasswordView, ValidarCodigoRecuperacionView, NuevaPasswordRecoveryView
 
 router = DefaultRouter()
 
@@ -24,5 +24,6 @@ urlpatterns = [
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('auth/recuperar-password/solicitar', SolicitarRecuperacionPasswordView.as_view(), name='recuperar_password_solicitar'),
     path('auth/recuperar-password/validar', ValidarCodigoRecuperacionView.as_view(), name='recuperar_password_validar'),
+    path('auth/recuperar-password/nueva/', NuevaPasswordRecoveryView.as_view(), name='recuperar_password_nueva'),
     path('', include(router.urls)),
 ]

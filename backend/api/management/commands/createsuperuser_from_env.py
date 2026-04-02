@@ -22,17 +22,37 @@ class Command(BaseCommand):
 
         if User.objects.filter(username=USERNAME).exists():
             self.stdout.write(self.style.WARNING(f'⚠️ Superusuario "{USERNAME}" ya existe. Omitiendo creación.'))
-            return
+        else:
+            try:
+                User.objects.create_superuser(
+                    username=USERNAME,
+                    email=EMAIL,
+                    password=PASSWORD,
+                    first_name=FIRST_NAME,
+                    last_name=LAST_NAME,
+                    is_staff=IS_STAFF, 
+                )
+                self.stdout.write(self.style.SUCCESS(f'✅ Superusuario "{USERNAME}" creado exitosamente.'))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f'❌ Error al crear superusuario: {e}'))
 
-        try:
-            User.objects.create_superuser(
-                username=USERNAME,
-                email=EMAIL,
-                password=PASSWORD,
-                first_name=FIRST_NAME,
-                last_name=LAST_NAME,
-                is_staff=IS_STAFF, 
-            )
-            self.stdout.write(self.style.SUCCESS(f'✅ Superusuario "{USERNAME}" creado exitosamente.'))
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f'❌ Error al crear superusuario: {e}'))
+        # Lógica añadida para crear también un usuario común (no admin) si está en el .env
+        COM_USERNAME = os.environ.get('USER_USERNAME')
+        COM_EMAIL = os.environ.get('USER_EMAIL')
+        COM_PASSWORD = os.environ.get('USER_PASSWORD')
+
+        if COM_USERNAME and COM_EMAIL and COM_PASSWORD:
+            if User.objects.filter(username=COM_USERNAME).exists():
+                self.stdout.write(self.style.WARNING(f'⚠️ Usuario común "{COM_USERNAME}" ya existe.'))
+            else:
+                try:
+                    User.objects.create_user(
+                        username=COM_USERNAME,
+                        email=COM_EMAIL,
+                        password=COM_PASSWORD,
+                        first_name=os.environ.get('USER_FIRST_NAME', ''),
+                        last_name=os.environ.get('USER_LAST_NAME', ''),
+                    )
+                    self.stdout.write(self.style.SUCCESS(f'✅ Usuario común "{COM_USERNAME}" creado exitosamente.'))
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f'❌ Error al crear usuario común: {e}'))
