@@ -18,19 +18,20 @@ const iconVariants = {
 	editar: "icon-[tabler--edit]",
 	eliminar: "icon-[line-md--trash]",
 	alerta: "icon-[mingcute--alert-line]",
+	file: "icon-[pepicons-pop--file]",
 };
 
 export type IconVariants = keyof typeof iconVariants;
 
 type IconProps = {
-    className?: string;
-    variant?: IconVariants;
+	className?: string;
+	variant?: IconVariants;
 };
 
 export default function Icon({ className = "", variant = "none" }: IconProps) {
 
 
 	return (
-		<span className={`${className} ${iconVariants[variant]}`}/>
+		<span className={`${className} ${iconVariants[variant]}`} />
 	);
 }
