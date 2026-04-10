@@ -3,7 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from ..serializer import UsuarioSerializer, ChangePasswordSerializer
 from ..models import Usuario, Rol
 from ..filters import UsuarioFilter
-from ..definicionRoles import PREDEFINED_ROLE_NAMES
+from ..utils.definicion_roles import PREDEFINED_ROLE_NAMES
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
