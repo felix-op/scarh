@@ -16,9 +16,13 @@ const iconVariants = {
 	sol: "icon-[solar--sun-broken]",
 	dashboard: "icon-[mingcute--dashboard-line]",
 	editar: "icon-[tabler--edit]",
+	noEditar: "icon-[tabler--edit-off]",
 	eliminar: "icon-[line-md--trash]",
 	alerta: "icon-[mingcute--alert-line]",
 	file: "icon-[pepicons-pop--file]",
+	llave: "icon-[wpf--key-security]",
+	ver: "icon-[zondicons--view-show]",
+	ocultar: "icon-[zondicons--view-hide]",
 };
 
 export type IconVariants = keyof typeof iconVariants;
