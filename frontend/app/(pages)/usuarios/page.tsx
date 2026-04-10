@@ -5,12 +5,11 @@ import { useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import DataTable from "@componentes/tabla/DataTable";
 import { ActionConfig, ColumnConfig } from "@componentes/tabla/types";
-import ActionMenu from "@componentes/tabla/ActionMenu";
 import VentanaAgregrarUsuario from "./componentes/VentanaAgregarUsuario";
-import BotonVariante from "@componentes/botones/BotonVariante";
+import VentanaEditarUsuario from "./componentes/VentanaEditarUsuario";
+import VentanaEliminarUsuario from "./componentes/VentanaEliminarUsuario";
 import { UsuarioResponse } from "types/usuarios";
 import { useGetUsuarios } from "@servicios/api";
-import BotonIconoEditar from "@componentes/botones/BotonIconoEditar";
 import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 import usePaginadoBackend from "@hooks/usePaginadoBackend";
 import FiltrosContenedor from "@componentes/filtros/FiltrosContenedor";
@@ -19,6 +18,8 @@ import FiltroOpciones from "@componentes/filtros/FiltroOpciones";
 import { opcionesEstado } from "./constantes";
 import ChipEstadoUsuario from "@componentes/chips/ChipEstadoUsuario";
 import { useNotificar } from "@hooks/useNotificar";
+import MenuAcciones from "@componentes/menu/MenuAcciones";
+import Icon from "@componentes/icons/Icon";
 
 const queriesToInvalidate = ["useGetUsuarios"];
 
@@ -28,6 +29,7 @@ export default function UsersAdminPage() {
 	const [isOpenFiltros, setIsOpenFiltros] = useState(false);
 	const [search, setSearch] = useState("");
 	const [estado, setEstado] = useState("");
+	const [usuarioEditar, setUsuarioEditar] = useState<UsuarioResponse | null>(null);
 
 	const { data: usuarios, isLoading, isRefetching } = useGetUsuarios({
 		params: {
@@ -47,6 +49,28 @@ export default function UsersAdminPage() {
 	const handleOpenAdd = () => setIsAddOpen(true);
 	const handleCancelAdd = () => setIsAddOpen(false);
 
+	// --- Modal editar ---
+	const [isEditOpen, setIsEditOpen] = useState(false);
+	const handleOpenEdit = (usuario: UsuarioResponse) => {
+		setUsuarioEditar(usuario);
+		setIsEditOpen(true);
+	};
+	const handleCancelEdit = () => {
+		setIsEditOpen(false);
+		setUsuarioEditar(null);
+	};
+
+	// --- Modal eliminar ---
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+	const handleOpenDelete = (usuario: UsuarioResponse) => {
+		setUsuarioEditar(usuario);
+		setIsDeleteOpen(true);
+	};
+	const handleCancelDelete = () => {
+		setIsDeleteOpen(false);
+		setUsuarioEditar(null);
+	};
+
 	const handleOpenInfo = (message: VentanaAceptarOptions) => {
 		notificar({
 			titulo: message.title,
@@ -54,6 +78,10 @@ export default function UsersAdminPage() {
 			variante: message.variant,
 			desaparecerEnMS: message.variant === "error" || message.variant === "alerta" ? false : 2500,
 		});
+	};
+
+	const handlePermissions = (usuario: UsuarioResponse) => {
+		router.push(`/usuarios/permisos/${usuario.id}`);
 	};
 
 	const handleViewUser = (usuario: UsuarioResponse) => {
@@ -81,24 +109,45 @@ export default function UsersAdminPage() {
 	];
 
 	const actionConfig: ActionConfig<UsuarioResponse> = {
-		typeAction: "fila",
-		actionColumns: (row) => (
-			<ActionMenu>
-				<BotonVariante
-					variant="editar"
-					className="hidden lg:flex"
-					onClick={() => {
-						handleViewUser(row);
-					}}
-				/>
-				<BotonIconoEditar
-					className="lg:hidden"
-					onClick={() => {
-						handleViewUser(row);
-					}}
-				/>
-			</ActionMenu>
-		),
+		typeAction: "menu",
+		options: [
+			{
+				label: (
+					<p className="flex items-center gap-2">
+						<Icon variant="documento" className="text-2xl text-principal" />
+						Detalles
+					</p>
+				),
+				onClick: handleViewUser,
+			},
+			{
+				label: (
+					<p className="flex items-center gap-2">
+						<Icon variant="llave" className="text-2xl text-advertencia" />
+						Permisos
+					</p>
+				),
+				onClick: handlePermissions,
+			},
+			{
+				label: (
+					<p className="flex items-center gap-2">
+						<Icon variant="editar" className="text-2xl text-exito" />
+						Editar
+					</p>
+				),
+				onClick: (usuario) => handleOpenEdit(usuario),
+			},
+			{
+				label: (
+					<p className="flex items-center gap-2">
+						<Icon variant="eliminar" className="text-2xl text-error" />
+						Eliminar
+					</p>
+				),
+				onClick: (usuario) => handleOpenDelete(usuario),
+			},
+		]
 	};
 
 	const paginationConfig = usePaginadoBackend({
@@ -169,6 +218,21 @@ export default function UsersAdminPage() {
 				usuarios={[]}
 				handleMessage={handleOpenInfo}
 				queriesToInvalidate={queriesToInvalidate}
+			/>
+			<VentanaEditarUsuario
+				open={isEditOpen}
+				onClose={handleCancelEdit}
+				usuario={usuarioEditar}
+				queriesToInvalidate={queriesToInvalidate}
+				handleMessage={handleOpenInfo}
+			/>
+			<VentanaEliminarUsuario
+				open={isDeleteOpen}
+				onClose={handleCancelDelete}
+				handleMessage={handleOpenInfo}
+				queriesToInvalidate={queriesToInvalidate}
+				onSuccess={handleCancelDelete}
+				usuario={usuarioEditar}
 			/>
 		</PaginaBase>
 	);
