@@ -1,3 +1,5 @@
+"use client";
+
 import { usePutUsuarioRoles } from "@servicios/api/usuarios";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { UsuarioResponse } from "types/usuarios";
@@ -40,7 +42,8 @@ export default function useRoles({ id, usuario }: UseRolesProps) {
                     mensaje: "Los permisos del usuario han sido actualizados correctamente.",
                     variante: "exito",
                     desaparecerEnMS: 5000,
-                })
+                });
+                setIsEdited(false);
             },
             onError: (error) => {
                 notificar({
@@ -91,7 +94,7 @@ export default function useRoles({ id, usuario }: UseRolesProps) {
                 roles
             },
         })
-    }, [])
+    }, [roles])
 
     return {
         permisos,
