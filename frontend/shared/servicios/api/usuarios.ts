@@ -1,4 +1,4 @@
-import { UsuarioPatchRequest, UsuarioPostRequest, UsuarioPutRequest, UsuarioResponse } from "types/usuarios";
+import { UsuarioPatchRequest, UsuarioPostRequest, UsuarioPutRequest, UsuarioResponse, UsuarioRolesPutRequest } from "types/usuarios";
 import { MutationConfig, Paginado, ParamsBase, UseGetConfig } from "./types";
 import { useGet, useDelete, usePatch, usePost, usePut } from "./queryHooks";
 
@@ -81,6 +81,30 @@ export function usePutUsuario({ params, configuracion }: UsePutUsuarioOptions) {
 
 	return usePut({
 		url: `${NEXT_PROXY_URL}/usuarios/{id}`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+type UsePutUsuarioRolesOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: MutationConfig<
+		UsuarioRolesPutRequest,
+		UsuarioResponse,
+		ParamsBase
+	>
+};
+
+export function usePutUsuarioRoles({ params, configuracion }: UsePutUsuarioRolesOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+
+	return usePut({
+		url: `${NEXT_PROXY_URL}/usuarios/{id}/roles`,
 		configuracion: configuracion ?? defaultConfig,
 		params: params ?? defaultParams,
 	});

@@ -3,7 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from ..models import Medicion
 from ..serializer import MedicionSerializer
-from ..permissions import IsAutomaticOrManual
+from ..permissions import IsAutomaticOrManual, MedicionesPermissionWithAPIKey
 from ..filters import MedicionFilter
 from ..utils.audit import registrar_accion_auditoria
 from ..utils.estado_limnigrafo import calcular_estado_limnigrafo
@@ -22,7 +22,7 @@ class MedicionViewSet(
     queryset = Medicion.objects.all().order_by('-fecha_hora')
     serializer_class = MedicionSerializer
     pagination_class = MedicionPagination
-    permission_classes = [IsAutomaticOrManual] 
+    permission_classes = [MedicionesPermissionWithAPIKey] 
     
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = MedicionFilter

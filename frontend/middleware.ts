@@ -1,17 +1,48 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
+const PERMISSION_MAP: Record<string, string> = {
+	"/usuarios": "usuarios-visualizar",
+	"/limnigrafos": "limnigrafos-visualizar",
+	"/mediciones": "mediciones-visualizar",
+	"/historial": "historial-visualizar",
+	"/mapa": "mapa-visualizar",
+	"/estadisticas": "estadisticas-visualizar",
+	"/ubicaciones": "ubicaciones-visualizar",
+};
+
 export default withAuth(
 	function middleware(req) {
 		const token = req.nextauth.token;
-		
+
 		if (token?.error === "RefreshAccessTokenError") {
 			return NextResponse.redirect(new URL("/auth/login", req.url));
 		}
+
+		const { pathname } = req.nextUrl;
+		const roles = token?.roles ?? [];
+
+		// Buscamos si la ruta actual requiere algún permiso específico
+		// Comprobamos si el pathname coincide exactamente o es una subruta
+		const restrictedRoute = Object.keys(PERMISSION_MAP).find(
+			(route) => pathname === route || pathname.startsWith(`${route}/`)
+		);
+
+		if (restrictedRoute) {
+			const requiredPermission = PERMISSION_MAP[restrictedRoute];
+			const hasPermission = roles.includes(requiredPermission) || roles.includes("administracion");
+
+			if (!hasPermission) {
+				// Si no tiene permiso, lanzamos un 404 (mediante rewrite) para ocultar la página
+				return NextResponse.rewrite(new URL("/404", req.url));
+			}
+		}
+
+		return NextResponse.next();
 	},
 	{
 		callbacks: {
-			authorized: ({ token }) =>!!token,
+			authorized: ({ token }) => !!token,
 		},
 		pages: {
 			signIn: "/auth/login",

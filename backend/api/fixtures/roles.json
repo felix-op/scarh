@@ -1,0 +1,16 @@
+[
+{"model": "api.rol", "pk": 1, "fields": {"nombre": "limnigrafos-visualizar", "descripcion": "Permite visualizar limnigrafos."}},
+{"model": "api.rol", "pk": 2, "fields": {"nombre": "limnigrafos-editar", "descripcion": "Permite crear, editar y eliminar limnigrafos."}},
+{"model": "api.rol", "pk": 3, "fields": {"nombre": "mediciones-visualizar", "descripcion": "Permite visualizar mediciones."}},
+{"model": "api.rol", "pk": 4, "fields": {"nombre": "mediciones-editar", "descripcion": "Permite crear mediciones manuales."}},
+{"model": "api.rol", "pk": 5, "fields": {"nombre": "usuarios-visualizar", "descripcion": "Permite visualizar usuarios."}},
+{"model": "api.rol", "pk": 6, "fields": {"nombre": "usuarios-editar", "descripcion": "Permite crear, editar y eliminar usuarios."}},
+{"model": "api.rol", "pk": 7, "fields": {"nombre": "historial-visualizar", "descripcion": "Permite visualizar historial de acciones."}},
+{"model": "api.rol", "pk": 8, "fields": {"nombre": "ubicaciones-visualizar", "descripcion": "Permite visualizar ubicaciones."}},
+{"model": "api.rol", "pk": 9, "fields": {"nombre": "ubicaciones-editar", "descripcion": "Permite crear, editar y eliminar ubicaciones."}},
+{"model": "api.rol", "pk": 10, "fields": {"nombre": "mapa-visualizar", "descripcion": "Permite visualizar mapa."}},
+{"model": "api.rol", "pk": 11, "fields": {"nombre": "mapa-editar", "descripcion": "Permite editar configuraciones relacionadas al mapa."}},
+{"model": "api.rol", "pk": 12, "fields": {"nombre": "estadisticas-visualizar", "descripcion": "Permite consultar estadisticas no persistidas."}},
+{"model": "api.rol", "pk": 13, "fields": {"nombre": "administracion", "descripcion": "Permite acceso total a todas las funcionalidades de administración (incluye todos los permisos anteriores)."}}
+]
+

@@ -25,3 +25,17 @@ export type TFormCrearUsuario = {
 export type TCrearUsuario = (data: TFormCrearUsuario) => void;
 
 export type TError = AxiosError<BackendError> | null;
+
+export type TRoleType = "ver" | "editar";
+
+export type TRole = {
+	label: string;
+	value: string;
+	help: string;
+	type: TRoleType;
+};
+
+export type TEntidadRoles = {
+	entidad: string;
+	roles: TRole[];
+};

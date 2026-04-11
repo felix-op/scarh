@@ -64,7 +64,7 @@ export default function UsuarioDetallePage() {
 			variante: newMessage.variant,
 			desaparecerEnMS:
 				newMessage.variant === "error" ||
-				newMessage.variant === "alerta"
+					newMessage.variant === "alerta"
 					? false
 					: 2500,
 		});

@@ -6,6 +6,8 @@ import Selector from "@componentes/campos/Selector";
 import BotonAnterior from "@componentes/botones/BotonAnterior";
 import BotonSiguiente from "@componentes/botones/BotonSiguiente";
 import { ReactNode } from "react";
+import MenuAcciones from "@componentes/menu/MenuAcciones";
+import DataTableRow from "./DataTableRow";
 
 type DataTableProps<T> = {
 	noResults?: boolean;
@@ -46,17 +48,6 @@ export default function DataTable<T>({
 		if (!actionConfig || !(actionConfig.typeAction === "funcion") || !(actionConfig?.actionFn)) return;
 		actionConfig.actionFn(row);
 	}
-
-	const getRowClassName = (row: T, index: number) => {
-		const customRowClassName = typeof styles?.rowClassName === "function"
-			? styles.rowClassName(row, index)
-			: styles?.rowClassName ?? "";
-		const baseClassName = enableRowAnimation
-			? "border dark:border-white/5 hover:bg-table-hover opacity-0 animate-fade-in-up"
-			: "border dark:border-white/5 hover:bg-table-hover";
-
-		return `${baseClassName} ${customRowClassName}`.trim();
-	};
 
 	return (
 		<div className={`pb-4 ${styles?.rootClassName ?? ""}`.trim()}>
@@ -113,8 +104,8 @@ export default function DataTable<T>({
 									}
 									return <th key={column.id}>{column.header}</th>
 								})}
-								{actionConfig && actionConfig.typeAction === "fila" && (
-									<th className={`py-4 px-4 text-foreground-title ${styles?.headerCellClassName ?? ""}`.trim()}>Acciones</th>
+								{actionConfig && (
+									<th className={`py-4 px-4 text-foreground-title ${styles?.headerCellClassName ?? ""} ${actionConfig.typeAction === "menu" ? "text-center" : ""}`.trim()}>Acciones</th>
 								)}
 							</tr>
 						</thead>
@@ -143,13 +134,15 @@ export default function DataTable<T>({
 										</td>
 									</tr>
 								) : data.map((row, index) => (
-									<tr
+									<DataTableRow
 										key={String(row[rowIdKey])}
-										className={getRowClassName(row, index)}
-										style={{
-											animationDelay: enableRowAnimation ? `${index * 0.05}s` : undefined,
-										}}
-										onClick={() => handleAction(row)}
+										row={row}
+										index={index}
+										handleAction={handleAction}
+										hover={!styles?.hiddenRowHover}
+										border
+										animation={enableRowAnimation}
+										className={styles?.rowClassName}
 									>
 										{columns.map((column) => {
 											const key = column?.accessorKey || (column.id as keyof T);
@@ -164,13 +157,26 @@ export default function DataTable<T>({
 												</td>
 											);
 										})}
-										{
-											actionConfig &&
-											actionConfig.typeAction === "fila" &&
-											actionConfig?.actionColumns &&
-											<td>{actionConfig.actionColumns(row)}</td>
-										}
-									</tr>
+										{actionConfig && (
+											<td>
+												{(actionConfig.typeAction === "menu") ? (
+													<div className="flex w-full justify-center">
+														<MenuAcciones
+															opciones={actionConfig?.options?.map(
+																(option, index) => ({
+																	...option,
+																	value: `ActionMenu-${String(row[rowIdKey])}-${index}`,
+																	onClick: () => option.onClick(row)
+																})
+															) || []}
+														/>
+													</div>
+												) : (actionConfig.typeAction === "fila" && actionConfig?.actionColumns) && (
+													actionConfig.actionColumns(row)
+												)}
+											</td>
+										)}
+									</DataTableRow>
 								))}
 						</tbody>
 

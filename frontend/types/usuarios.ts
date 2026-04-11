@@ -8,6 +8,7 @@ export type UsuarioResponse = {
     first_name: string,
     last_name: string,
     estado: boolean,
+    roles: string[],
 };
 
 export type UsuarioPostRequest = {
@@ -28,6 +29,10 @@ export type UsuarioPutRequest = {
     last_name: string,
     estado: boolean,
 };
+
+export type UsuarioRolesPutRequest = {
+    roles: string[];
+}
 
 export type UsuarioPatchRequest = {
     nombre_usuario?: string,

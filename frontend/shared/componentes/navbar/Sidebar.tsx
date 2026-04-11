@@ -5,31 +5,51 @@ import Divider from "./Divider";
 import usePersistedState from "@hooks/usePersistedState";
 import useIsMounted from "@hooks/useIsMounted";
 import ProfileMenu from "./ProfileMenu";
+import { useTieneRol } from "@hooks/useTieneRol";
 
 type SidebarItem = {
 	label: string;
 	icono: IconVariants;
-	href: string
+	href: string;
+	permiso?: string;
 };
 
 const rutas: Record<string, SidebarItem[]> = {
 	general: [
 		{ label: "Dashboard", icono: "dashboard", href: "/" },
-		{ label: "Mapa", icono: "mapa", href: "/mapa" },
-		{ label: "Limnigrafos", icono: "chip", href: "/limnigrafos" },
-		{ label: "Mediciones", icono: "documento", href: "/mediciones" },
-		{ label: "Estadisticas", icono: "funcion", href: "/estadisticas" },
+		{ label: "Mapa", icono: "mapa", href: "/mapa", permiso: "mapa-visualizar" },
+		{ label: "Limnigrafos", icono: "chip", href: "/limnigrafos", permiso: "limnigrafos-visualizar" },
+		{ label: "Mediciones", icono: "documento", href: "/mediciones", permiso: "mediciones-visualizar" },
+		{ label: "Estadisticas", icono: "funcion", href: "/estadisticas", permiso: "estadisticas-visualizar" },
 	],
 	admin: [
-		{ label: "Usuarios", icono: "user1", href: "/usuarios" },
-		{ label: "Historial", icono: "historial", href: "/historial" },
-		{ label: "Documentacion", icono: "documentacion", href: "/documentacion" },
+		{ label: "Usuarios", icono: "user1", href: "/usuarios", permiso: "usuarios-visualizar" },
+		{ label: "Historial", icono: "historial", href: "/historial", permiso: "historial-visualizar" },
+		{ label: "Documentacion", icono: "documentacion", href: "/documentacion", permiso: "administracion" },
 	],
 };
 
+function NavItem({ item, esAdmin = false }: { item: SidebarItem, esAdmin?: boolean }) {
+	const tienePermiso = useTieneRol(item.permiso ?? "");
+
+	// Si el item requiere permiso y el usuario no lo tiene ni es admin, se oculta.
+	if (!esAdmin && item.permiso && !tienePermiso) {
+		return null;
+	}
+
+	return (
+		<SidebarButton
+			label={item.label}
+			icono={item.icono}
+			href={item.href}
+		/>
+	);
+}
+
 export default function Sidebar() {
+	const esAdmin = useTieneRol("administracion");
 	const mounted = useIsMounted();
-	
+
 	const [isCollapsed, setIsCollapsed] = usePersistedState("scarh-nav-collapsed", false);
 
 	const toggleSidebar = () => {
@@ -80,13 +100,8 @@ export default function Sidebar() {
 				</div>
 				<Divider direccion="horizontal" />
 				<div className="flex flex-col gap-2 w-full">
-					{rutas.general.map(({ label, icono, href }) => (
-						<SidebarButton
-							key={label}
-							label={label}
-							icono={icono}
-							href={href}
-						/>
+					{rutas.general.map((item) => (
+						<NavItem key={item.label} item={item} esAdmin={esAdmin} />
 					))}
 				</div>
 				<div className="flex justify-center w-full">
@@ -98,13 +113,8 @@ export default function Sidebar() {
 				</div>
 				<Divider direccion="horizontal" />
 				<div className="flex flex-col gap-2 w-full">
-					{rutas.admin.map(({ label, icono, href }) => (
-						<SidebarButton
-							key={label}
-							label={label}
-							icono={icono}
-							href={href}
-						/>
+					{rutas.admin.map((item) => (
+						<NavItem key={item.label} item={item} esAdmin={esAdmin} />
 					))}
 				</div>
 			</div>

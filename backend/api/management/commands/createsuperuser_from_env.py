@@ -1,6 +1,7 @@
 import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+from api.models.rol import Rol
 
 class Command(BaseCommand):
     help = "Crea un superusuario basado en variables de entorno (ADMIN_*) si no existe."
@@ -24,7 +25,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f'⚠️ Superusuario "{USERNAME}" ya existe. Omitiendo creación.'))
         else:
             try:
-                User.objects.create_superuser(
+                user = User.objects.create_superuser(
                     username=USERNAME,
                     email=EMAIL,
                     password=PASSWORD,
@@ -32,6 +33,15 @@ class Command(BaseCommand):
                     last_name=LAST_NAME,
                     is_staff=IS_STAFF, 
                 )
+
+                # Asignar rol de administración
+                
+                rol_admin, _ = Rol.objects.get_or_create(
+                    nombre="administracion",
+                    defaults={"descripcion": "Permite acceso total a todas las funcionalidades de administración"}
+                )
+                user.roles.add(rol_admin)
+
                 self.stdout.write(self.style.SUCCESS(f'✅ Superusuario "{USERNAME}" creado exitosamente.'))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f'❌ Error al crear superusuario: {e}'))

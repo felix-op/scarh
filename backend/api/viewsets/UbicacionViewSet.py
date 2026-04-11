@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from ..models import Ubicacion
+from ..permissions import UbicacionesPermission
 from ..serializer import UbicacionSerializer, UbicacionOutputSerializer
 from drf_spectacular.utils import extend_schema
 
@@ -8,4 +9,4 @@ from drf_spectacular.utils import extend_schema
 class UbicacionViewSet(viewsets.ModelViewSet):
     queryset = Ubicacion.objects.all()
     serializer_class = UbicacionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, UbicacionesPermission]
