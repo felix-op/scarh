@@ -182,7 +182,6 @@ export default function SeccionHistorialMediciones({
 			</div>
 
 			<FiltrosContenedor>
-				<h4>Filtros</h4>
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
 					<div className="flex flex-col gap-2">
 						<Label
