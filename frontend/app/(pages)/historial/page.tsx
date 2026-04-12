@@ -291,9 +291,6 @@ export default function HistorialPage() {
 									Historial de acciones
 								</p>
 							</div>
-							<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569] dark:bg-[#0F172A] dark:text-[#94A3B8]">
-								{isLoadingHistorial ? "Cargando..." : `${totalRecords} registros`}
-							</span>
 						</div>
 
 						{historialError ? (
@@ -315,18 +312,6 @@ export default function HistorialPage() {
 									No hay acciones registradas con los filtros seleccionados.
 								</span>
 							}
-							styles={{
-								topBarClassName: "justify-end border-b border-[#EAEAEA] p-4 dark:border-[#334155]",
-								cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)] dark:border-[#334155] dark:bg-[#0F172A] dark:shadow-[0px_10px_20px_rgba(0,0,0,0.45)]",
-								scrollerClassName: "overflow-x-auto",
-								tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F] dark:text-[#CBD5E1]",
-								theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none dark:bg-[#111923] dark:text-[#94A3B8]",
-								headerCellClassName: "px-4 py-3",
-								tbodyClassName: "divide-y divide-[#EAEAEA] dark:divide-[#334155]",
-								rowClassName: "border-0 hover:bg-[#F9FBFF] dark:hover:bg-[#1E293B]",
-								cellClassName: "align-middle",
-								emptyCellClassName: "px-4 py-8",
-							}}
 						/>
 
 						<div className="flex flex-wrap items-center justify-between gap-3 pt-2">

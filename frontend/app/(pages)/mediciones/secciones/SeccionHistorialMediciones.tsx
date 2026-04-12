@@ -1,6 +1,11 @@
 "use client";
 
 import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
+import BotonVariante from "@componentes/botones/BotonVariante";
+import TextField from "@componentes/campos/TextField";
+import Selector from "@componentes/campos/Selector";
+import FiltrosContenedor from "@componentes/filtros/FiltrosContenedor";
+import Label from "@componentes/formularios/Label";
 import DataTable from "@componentes/tabla/DataTable";
 import { ColumnConfig, PaginationConfig } from "@componentes/tabla/types";
 import { LimnigrafoResponse } from "types/limnigrafos";
@@ -174,109 +179,108 @@ export default function SeccionHistorialMediciones({
 		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 			<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
 				<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Historial completo</p>
-				<span className="rounded-full bg-[#F1F5F9] px-4 py-1 text-[13px] font-semibold text-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]">
-					{isLoading ? "Cargando..." : `${serverCount} registros`}
-				</span>
 			</div>
 
-			<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 dark:border-[#334155] dark:bg-[#111923]">
+			<FiltrosContenedor>
+				<h4>Filtros</h4>
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-					<div className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
-						<label htmlFor="mediciones-limnigrafos-historial">
-							Limnígrafos ({filters.limnigrafo.length})
-						</label>
+					<div className="flex flex-col gap-2">
+						<Label
+							name="mediciones-limnigrafos-historial"
+							text={`Limnígrafos (${filters.limnigrafo.length})`}
+						/>
 						<MultiSelect
 							id="mediciones-limnigrafos-historial"
 							options={limnigrafoOptions}
 							selectedValues={filters.limnigrafo}
 							onChange={onLimnigrafoChange}
 							placeholder="Todos"
-							className="h-[50px] text-[15px]"
+							className="text-[15px]"
 							emptyText="No hay limnígrafos disponibles"
 							maxVisibleLabels={2}
 						/>
 					</div>
 
-					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
-						Fuente
-						<select
+					<div className="flex flex-col gap-2">
+						<Label name="mediciones-fuente-historial" text="Fuente" />
+						<Selector
+							id="mediciones-fuente-historial"
+							name="mediciones-fuente-historial"
 							value={filters.fuente}
 							onChange={(event) => onFuenteChange(event.target.value as FuenteFiltro)}
-							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 						>
 							<option value="">Todas</option>
 							<option value="manual">Manual</option>
 							<option value="automatico">Automática</option>
 							<option value="import_csv">Importación CSV</option>
 							<option value="import_json">Importación JSON</option>
-						</select>
-					</label>
+						</Selector>
+					</div>
 
-					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
-						Desde
-						<input
+					<div className="flex flex-col gap-2">
+						<Label name="mediciones-desde-historial" text="Desde" />
+						<TextField
+							id="mediciones-desde-historial"
+							name="mediciones-desde-historial"
 							type="datetime-local"
 							value={filters.desde}
 							onChange={(event) => onDesdeChange(event.target.value)}
-							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 						/>
-					</label>
+					</div>
 
-					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
-						Hasta
-						<input
+					<div className="flex flex-col gap-2">
+						<Label name="mediciones-hasta-historial" text="Hasta" />
+						<TextField
+							id="mediciones-hasta-historial"
+							name="mediciones-hasta-historial"
 							type="datetime-local"
 							value={filters.hasta}
 							onChange={(event) => onHastaChange(event.target.value)}
-							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 						/>
-					</label>
+					</div>
 
-					<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
-						Buscar
-						<input
+					<div className="flex flex-col gap-2">
+						<Label name="mediciones-busqueda-historial" text="Buscar" />
+						<TextField
+							id="mediciones-busqueda-historial"
+							name="mediciones-busqueda-historial"
 							type="text"
 							value={filters.busqueda}
 							onChange={(event) => onBusquedaChange(event.target.value)}
 							placeholder="ID, limnígrafo o valor"
-							className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 						/>
-					</label>
+					</div>
 				</div>
 
 				<div className="mt-4 flex flex-wrap gap-3">
-					<button
-						type="button"
+					<BotonVariante
+						variant="guardar"
 						onClick={onApplyFilters}
-						className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)] dark:bg-[#0369A1] dark:shadow-[0px_4px_12px_rgba(2,132,199,0.4)]"
 					>
-						Aplicar filtros de historial
-					</button>
-					<button
-						type="button"
+						<span>Aplicar filtros</span>
+					</BotonVariante>
+					<BotonVariante
+						variant="default"
 						onClick={onClearFilters}
-						className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]"
 					>
-						Limpiar
-					</button>
-					<button
-						type="button"
+						<span>Limpiar</span>
+					</BotonVariante>
+					<BotonVariante
+						variant="default"
 						onClick={() => onExport("csv")}
 						disabled={isExporting}
-						className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50 dark:border-[#2563EB] dark:bg-[#0B2A43] dark:text-[#93C5FD]"
 					>
-						Exportar CSV
-					</button>
-					<button
-						type="button"
+						<span>Exportar CSV</span>
+					</BotonVariante>
+					<BotonVariante
+						variant="default"
 						onClick={() => onExport("json")}
 						disabled={isExporting}
-						className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50 dark:border-[#2563EB] dark:bg-[#0B2A43] dark:text-[#93C5FD]"
 					>
-						Exportar JSON
-					</button>
+						<span>Exportar JSON</span>
+					</BotonVariante>
 				</div>
-			</div>
+			</FiltrosContenedor>
 
 			{actionError ? (
 				<p className="mb-4 mt-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
@@ -305,18 +309,6 @@ export default function SeccionHistorialMediciones({
 				paginationConfig={paginationConfig}
 				showBottomPagination
 				emptyStateContent={<span className="text-[#6B7280] dark:text-[#94A3B8]">No hay mediciones para los filtros seleccionados.</span>}
-				styles={{
-					cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)] dark:border-[#334155] dark:bg-[#0F172A] dark:shadow-[0px_10px_20px_rgba(0,0,0,0.45)]",
-					scrollerClassName: "overflow-x-auto",
-					topBarClassName: "justify-end",
-					tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F] dark:text-[#CBD5E1]",
-					theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none dark:bg-[#111923] dark:text-[#94A3B8]",
-					headerCellClassName: "px-4 py-3",
-					tbodyClassName: "divide-y divide-[#EAEAEA] dark:divide-[#334155]",
-					rowClassName: "border-0 hover:bg-[#F9FBFF] dark:hover:bg-[#1E293B]",
-					cellClassName: "align-middle",
-					emptyCellClassName: "px-4 py-8",
-				}}
 			/>
 
 			<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
