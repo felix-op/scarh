@@ -21,6 +21,7 @@ type DataTableProps<T> = {
 	actionConfig?: ActionConfig<T>;
 	paginationConfig?: PaginationConfig;
 	showTopBar?: boolean;
+	showBottomPagination?: boolean;
 	enableRowAnimation?: boolean;
 	loadingRows?: number;
 	emptyStateContent?: ReactNode;
@@ -39,6 +40,7 @@ export default function DataTable<T>({
 	minWidth = 300,
 	rowIdKey,
 	showTopBar = true,
+	showBottomPagination = false,
 	enableRowAnimation = true,
 	loadingRows = 5,
 	emptyStateContent,
@@ -48,6 +50,43 @@ export default function DataTable<T>({
 		if (!actionConfig || !(actionConfig.typeAction === "funcion") || !(actionConfig?.actionFn)) return;
 		actionConfig.actionFn(row);
 	}
+
+	const renderPaginationControls = (position: "top" | "bottom") => {
+		if (!paginationConfig) return null;
+
+		return (
+			<div className="flex gap-2 items-center self-end sm:self-auto">
+				<div>
+					{paginationConfig.page} <span className="text-foreground">
+						de {paginationConfig.maxPage}
+					</span>
+				</div>
+				<BotonAnterior
+					onClick={() => paginationConfig.prevPage(paginationConfig.page)}
+					disabled={paginationConfig.page === 1}
+				/>
+				<BotonSiguiente
+					onClick={() => paginationConfig.nextPage(paginationConfig.page)}
+					disabled={paginationConfig.page === paginationConfig.maxPage}
+				/>
+				<Selector
+					name={`data-table-page-length-${position}`}
+					value={String(paginationConfig.lengthPages)}
+					onChange={(event) => paginationConfig.changeLength(Number(event.target.value))}
+					style={{ width: "80px" }}
+				>
+					{paginationConfig.lengthOptions.map((option) => (
+						<option
+							key={`data-table-page-length-${position}-option-${option}`}
+							value={String(option)}
+						>
+							{option}
+						</option>
+					))}
+				</Selector>
+			</div>
+		);
+	};
 
 	return (
 		<div className={`pb-4 ${styles?.rootClassName ?? ""}`.trim()}>
@@ -61,38 +100,7 @@ export default function DataTable<T>({
 								{(onAdd) && (<BotonVariante variant="agregar" onClick={onAdd} />)}
 								{(onFilter) && (<BotonVariante variant="filtro" onClick={onFilter} />)}
 							</div>
-							{paginationConfig && (
-								<div className="flex gap-2 items-center self-end sm:self-auto">
-									<div>
-										{paginationConfig.page} <span className="text-foreground">
-											de {paginationConfig.maxPage}
-										</span>
-									</div>
-									<BotonAnterior
-										onClick={() => paginationConfig.prevPage(paginationConfig.page)}
-										disabled={paginationConfig.page === 1}
-									/>
-									<BotonSiguiente
-										onClick={() => paginationConfig.nextPage(paginationConfig.page)}
-										disabled={paginationConfig.page === paginationConfig.maxPage}
-									/>
-									<Selector
-										name="data-table-page-length"
-										value={String(paginationConfig.lengthPages)}
-										onChange={(event) => paginationConfig.changeLength(Number(event.target.value))}
-										style={{ width: "80px" }}
-									>
-										{paginationConfig.lengthOptions.map((option) => (
-											<option
-												key={`data-table-page-length-option-${option}`}
-												value={String(option)}
-											>
-												{option}
-											</option>
-										))}
-									</Selector>
-								</div>
-							)}
+							{renderPaginationControls("top")}
 						</div>
 					)}
 					<table className={`w-full border-collapse ${styles?.tableClassName ?? ""}`.trim()} style={{ minWidth }}>
@@ -182,6 +190,13 @@ export default function DataTable<T>({
 
 					</table>
 				</div>
+				{showBottomPagination && paginationConfig && (
+					<div
+						className={`flex justify-end p-4 border-t dark:border-white/5 ${styles?.topBarClassName ?? ""}`.trim()}
+					>
+						{renderPaginationControls("bottom")}
+					</div>
+				)}
 			</div>
 		</div>
 	)

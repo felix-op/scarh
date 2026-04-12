@@ -2,8 +2,8 @@
 
 import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
 import DataTable from "@componentes/tabla/DataTable";
-import { ColumnConfig } from "@componentes/tabla/types";
-import { LimnigrafoResponse } from "@servicios/api/django.api";
+import { ColumnConfig, PaginationConfig } from "@componentes/tabla/types";
+import { LimnigrafoResponse } from "types/limnigrafos";
 import { FuenteFiltro, HistorialFilters, MedicionRow } from "./types";
 
 function getFuenteChip(fuente: string): { label: string; className: string } {
@@ -151,6 +151,24 @@ export default function SeccionHistorialMediciones({
 		value: String(limnigrafo.id),
 		label: limnigrafo.codigo,
 	}));
+	const paginationConfig: PaginationConfig = {
+		page: currentPage,
+		maxPage: totalPages,
+		prevPage: () => {
+			if (isFetching) return;
+			onPrevPage();
+		},
+		nextPage: () => {
+			if (isFetching) return;
+			onNextPage();
+		},
+		lengthPages: pageSize,
+		lengthOptions: pageSizeOptions,
+		changeLength: (value) => {
+			if (isFetching) return;
+			onPageSizeChange(value);
+		},
+	};
 
 	return (
 		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
@@ -277,36 +295,20 @@ export default function SeccionHistorialMediciones({
 				</p>
 			) : null}
 
-			<div className="mb-4 flex justify-end">
-				<label className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#475569] dark:text-[#94A3B8]">
-					<span>Filas por página</span>
-					<select
-						value={String(pageSize)}
-						onChange={(event) => onPageSizeChange(Number.parseInt(event.target.value, 10))}
-						disabled={isFetching}
-						className="h-9 rounded-xl border border-[#CBD5E1] bg-white px-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] disabled:opacity-60 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1] dark:focus:border-[#38BDF8]"
-					>
-						{pageSizeOptions.map((option) => (
-							<option key={option} value={option}>
-								{option}
-							</option>
-						))}
-					</select>
-				</label>
-			</div>
-
 			<DataTable
 				data={rows}
 				columns={tableColumns}
 				rowIdKey="id"
-				showTopBar={false}
 				enableRowAnimation={false}
 				loadingRows={8}
 				isLoading={isLoading}
+				paginationConfig={paginationConfig}
+				showBottomPagination
 				emptyStateContent={<span className="text-[#6B7280] dark:text-[#94A3B8]">No hay mediciones para los filtros seleccionados.</span>}
 				styles={{
 					cardClassName: "rounded-[20px] border-[#E5E7EB] bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)] dark:border-[#334155] dark:bg-[#0F172A] dark:shadow-[0px_10px_20px_rgba(0,0,0,0.45)]",
 					scrollerClassName: "overflow-x-auto",
+					topBarClassName: "justify-end",
 					tableClassName: "min-w-full text-left text-[14px] text-[#2F2F2F] dark:text-[#CBD5E1]",
 					theadClassName: "bg-[#F7F9FB] text-[13px] uppercase tracking-wide text-[#6B6B6B] border-none dark:bg-[#111923] dark:text-[#94A3B8]",
 					headerCellClassName: "px-4 py-3",
@@ -322,24 +324,6 @@ export default function SeccionHistorialMediciones({
 					Mostrando {startRow}-{endRow} de {serverCount}. Página {currentPage} de {totalPages}
 					{hasBusqueda ? ` (coincidencias en página: ${rows.length})` : ""}
 				</p>
-				<div className="flex gap-2">
-					<button
-						type="button"
-						onClick={onPrevPage}
-						disabled={currentPage <= 1 || isFetching}
-						className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]"
-					>
-						Anterior
-					</button>
-					<button
-						type="button"
-						onClick={onNextPage}
-						disabled={currentPage >= totalPages || isFetching}
-						className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]"
-					>
-						Siguiente
-					</button>
-				</div>
 			</div>
 		</section>
 	);
