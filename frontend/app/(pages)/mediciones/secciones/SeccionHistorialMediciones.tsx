@@ -11,6 +11,8 @@ import { ColumnConfig, PaginationConfig } from "@componentes/tabla/types";
 import { LimnigrafoResponse } from "types/limnigrafos";
 import { FuenteFiltro, HistorialFilters, MedicionRow } from "./types";
 
+const ALL_LIMNIGRAFOS_VALUE = "__all__";
+
 function getFuenteChip(fuente: string): { label: string; className: string } {
 	if (fuente === "manual") {
 		return {
@@ -152,10 +154,16 @@ export default function SeccionHistorialMediciones({
 	actionError,
 	actionMessage,
 }: SeccionHistorialMedicionesProps) {
-	const limnigrafoOptions: MultiSelectOption[] = limnigrafos.map((limnigrafo) => ({
-		value: String(limnigrafo.id),
-		label: limnigrafo.codigo,
-	}));
+	const limnigrafoOptions: MultiSelectOption[] = [
+		{
+			value: ALL_LIMNIGRAFOS_VALUE,
+			label: "Todos",
+		},
+		...limnigrafos.map((limnigrafo) => ({
+			value: String(limnigrafo.id),
+			label: limnigrafo.codigo,
+		})),
+	];
 	const paginationConfig: PaginationConfig = {
 		page: currentPage,
 		maxPage: totalPages,
@@ -192,7 +200,13 @@ export default function SeccionHistorialMediciones({
 							id="mediciones-limnigrafos-historial"
 							options={limnigrafoOptions}
 							selectedValues={filters.limnigrafo}
-							onChange={onLimnigrafoChange}
+							onChange={(values) => {
+								if (values.includes(ALL_LIMNIGRAFOS_VALUE)) {
+									onLimnigrafoChange([]);
+									return;
+								}
+								onLimnigrafoChange(values);
+							}}
 							placeholder="Todos"
 							className="text-[15px]"
 							emptyText="No hay limnígrafos disponibles"

@@ -92,28 +92,28 @@ export function MultiSelect({
 					id={id}
 					type="button"
 					className={cn(
-						"flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-[#D3D4D5] bg-white px-3 py-2 text-left text-[13px] text-[#334155] outline-none transition focus-visible:border-[#0982C8] focus-visible:ring-2 focus-visible:ring-[#0982C8]/20 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus-visible:border-[#38BDF8] dark:focus-visible:ring-[#38BDF8]/20",
+						"flex w-full items-center justify-between gap-2 rounded-lg border-2 border-border bg-campo-input px-4 py-3 text-left text-base text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-principal",
 						className,
 					)}
 				>
 					<span className="line-clamp-1">{triggerText}</span>
-					<ChevronDownIcon className="size-4 opacity-60" />
+					<ChevronDownIcon className="size-5 text-gray-400" />
 				</button>
 			</DropdownMenuTrigger>
 
 			<DropdownMenuContent
 				align="start"
 				sideOffset={6}
-				className="w-[--radix-dropdown-menu-trigger-width] min-w-[220px] rounded-xl border border-[#D3D4D5] bg-white p-1 dark:border-[#475569] dark:bg-[#0F172A]"
+				className="w-[--radix-dropdown-menu-trigger-width] min-w-[220px] rounded-lg border-2 border-border bg-campo-input p-1 text-foreground shadow-md"
 			>
-				<DropdownMenuLabel className="text-[12px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
+				<DropdownMenuLabel className="text-xs font-semibold text-foreground">
 					Limnígrafos
 				</DropdownMenuLabel>
-				<DropdownMenuSeparator className="bg-[#E2E8F0] dark:bg-[#334155]" />
+				<DropdownMenuSeparator className="bg-border" />
 
 				<div className="max-h-[220px] overflow-y-auto">
 					{options.length === 0 ? (
-						<p className="px-2 py-3 text-[13px] text-[#64748B] dark:text-[#94A3B8]">{emptyText}</p>
+						<p className="px-2 py-3 text-sm text-foreground">{emptyText}</p>
 					) : (
 						options.map((option) => (
 							<DropdownMenuCheckboxItem
@@ -122,7 +122,7 @@ export function MultiSelect({
 								disabled={option.disabled}
 								onSelect={(event) => event.preventDefault()}
 								onCheckedChange={(checked) => handleCheckedChange(option.value, checked === true)}
-								className="text-[13px] text-[#334155] dark:text-[#CBD5E1]"
+								className="text-sm text-foreground"
 							>
 								{option.label}
 							</DropdownMenuCheckboxItem>

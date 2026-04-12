@@ -1,4 +1,6 @@
 import BotonVariante from "@componentes/botones/BotonVariante";
+import Selector from "@componentes/campos/Selector";
+import TextField from "@componentes/campos/TextField";
 
 export type FilterOption = {
 	label: string;
@@ -34,16 +36,15 @@ export default function FilterBar({
 	onClear,
 	isLoading = false,
 }: FilterBarProps) {
-	const fieldClassName = "rounded-xl border border-[#D3D4D5] bg-white p-3 text-[15px] text-[#4B4B4B] outline-none transition focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]";
-
 	return (
 		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 			<div className="flex flex-col gap-4">
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
 					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Usuario
-						<select
-							className={fieldClassName}
+						<Selector
+							id="historial-usuario"
+							name="historial-usuario"
 							value={values.usuario}
 							onChange={(event) => onChange("usuario", event.target.value)}
 						>
@@ -52,12 +53,13 @@ export default function FilterBar({
 									{user.label}
 								</option>
 							))}
-						</select>
+						</Selector>
 					</label>
 					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Tipo de acción
-						<select
-							className={fieldClassName}
+						<Selector
+							id="historial-accion"
+							name="historial-accion"
 							value={values.accion}
 							onChange={(event) => onChange("accion", event.target.value)}
 						>
@@ -66,12 +68,13 @@ export default function FilterBar({
 									{action.label}
 								</option>
 							))}
-						</select>
+						</Selector>
 					</label>
 					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Entidad
-						<select
-							className={fieldClassName}
+						<Selector
+							id="historial-entidad"
+							name="historial-entidad"
 							value={values.entidad}
 							onChange={(event) => onChange("entidad", event.target.value)}
 						>
@@ -80,22 +83,24 @@ export default function FilterBar({
 									{entity.label}
 								</option>
 							))}
-						</select>
+						</Selector>
 					</label>
 					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Fecha desde
-						<input
+						<TextField
+							id="historial-desde"
+							name="historial-desde"
 							type="date"
-							className={fieldClassName}
 							value={values.desde}
 							onChange={(event) => onChange("desde", event.target.value)}
 						/>
 					</label>
 					<label className="flex flex-col gap-2 text-[15px] font-semibold text-[#4B4B4B] dark:text-[#CBD5E1]">
 						Fecha hasta
-						<input
+						<TextField
+							id="historial-hasta"
+							name="historial-hasta"
 							type="date"
-							className={fieldClassName}
 							value={values.hasta}
 							onChange={(event) => onChange("hasta", event.target.value)}
 						/>
