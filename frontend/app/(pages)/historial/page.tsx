@@ -5,11 +5,12 @@ import { useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import FilterBar, { FilterOption, HistorialFilters } from "@componentes/FilterBar";
 import DataTable from "@componentes/tabla/DataTable";
-import { ColumnConfig } from "@componentes/tabla/types";
+import { ColumnConfig, PaginationConfig } from "@componentes/tabla/types";
 import { useGetUsuarios } from "@servicios/api";
 import { HistorialItem, useGetHistoriales } from "@servicios/api/django.api";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
 const EMPTY_FILTERS: HistorialFilters = {
 	usuario: "",
@@ -133,11 +134,12 @@ export default function HistorialPage() {
 		usuario: usuarioParam,
 	});
 	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [isFilterOpen, setIsFilterOpen] = useState(true);
 
 	const historialQueryParams = useMemo(() => {
 		const params: Record<string, string> = {
-			limit: String(PAGE_SIZE),
+			limit: String(pageSize),
 			page: String(currentPage),
 		};
 
@@ -158,7 +160,7 @@ export default function HistorialPage() {
 		}
 
 		return params;
-	}, [appliedFilters, currentPage]);
+	}, [appliedFilters, currentPage, pageSize]);
 
 	const {
 		data: historialData,
@@ -226,9 +228,28 @@ export default function HistorialPage() {
 	);
 
 	const totalRecords = historialData?.count ?? 0;
-	const totalPages = Math.max(1, Math.ceil(totalRecords / PAGE_SIZE));
-	const startRow = totalRecords === 0 ? 0 : ((currentPage - 1) * PAGE_SIZE) + 1;
-	const endRow = Math.min(currentPage * PAGE_SIZE, totalRecords);
+	const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
+	const startRow = totalRecords === 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+	const endRow = Math.min(currentPage * pageSize, totalRecords);
+	const paginationConfig: PaginationConfig = {
+		page: currentPage,
+		maxPage: totalPages,
+		prevPage: () => {
+			if (isFetchingHistorial) return;
+			setCurrentPage((previous) => Math.max(1, previous - 1));
+		},
+		nextPage: () => {
+			if (isFetchingHistorial) return;
+			setCurrentPage((previous) => Math.min(totalPages, previous + 1));
+		},
+		lengthPages: pageSize,
+		lengthOptions: [...PAGE_SIZE_OPTIONS],
+		changeLength: (value) => {
+			if (isFetchingHistorial) return;
+			setPageSize(value);
+			setCurrentPage(1);
+		},
+	};
 
 	function handleFilterChange(field: keyof HistorialFilters, value: string) {
 		setFilters((previous) => ({
@@ -250,14 +271,6 @@ export default function HistorialPage() {
 		setFilters(resetFilters);
 		setAppliedFilters(resetFilters);
 		setCurrentPage(1);
-	}
-
-	function handlePrevPage() {
-		setCurrentPage((previous) => Math.max(1, previous - 1));
-	}
-
-	function handleNextPage() {
-		setCurrentPage((previous) => Math.min(totalPages, previous + 1));
 	}
 
 	return (
@@ -307,6 +320,8 @@ export default function HistorialPage() {
 							enableRowAnimation={false}
 							loadingRows={6}
 							isLoading={isLoadingHistorial}
+							paginationConfig={paginationConfig}
+							showBottomPagination
 							emptyStateContent={
 								<span className="text-[#6B7280] dark:text-[#94A3B8]">
 									No hay acciones registradas con los filtros seleccionados.
@@ -318,24 +333,6 @@ export default function HistorialPage() {
 							<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
 								Mostrando {startRow}-{endRow} de {totalRecords}. Página {currentPage} de {totalPages}
 							</p>
-							<div className="flex gap-2">
-								<button
-									type="button"
-									onClick={handlePrevPage}
-									disabled={currentPage <= 1 || isFetchingHistorial}
-									className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40 dark:border-[#334155] dark:text-[#CBD5E1] dark:hover:bg-[#1E293B]"
-								>
-									Anterior
-								</button>
-								<button
-									type="button"
-									onClick={handleNextPage}
-									disabled={currentPage >= totalPages || isFetchingHistorial}
-									className="rounded-xl border border-[#CBD5E1] px-4 py-2 text-[14px] font-semibold text-[#334155] disabled:opacity-40 dark:border-[#334155] dark:text-[#CBD5E1] dark:hover:bg-[#1E293B]"
-								>
-									Siguiente
-								</button>
-							</div>
 						</div>
 					</section>
 				</div>
