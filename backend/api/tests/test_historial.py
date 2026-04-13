@@ -164,7 +164,7 @@ class HistorialTests(APITestCase):
     def test_retrieve_historial(self):
         action = Accion.objects.create(
             tipo_accion="manual_data_load",
-            entidad="Métrica",
+            entidad="Medición",
             entidad_id="321",
             descripcion="Carga manual.",
             usuario=self.user,
@@ -257,7 +257,7 @@ class HistorialTests(APITestCase):
         history_response = self.client.get(self.list_url, {"type": "manual_data_load"})
         self.assertEqual(history_response.status_code, status.HTTP_200_OK)
         self.assertGreaterEqual(len(history_response.data["results"]), 1)
-        self.assertEqual(history_response.data["results"][0]["model_name"], "Métrica")
+        self.assertEqual(history_response.data["results"][0]["model_name"], "Medición")
 
     def test_read_only(self):
         response = self.client.post(self.list_url, {})

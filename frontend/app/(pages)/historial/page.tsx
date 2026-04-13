@@ -258,7 +258,7 @@ export default function HistorialPage() {
 	}, [allUsernames, historialData, usuarioParam]);
 
 	const entityOptions = useMemo<FilterOption[]>(() => {
-		const entities = new Set<string>(["Usuario", "Limnígrafo", "Métrica"]);
+		const entities = new Set<string>(["Usuario", "Limnígrafo", "Medición"]);
 
 		(historialData?.results ?? []).forEach((item) => {
 			const entity = item.model_name?.trim();
@@ -333,7 +333,7 @@ export default function HistorialPage() {
 					<header className="flex flex-col gap-1">
 						<h1 className="text-[34px] font-semibold text-[#011018] dark:text-[#E2E8F0]">Historial</h1>
 						<p className="text-[16px] text-[#4B4B4B] dark:text-[#94A3B8]">
-							Registros de acciones sobre limnígrafos, métricas y usuarios.
+							Registros de acciones sobre limnígrafos, mediciones y usuarios.
 						</p>
 					</header>
 

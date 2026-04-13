@@ -55,7 +55,7 @@ class MedicionViewSet(
             registrar_accion_auditoria(
                 request=self.request,
                 tipo_accion="manual_data_load",
-                entidad="Métrica",
+                entidad="Medición",
                 entidad_id=medicion_instance.id,
                 descripcion=f"Cargó manualmente datos para el limnígrafo '{limnigrafo.codigo}'.",
                 metadata={

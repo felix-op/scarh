@@ -33,8 +33,8 @@ class HistorialViewSet(viewsets.ReadOnlyModelViewSet):
                 "usuario": "Usuario",
                 "limnigrafo": "Limnígrafo",
                 "limnígrafo": "Limnígrafo",
-                "metrica": "Métrica",
-                "métrica": "Métrica",
+                "medicion": "Medición",
+                "medición": "Medición",
             }
             model_normalizado = model.strip().lower()
             model_filtrado = model_map.get(model_normalizado, model.strip())
