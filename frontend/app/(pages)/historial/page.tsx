@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import FilterBar, { FilterOption, HistorialFilters } from "@componentes/FilterBar";
 import DataTable from "@componentes/tabla/DataTable";
 import { ColumnConfig, PaginationConfig } from "@componentes/tabla/types";
-import { useGetUsuarios } from "@servicios/api";
+import { Paginado } from "@servicios/api/types";
 import { HistorialItem, useGetHistoriales } from "@servicios/api/django.api";
+import { UsuarioResponse } from "types/usuarios";
 
 const DEFAULT_PAGE_SIZE = 10;
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
+const USERS_FETCH_PAGE_SIZE = 100;
 
 const EMPTY_FILTERS: HistorialFilters = {
 	usuario: "",
@@ -88,6 +90,42 @@ function mapHistorialToRow(item: HistorialItem): HistoryRow {
 	};
 }
 
+async function fetchAllUsernames(): Promise<string[]> {
+	const usernames = new Set<string>();
+	let page = 1;
+
+	while (true) {
+		const query = new URLSearchParams({
+			limit: String(USERS_FETCH_PAGE_SIZE),
+			page: String(page),
+		});
+		const response = await fetch(`/api/proxy/usuarios/?${query.toString()}`, {
+			method: "GET",
+			cache: "no-store",
+		});
+
+		if (!response.ok) {
+			throw new Error("No se pudieron cargar los usuarios del historial.");
+		}
+
+		const payload = await response.json() as Paginado<UsuarioResponse>;
+		payload.results.forEach((usuario) => {
+			const username = usuario.nombre_usuario?.trim();
+			if (username) {
+				usernames.add(username);
+			}
+		});
+
+		if (!payload.next) {
+			break;
+		}
+
+		page += 1;
+	}
+
+	return Array.from(usernames);
+}
+
 const historyColumns: ColumnConfig<HistoryRow>[] = [
 	{
 		id: "usuario",
@@ -136,6 +174,7 @@ export default function HistorialPage() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [isFilterOpen, setIsFilterOpen] = useState(true);
+	const [allUsernames, setAllUsernames] = useState<string[]>([]);
 
 	const historialQueryParams = useMemo(() => {
 		const params: Record<string, string> = {
@@ -173,17 +212,31 @@ export default function HistorialPage() {
 		},
 	});
 
-	const { data: usuariosData } = useGetUsuarios({});
+	useEffect(() => {
+		let cancelled = false;
+
+		async function loadAllUsernames() {
+			try {
+				const usernames = await fetchAllUsernames();
+				if (!cancelled) {
+					setAllUsernames(usernames);
+				}
+			} catch (error) {
+				console.warn("No se pudieron cargar todos los usuarios para filtros de historial.", error);
+			}
+		}
+
+		loadAllUsernames();
+
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	const userOptions = useMemo<FilterOption[]>(() => {
 		const usernames = new Set<string>();
 
-		(Array.isArray(usuariosData) ? usuariosData : []).forEach((usuario) => {
-			const username = usuario.nombre_usuario?.trim();
-			if (username) {
-				usernames.add(username);
-			}
-		});
+		allUsernames.forEach((username) => usernames.add(username));
 
 		(historialData?.results ?? []).forEach((item) => {
 			const username = item.username?.trim();
@@ -202,7 +255,7 @@ export default function HistorialPage() {
 				.sort((a, b) => a.localeCompare(b))
 				.map((username) => ({ label: username, value: username })),
 		];
-	}, [usuariosData, historialData, usuarioParam]);
+	}, [allUsernames, historialData, usuarioParam]);
 
 	const entityOptions = useMemo<FilterOption[]>(() => {
 		const entities = new Set<string>(["Usuario", "Limnígrafo", "Métrica"]);
