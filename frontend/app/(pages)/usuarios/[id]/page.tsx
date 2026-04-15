@@ -17,6 +17,8 @@ import SeccionInfoGroup from "@componentes/secciones/SeccionInfoGroup";
 import ChipEstadoUsuario from "@componentes/chips/ChipEstadoUsuario";
 import SeccionInfoData from "@componentes/secciones/SeccionInfoData";
 import normalizarString from "@lib/normalizarString";
+import { useTieneRol } from "@hooks/useTieneRol";
+import Alerta from "@componentes/alertas/Alerta";
 
 type InfoItem = {
 	label: string;
@@ -28,6 +30,7 @@ export default function UsuarioDetallePage() {
 	const router = useRouter();
 	const usuarioId = params?.id ?? "";
 	const notificar = useNotificar();
+	const puedeEditar = useTieneRol("administracion");
 
 	const { data: usuario } = useGetUsuario({ params: { id: usuarioId } });
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -81,9 +84,19 @@ export default function UsuarioDetallePage() {
 				onClick={() => router.push("/usuarios")}
 			/>
 			<br />
+
+			{!puedeEditar && (
+				<>
+					<Alerta variant="alerta">
+						<p>No tenés permisos para editar o eliminar usuarios. Solo podés visualizar la información.</p>
+					</Alerta>
+					<br />
+				</>
+			)}
+
 			<SeccionInfo>
 				<SeccionInfoHeader>
-					<BotonVariante variant="editar" onClick={handleOpenEdit}>
+					<BotonVariante variant="editar" onClick={handleOpenEdit} disabled={!puedeEditar}>
 						<span className="icon-[line-md--edit]" />
 						<span>Editar</span>
 					</BotonVariante>
@@ -99,6 +112,7 @@ export default function UsuarioDetallePage() {
 					<BotonVariante
 						variant="eliminar"
 						onClick={() => setIsDeleteOpen(true)}
+						disabled={!puedeEditar}
 					/>
 				</SeccionInfoHeader>
 				<SeccionInfoGroups>

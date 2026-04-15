@@ -33,25 +33,13 @@ export default function VentanaEditarUsuario({
 					variant: "exito",
 				});
 			},
-			onError: (e) => {
+			onError: (e: any) => {
+				const mensaje = e.response?.data?.descripcion_usuario;
 				console.error("Error en el componente VentanaEditarUsuario: ", e);
-
-				const errores = (e.response?.data ?? {}) as Record<string, unknown>;
-				const existeNombreUsuario = Boolean(errores.nombre_usuario) || Boolean(errores.username);
-				const existeLegajo = Boolean(errores.legajo);
-				let descripcion = `El usuario ${usuario?.nombre_usuario} no se pudo editar`;
-
-				if (existeNombreUsuario && existeLegajo) {
-					descripcion = "El nombre de usuario y el legajo ya existen";
-				} else if (existeNombreUsuario) {
-					descripcion = "El nombre de usuario ya existe";
-				} else if (existeLegajo) {
-					descripcion = "El legajo ya existe";
-				}
 
 				handleMessage({
 					title: "Error al editar",
-					description: descripcion,
+					description: mensaje || `El usuario ${usuario?.nombre_usuario || ""} no se pudo editar`,
 					variant: "error",
 				});
 			},

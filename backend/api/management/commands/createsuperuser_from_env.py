@@ -50,19 +50,39 @@ class Command(BaseCommand):
         COM_USERNAME = os.environ.get('USER_USERNAME')
         COM_EMAIL = os.environ.get('USER_EMAIL')
         COM_PASSWORD = os.environ.get('USER_PASSWORD')
+        COM_IS_STAFF = os.environ.get('USER_IS_STAFF', 'True').lower() in ('true', '1', 't')
 
         if COM_USERNAME and COM_EMAIL and COM_PASSWORD:
             if User.objects.filter(username=COM_USERNAME).exists():
                 self.stdout.write(self.style.WARNING(f'⚠️ Usuario común "{COM_USERNAME}" ya existe.'))
             else:
                 try:
-                    User.objects.create_user(
+                    user = User.objects.create_user(
                         username=COM_USERNAME,
                         email=COM_EMAIL,
                         password=COM_PASSWORD,
                         first_name=os.environ.get('USER_FIRST_NAME', ''),
                         last_name=os.environ.get('USER_LAST_NAME', ''),
+                        is_staff=COM_IS_STAFF,
                     )
+
+                    # Asignar roles de visualización al usuario staff
+                    if COM_IS_STAFF:
+                        roles_visualizacion = [
+                            "mapa-visualizar",
+                            "limnigrafos-visualizar",
+                            "mediciones-visualizar",
+                            "estadisticas-visualizar",
+                            "usuarios-visualizar",
+                            "historial-visualizar",
+                        ]
+                        for nombre_rol in roles_visualizacion:
+                            rol, _ = Rol.objects.get_or_create(
+                                nombre=nombre_rol,
+                                defaults={"descripcion": f"Permite visualizar {nombre_rol.split('-')[0]}."}
+                            )
+                            user.roles.add(rol)
+
                     self.stdout.write(self.style.SUCCESS(f'✅ Usuario común "{COM_USERNAME}" creado exitosamente.'))
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'❌ Error al crear usuario común: {e}'))

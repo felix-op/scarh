@@ -18,6 +18,8 @@ import FiltroOpciones from "@componentes/filtros/FiltroOpciones";
 import { opcionesEstado } from "./constantes";
 import ChipEstadoUsuario from "@componentes/chips/ChipEstadoUsuario";
 import { useNotificar } from "@hooks/useNotificar";
+import { useTieneRol } from "@hooks/useTieneRol";
+import Alerta from "@componentes/alertas/Alerta";
 import MenuAcciones from "@componentes/menu/MenuAcciones";
 import Icon from "@componentes/icons/Icon";
 
@@ -30,6 +32,7 @@ export default function UsersAdminPage() {
 	const [search, setSearch] = useState("");
 	const [estado, setEstado] = useState("");
 	const [usuarioEditar, setUsuarioEditar] = useState<UsuarioResponse | null>(null);
+	const puedeEditar = useTieneRol("administracion");
 
 	const { data: usuarios, isLoading, isRefetching } = useGetUsuarios({
 		params: {
@@ -120,33 +123,35 @@ export default function UsersAdminPage() {
 				),
 				onClick: handleViewUser,
 			},
-			{
-				label: (
-					<p className="flex items-center gap-2">
-						<Icon variant="llave" className="text-2xl text-advertencia" />
-						Permisos
-					</p>
-				),
-				onClick: handlePermissions,
-			},
-			{
-				label: (
-					<p className="flex items-center gap-2">
-						<Icon variant="editar" className="text-2xl text-exito" />
-						Editar
-					</p>
-				),
-				onClick: (usuario) => handleOpenEdit(usuario),
-			},
-			{
-				label: (
-					<p className="flex items-center gap-2">
-						<Icon variant="eliminar" className="text-2xl text-error" />
-						Eliminar
-					</p>
-				),
-				onClick: (usuario) => handleOpenDelete(usuario),
-			},
+			...(puedeEditar ? [
+				{
+					label: (
+						<p className="flex items-center gap-2">
+							<Icon variant="llave" className="text-2xl text-advertencia" />
+							Permisos
+						</p>
+					),
+					onClick: handlePermissions,
+				},
+				{
+					label: (
+						<p className="flex items-center gap-2">
+							<Icon variant="editar" className="text-2xl text-exito" />
+							Editar
+						</p>
+					),
+					onClick: (usuario: UsuarioResponse) => handleOpenEdit(usuario),
+				},
+				{
+					label: (
+						<p className="flex items-center gap-2">
+							<Icon variant="eliminar" className="text-2xl text-error" />
+							Eliminar
+						</p>
+					),
+					onClick: (usuario: UsuarioResponse) => handleOpenDelete(usuario),
+				},
+			] : []),
 		]
 	};
 
@@ -174,6 +179,12 @@ export default function UsersAdminPage() {
 					Seleccioná un usuario de la lista para ver o editar su
 					información.
 				</p>
+
+				{!puedeEditar && (
+					<Alerta variant="alerta">
+						<p>No tenés permisos para agregar, editar o eliminar usuarios. Contactá a un administrador si necesitás acceso.</p>
+					</Alerta>
+				)}
 
 				<FiltrosContenedor open={isOpenFiltros}>
 					<h4>Filtros</h4>
@@ -203,7 +214,7 @@ export default function UsersAdminPage() {
 					columns={columns}
 					rowIdKey="id"
 					minWidth={320}
-					onAdd={handleOpenAdd}
+					onAdd={puedeEditar ? handleOpenAdd : undefined}
 					onFilter={() => {
 						setIsOpenFiltros((prev) => !prev)
 					}}

@@ -27,11 +27,13 @@ export default function VentanaEliminarUsuario({
 			onSuccess: () => {
 				onSuccess();
 			},
-			onError: () => {
+			onError: (e: any) => {
+				const mensaje = e.response?.data?.descripcion_usuario;
+				console.error("Error en el componente VentanaEliminarUsuario: ", e);
 				onClose();
 				handleMessage({
 					title: "Error al eliminar",
-					description: `El usuario ${usuario?.id} no se pudo eliminar`,
+					description: mensaje || `El usuario ${usuario?.nombre_usuario || ""} no se pudo eliminar`,
 					variant: "error",
 				});
 			},

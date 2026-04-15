@@ -9,6 +9,8 @@ declare module "next-auth" {
 		first_name: string;
 		last_name: string;
 		roles: string[];
+		is_superuser: boolean;
+		is_staff: boolean;
 		accessToken: string;
 		refreshToken: string;
 		accessTokenExpires: number;
@@ -23,6 +25,8 @@ interface Session {
 			last_name: string;
 			email: string;
 			roles: string[];
+			is_superuser: boolean;
+			is_staff: boolean;
 			accessToken: string;
 			refreshToken: string;
 			accessTokenExpires: number,
@@ -38,6 +42,8 @@ declare module "next-auth/jwt" {
         last_name: string;
         email: string;
         roles: string[];
+        is_superuser: boolean;
+        is_staff: boolean;
         accessToken: string;
         refreshToken: string; 
         accessTokenExpires: number;

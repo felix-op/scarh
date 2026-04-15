@@ -43,25 +43,13 @@ export default function VentanaAgregrarUsuario({
 					variant: "exito",
 				});
 			},
-			onError: (e) => {
+			onError: (e: any) => {
+				const mensaje = e.response?.data?.descripcion_usuario;
 				console.error("Error en el componente VentanaAgregarUsuario: ", e);
-
-				const errores = (e.response?.data ?? {}) as Record<string, unknown>;
-				const existeNombreUsuario = Boolean(errores.nombre_usuario) || Boolean(errores.username);
-				const existeLegajo = Boolean(errores.legajo);
-				let descripcion = "No se pudo crear el usuario";
-
-				if (existeNombreUsuario && existeLegajo) {
-					descripcion = "El nombre de usuario y el legajo ya existen";
-				} else if (existeNombreUsuario) {
-					descripcion = "El nombre de usuario ya existe";
-				} else if (existeLegajo) {
-					descripcion = "El legajo ya existe";
-				}
 
 				handleMessage({
 					title: "Error al crear",
-					description: descripcion,
+					description: mensaje || "No se pudo crear el usuario",
 					variant: "error",
 				});
 			},
