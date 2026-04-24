@@ -18,7 +18,10 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 				zoom={15}
 				className="h-full w-full min-h-[400px]"
 			>
-				<MapTileLayer />
+				<MapTileLayer 
+					url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
+					attribution="&copy; <a href='https://carto.com/'>CARTO</a>"
+				/>
 				<MapZoomControl />
 			</Map>
 		</div>
