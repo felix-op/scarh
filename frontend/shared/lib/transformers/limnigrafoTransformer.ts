@@ -6,7 +6,8 @@
  * sin modificar los componentes existentes.
  */
 
-import type { LimnigrafoResponse, MedicionResponse } from "@servicios/api/django.api";
+import type { MedicionResponse } from "@servicios/api/django.api";
+import type { LimnigrafoResponse } from "types/limnigrafos";
 import type { EstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
 
 /**
@@ -43,10 +44,10 @@ export function formatearBateria(
 	if (bateriaActual === null || bateriaActual === undefined) {
 		return "Bateria N/A";
 	}
-	
+
 	// Calcular porcentaje: (actual - min) / (max - min) * 100
 	const porcentaje = ((bateriaActual - bateriaMin) / (bateriaMax - bateriaMin)) * 100;
-	
+
 	// Redondear a entero y limitar entre 0-100
 	const nivel = Math.max(0, Math.min(100, Math.round(porcentaje)));
 	return `Bateria ${nivel}%`;
@@ -100,7 +101,7 @@ export function formatearMedicion(valor: number | null, unidad: string): string 
 	if (valor === null || valor === undefined) {
 		return "N/A";
 	}
-	
+
 	// Redondear a 1 decimal
 	const valorRedondeado = Math.round(valor * 10) / 10;
 	return `${valorRedondeado}${unidad}`;
@@ -121,7 +122,7 @@ export function transformarLimnigrafoConMedicion(
 ) {
 	// Usar ultima_medicion del propio limnígrafo o el parámetro opcional
 	const medicion = ultimaMedicion || limnigrafo.ultima_medicion;
-	
+
 	// El backend ahora devuelve ultima_conexion como timestamp completo ISO 8601
 	// Ejemplo: "2025-12-05T01:23:28.002536+00:00"
 	const timestampCompleto = limnigrafo.ultima_conexion || null;
@@ -129,49 +130,67 @@ export function transformarLimnigrafoConMedicion(
 	return {
 		// ID como string (frontend lo espera así)
 		id: String(limnigrafo.id),
-		
+
 		// Nombre: solo el código del limnígrafo
 		nombre: limnigrafo.codigo,
-		
+
 		// Ubicación: nombre de la ubicación
 		ubicacion: limnigrafo.ubicacion?.nombre || "Sin ubicación",
-		
+
 		// Batería: formatear con cálculo de porcentaje
 		bateria: formatearBateria(
 			limnigrafo.bateria,
 			limnigrafo.bateria_min,
 			limnigrafo.bateria_max
 		),
-		
+
 		// Tiempo del último dato: calcular desde última conexión
 		tiempoUltimoDato: calcularTiempoUltimoDato(timestampCompleto),
-		
+
 		// Estado: mapear al formato del frontend
 		estado: mapearEstado(limnigrafo.estado),
-		
+
 		// Datos de la última medición (si existe)
-		temperatura: medicion 
+		temperatura: medicion
 			? formatearMedicion(medicion.temperatura, "°")
 			: "N/A",
-		
-		altura: medicion 
+
+		altura: medicion
 			? formatearMedicion(medicion.altura_agua, " mts")
 			: "N/A",
-		
-		presion: medicion 
+
+		presion: medicion
 			? formatearMedicion(medicion.presion, " bar")
 			: "N/A",
-		
+
 		// Datos adicionales (para página de detalle)
 		ultimoMantenimiento: limnigrafo.ultimo_mantenimiento || "Sin información",
 		descripcion: limnigrafo.descripcion || "Sin descripción",
-		
+
 		// Coordenadas (para el mapa)
-		coordenadas: limnigrafo.ubicacion ? {
-			lat: limnigrafo.ubicacion.latitud,
-			lng: limnigrafo.ubicacion.longitud,
-		} : undefined,
-		
+		coordenadas: (() => {
+			const u = limnigrafo.ubicacion;
+			if (!u) return undefined;
+			
+			// Caso 1: Formato GeoJSON del to_representation
+			if (u.geometry && Array.isArray(u.geometry.coordinates)) {
+				return {
+					lat: u.geometry.coordinates[1],
+					lng: u.geometry.coordinates[0],
+				};
+			}
+			
+			// Caso 2: Formato plano del modelo/serializer base
+			if (u.latitud !== undefined && u.longitud !== undefined) {
+				return {
+					lat: u.latitud,
+					lng: u.longitud,
+				};
+			}
+			
+			return undefined;
+		})(),
+
 		// Datos extra (pueden agregarse más según necesidad)
 		datosExtra: [
 			{ label: "Batería máx", value: `${limnigrafo.bateria_max}V` },
@@ -192,7 +211,17 @@ export function transformarLimnigrafos(
 	medicionesPorLimnigrafo?: Map<number, MedicionResponse>
 ) {
 	return limnigrafos.map(limnigrafo => {
-		const ultimaMedicion = medicionesPorLimnigrafo?.get(limnigrafo.id);
+		let ultimaMedicion: MedicionResponse | undefined;
+
+		if (medicionesPorLimnigrafo) {
+			if (typeof medicionesPorLimnigrafo.get === "function") {
+				ultimaMedicion = medicionesPorLimnigrafo.get(limnigrafo.id);
+			} else if (typeof medicionesPorLimnigrafo === "object") {
+				// En caso de que se pase un diccionario/objeto normal en lugar de Map
+				ultimaMedicion = (medicionesPorLimnigrafo as any)[limnigrafo.id];
+			}
+		}
+
 		return transformarLimnigrafoConMedicion(limnigrafo, ultimaMedicion);
 	});
 }

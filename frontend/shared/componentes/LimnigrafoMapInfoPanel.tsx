@@ -29,45 +29,47 @@ export function LimnigrafoMapInfoPanel({
 	];
 
 	return (
-		<div className="absolute right-6 top-6 z-[1000] max-w-[420px]">
-			<div className="rounded-[32px] bg-white shadow-[0px_8px_24px_rgba(0,0,0,0.25)]">
-				<header className="relative px-6 pb-4 pt-5 text-center">
-					<h3 className="text-[26px] font-semibold text-[#032C44]">
+		<div className="absolute left-4 bottom-4 z-[1001] w-[320px]">
+			<div className="rounded-2xl bg-white dark:bg-[#1B1F25] shadow-[0px_8px_24px_rgba(0,0,0,0.2)] dark:shadow-[0px_8px_24px_rgba(0,0,0,0.5)] border border-border/30">
+				<header className="relative px-4 pb-2 pt-3 text-center">
+					<h3 className="text-base font-semibold text-foreground-title">
 						Datos del {limnigrafo.nombre}
 					</h3>
 					<button
 						type="button"
 						onClick={onClose}
-						className="absolute right-4 top-4 text-[#6B6B6B]"
+						className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors text-sm"
 						aria-label="Cerrar panel"
 					>
 						✕
 					</button>
 				</header>
 
-				<div className="px-4">
-					<div className="grid grid-cols-2 border-b border-[#D8D8D8] px-4 py-2 text-center text-xs font-medium text-[#8E8E8E]">
+				<div className="px-3">
+					<div className="grid grid-cols-2 border-b border-border px-3 py-1.5 text-center text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
 						<span>Elemento</span>
 						<span>Dato</span>
 					</div>
 					{infoRows.map((row) => (
 						<div
 							key={row.label}
-							className="grid grid-cols-2 items-center gap-4 border-b border-dashed border-[#D8D8D8] px-4 py-2 text-center text-lg font-semibold text-[#4B4B4B]"
+							className="grid grid-cols-2 items-center gap-2 border-b border-dashed border-border/60 px-3 py-1.5 text-center text-sm font-semibold text-foreground"
 						>
-							<span>{row.label}</span>
+							<span className="text-muted-foreground font-medium">{row.label}</span>
 							<span>{row.value}</span>
 						</div>
 					))}
-					<div className="grid grid-cols-2 items-center gap-4 px-4 py-3 text-center">
-						<span className="text-lg font-semibold text-[#4B4B4B]">
+					<div className="grid grid-cols-2 items-center gap-2 px-3 py-2 text-center overflow-hidden">
+						<span className="text-sm font-medium text-muted-foreground">
 							Estado
 						</span>
-						<BotonEstadoLimnigrafo estado={limnigrafo.estado} />
+						<div className="scale-[0.65] origin-center">
+							<BotonEstadoLimnigrafo estado={limnigrafo.estado} />
+						</div>
 					</div>
 				</div>
 
-				<div className="flex items-center justify-center px-6 py-4">
+				<div className="flex items-center justify-center px-4 py-3">
 					<button
 						type="button"
 						onClick={() =>
@@ -77,7 +79,7 @@ export function LimnigrafoMapInfoPanel({
 								)}`,
 							)
 						}
-						className="w-full rounded-2xl bg-[#F4F4F4] px-6 py-3 text-lg font-medium text-[#898989] shadow-[0px_4px_6px_rgba(0,0,0,0.2)] hover:bg-[#E6E6E6]"
+						className="w-full rounded-xl bg-default-claro dark:bg-[#2a2e36] px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:bg-hover dark:hover:bg-[#363a44] transition-colors"
 					>
 						Ver más
 					</button>
@@ -86,3 +88,4 @@ export function LimnigrafoMapInfoPanel({
 		</div>
 	);
 }
+
