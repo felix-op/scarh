@@ -55,23 +55,56 @@ export function LimnigrafosSidebar({
 					Limnigrafos
 				</h2>
 
-				<div className="flex gap-2 mb-3">
-					<Button
-						variant={filtroEstado === "activo" ? "default" : "outline"}
-						size="sm"
-						className="flex-1 rounded-full text-[11px] font-medium h-7"
-						onClick={() => setFiltroEstado(f => f === "activo" ? "todos" : "activo")}
-					>
-						Estado | Activo
-					</Button>
-					<Button
-						variant={filtroUbicacion === "sin-ubicacion" ? "default" : "outline"}
-						size="sm"
-						className="flex-1 rounded-full text-[11px] font-medium h-7"
-						onClick={() => setFiltroUbicacion(f => f === "sin-ubicacion" ? "todos" : "sin-ubicacion")}
-					>
-						Ubicación | Sin Ubicación
-					</Button>
+				<div className="flex gap-2 mb-4">
+					{/* Filtro Estado */}
+					<div className="flex-1 flex bg-muted/40 dark:bg-white/5 rounded-full p-0.5 border border-border/40">
+						<button
+							onClick={() => setFiltroEstado("todos")}
+							className={`flex-1 px-2 py-1 rounded-full text-[10px] font-bold transition-all ${
+								filtroEstado === "todos" 
+									? "bg-white dark:bg-white/20 shadow-sm text-principal" 
+									: "text-muted-foreground hover:text-foreground"
+							}`}
+						>
+							Estado
+						</button>
+						<div className="w-[1px] bg-border/30 my-1.5" />
+						<button
+							onClick={() => setFiltroEstado("activo")}
+							className={`flex-1 px-2 py-1 rounded-full text-[10px] font-bold transition-all ${
+								filtroEstado === "activo" 
+									? "bg-principal text-white shadow-sm" 
+									: "text-muted-foreground hover:text-foreground"
+							}`}
+						>
+							Activo
+						</button>
+					</div>
+
+					{/* Filtro Ubicación */}
+					<div className="flex-1 flex bg-muted/40 dark:bg-white/5 rounded-full p-0.5 border border-border/40">
+						<button
+							onClick={() => setFiltroUbicacion("todos")}
+							className={`flex-1 px-2 py-1 rounded-full text-[10px] font-bold transition-all ${
+								filtroUbicacion === "todos" 
+									? "bg-white dark:bg-white/20 shadow-sm text-principal" 
+									: "text-muted-foreground hover:text-foreground"
+							}`}
+						>
+							Ubicación
+						</button>
+						<div className="w-[1px] bg-border/30 my-1.5" />
+						<button
+							onClick={() => setFiltroUbicacion("sin-ubicacion")}
+							className={`flex-1 px-3 py-1 rounded-full text-[10px] font-bold transition-all ${
+								filtroUbicacion === "sin-ubicacion" 
+									? "bg-principal text-white shadow-sm" 
+									: "text-muted-foreground hover:text-foreground"
+							}`}
+						>
+							Sin Ubic.
+						</button>
+					</div>
 				</div>
 
 				<div className="mb-3">
