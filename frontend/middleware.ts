@@ -30,13 +30,9 @@ export default withAuth(
 
 		if (restrictedRoute) {
 			const requiredPermission = PERMISSION_MAP[restrictedRoute];
-			const isSuperuser = token?.is_superuser === true;
-			const isStaff = token?.is_staff === true;
 			const hasRolePermission = roles.includes(requiredPermission) || roles.includes("administracion");
 
-			// Superusuarios tienen acceso total
-			// Staff tiene acceso a rutas de visualización general
-			const hasPermission = isSuperuser || hasRolePermission || (isStaff && requiredPermission.endsWith("-visualizar"));
+			const hasPermission = hasRolePermission;
 
 			if (!hasPermission) {
 				// Si no tiene permiso, lanzamos un 404 (mediante rewrite) para ocultar la página

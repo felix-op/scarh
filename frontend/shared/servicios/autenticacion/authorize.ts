@@ -47,8 +47,6 @@ export default async function authorize(credentials: AuthorizeCredentials) {
 			first_name: data.user.first_name,
 			last_name: data.user.last_name,
 			roles: data.user.roles,
-			is_superuser: data.user.is_superuser,
-			is_staff: data.user.is_staff,
 			accessToken: data.access,
 			refreshToken: data.refresh,
 			accessTokenExpires: Date.now() + (data.access_token_lifetime * 1000),

@@ -15,8 +15,6 @@ export default async function session({ session, token }: SessionOptions) {
 			first_name: token.first_name,
 			last_name: token.last_name,
 			roles: token.roles,
-			is_superuser: token.is_superuser,
-			is_staff: token.is_staff,
 			accessToken: token.accessToken,
 			refreshToken: token.refreshToken,
 			accessTokenExpires: token.accessTokenExpires
