@@ -18,5 +18,7 @@
     "lib": "@componentes/lib",
     "hooks": "@componentes/hooks"
   },
-  "registries": {}
+  "registries": {
+    "@shadcn-map": "http://shadcn-map.vercel.app/r/{name}.json"
+  }
 }
