@@ -395,7 +395,7 @@ export default function EstadisticasPage() {
 								limnigrafosError={limnigrafosError}
 								chartAtributo={appliedFilters.atributo}
 								chartLimnigrafos={appliedFilters.limnigrafos}
-								chartTimeRange={appliedFilters.ventana}
+								chartFilters={appliedFilters}
 							/>
 
 							{shouldShowRateChart ? (

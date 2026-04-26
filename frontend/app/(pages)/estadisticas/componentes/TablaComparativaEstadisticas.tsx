@@ -78,10 +78,16 @@ export default function TablaComparativaEstadisticas({
 	}, [limnigrafos]);
 
 	const limnigrafosIds = useMemo(
-		() => limnigrafosSeleccionados
-			.map((item) => Number.parseInt(item, 10))
-			.filter((item) => !Number.isNaN(item)),
-		[limnigrafosSeleccionados],
+		() => {
+			const selectedIds = limnigrafosSeleccionados
+				.map((item) => Number.parseInt(item, 10))
+				.filter((item) => !Number.isNaN(item));
+
+			return selectedIds.length > 0
+				? selectedIds
+				: limnigrafos.map((limnigrafo) => limnigrafo.id);
+		},
+		[limnigrafos, limnigrafosSeleccionados],
 	);
 
 	const desdeIso = useMemo(() => toIsoString(desde), [desde]);

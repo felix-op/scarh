@@ -7,6 +7,8 @@ import {
 	type TablaComparativaFilters,
 } from "../lib/estadisticas-domain";
 
+const ALL_LIMNIGRAFOS_VALUE = "__all__";
+
 type FiltrosTablaComparativaProps = {
 	filters: TablaComparativaFilters;
 	limnigrafoOptions: MultiSelectOption[];
@@ -22,6 +24,34 @@ export default function FiltrosTablaComparativa({
 	onApply,
 	onReset,
 }: FiltrosTablaComparativaProps) {
+	const optionsWithAll: MultiSelectOption[] = [
+		{ value: ALL_LIMNIGRAFOS_VALUE, label: "Todos" },
+		...limnigrafoOptions,
+	];
+	const selectedLimnigrafoValues = filters.limnigrafos.length > 0
+		? filters.limnigrafos
+		: [ALL_LIMNIGRAFOS_VALUE];
+	const limnigrafoLabelText = filters.limnigrafos.length > 0
+		? `Limnígrafos (${filters.limnigrafos.length})`
+		: "Limnígrafos (todos)";
+
+	function handleLimnigrafoChange(values: string[]) {
+		if (values.includes(ALL_LIMNIGRAFOS_VALUE)) {
+			if (filters.limnigrafos.length === 0 && values.length > 1) {
+				setFilters((previous) => ({
+					...previous,
+					limnigrafos: values.filter((value) => value !== ALL_LIMNIGRAFOS_VALUE),
+				}));
+				return;
+			}
+
+			setFilters((previous) => ({ ...previous, limnigrafos: [] }));
+			return;
+		}
+
+		setFilters((previous) => ({ ...previous, limnigrafos: values }));
+	}
+
 	return (
 		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 			<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -63,14 +93,14 @@ export default function FiltrosTablaComparativa({
 
 				<div className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
 					<label htmlFor="estadisticas-tabla-limnigrafos-trigger">
-						Limnígrafos ({filters.limnigrafos.length})
+						{limnigrafoLabelText}
 					</label>
 					<MultiSelect
 						id="estadisticas-tabla-limnigrafos-trigger"
-						options={limnigrafoOptions}
-						selectedValues={filters.limnigrafos}
-						onChange={(values) => setFilters((previous) => ({ ...previous, limnigrafos: values }))}
-						placeholder="Seleccionar limnígrafos"
+						options={optionsWithAll}
+						selectedValues={selectedLimnigrafoValues}
+						onChange={handleLimnigrafoChange}
+						placeholder="Todos"
 						className="h-11 text-[13px]"
 						emptyText="No hay limnígrafos disponibles"
 					/>

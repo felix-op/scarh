@@ -9,23 +9,24 @@ import {
 import { useMemo } from "react";
 import { type LimnigrafoResponse } from "types/limnigrafos";
 import {
+	type EstadisticasFilters,
+	resolveCurrentRange,
+} from "../lib/estadisticas-domain";
+import {
 	type ChartPoint,
 	type ChartSerie,
-	type SharedTimeRange,
 	ATRIBUTO_METADATA,
 	CHART_PAGE_SIZE,
 	MAX_CHART_POINTS,
 	PANEL_CHART_COLORS,
-	WINDOW_DURATION_MS,
 	getMedicionValueByAtributo,
-	getStartDateFromRange,
 } from "../lib/panel-comparativas-domain";
 
 type UsePanelComparativasDataInput = {
 	limnigrafos: LimnigrafoResponse[];
 	chartAtributo: EstadisticaAtributo;
 	chartLimnigrafos: string[];
-	chartTimeRange: SharedTimeRange;
+	chartFilters: EstadisticasFilters;
 };
 
 type UsePanelComparativasDataOutput = {
@@ -42,18 +43,26 @@ export default function usePanelComparativasData({
 	limnigrafos,
 	chartAtributo,
 	chartLimnigrafos,
-	chartTimeRange,
+	chartFilters,
 }: UsePanelComparativasDataInput): UsePanelComparativasDataOutput {
-	const comparativasQueryParams = useMemo(() => {
-		const now = new Date();
-		const from = new Date(now.getTime() - WINDOW_DURATION_MS["90d"]);
+	const activeChartRange = useMemo(
+		() => resolveCurrentRange(chartFilters, new Date()),
+		[chartFilters],
+	);
 
-		return {
+	const comparativasQueryParams = useMemo(() => {
+		const params: Record<string, string> = {
 			limit: String(CHART_PAGE_SIZE),
 			page: "1",
-			fecha_desde: from.toISOString(),
+			fecha_desde: activeChartRange.from.toISOString(),
 		};
-	}, []);
+
+		if (chartFilters.modo === "rango") {
+			params.fecha_hasta = activeChartRange.to.toISOString();
+		}
+
+		return params;
+	}, [activeChartRange, chartFilters.modo]);
 
 	const {
 		data: medicionesComparativasData,
@@ -83,19 +92,21 @@ export default function usePanelComparativasData({
 	);
 
 	const limnigrafosSeleccionados = useMemo(
-		() => chartLimnigrafos
-			.map((item) => Number.parseInt(item, 10))
-			.filter((item) => !Number.isNaN(item)),
-		[chartLimnigrafos],
+		() => {
+			const selectedIds = chartLimnigrafos
+				.map((item) => Number.parseInt(item, 10))
+				.filter((item) => !Number.isNaN(item));
+
+			return selectedIds.length > 0
+				? selectedIds
+				: limnigrafos.map((limnigrafo) => limnigrafo.id);
+		},
+		[chartLimnigrafos, limnigrafos],
 	);
 
 	const chartSeries = useMemo<ChartSerie[]>(() => {
-		return chartLimnigrafos
-			.map((id, index) => {
-				const parsedId = Number.parseInt(id, 10);
-				if (Number.isNaN(parsedId)) {
-					return null;
-				}
+		return limnigrafosSeleccionados
+			.map((parsedId, index) => {
 				return {
 					limnigrafoId: parsedId,
 					dataKey: `limnigrafo_${parsedId}`,
@@ -104,7 +115,7 @@ export default function usePanelComparativasData({
 				};
 			})
 			.filter((item): item is ChartSerie => item !== null);
-	}, [chartLimnigrafos, limnigrafoNameById]);
+	}, [limnigrafoNameById, limnigrafosSeleccionados]);
 
 	const chartConfig = useMemo<ChartConfig>(() => {
 		const config: ChartConfig = {};
@@ -154,14 +165,11 @@ export default function usePanelComparativasData({
 			return [];
 		}
 
-		const referenceDate = new Date();
-		const startDate = getStartDateFromRange(referenceDate, chartTimeRange);
-
 		return chartData.filter((point) => {
 			const date = new Date(point.date);
-			return date >= startDate && date <= referenceDate;
+			return date >= activeChartRange.from && date <= activeChartRange.to;
 		});
-	}, [chartData, chartTimeRange]);
+	}, [activeChartRange, chartData]);
 
 	return {
 		chartSeries,

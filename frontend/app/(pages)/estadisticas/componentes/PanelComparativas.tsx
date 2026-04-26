@@ -18,8 +18,8 @@ import { type EstadisticaAtributo } from "@servicios/api/django.api";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { type LimnigrafoResponse } from "types/limnigrafos";
 import usePanelComparativasData from "../hooks/usePanelComparativasData";
+import { type EstadisticasFilters } from "../lib/estadisticas-domain";
 import {
-	type SharedTimeRange,
 	TIME_RANGE_LABEL,
 	formatAtributoValue,
 	toNumericTooltipValue,
@@ -30,7 +30,7 @@ type PanelComparativasProps = {
 	limnigrafosError: unknown;
 	chartAtributo: EstadisticaAtributo;
 	chartLimnigrafos: string[];
-	chartTimeRange: SharedTimeRange;
+	chartFilters: EstadisticasFilters;
 };
 
 export default function PanelComparativas({
@@ -38,7 +38,7 @@ export default function PanelComparativas({
 	limnigrafosError,
 	chartAtributo,
 	chartLimnigrafos,
-	chartTimeRange,
+	chartFilters,
 }: PanelComparativasProps) {
 	const {
 		chartSeries,
@@ -52,8 +52,11 @@ export default function PanelComparativas({
 		limnigrafos,
 		chartAtributo,
 		chartLimnigrafos,
-		chartTimeRange,
+		chartFilters,
 	});
+	const rangeDescription = chartFilters.modo === "realtime"
+		? `Ventana actual: ${TIME_RANGE_LABEL[chartFilters.ventana]}. Actualización automática cada 30 segundos.`
+		: "Rango actual: fechas personalizadas aplicadas.";
 
 	return (
 		<>
@@ -71,7 +74,8 @@ export default function PanelComparativas({
 						</CardTitle>
 						<CardDescription className="text-[14px] text-[#64748B] dark:text-[#94A3B8]">
 							Serie de {atributoSeleccionado.label.toLowerCase()} para limnígrafos seleccionados ({limnigrafosSeleccionados.length}).
-							Ventana actual: {TIME_RANGE_LABEL[chartTimeRange]}. Actualización automática cada 30 segundos.
+							{" "}
+							{rangeDescription}
 						</CardDescription>
 					</div>
 				</CardHeader>
