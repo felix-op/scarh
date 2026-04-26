@@ -34,6 +34,17 @@ export const opcionesEstado = [
 
 export const opcionesRoles: TEntidadRoles[] = [
 	{
+		entidad: "Administración",
+		roles: [
+			{
+				label: "Acceso total",
+				value: "administracion",
+				help: "Permite acceso total a todas las funcionalidades de administración (incluye todos los permisos anteriores).",
+				type: "editar",
+			},
+		],
+	},
+	{
 		entidad: "Limnígrafos",
 		roles: [
 			{
@@ -137,17 +148,6 @@ export const opcionesRoles: TEntidadRoles[] = [
 				value: "estadisticas-visualizar",
 				help: "Permite consultar estadisticas no persistidas.",
 				type: "ver",
-			},
-		],
-	},
-	{
-		entidad: "Administración",
-		roles: [
-			{
-				label: "Acceso total",
-				value: "administracion",
-				help: "Permite acceso total a todas las funcionalidades de administración (incluye todos los permisos anteriores).",
-				type: "editar",
 			},
 		],
 	},
