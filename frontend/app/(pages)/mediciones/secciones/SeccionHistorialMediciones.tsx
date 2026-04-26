@@ -164,6 +164,12 @@ export default function SeccionHistorialMediciones({
 			label: limnigrafo.codigo,
 		})),
 	];
+	const selectedLimnigrafoValues = filters.limnigrafo.length > 0
+		? filters.limnigrafo
+		: [ALL_LIMNIGRAFOS_VALUE];
+	const limnigrafoLabelText = filters.limnigrafo.length > 0
+		? `Limnígrafos (${filters.limnigrafo.length})`
+		: "Limnígrafos (todos)";
 	const paginationConfig: PaginationConfig = {
 		page: currentPage,
 		maxPage: totalPages,
@@ -194,14 +200,18 @@ export default function SeccionHistorialMediciones({
 					<div className="flex flex-col gap-2">
 						<Label
 							name="mediciones-limnigrafos-historial"
-							text={`Limnígrafos (${filters.limnigrafo.length})`}
+							text={limnigrafoLabelText}
 						/>
 						<MultiSelect
 							id="mediciones-limnigrafos-historial"
 							options={limnigrafoOptions}
-							selectedValues={filters.limnigrafo}
+							selectedValues={selectedLimnigrafoValues}
 							onChange={(values) => {
 								if (values.includes(ALL_LIMNIGRAFOS_VALUE)) {
+									if (filters.limnigrafo.length === 0 && values.length > 1) {
+										onLimnigrafoChange(values.filter((value) => value !== ALL_LIMNIGRAFOS_VALUE));
+										return;
+									}
 									onLimnigrafoChange([]);
 									return;
 								}
