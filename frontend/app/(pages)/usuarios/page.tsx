@@ -20,7 +20,6 @@ import ChipEstadoUsuario from "@componentes/chips/ChipEstadoUsuario";
 import { useNotificar } from "@hooks/useNotificar";
 import { useTieneRol } from "@hooks/useTieneRol";
 import Alerta from "@componentes/alertas/Alerta";
-import MenuAcciones from "@componentes/menu/MenuAcciones";
 import Icon from "@componentes/icons/Icon";
 
 const queriesToInvalidate = ["useGetUsuarios"];
@@ -32,7 +31,8 @@ export default function UsersAdminPage() {
 	const [search, setSearch] = useState("");
 	const [estado, setEstado] = useState("");
 	const [usuarioEditar, setUsuarioEditar] = useState<UsuarioResponse | null>(null);
-	const puedeEditar = useTieneRol("administracion");
+	const esAdministrador = useTieneRol("administracion");
+	const esEditor = useTieneRol("usuarios-editar");
 
 	const { data: usuarios, isLoading, isRefetching } = useGetUsuarios({
 		params: {
@@ -123,7 +123,7 @@ export default function UsersAdminPage() {
 				),
 				onClick: handleViewUser,
 			},
-			...(puedeEditar ? [
+			...(esAdministrador || esEditor ? [
 				{
 					label: (
 						<p className="flex items-center gap-2">
@@ -180,7 +180,7 @@ export default function UsersAdminPage() {
 					información.
 				</p>
 
-				{!puedeEditar && (
+				{!(esAdministrador || esEditor) && (
 					<Alerta variant="alerta">
 						<p>No tenés permisos para agregar, editar o eliminar usuarios. Contactá a un administrador si necesitás acceso.</p>
 					</Alerta>
@@ -214,7 +214,7 @@ export default function UsersAdminPage() {
 					columns={columns}
 					rowIdKey="id"
 					minWidth={320}
-					onAdd={puedeEditar ? handleOpenAdd : undefined}
+					onAdd={(esAdministrador || esEditor) ? handleOpenAdd : undefined}
 					onFilter={() => {
 						setIsOpenFiltros((prev) => !prev)
 					}}

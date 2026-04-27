@@ -30,7 +30,9 @@ export default function UsuarioDetallePage() {
 	const router = useRouter();
 	const usuarioId = params?.id ?? "";
 	const notificar = useNotificar();
-	const puedeEditar = useTieneRol("administracion");
+	const esAdministrador = useTieneRol("administracion");
+	const esEditor = useTieneRol("usuarios-editar");
+	const puedeVisualizarHistorial = useTieneRol("historial-visualizar");
 
 	const { data: usuario } = useGetUsuario({ params: { id: usuarioId } });
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -85,7 +87,7 @@ export default function UsuarioDetallePage() {
 			/>
 			<br />
 
-			{!puedeEditar && (
+			{!(esAdministrador || esEditor) && (
 				<>
 					<Alerta variant="alerta">
 						<p>No tenés permisos para editar o eliminar usuarios. Solo podés visualizar la información.</p>
@@ -96,23 +98,25 @@ export default function UsuarioDetallePage() {
 
 			<SeccionInfo>
 				<SeccionInfoHeader>
-					<BotonVariante variant="editar" onClick={handleOpenEdit} disabled={!puedeEditar}>
+					<BotonVariante variant="editar" onClick={handleOpenEdit} disabled={!(esAdministrador || esEditor)}>
 						<span className="icon-[line-md--edit]" />
 						<span>Editar</span>
 					</BotonVariante>
-					<BotonVariante
-						variant="ir"
-						onClick={() =>
-							router.push(`/historial?usuario=${nombre_usuario}`)
-						}
-					>
-						<span className="icon-[oui--arrow-right]" />
-						<span>Ver historial de Acciones</span>
-					</BotonVariante>
+					{(puedeVisualizarHistorial || esAdministrador) && (
+						<BotonVariante
+							variant="ir"
+							onClick={() =>
+								router.push(`/historial?usuario=${nombre_usuario}`)
+							}
+						>
+							<span className="icon-[oui--arrow-right]" />
+							<span>Ver historial de Acciones</span>
+						</BotonVariante>
+					)}
 					<BotonVariante
 						variant="eliminar"
 						onClick={() => setIsDeleteOpen(true)}
-						disabled={!puedeEditar}
+						disabled={!(esAdministrador || esEditor)}
 					/>
 				</SeccionInfoHeader>
 				<SeccionInfoGroups>
@@ -138,14 +142,16 @@ export default function UsuarioDetallePage() {
 							/>
 						</div>
 					</SeccionInfoGroup>
-					<SeccionInfoGroup>
-						<h2 className="text-center">Resumen del Historial</h2>
-						<hr />
-						<ResumenHistorialUsuario
-							username={nombre_usuario}
-							maxRecords={6}
-						/>
-					</SeccionInfoGroup>
+					{(puedeVisualizarHistorial || esAdministrador) && (
+						<SeccionInfoGroup>
+							<h2 className="text-center">Resumen del Historial</h2>
+							<hr />
+							<ResumenHistorialUsuario
+								username={nombre_usuario}
+								maxRecords={6}
+							/>
+						</SeccionInfoGroup>
+					)}
 				</SeccionInfoGroups>
 			</SeccionInfo>
 
