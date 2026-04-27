@@ -20,6 +20,8 @@ import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
 import ChipEstadoLimnigrafo from "@componentes/chips/ChipEstadoLimnigrafo";
 import FiltroFecha from "@componentes/filtros/FiltroFecha";
 import BotonIconoIr from "@componentes/botones/BotonIconoIr";
+import { useTieneRol } from "@hooks/useTieneRol";
+import Alerta from "@componentes/alertas/Alerta";
 
 type EstadoFiltro = "" | EstadoLimnigrafo;
 
@@ -54,6 +56,8 @@ function formatBateria(value?: number | null): string {
 
 export default function Home() {
 	const router = useRouter();
+	const esAdministrador = useTieneRol("administracion");
+	const esEditor = useTieneRol("limnigrafos-editar");
 
 	const [page, setPage] = useState(1);
 	const [lengthPages, setLengthPages] = useState(5);
@@ -145,19 +149,23 @@ export default function Home() {
 		typeAction: "fila",
 		actionColumns: (row) => (
 			<ActionMenu>
-				<BotonVariante
-					variant="editar"
-					className="hidden xl:flex"
-					onClick={() => {
-						handleEdit(row);
-					}}
-				/>
-				<BotonIconoEditar
-					className="xl:hidden"
-					onClick={() => {
-						handleEdit(row);
-					}}
-				/>
+				{(esAdministrador || esEditor) && (
+					<>
+						<BotonVariante
+							variant="editar"
+							className="hidden xl:flex"
+							onClick={() => {
+								handleEdit(row);
+							}}
+						/>
+						<BotonIconoEditar
+							className="xl:hidden"
+							onClick={() => {
+								handleEdit(row);
+							}}
+						/>
+					</>
+				)}
 				<BotonVariante
 					variant="ir"
 					className="hidden xl:flex"
@@ -182,6 +190,11 @@ export default function Home() {
 				<p>
 					Gestiona el inventario de limnigrafos, agrega nuevos equipos y revisa su ubicacion y estado general.
 				</p>
+				{!(esAdministrador || esEditor) && (
+					<Alerta variant="alerta">
+						<p>No tenés permisos para agregar, editar o eliminar limnígrafos. Contactá a un administrador si necesitás acceso.</p>
+					</Alerta>
+				)}
 				<FiltrosContenedor open={isOpenFiltros}>
 					<h4>Filtros</h4>
 					<div className="flex flex-col gap-4">
@@ -205,8 +218,8 @@ export default function Home() {
 						<div>
 							<FiltroFecha
 								title="Tiempo desde el último dato"
-								onChangeInicio={() => {}}
-								onChangeFin={() => {}}
+								onChangeInicio={() => { }}
+								onChangeFin={() => { }}
 							/>
 						</div>
 					</div>
@@ -216,7 +229,7 @@ export default function Home() {
 					columns={columns}
 					rowIdKey="id"
 					minWidth={600}
-					onAdd={handleOpenAdd}
+					onAdd={(esAdministrador || esEditor) ? handleOpenAdd : undefined}
 					onFilter={() => setIsOpenFiltros((prev) => !prev)}
 					actionConfig={actionConfig}
 					paginationConfig={paginationConfig}

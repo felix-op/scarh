@@ -19,8 +19,13 @@ import CargandoDatos from "@componentes/animaciones/CargandoDatos";
 import MensajeError from "@componentes/mensajes/MensajeError";
 import DetallesLimnigrafo from "../componentes/DetallesLimnigrafo";
 import ImportarDatos from "app/(pages)/componentes/ImportarDatos";
+import { useTieneRol } from "@hooks/useTieneRol";
+import Alerta from "@componentes/alertas/Alerta";
 
 export default function DetalleLimnigrafo() {
+	const esAdministrador = useTieneRol("administracion");
+	const esEditor = useTieneRol("limnigrafos-editar");
+	const puedeEditarMediciones = useTieneRol("mediciones-editar");
 	const router = useRouter();
 	const params = useParams<{ id: string }>();
 	const limnigrafoID = params?.id || "";
@@ -116,12 +121,23 @@ export default function DetalleLimnigrafo() {
 	return (
 		<PaginaBase>
 			<BotonVariante variant="volver" onClick={handleVolver} />
-			<Tabs tab={tab} handleChange={handleChange} options={opciones} />
+			{!(esAdministrador || esEditor) && (
+				<div className="my-4">
+					<Alerta variant="alerta">
+						<p>No tenés permisos para editar o eliminar el limnígrafo. Contactá a un administrador si necesitás acceso.</p>
+					</Alerta>
+				</div>
+			)}
+			{(puedeEditarMediciones) && (
+				<Tabs tab={tab} handleChange={handleChange} options={opciones} />
+			)}
 			<br />
 			{tab === 1 && (
 				<SeccionInfo>
 					<SeccionInfoHeader>
-						<BotonVariante variant="editar" onClick={handleEditar} />
+						{(esAdministrador || esEditor) && (
+							<BotonVariante variant="editar" onClick={handleEditar} />
+						)}
 						<LimnigrafoMenu />
 					</SeccionInfoHeader>
 					{isLoadingLimnigrafo ? (
