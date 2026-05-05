@@ -11,12 +11,12 @@ type SidebarItem = {
 	label: string;
 	icono: IconVariants;
 	href: string;
-	permiso?: string;
+	permiso?: string | string[];
 };
 
 const rutas: Record<string, SidebarItem[]> = {
 	general: [
-		{ label: "Dashboard", icono: "dashboard", href: "/" },
+		{ label: "Dashboard", icono: "dashboard", href: "/", permiso: ["estadisticas-visualizar", "limnigrafos-visualizar"] },
 		{ label: "Mapa", icono: "mapa", href: "/mapa", permiso: "mapa-visualizar" },
 		{ label: "Limnigrafos", icono: "chip", href: "/limnigrafos", permiso: "limnigrafos-visualizar" },
 		{ label: "Mediciones", icono: "documento", href: "/mediciones", permiso: "mediciones-visualizar" },
