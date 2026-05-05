@@ -43,4 +43,6 @@ export type DataTableStyles<T> = {
     cellClassName?: string;
     emptyCellClassName?: string;
     hiddenRowHover?: boolean;
+    scrollX?: "hidden" | "auto";
+    scrollY?: "hidden" | "auto";
 }

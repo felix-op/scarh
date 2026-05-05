@@ -8,6 +8,7 @@ import BotonSiguiente from "@componentes/botones/BotonSiguiente";
 import { ReactNode } from "react";
 import MenuAcciones from "@componentes/menu/MenuAcciones";
 import DataTableRow from "./DataTableRow";
+import SeccionCard from "@componentes/secciones/SeccionCard";
 
 type DataTableProps<T> = {
 	noResults?: boolean;
@@ -26,6 +27,7 @@ type DataTableProps<T> = {
 	loadingRows?: number;
 	emptyStateContent?: ReactNode;
 	styles?: DataTableStyles<T>;
+	topBar?: ReactNode,
 }
 
 export default function DataTable<T>({
@@ -40,6 +42,7 @@ export default function DataTable<T>({
 	minWidth = 300,
 	rowIdKey,
 	showTopBar = true,
+	topBar = null,
 	showBottomPagination = false,
 	enableRowAnimation = true,
 	loadingRows = 5,
@@ -88,23 +91,26 @@ export default function DataTable<T>({
 		);
 	};
 
+	const xScrollClass = styles?.scrollX === "hidden" ? "overflow-x-hidden" : "overflow-x-auto";
+	const yScrollClass = styles?.scrollY === "auto" ? "overflow-y-auto" : "overflow-y-hidden";
+
 	return (
 		<div className={`pb-4 ${styles?.rootClassName ?? ""}`.trim()}>
-			<div className={`bg-table rounded-xl overflow-hidden border dark:border-white/5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)] ${styles?.cardClassName ?? ""}`.trim()}>
-				<div className={`overflow-x-auto overflow-y-hidden custom-scroll ${styles?.scrollerClassName ?? ""}`.trim()}>
-					{showTopBar && (
-						<div
-							className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 ${styles?.topBarClassName ?? ""}`.trim()}
-						>
-							<div className="flex gap-2">
-								{(onAdd) && (<BotonVariante variant="agregar" onClick={onAdd} />)}
-								{(onFilter) && (<BotonVariante variant="filtro" onClick={onFilter} />)}
-							</div>
-							{renderPaginationControls("top")}
+			<SeccionCard className={styles?.cardClassName ?? ""}>
+				{topBar || (showTopBar && (
+					<div
+						className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 ${styles?.topBarClassName ?? ""}`.trim()}
+					>
+						<div className="flex gap-2">
+							{(onAdd) && (<BotonVariante variant="agregar" onClick={onAdd} />)}
+							{(onFilter) && (<BotonVariante variant="filtro" onClick={onFilter} />)}
 						</div>
-					)}
+						{renderPaginationControls("top")}
+					</div>
+				))}
+				<div className={`${xScrollClass} ${yScrollClass} custom-scroll ${styles?.scrollerClassName ?? ""}`.trim()}>
 					<table className={`w-full border-collapse ${styles?.tableClassName ?? ""}`.trim()} style={{ minWidth }}>
-						<thead className={`text-left bg-table-header border dark:border-white/5 ${styles?.theadClassName ?? ""}`.trim()}>
+						<thead className={`sticky top-0 z-10 text-left bg-table-header border dark:border-white/5 ${styles?.theadClassName ?? ""}`.trim()}>
 							<tr className={styles?.headerRowClassName}>
 								{columns.map((column) => {
 									if (typeof column.header === "string") {
@@ -197,7 +203,7 @@ export default function DataTable<T>({
 						{renderPaginationControls("bottom")}
 					</div>
 				)}
-			</div>
+			</SeccionCard>
 		</div>
 	)
 }
