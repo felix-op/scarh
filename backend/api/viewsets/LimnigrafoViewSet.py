@@ -1,7 +1,7 @@
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from ..models import Limnigrafo
-from ..serializer import LimnigrafoSerializer
+from ..serializer import LimnigrafoSerializer, ConfiguracionLimnigrafoSerializer
 from ..filters import LimnigrafoFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
@@ -149,3 +149,35 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
             "secret_key": key_secret,
             "warning": "GUARDE ESTA CLAVE. No se puede recuperar después de este momento."
         }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get', 'put', 'patch'], url_path='configuracion', serializer_class=ConfiguracionLimnigrafoSerializer)
+    def configuracion(self, request, pk=None):
+        limnigrafo = self.get_object()
+        configuracion = getattr(limnigrafo, 'configuracion', None)
+        if not configuracion:
+            from ..models import ConfiguracionLimnigrafo
+            configuracion = ConfiguracionLimnigrafo.objects.create(limnigrafo=limnigrafo)
+        
+        if request.method == 'GET':
+            serializer = self.get_serializer(configuracion)
+            return Response(serializer.data)
+            
+        elif request.method in ['PUT', 'PATCH']:
+            partial = (request.method == 'PATCH')
+            serializer = self.get_serializer(configuracion, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            
+            registrar_accion_auditoria(
+                request=request,
+                tipo_accion="modified",
+                entidad="Configuración Limnígrafo",
+                entidad_id=configuracion.id,
+                descripcion=f"Modificó la configuración del limnígrafo '{limnigrafo.codigo}'.",
+                metadata={
+                    "codigo": limnigrafo.codigo,
+                    "limnigrafo_id": limnigrafo.id,
+                    "changes": serializer.validated_data,
+                },
+            )
+            return Response(serializer.data)

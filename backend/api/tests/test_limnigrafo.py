@@ -132,3 +132,27 @@ class LimnigrafoTests(APITestCase):
         self.client.force_authenticate(user=None)
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_configuracion_action(self):
+        url = reverse('limnigrafos-configuracion', args=[self.limnigrafo.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['bateria_max'], 12.0)
+        self.assertEqual(response.data['bateria_min'], 10.0)
+
+    def test_update_configuracion_action(self):
+        url = reverse('limnigrafos-configuracion', args=[self.limnigrafo.id])
+        update_data = {
+            'bateria_max': 13.5,
+            'bateria_min': 10.5,
+            'tiempo_advertencia': 900
+        }
+        response = self.client.patch(url, update_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['bateria_max'], 13.5)
+        self.assertEqual(response.data['bateria_min'], 10.5)
+        self.assertEqual(response.data['tiempo_advertencia'], 900)
+        
+        # Verify it persisted in DB
+        self.limnigrafo.configuracion.refresh_from_db()
+        self.assertEqual(self.limnigrafo.configuracion.bateria_max, 13.5)
