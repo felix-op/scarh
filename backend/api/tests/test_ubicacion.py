@@ -7,7 +7,7 @@ from api.models.ubicacion import Ubicacion
 class UbicacionTests(APITestCase):
     def setUp(self):
         User = get_user_model()
-        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.user = User.objects.create_superuser(username='testuser', password='testpassword', email='testuser@example.com')
         self.client.force_authenticate(user=self.user)
 
         self.ubicacion_data = {

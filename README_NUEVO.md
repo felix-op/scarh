@@ -36,7 +36,7 @@ docker-compose up -d
 ```
 
 Esto iniciará:
-- 🗄️ Base de datos PostgreSQL con PostGIS en `localhost:5433`
+- 🗄️ Base de datos PostgreSQL estándar en `localhost:5433`
 - 🐍 Backend Django en `http://localhost:8000`
 - 📊 Simulador de datos (Go) generando mediciones automáticamente
 
@@ -129,10 +129,9 @@ pip install -r requirements.txt
 ```
 
 4. **Configurar PostgreSQL local**
-Asegúrate de tener PostgreSQL con PostGIS instalado y crea una base de datos:
+Asegúrate de tener PostgreSQL instalado y crea una base de datos:
 ```sql
 CREATE DATABASE scarh_db;
-CREATE EXTENSION postgis;
 ```
 
 5. **Realizar migraciones**
@@ -160,7 +159,7 @@ npm run dev
 
 ### Exportar datos actuales
 ```bash
-docker exec scarh_backend_dev python manage.py dumpdata api.Limnigrafo api.Medicion api.Ubicacion api.SectorRio api.RutaAcceso --indent 2 > datos_limnigrafos.json
+docker exec scarh_backend_dev python manage.py dumpdata api.Limnigrafo api.Medicion api.Ubicacion api.RutaAcceso --indent 2 > datos_limnigrafos.json
 git add datos_limnigrafos.json
 git commit -m "actualizar datos de limnigrafos"
 git push

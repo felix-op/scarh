@@ -58,9 +58,10 @@ def calcular_estado_limnigrafo(limnigrafo, referencia=None):
     bateria_critica = False
     bateria_baja = False
 
+    config = getattr(limnigrafo, "configuracion", None)
     bateria_actual = limnigrafo.bateria_actual
-    bateria_max = limnigrafo.bateria_max
-    bateria_min = limnigrafo.bateria_min
+    bateria_max = config.bateria_max if config else None
+    bateria_min = config.bateria_min if config else None
 
     if (
         bateria_actual is not None
@@ -86,8 +87,8 @@ def calcular_estado_limnigrafo(limnigrafo, referencia=None):
         if tiempo_transcurrido < timedelta(0):
             tiempo_transcurrido = timedelta(0)
 
-        advertencia_delta = _to_timedelta(limnigrafo.tiempo_advertencia)
-        peligro_delta = _to_timedelta(limnigrafo.tiempo_peligro)
+        advertencia_delta = _to_timedelta(config.tiempo_advertencia) if config else None
+        peligro_delta = _to_timedelta(config.tiempo_peligro) if config else None
         fuera_servicio_delta = peligro_delta * 3 if peligro_delta is not None else None
 
         if fuera_servicio_delta is not None and tiempo_transcurrido > fuera_servicio_delta:

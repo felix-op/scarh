@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from ..models import Limnigrafo, Ubicacion
+from ..models import Limnigrafo, Ubicacion, ConfiguracionLimnigrafo
 from .ubicacionSerializer import UbicacionSerializer
+from .configuracion_limnigrafoSerializer import ConfiguracionLimnigrafoSerializer
 
     
 class LimnigrafoSerializer(serializers.ModelSerializer):
@@ -13,6 +14,7 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
     estado = serializers.CharField(read_only=True)
     ultima_conexion = serializers.DateTimeField(read_only=True)
     ultima_medicion = serializers.SerializerMethodField()
+    configuracion = ConfiguracionLimnigrafoSerializer(read_only=True, allow_null=True)
     ubicacion_id = serializers.PrimaryKeyRelatedField(
         queryset=Ubicacion.objects.all(),
         source='ubicacion',
@@ -33,6 +35,11 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
                 'presion': ultima.presion,
             }
         return None
+
+    def create(self, validated_data):
+        limnigrafo = Limnigrafo.objects.create(**validated_data)
+        ConfiguracionLimnigrafo.objects.create(limnigrafo=limnigrafo)
+        return limnigrafo
     class Meta:
         model = Limnigrafo
         fields = [
@@ -41,15 +48,12 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
             'descripcion',
             'ultimo_mantenimiento',
             'tipo_comunicacion',
-            'bateria_max',
-            'bateria_min',
             'bateria',
             'memoria',
-            'tiempo_advertencia',
-            'tiempo_peligro',
             'ultima_conexion',
             'estado',
             'ubicacion',
             'ubicacion_id',
             'ultima_medicion',
+            'configuracion',
         ]

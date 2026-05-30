@@ -6,13 +6,13 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import Accion, Limnigrafo
+from api.models import Accion, Limnigrafo, ConfiguracionLimnigrafo
 
 
 class HistorialTests(APITestCase):
     def setUp(self):
         User = get_user_model()
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_superuser(
             username="testuser",
             email="testuser@example.com",
             password="testpassword",
@@ -233,11 +233,14 @@ class HistorialTests(APITestCase):
             descripcion="Historial Test",
             memoria=1024,
             tipo_de_comunicacion=["fisico-usb"],
+            bateria_actual=12.0,
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=limnigrafo,
             bateria_max=12.0,
             bateria_min=10.0,
-            bateria_actual=12.0,
-            tiempo_advertencia=time(1, 0),
-            tiempo_peligro=time(2, 0),
+            tiempo_advertencia=3600,
+            tiempo_peligro=7200,
         )
 
         response = self.client.post(

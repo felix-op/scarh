@@ -1,5 +1,4 @@
 from .limnigrafo import *
-from .sector_rio import *
 from .ubicacion import *
 from .ruta_acceso import *
 from .medicion import *
@@ -9,10 +8,10 @@ from .usuario import *
 from .accion import *
 from .rol import *
 from .password_recovery import *
+from .configuracion_limnigrafo import *
 
 __all__ = [
     'Limnigrafo',
-    'SectorRio',
     'Ubicacion',
     'RutaAcceso',
     'Medicion',
@@ -22,4 +21,5 @@ __all__ = [
     'Accion',
     'Rol',
     'PasswordRecoveryCode',
+    'ConfiguracionLimnigrafo',
 ]

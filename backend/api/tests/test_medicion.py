@@ -3,7 +3,7 @@ from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from api.models.limnigrafo import Limnigrafo
+from api.models import Limnigrafo, ConfiguracionLimnigrafo
 from api.models.medicion import Medicion
 from rest_framework_api_key.models import APIKey
 from datetime import timedelta
@@ -11,25 +11,27 @@ from datetime import timedelta
 class MedicionTests(APITestCase):
     def setUp(self):
         User = get_user_model()
-        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.user = User.objects.create_superuser(username='testuser', password='testpassword', email='testuser@example.com')
         
         self.limnigrafo = Limnigrafo.objects.create(
             codigo='LMG-001',
             descripcion='Limnigrafo Test',
             memoria=1024,
             tipo_de_comunicacion=['fisico-usb'],
+            bateria_actual=11.5,
+            estado='normal'
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=self.limnigrafo,
             bateria_max=12.0,
             bateria_min=10.0,
-            bateria_actual=11.5,
             tiempo_advertencia=3600,
             tiempo_peligro=7200,
-            estado='normal'
         )
         
         self.list_url = reverse('medicion-list')
         
         self.api_key, self.key_secret = APIKey.objects.create_key(name="test-key")
-
     def test_list_mediciones(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.list_url)
@@ -134,9 +136,12 @@ class MedicionTests(APITestCase):
             codigo='LMG-002',
             descripcion='Other',
             memoria=1024,
+            bateria_actual=12,
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=other_limnigrafo,
             bateria_max=12,
             bateria_min=10,
-            bateria_actual=12,
             tiempo_advertencia=3600,
             tiempo_peligro=7200,
         )
@@ -155,9 +160,12 @@ class MedicionTests(APITestCase):
             codigo='LMG-003',
             descripcion='Other multi',
             memoria=1024,
+            bateria_actual=12,
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=other_limnigrafo,
             bateria_max=12,
             bateria_min=10,
-            bateria_actual=12,
             tiempo_advertencia=3600,
             tiempo_peligro=7200,
         )
@@ -165,9 +173,12 @@ class MedicionTests(APITestCase):
             codigo='LMG-004',
             descripcion='Other excluded',
             memoria=1024,
+            bateria_actual=12,
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=another_limnigrafo,
             bateria_max=12,
             bateria_min=10,
-            bateria_actual=12,
             tiempo_advertencia=3600,
             tiempo_peligro=7200,
         )

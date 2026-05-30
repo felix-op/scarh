@@ -3,14 +3,14 @@ from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from api.models.limnigrafo import Limnigrafo
+from api.models import Limnigrafo, ConfiguracionLimnigrafo
 from datetime import time, timedelta
 from rest_framework_api_key.models import APIKey
 
 class LimnigrafoTests(APITestCase):
     def setUp(self):
         User = get_user_model()
-        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.user = User.objects.create_superuser(username='testuser', password='testpassword', email='testuser@example.com')
         self.client.force_authenticate(user=self.user)
 
         self.limnigrafo_data = {
@@ -29,10 +29,13 @@ class LimnigrafoTests(APITestCase):
             descripcion='Limnigrafo existente',
             memoria=2048,
             tipo_de_comunicacion=['fisico-usb'],
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=self.limnigrafo,
             bateria_max=12.0,
             bateria_min=10.0,
-            tiempo_advertencia=time(0, 30),
-            tiempo_peligro=time(1, 0)
+            tiempo_advertencia=1800,  # 30 minutos (1800 segundos)
+            tiempo_peligro=3600       # 1 hora (3600 segundos)
         )
         self.list_url = reverse('limnigrafos-list')
         self.detail_url = reverse('limnigrafos-detail', args=[self.limnigrafo.id])

@@ -2,7 +2,6 @@
 
 import django.contrib.auth.models
 import django.contrib.auth.validators
-import django.contrib.gis.db.models.fields
 import django.contrib.postgres.fields
 import django.db.models.deletion
 import django.utils.timezone
@@ -43,7 +42,7 @@ class Migration(migrations.Migration):
                 ('nombre_sector', models.CharField(max_length=100)),
                 ('descripcion', models.TextField(blank=True)),
                 ('cuenca', models.CharField(max_length=100)),
-                ('geometria', django.contrib.gis.db.models.fields.LineStringField(blank=True, null=True, srid=4326)),
+                ('geometria', models.TextField(blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(
@@ -130,7 +129,7 @@ class Migration(migrations.Migration):
                 ('distancia_km', models.FloatField()),
                 ('tiempo_estimado_minutos', models.FloatField(null=True)),
                 ('observaciones', models.TextField(blank=True)),
-                ('track', django.contrib.gis.db.models.fields.LineStringField(blank=True, null=True, srid=4326)),
+                ('track', models.TextField(blank=True, null=True)),
                 ('ubicacion', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='rutas_acceso', to='api.ubicacion')),
             ],
         ),
