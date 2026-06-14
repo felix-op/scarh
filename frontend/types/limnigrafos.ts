@@ -12,13 +12,21 @@ export type EstadoLimnigrafo =
   | "peligro"
   | "advertencia";
 
+export type UltimaMedicionResponse = {
+    id: number
+    fecha_hora: string
+    altura_agua: number | null
+    temperatura: number | null
+    presion: number | null
+}
+
 export type LimnigrafoResponse = {
     id: number
     codigo: string
     estado: EstadoLimnigrafo
     descripcion: string
     ultimo_mantenimiento: string // Fecha
-    ultima_medicion: string // Fecha
+    ultima_medicion: UltimaMedicionResponse | null
     tipo_comunicacion: string[]
     tiempo_advertencia: number | null // Segundos
     tiempo_peligro: number | null // Segundos

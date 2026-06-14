@@ -6,9 +6,25 @@ import DataTable from "@componentes/tabla/DataTable";
 import { ColumnConfig } from "@componentes/tabla/types";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
 import { useRouter } from "next/navigation";
-import { LimnigrafoResponse } from "types/limnigrafos";
+import { LimnigrafoResponse, UltimaMedicionResponse } from "types/limnigrafos";
 
 const HOME_PAGE_SIZE = 10;
+
+function formatUltimaMedicion(medicion?: UltimaMedicionResponse | null): string {
+	if (!medicion?.fecha_hora) {
+		return "Sin registros";
+	}
+
+	const fecha = new Date(medicion.fecha_hora);
+	if (Number.isNaN(fecha.getTime())) {
+		return "Sin registros";
+	}
+
+	return `${fecha.toLocaleDateString("es-AR")} ${fecha.toLocaleTimeString("es-AR", {
+		hour: "2-digit",
+		minute: "2-digit",
+	})}`;
+}
 
 const tableColumns: ColumnConfig<LimnigrafoResponse>[] = [
 	{
@@ -31,7 +47,7 @@ const tableColumns: ColumnConfig<LimnigrafoResponse>[] = [
 		accessorKey: "ultima_medicion",
 		cell: (row) => (
 			<p className="p-4">
-				{(row.ultima_medicion) || "Sin registros"}
+				{formatUltimaMedicion(row.ultima_medicion)}
 			</p>
 		),
 	},

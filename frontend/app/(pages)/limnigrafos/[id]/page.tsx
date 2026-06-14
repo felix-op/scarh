@@ -21,6 +21,23 @@ import DetallesLimnigrafo from "../componentes/DetallesLimnigrafo";
 import ImportarDatos from "app/(pages)/componentes/ImportarDatos";
 import { useTieneRol } from "@hooks/useTieneRol";
 import Alerta from "@componentes/alertas/Alerta";
+import type { UltimaMedicionResponse } from "types/limnigrafos";
+
+function formatUltimaMedicion(medicion?: UltimaMedicionResponse | null): string {
+	if (!medicion?.fecha_hora) {
+		return "-";
+	}
+
+	const fecha = new Date(medicion.fecha_hora);
+	if (Number.isNaN(fecha.getTime())) {
+		return "-";
+	}
+
+	return `${fecha.toLocaleDateString("es-AR")} ${fecha.toLocaleTimeString("es-AR", {
+		hour: "2-digit",
+		minute: "2-digit",
+	})}`;
+}
 
 export default function DetalleLimnigrafo() {
 	const esAdministrador = useTieneRol("administracion");
@@ -56,7 +73,7 @@ export default function DetalleLimnigrafo() {
 		const tiempo_advertencia = hmsLegibles(limnigrafo?.tiempo_advertencia);
 		const tiempo_peligro = hmsLegibles(limnigrafo?.tiempo_peligro);
 		const ultima_conexion = normalizarString(limnigrafo?.ultima_conexion);
-		const ultima_medicion = normalizarString(limnigrafo?.ultima_medicion);
+		const ultima_medicion = formatUltimaMedicion(limnigrafo?.ultima_medicion);
 		const bateria =
 			limnigrafo?.bateria != null ? `${limnigrafo.bateria}v` : "-";
 		const bateria_min =
