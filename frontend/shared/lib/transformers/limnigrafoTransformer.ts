@@ -38,10 +38,20 @@ export function mapearEstado(estadoBackend: string): EstadoLimnigrafo {
  */
 export function formatearBateria(
 	bateriaActual: number | null,
-	bateriaMin: number,
-	bateriaMax: number
+	bateriaMin: number | null,
+	bateriaMax: number | null
 ): string {
 	if (bateriaActual === null || bateriaActual === undefined) {
+		return "Bateria N/A";
+	}
+
+	if (
+		bateriaMin === null ||
+		bateriaMin === undefined ||
+		bateriaMax === null ||
+		bateriaMax === undefined ||
+		bateriaMax <= bateriaMin
+	) {
 		return "Bateria N/A";
 	}
 
@@ -122,6 +132,7 @@ export function transformarLimnigrafoConMedicion(
 ) {
 	// Usar ultima_medicion del propio limnígrafo o el parámetro opcional
 	const medicion = ultimaMedicion || limnigrafo.ultima_medicion;
+	const configuracion = limnigrafo.configuracion;
 
 	// El backend ahora devuelve ultima_conexion como timestamp completo ISO 8601
 	// Ejemplo: "2025-12-05T01:23:28.002536+00:00"
@@ -140,8 +151,8 @@ export function transformarLimnigrafoConMedicion(
 		// Batería: formatear con cálculo de porcentaje
 		bateria: formatearBateria(
 			limnigrafo.bateria,
-			limnigrafo.bateria_min,
-			limnigrafo.bateria_max
+			configuracion?.bateria_min ?? null,
+			configuracion?.bateria_max ?? null
 		),
 
 		// Tiempo del último dato: calcular desde última conexión
@@ -193,8 +204,10 @@ export function transformarLimnigrafoConMedicion(
 
 		// Datos extra (pueden agregarse más según necesidad)
 		datosExtra: [
-			{ label: "Batería máx", value: `${limnigrafo.bateria_max}V` },
-			{ label: "Batería mín", value: `${limnigrafo.bateria_min}V` },
+			{ label: "Batería máx", value: configuracion?.bateria_max != null ? `${configuracion.bateria_max}V` : "N/D" },
+			{ label: "Batería mín", value: configuracion?.bateria_min != null ? `${configuracion.bateria_min}V` : "N/D" },
+			{ label: "Advertencia", value: configuracion?.tiempo_advertencia != null ? `${configuracion.tiempo_advertencia}s` : "N/D" },
+			{ label: "Peligro", value: configuracion?.tiempo_peligro != null ? `${configuracion.tiempo_peligro}s` : "N/D" },
 		],
 	};
 }

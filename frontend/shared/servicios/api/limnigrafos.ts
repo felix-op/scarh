@@ -1,4 +1,4 @@
-import { LimnigrafoPatchtRequest, LimnigrafoPostRequest, LimnigrafoPutRequest, LimnigrafoResponse } from "types/limnigrafos";
+import { ConfiguracionLimnigrafoResponse, ConfiguracionLimnigrafoUpdateRequest, LimnigrafoPatchtRequest, LimnigrafoPostRequest, LimnigrafoPutRequest, LimnigrafoResponse } from "types/limnigrafos";
 import { useDelete, useGet, usePatch, usePost, usePut } from "./queryHooks";
 import { MutationConfig, Paginado, ParamsBase, UseGetConfig } from "./types";
 
@@ -105,6 +105,30 @@ export function usePachtLimnigrafo({ params, configuracion }: UsePachtLimngrafoO
 
 	return usePatch({
 		url: `${NEXT_PROXY_URL}/limnigrafos/{id}`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+type UsePatchConfiguracionLimnigrafoOptions = {
+	params?: {
+		id: string,
+	}
+	configuracion?: MutationConfig<
+		ConfiguracionLimnigrafoUpdateRequest,
+		ConfiguracionLimnigrafoResponse,
+		ParamsBase
+	>
+};
+
+export function usePatchConfiguracionLimnigrafo({ params, configuracion }: UsePatchConfiguracionLimnigrafoOptions) {
+	const defaultParams = {
+		id: "",
+	}
+	const defaultConfig = {};
+
+	return usePatch<ConfiguracionLimnigrafoUpdateRequest, ConfiguracionLimnigrafoResponse, ParamsBase>({
+		url: `${NEXT_PROXY_URL}/limnigrafos/{id}/configuracion/`,
 		configuracion: configuracion ?? defaultConfig,
 		params: params ?? defaultParams,
 	});

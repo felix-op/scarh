@@ -59,6 +59,7 @@ export default function DetalleLimnigrafo() {
 		especificacionesTecnicas,
 		estadoActual,
 	} = useMemo(() => {
+		const configuracion = limnigrafo?.configuracion;
 		const codigo = normalizarString(limnigrafo?.codigo);
 		const descripcion = normalizarString(limnigrafo?.descripcion);
 		const memoria = memoriaLegible(limnigrafo?.memoria);
@@ -70,19 +71,19 @@ export default function DetalleLimnigrafo() {
 		const ultimo_mantenimiento = normalizarFechaAFormatoLatino(
 			limnigrafo?.ultimo_mantenimiento,
 		);
-		const tiempo_advertencia = hmsLegibles(limnigrafo?.tiempo_advertencia);
-		const tiempo_peligro = hmsLegibles(limnigrafo?.tiempo_peligro);
+		const tiempo_advertencia = hmsLegibles(configuracion?.tiempo_advertencia);
+		const tiempo_peligro = hmsLegibles(configuracion?.tiempo_peligro);
 		const ultima_conexion = normalizarString(limnigrafo?.ultima_conexion);
 		const ultima_medicion = formatUltimaMedicion(limnigrafo?.ultima_medicion);
 		const bateria =
 			limnigrafo?.bateria != null ? `${limnigrafo.bateria}v` : "-";
 		const bateria_min =
-			limnigrafo?.bateria_min != null
-				? `${limnigrafo.bateria_min}v`
+			configuracion?.bateria_min != null
+				? `${configuracion.bateria_min}v`
 				: "-";
 		const bateria_max =
-			limnigrafo?.bateria_max != null
-				? `${limnigrafo.bateria_max}v`
+			configuracion?.bateria_max != null
+				? `${configuracion.bateria_max}v`
 				: "-";
 		const ubicacion = limnigrafo?.ubicacion
 			? limnigrafo.ubicacion.nombre

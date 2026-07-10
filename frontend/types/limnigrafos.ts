@@ -20,6 +20,20 @@ export type UltimaMedicionResponse = {
     presion: number | null
 }
 
+export type ConfiguracionLimnigrafoResponse = {
+    id: number
+    tiempo_advertencia: number | null
+    tiempo_peligro: number | null
+    bateria_max: number | null
+    bateria_min: number | null
+    altura_minima_agua: number | null
+    altura_maxima_agua: number | null
+    temperatura_minima: number | null
+    temperatura_maxima: number | null
+    presion_minima: number | null
+    presion_maxima: number | null
+}
+
 export type LimnigrafoResponse = {
     id: number
     codigo: string
@@ -28,14 +42,11 @@ export type LimnigrafoResponse = {
     ultimo_mantenimiento: string // Fecha
     ultima_medicion: UltimaMedicionResponse | null
     tipo_comunicacion: string[]
-    tiempo_advertencia: number | null // Segundos
-    tiempo_peligro: number | null // Segundos
     ultima_conexion: string
-    bateria_max: number // Voltios
-    bateria_min: number // Voltios
     bateria: number // Voltios
     memoria: number // Bytes
     ubicacion: Ubicacion
+    configuracion: ConfiguracionLimnigrafoResponse | null
 }
 
 export type LimnigrafoPostRequest = {
@@ -49,11 +60,7 @@ export type LimnigrafoPutRequest = {
     descripcion?: string
 	ultimo_mantenimiento?: string | null; // Fecha
     tipo_comunicacion?: string[]
-    bateria_max?: number // Voltios
-    bateria_min?: number // Voltios
     memoria?: number // Bytes
-	tiempo_advertencia?: number | null; // Segundos
-	tiempo_peligro?: number | null; // Segundos
 	ubicacion_id?: string | null;
 }
 
@@ -62,10 +69,19 @@ export type LimnigrafoPatchtRequest = {
     descripcion?: string
     ultimo_mantenimiento?: string
     tipo_comunicacion?: string[]
-    bateria_max?: number
-    bateria_min?: number
     memoria?: number // Bytes
-    tiempo_advertencia?: number
-    tiempo_peligro?: number
     ubicacion_id?: string
+}
+
+export type ConfiguracionLimnigrafoUpdateRequest = {
+    tiempo_advertencia?: number | null
+    tiempo_peligro?: number | null
+    bateria_max?: number | null
+    bateria_min?: number | null
+    altura_minima_agua?: number | null
+    altura_maxima_agua?: number | null
+    temperatura_minima?: number | null
+    temperatura_maxima?: number | null
+    presion_minima?: number | null
+    presion_maxima?: number | null
 }
