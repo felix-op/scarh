@@ -10,7 +10,6 @@ import { LimnigrafoMapInfoPanel } from "@componentes/LimnigrafoMapInfoPanel";
 import { LimnigrafosSidebar } from "./LimnigrafosSidebar";
 import {
 	type LimnigrafoDetalleData,
-	LIMNIGRAFOS,
 } from "@data/limnigrafos";
 import {
 	useGetMediciones,
@@ -84,6 +83,8 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 
 	const {
 		data: limnigrafosData,
+		isLoading: isLoadingLimnigrafos,
+		error: limnigrafosError,
 	} = useGetLimnigrafos({
 		config: {
 			refetchInterval: 300000,
@@ -91,6 +92,8 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 	});
 	const {
 		data: medicionesData,
+		isLoading: isLoadingMediciones,
+		error: medicionesError,
 	} = useGetMediciones({
 		config: {
 			refetchInterval: 300000,
@@ -119,11 +122,13 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 		return transformarLimnigrafos(limnigrafosArray, medicionesMap);
 	}, [limnigrafosResponse, medicionesResponse]);
 
-	const limnigrafos =
-		limnigrafosTransformados.length > 0 ? limnigrafosTransformados : LIMNIGRAFOS;
+	const limnigrafos = limnigrafosTransformados;
 	const [selectedLimnigrafo, setSelectedLimnigrafo] =
 		useState<LimnigrafoDetalleData | null>(null);
 	const [cameraCenter, setCameraCenter] = useState<[number, number]>(DEFAULT_CENTER);
+	const isLoadingMapa = isLoadingLimnigrafos || isLoadingMediciones;
+	const mapaError = limnigrafosError || medicionesError;
+	const hasLimnigrafos = limnigrafos.length > 0;
 
 	const markers = useMemo(
 		() =>
@@ -140,6 +145,22 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 			setCameraCenter([markers[0].coordenadas.lat, markers[0].coordenadas.lng]);
 		}
 	}, [markers, cameraCenter]);
+
+	useEffect(() => {
+		if (!selectedLimnigrafo) {
+			return;
+		}
+
+		const limnigrafoActualizado = limnigrafos.find((item) => item.id === selectedLimnigrafo.id) ?? null;
+		if (!limnigrafoActualizado) {
+			setSelectedLimnigrafo(null);
+			return;
+		}
+
+		if (limnigrafoActualizado !== selectedLimnigrafo) {
+			setSelectedLimnigrafo(limnigrafoActualizado);
+		}
+	}, [limnigrafos, selectedLimnigrafo]);
 
 	const toggleFullscreen = () => {
 		if (!document.fullscreenElement) {
@@ -351,6 +372,30 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 						onVerEnMapa={handleVerEnMapa}
 					/>
 				)}
+
+				{isLoadingMapa ? (
+					<div className="pointer-events-none absolute inset-0 z-[1001] flex items-center justify-center">
+						<div className="rounded-2xl border border-white/40 bg-white/90 px-5 py-3 text-sm font-medium text-[#0F172A] shadow-lg backdrop-blur-sm dark:border-white/10 dark:bg-[#111827]/90 dark:text-[#E5E7EB]">
+							Cargando datos reales del mapa...
+						</div>
+					</div>
+				) : null}
+
+				{!isLoadingMapa && mapaError ? (
+					<div className="pointer-events-none absolute inset-0 z-[1001] flex items-center justify-center">
+						<div className="max-w-md rounded-2xl border border-[#FECACA] bg-[#FEF2F2]/95 px-5 py-4 text-center text-sm text-[#991B1B] shadow-lg backdrop-blur-sm dark:border-[#7F1D1D] dark:bg-[#3A1818]/95 dark:text-[#FECACA]">
+							No se pudieron cargar los limnígrafos reales del mapa.
+						</div>
+					</div>
+				) : null}
+
+				{!isLoadingMapa && !mapaError && !hasLimnigrafos ? (
+					<div className="pointer-events-none absolute inset-0 z-[1001] flex items-center justify-center">
+						<div className="max-w-md rounded-2xl border border-white/40 bg-white/90 px-5 py-4 text-center text-sm text-[#334155] shadow-lg backdrop-blur-sm dark:border-white/10 dark:bg-[#111827]/90 dark:text-[#CBD5E1]">
+							No hay limnígrafos reales disponibles para mostrar en el mapa.
+						</div>
+					</div>
+				) : null}
 			</div>
 		</div>
 	);
