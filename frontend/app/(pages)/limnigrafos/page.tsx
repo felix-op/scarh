@@ -27,6 +27,32 @@ type EstadoFiltro = "" | EstadoLimnigrafo;
 
 const queriesToInvalidate = ["useGetLimnigrafos"];
 
+function toStartOfDayIso(value: string): string | undefined {
+	if (!value) {
+		return undefined;
+	}
+
+	const date = new Date(`${value}T00:00:00`);
+	if (Number.isNaN(date.getTime())) {
+		return undefined;
+	}
+
+	return date.toISOString();
+}
+
+function toEndOfDayIso(value: string): string | undefined {
+	if (!value) {
+		return undefined;
+	}
+
+	const date = new Date(`${value}T23:59:59.999`);
+	if (Number.isNaN(date.getTime())) {
+		return undefined;
+	}
+
+	return date.toISOString();
+}
+
 function formatUltimoRegistro(value?: string | null): string {
 	if (!value) {
 		return "Sin registros";
@@ -63,6 +89,8 @@ export default function Home() {
 	const [lengthPages, setLengthPages] = useState(5);
 	const [search, setSearch] = useState("");
 	const [estado, setEstadoFilter] = useState<EstadoFiltro>("");
+	const [ultimaConexionDesde, setUltimaConexionDesde] = useState("");
+	const [ultimaConexionHasta, setUltimaConexionHasta] = useState("");
 	const [message, setMessage] = useState(defaultMessage);
 
 	// --- Modal añadir ---
@@ -87,6 +115,8 @@ export default function Home() {
 				limit: String(lengthPages),
 				search,
 				estado,
+				...(toStartOfDayIso(ultimaConexionDesde) ? { ultima_conexion_desde: toStartOfDayIso(ultimaConexionDesde) } : {}),
+				...(toEndOfDayIso(ultimaConexionHasta) ? { ultima_conexion_hasta: toEndOfDayIso(ultimaConexionHasta) } : {}),
 			}
 		}
 	});
@@ -144,6 +174,26 @@ export default function Home() {
 	const handleEdit = (row: LimnigrafoResponse) => {
 		router.push(`/limnigrafos/editar/${row.id}`);
 	}
+
+	const handleSearch = (value: string) => {
+		setPage(1);
+		setSearch(value);
+	};
+
+	const handleEstadoFilter = (value: string) => {
+		setPage(1);
+		setEstadoFilter(value as EstadoFiltro);
+	};
+
+	const handleUltimaConexionDesde = (value: string) => {
+		setPage(1);
+		setUltimaConexionDesde(value);
+	};
+
+	const handleUltimaConexionHasta = (value: string) => {
+		setPage(1);
+		setUltimaConexionHasta(value);
+	};
 
 	const actionConfig: ActionConfig<LimnigrafoResponse> = {
 		typeAction: "fila",
@@ -204,22 +254,22 @@ export default function Home() {
 									label="Buscar"
 									placeholder="Por código o ubicación"
 									initialSearch={search}
-									onSearch={(value) => setSearch(value)}
+									onSearch={handleSearch}
 								/>
 							</div>
 							<div className="w-full md:max-w-[240px]">
 								<FiltroOpciones
 									title="Estado"
 									options={opcionesEstado}
-									onSelect={(value) => setEstadoFilter(value as EstadoFiltro)}
+									onSelect={handleEstadoFilter}
 								/>
 							</div>
 						</div>
 						<div>
 							<FiltroFecha
 								title="Tiempo desde el último dato"
-								onChangeInicio={() => { }}
-								onChangeFin={() => { }}
+								onChangeInicio={handleUltimaConexionDesde}
+								onChangeFin={handleUltimaConexionHasta}
 							/>
 						</div>
 					</div>

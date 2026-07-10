@@ -103,6 +103,66 @@ class LimnigrafoTests(APITestCase):
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.descripcion, 'Descripcion actualizada')
 
+    def test_filter_limnigrafos_by_ultima_conexion_desde(self):
+        reciente = timezone.now() - timedelta(hours=1)
+        antigua = timezone.now() - timedelta(days=4)
+
+        self.limnigrafo.ultima_conexion = reciente
+        self.limnigrafo.save(update_fields=['ultima_conexion'])
+
+        limnigrafo_antiguo = Limnigrafo.objects.create(
+            codigo='LMG-OLD',
+            descripcion='Limnigrafo antiguo',
+            memoria=1024,
+            tipo_de_comunicacion=['fisico-usb'],
+            ultima_conexion=antigua,
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=limnigrafo_antiguo,
+            bateria_max=12.0,
+            bateria_min=10.0,
+            tiempo_advertencia=1800,
+            tiempo_peligro=3600
+        )
+
+        response = self.client.get(self.list_url, {
+            'ultima_conexion_desde': (timezone.now() - timedelta(days=1)).isoformat(),
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        codigos = {item['codigo'] for item in response.data['results']}
+        self.assertIn('LMG-EXISTING', codigos)
+        self.assertNotIn('LMG-OLD', codigos)
+
+    def test_filter_limnigrafos_by_ultima_conexion_hasta(self):
+        reciente = timezone.now() - timedelta(hours=1)
+        antigua = timezone.now() - timedelta(days=4)
+
+        self.limnigrafo.ultima_conexion = reciente
+        self.limnigrafo.save(update_fields=['ultima_conexion'])
+
+        limnigrafo_antiguo = Limnigrafo.objects.create(
+            codigo='LMG-OLDER',
+            descripcion='Limnigrafo mas antiguo',
+            memoria=1024,
+            tipo_de_comunicacion=['fisico-usb'],
+            ultima_conexion=antigua,
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=limnigrafo_antiguo,
+            bateria_max=12.0,
+            bateria_min=10.0,
+            tiempo_advertencia=1800,
+            tiempo_peligro=3600
+        )
+
+        response = self.client.get(self.list_url, {
+            'ultima_conexion_hasta': (timezone.now() - timedelta(days=2)).isoformat(),
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        codigos = {item['codigo'] for item in response.data['results']}
+        self.assertIn('LMG-OLDER', codigos)
+        self.assertNotIn('LMG-EXISTING', codigos)
+
     def test_delete_limnigrafo(self):
         response = self.client.delete(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
