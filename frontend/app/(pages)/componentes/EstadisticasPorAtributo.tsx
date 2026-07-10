@@ -1,8 +1,8 @@
-import { useEffect } from "react";
-import { usePostEstadistica } from "@servicios/api/django.api";
+import { useGetEstadistica } from "@servicios/api/django.api";
 import SeccionEstadistica from "@componentes/secciones/SeccionEstadistica";
 import { formatearHora, formatearDiaMes } from "../../../shared/utiles/fechas";
 import { EstadisticaAtributo } from "types/estadisticas";
+import { useMemo } from "react";
 
 interface Props {
 	label: string;
@@ -13,23 +13,29 @@ interface Props {
 }
 
 export default function EstadisticasPorAtributo({ label, atributo, fechaInicio, fechaFin, limnigrafosIds }: Props) {
-	const { mutate: traerEstadisticas, data, isPending } = usePostEstadistica({});
+	const estadisticasRequest = useMemo(() => {
+		if (limnigrafosIds.length === 0) {
+			return null;
+		}
 
-	useEffect(() => {
-		if (limnigrafosIds.length === 0) return;
+		return {
+			limnigrafos: limnigrafosIds.join(","),
+			atributo,
+			fecha_inicio: fechaInicio.toISOString(),
+			fecha_fin: fechaFin.toISOString(),
+		};
+	}, [atributo, fechaFin, fechaInicio, limnigrafosIds]);
 
-		traerEstadisticas({
-			data: {
-				atributo,
-				fecha_inicio: fechaInicio.toISOString(),
-				fecha_fin: fechaFin.toISOString(),
-				limnigrafos: limnigrafosIds,
-			}
-		});
-	}, [fechaInicio, fechaFin, atributo, limnigrafosIds, traerEstadisticas]);
+	const { data, isLoading, isFetching } = useGetEstadistica({
+		params: estadisticasRequest ? { queryParams: estadisticasRequest } : undefined,
+		config: {
+			enabled: Boolean(estadisticasRequest),
+			placeholderData: (previous) => previous,
+		},
+	});
 
 	let valor: string | number = "-";
-	if (isPending) {
+	if (isLoading || isFetching) {
 		valor = "...";
 	} else if (data && data.length > 0) {
 		// Usamos el percentil_90 como valor representativo si no hay un promedio explícito en la API.

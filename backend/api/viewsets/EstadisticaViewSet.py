@@ -2,26 +2,47 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from ..permissions import EstadisticasPermission
-from drf_spectacular.utils import extend_schema
 from ..models import Medicion
 from ..serializer import EstadisticaInputSerializer, EstadisticaOutputSerializer
 from collections import Counter
 import statistics
 import math
+from rest_framework.exceptions import ValidationError
 
 class EstadisticaViewSet(viewsets.GenericViewSet):
     serializer_class = EstadisticaInputSerializer
     permission_classes = [IsAuthenticated, EstadisticasPermission]
+    http_method_names = ['get', 'head', 'options']
 
-    @extend_schema(
-        request=EstadisticaInputSerializer,
-        responses={200: EstadisticaOutputSerializer(many=True)}
-    )
-    def create(self, request):
-        serializer = self.get_serializer(data=request.data)
+    def list(self, request):
+        limnigrafos_param = request.query_params.get("limnigrafos", "").strip()
+        atributo = request.query_params.get("atributo")
+        fecha_inicio = request.query_params.get("fecha_inicio")
+        fecha_fin = request.query_params.get("fecha_fin")
+
+        limnigrafos = []
+        if limnigrafos_param:
+            try:
+                limnigrafos = [
+                    int(item.strip())
+                    for item in limnigrafos_param.split(",")
+                    if item.strip()
+                ]
+            except ValueError as exc:
+                raise ValidationError({"limnigrafos": "Debe ser una lista de IDs numéricos separados por coma."}) from exc
+
+        serializer = self.get_serializer(
+            data={
+                "limnigrafos": limnigrafos,
+                "atributo": atributo,
+                "fecha_inicio": fecha_inicio,
+                "fecha_fin": fecha_fin,
+            }
+        )
         serializer.is_valid(raise_exception=True)
-        
-        data = serializer.validated_data
+        return Response(self._calcular_resultados(serializer.validated_data), status=status.HTTP_200_OK)
+
+    def _calcular_resultados(self, data):
         limnigrafos_ids = data['limnigrafos']
         atributo = data['atributo']
         fecha_inicio = data['fecha_inicio']
@@ -51,7 +72,7 @@ class EstadisticaViewSet(viewsets.GenericViewSet):
             resultados.append(global_stats)
 
         output_serializer = EstadisticaOutputSerializer(resultados, many=True)
-        return Response(output_serializer.data, status=status.HTTP_200_OK)
+        return output_serializer.data
 
     def _calcular_estadisticas(self, values):
         if not values:

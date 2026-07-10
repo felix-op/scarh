@@ -61,13 +61,13 @@ class EstadisticaTests(APITestCase):
             )
 
     def test_calculate_statistics_temperatura(self):
-        data = {
-            'limnigrafos': [self.limnigrafo.id],
+        params = {
+            'limnigrafos': str(self.limnigrafo.id),
             'atributo': 'temperatura',
             'fecha_inicio': '2024-01-01T00:00:00Z',
             'fecha_fin': '2024-01-02T00:00:00Z'
         }
-        response = self.client.post(self.url, data, format='json')
+        response = self.client.get(self.url, params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         result = response.data[0]
@@ -77,13 +77,13 @@ class EstadisticaTests(APITestCase):
         self.assertAlmostEqual(result['desvio_estandar'], 3.16227766, places=4)
         
     def test_calculate_statistics_altura(self):
-        data = {
-            'limnigrafos': [self.limnigrafo.id],
+        params = {
+            'limnigrafos': str(self.limnigrafo.id),
             'atributo': 'altura_agua',
             'fecha_inicio': '2024-01-01T00:00:00Z',
             'fecha_fin': '2024-01-02T00:00:00Z'
         }
-        response = self.client.post(self.url, data, format='json')
+        response = self.client.get(self.url, params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         result = response.data[0]
@@ -92,13 +92,13 @@ class EstadisticaTests(APITestCase):
         self.assertEqual(result['moda'], 1.0)
 
     def test_global_statistics(self):
-        data = {
-            'limnigrafos': [self.limnigrafo.id, self.limnigrafo2.id],
+        params = {
+            'limnigrafos': f'{self.limnigrafo.id},{self.limnigrafo2.id}',
             'atributo': 'altura_agua',
             'fecha_inicio': '2024-01-01T00:00:00Z',
             'fecha_fin': '2024-01-02T00:00:00Z'
         }
-        response = self.client.post(self.url, data, format='json')
+        response = self.client.get(self.url, params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         self.assertEqual(len(response.data), 3)
@@ -116,24 +116,38 @@ class EstadisticaTests(APITestCase):
             fuente='manual'
         )
 
-        data = {
-            'limnigrafos': [self.limnigrafo.id],
+        params = {
+            'limnigrafos': str(self.limnigrafo.id),
             'atributo': 'altura_agua',
             'fecha_inicio': '2024-01-01T00:00:00Z',
             'fecha_fin': '2024-01-02T00:00:00Z'
         }
-        response = self.client.post(self.url, data, format='json')
+        response = self.client.get(self.url, params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         result = response.data[0]
         self.assertEqual(result['moda'], 3.0)
 
     def test_validation_dates(self):
-        data = {
-            'limnigrafos': [self.limnigrafo.id],
+        params = {
+            'limnigrafos': str(self.limnigrafo.id),
             'atributo': 'temperatura',
             'fecha_inicio': '2024-01-02T00:00:00Z',
             'fecha_fin': '2024-01-01T00:00:00Z'
         }
-        response = self.client.post(self.url, data, format='json')
+        response = self.client.get(self.url, params)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_calculate_statistics_with_get(self):
+        response = self.client.get(self.url, {
+            'limnigrafos': f'{self.limnigrafo.id},{self.limnigrafo2.id}',
+            'atributo': 'altura_agua',
+            'fecha_inicio': '2024-01-01T00:00:00Z',
+            'fecha_fin': '2024-01-02T00:00:00Z'
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+
+        global_stat = next(r for r in response.data if r['id'] is None)
+        self.assertEqual(global_stat['minimo'], 1.0)
+        self.assertEqual(global_stat['maximo'], 20.0)

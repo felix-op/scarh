@@ -5,9 +5,9 @@ import { type ColumnConfig } from "@componentes/tabla/types";
 import {
 	type EstadisticaAtributo,
 	type EstadisticaOutputItem,
-	usePostEstadistica,
+	useGetEstadistica,
 } from "@servicios/api/django.api";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { type LimnigrafoResponse } from "types/limnigrafos";
 
 type ComparativaTableRow = {
@@ -64,11 +64,6 @@ export default function TablaComparativaEstadisticas({
 	limnigrafosSeleccionados,
 	limnigrafos,
 }: TablaComparativaEstadisticasProps) {
-	const [estadisticas, setEstadisticas] = useState<EstadisticaOutputItem[]>([]);
-	const [estadisticasError, setEstadisticasError] = useState<string | null>(null);
-	const statsRequestIdRef = useRef(0);
-	const { mutateAsync: calcularEstadistica, isPending: isCalculandoEstadisticas } = usePostEstadistica();
-
 	const limnigrafoNameById = useMemo(() => {
 		const map = new Map<number, string>();
 		limnigrafos.forEach((limnigrafo) => {
@@ -98,7 +93,7 @@ export default function TablaComparativaEstadisticas({
 			return null;
 		}
 		return {
-			limnigrafos: limnigrafosIds,
+			limnigrafos: limnigrafosIds.join(","),
 			atributo,
 			fecha_inicio: desdeIso,
 			fecha_fin: hastaIso,
@@ -106,11 +101,28 @@ export default function TablaComparativaEstadisticas({
 	}, [atributo, desdeIso, hastaIso, limnigrafosIds]);
 
 	const shouldShowEstadisticas = limnigrafosIds.length > 0 && Boolean(desdeIso && hastaIso);
-	const estadisticasVisibles = useMemo(
-		() => (shouldShowEstadisticas ? estadisticas : []),
-		[estadisticas, shouldShowEstadisticas],
+	const {
+		data: estadisticasData,
+		error: estadisticasError,
+		isLoading: isCalculandoEstadisticas,
+		isFetching: isActualizandoEstadisticas,
+	} = useGetEstadistica({
+		params: estadisticasRequest ? { queryParams: estadisticasRequest } : undefined,
+		config: {
+			enabled: shouldShowEstadisticas && Boolean(estadisticasRequest),
+			placeholderData: (previous) => previous,
+		},
+	});
+
+	const estadisticasVisibles = useMemo<EstadisticaOutputItem[]>(
+		() => (shouldShowEstadisticas ? (estadisticasData ?? []) : []),
+		[estadisticasData, shouldShowEstadisticas],
 	);
-	const estadisticasErrorVisible = shouldShowEstadisticas ? estadisticasError : null;
+	const estadisticasErrorVisible = shouldShowEstadisticas
+		? (estadisticasError instanceof Error
+			? estadisticasError.message
+			: null)
+		: null;
 
 	const comparativaRows = useMemo<ComparativaTableRow[]>(
 		() =>
@@ -162,48 +174,6 @@ export default function TablaComparativaEstadisticas({
 		[],
 	);
 
-	useEffect(() => {
-		if (!estadisticasRequest) {
-			return;
-		}
-
-		let cancelled = false;
-		const requestId = statsRequestIdRef.current + 1;
-		statsRequestIdRef.current = requestId;
-
-		async function run() {
-			try {
-				setEstadisticasError(null);
-				const result = await calcularEstadistica({
-					data: estadisticasRequest,
-				});
-
-				if (cancelled || statsRequestIdRef.current !== requestId) {
-					return;
-				}
-
-				setEstadisticas(result);
-			} catch (error) {
-				if (cancelled || statsRequestIdRef.current !== requestId) {
-					return;
-				}
-
-				setEstadisticas([]);
-				setEstadisticasError(
-					error instanceof Error
-						? error.message
-						: "No se pudieron calcular estadísticas para el rango seleccionado.",
-				);
-			}
-		}
-
-		run();
-
-		return () => {
-			cancelled = true;
-		};
-	}, [calcularEstadistica, estadisticasRequest]);
-
 	return (
 		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 			<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -222,7 +192,7 @@ export default function TablaComparativaEstadisticas({
 					{estadisticasErrorVisible}
 				</p>
 			) : null}
-			{isCalculandoEstadisticas ? (
+			{(isCalculandoEstadisticas || isActualizandoEstadisticas) ? (
 				<p className="mb-4 rounded-xl border border-[#BAE6FD] bg-[#F0F9FF] px-4 py-3 text-[14px] text-[#075985] dark:border-[#1E3A8A] dark:bg-[#0B2A43] dark:text-[#BFDBFE]">
 					Calculando estadísticas...
 				</p>

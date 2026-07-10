@@ -100,13 +100,6 @@ export function usePostMedicion({ params, configuracion }: UsePostMedicionOption
 
 export type EstadisticaAtributo = "altura_agua" | "presion" | "temperatura";
 
-export type EstadisticaInput = {
-	limnigrafos: number[],
-	atributo: EstadisticaAtributo,
-	fecha_inicio: string,
-	fecha_fin: string,
-};
-
 export type EstadisticaOutputItem = {
 	id: number | null,
 	maximo: number,
@@ -117,22 +110,26 @@ export type EstadisticaOutputItem = {
 	percentil_90: number,
 };
 
-type UsePostEstadisticaOptions = {
-	params?: ParamsBase,
-	configuracion?: MutationConfig<
-		EstadisticaInput,
-		EstadisticaOutputItem[],
-		ParamsBase
-	>
-};
+type UseGetEstadisticaParams = {
+	queryParams?: {
+		limnigrafos?: string,
+		atributo?: EstadisticaAtributo,
+		fecha_inicio?: string,
+		fecha_fin?: string,
+	}
+} & ParamsBase
 
-export function usePostEstadistica({ params, configuracion }: UsePostEstadisticaOptions = {}) {
-	const defaultConfig = {};
+type UseGetEstadisticaOptions = {
+	params?: UseGetEstadisticaParams,
+	config?: UseGetConfig<EstadisticaOutputItem[]>,
+}
 
-	return usePost<EstadisticaInput, EstadisticaOutputItem[], ParamsBase>({
+export function useGetEstadistica({ params, config }: UseGetEstadisticaOptions = {}) {
+	return useGet<UseGetEstadisticaParams, EstadisticaOutputItem[]>({
+		key: "useGetEstadistica",
 		url: `${NEXT_PROXY_URL}/estadistica/`,
-		configuracion: configuracion ?? defaultConfig,
-		params: params ?? {},
+		params: params ?? { queryParams: {} },
+		config: config ?? {},
 	});
 }
 
