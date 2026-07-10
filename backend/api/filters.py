@@ -26,10 +26,12 @@ class UsuarioFilter(django_filters.FilterSet):
 class LimnigrafoFilter(django_filters.FilterSet):
     search = django_filters.CharFilter(method='filter_search', label='Búsqueda general (código, descripción)')
     estado = django_filters.CharFilter(field_name='estado', lookup_expr='iexact')
+    ultima_conexion_desde = django_filters.DateTimeFilter(field_name='ultima_conexion', lookup_expr='gte')
+    ultima_conexion_hasta = django_filters.DateTimeFilter(field_name='ultima_conexion', lookup_expr='lte')
 
     class Meta:
         model = Limnigrafo
-        fields = ['estado']
+        fields = ['estado', 'ultima_conexion_desde', 'ultima_conexion_hasta']
 
     def filter_search(self, queryset, name, value):
         if value:
