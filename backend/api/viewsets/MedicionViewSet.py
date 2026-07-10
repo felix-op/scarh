@@ -3,7 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from ..models import Medicion
 from ..serializer import MedicionSerializer
-from ..permissions import IsAutomaticOrManual, MedicionesPermissionWithAPIKey
+from ..permissions import MedicionesPermissionWithAPIKey
 from ..filters import MedicionFilter
 from ..utils.audit import registrar_accion_auditoria
 from ..utils.estado_limnigrafo import calcular_estado_limnigrafo
