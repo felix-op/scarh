@@ -1,5 +1,5 @@
 from django.db import models
-from jsonschema import ValidationError
+from django.core.exceptions import ValidationError
 
 class Alerta(models.Model):
     ESTADOS_CHOICES = [
