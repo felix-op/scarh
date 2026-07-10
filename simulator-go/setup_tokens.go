@@ -95,17 +95,29 @@ type LoginResponse struct {
 }
 
 type LimnigrafoAPI struct {
-	ID             int     `json:"id"`
-	Codigo         string  `json:"codigo"`
-	Descripcion    string  `json:"descripcion"`
-	AlturaMin      float64 `json:"altura_min"`
-	AlturaMax      float64 `json:"altura_max"`
-	TemperaturaMin float64 `json:"temperatura_min"`
-	TemperaturaMax float64 `json:"temperatura_max"`
-	PresionMin     float64 `json:"presion_min"`
-	PresionMax     float64 `json:"presion_max"`
-	BateriaMax     float64 `json:"bateria_max"`
-	BateriaMin     float64 `json:"bateria_min"`
+	ID             int                      `json:"id"`
+	Codigo         string                   `json:"codigo"`
+	Descripcion    string                   `json:"descripcion"`
+	Configuracion  *ConfiguracionLimnigrafo `json:"configuracion"`
+	AlturaMin      float64                  `json:"altura_min"`
+	AlturaMax      float64                  `json:"altura_max"`
+	TemperaturaMin float64                  `json:"temperatura_min"`
+	TemperaturaMax float64                  `json:"temperatura_max"`
+	PresionMin     float64                  `json:"presion_min"`
+	PresionMax     float64                  `json:"presion_max"`
+	BateriaMax     float64                  `json:"bateria_max"`
+	BateriaMin     float64                  `json:"bateria_min"`
+}
+
+type ConfiguracionLimnigrafo struct {
+	BateriaMax        *float64 `json:"bateria_max"`
+	BateriaMin        *float64 `json:"bateria_min"`
+	AlturaMinimaAgua  *float64 `json:"altura_minima_agua"`
+	AlturaMaximaAgua  *float64 `json:"altura_maxima_agua"`
+	TemperaturaMinima *float64 `json:"temperatura_minima"`
+	TemperaturaMaxima *float64 `json:"temperatura_maxima"`
+	PresionMinima     *float64 `json:"presion_minima"`
+	PresionMaxima     *float64 `json:"presion_maxima"`
 }
 
 type LimnigrafoPaginatedResponse struct {
@@ -201,14 +213,14 @@ func main() {
 		configLmg := LimnigrafoConfigSetup{
 			ID:                 lmg.ID,
 			Token:              keyResponse.SecretKey,
-			AlturaMin:          getOrDefault(lmg.AlturaMin, 0.5),
-			AlturaMax:          getOrDefault(lmg.AlturaMax, 3.5),
-			TemperaturaMin:     getOrDefault(lmg.TemperaturaMin, -5),
-			TemperaturaMax:     getOrDefault(lmg.TemperaturaMax, 25),
-			PresionMin:         getOrDefault(lmg.PresionMin, 950),
-			PresionMax:         getOrDefault(lmg.PresionMax, 1050),
-			BateriaMax:         getOrDefault(lmg.BateriaMax, 100),
-			BateriaMin:         getOrDefault(lmg.BateriaMin, 10),
+			AlturaMin:          lmg.alturaMin(),
+			AlturaMax:          lmg.alturaMax(),
+			TemperaturaMin:     lmg.temperaturaMin(),
+			TemperaturaMax:     lmg.temperaturaMax(),
+			PresionMin:         lmg.presionMin(),
+			PresionMax:         lmg.presionMax(),
+			BateriaMax:         lmg.bateriaMax(),
+			BateriaMin:         lmg.bateriaMin(),
 			IntervalMinMinutes: intervaloMin,
 			IntervalMaxMinutes: intervaloMax,
 			ProbabilidadFalla:  probabilidadFalla,
@@ -356,6 +368,69 @@ func getOrDefault(value, defaultValue float64) float64 {
 		return defaultValue
 	}
 	return value
+}
+
+func getPointerOrDefault(value *float64, defaultValue float64) float64 {
+	if value == nil {
+		return defaultValue
+	}
+	return *value
+}
+
+func (l LimnigrafoAPI) alturaMin() float64 {
+	if l.Configuracion != nil {
+		return getPointerOrDefault(l.Configuracion.AlturaMinimaAgua, 0.5)
+	}
+	return getOrDefault(l.AlturaMin, 0.5)
+}
+
+func (l LimnigrafoAPI) alturaMax() float64 {
+	if l.Configuracion != nil {
+		return getPointerOrDefault(l.Configuracion.AlturaMaximaAgua, 3.5)
+	}
+	return getOrDefault(l.AlturaMax, 3.5)
+}
+
+func (l LimnigrafoAPI) temperaturaMin() float64 {
+	if l.Configuracion != nil {
+		return getPointerOrDefault(l.Configuracion.TemperaturaMinima, -5)
+	}
+	return getOrDefault(l.TemperaturaMin, -5)
+}
+
+func (l LimnigrafoAPI) temperaturaMax() float64 {
+	if l.Configuracion != nil {
+		return getPointerOrDefault(l.Configuracion.TemperaturaMaxima, 25)
+	}
+	return getOrDefault(l.TemperaturaMax, 25)
+}
+
+func (l LimnigrafoAPI) presionMin() float64 {
+	if l.Configuracion != nil {
+		return getPointerOrDefault(l.Configuracion.PresionMinima, 950)
+	}
+	return getOrDefault(l.PresionMin, 950)
+}
+
+func (l LimnigrafoAPI) presionMax() float64 {
+	if l.Configuracion != nil {
+		return getPointerOrDefault(l.Configuracion.PresionMaxima, 1050)
+	}
+	return getOrDefault(l.PresionMax, 1050)
+}
+
+func (l LimnigrafoAPI) bateriaMin() float64 {
+	if l.Configuracion != nil {
+		return getPointerOrDefault(l.Configuracion.BateriaMin, 10)
+	}
+	return getOrDefault(l.BateriaMin, 10)
+}
+
+func (l LimnigrafoAPI) bateriaMax() float64 {
+	if l.Configuracion != nil {
+		return getPointerOrDefault(l.Configuracion.BateriaMax, 100)
+	}
+	return getOrDefault(l.BateriaMax, 100)
 }
 
 func defaultFailureProfile(limnigrafoID int) (
