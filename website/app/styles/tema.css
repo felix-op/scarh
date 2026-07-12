@@ -118,3 +118,14 @@
     }
   }
 }
+
+/* Deshabilitar animaciones globalmente cuando la clase .no-animations está en html */
+.no-animations *,
+.no-animations *::before,
+.no-animations *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  transform: none !important;
+}

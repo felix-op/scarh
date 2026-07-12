@@ -78,7 +78,7 @@ export function serviceCommand(
 
   if (isProvider) {
     modeMessage = 'React Context Provider';
-    fileName = `provider.${serviceName}.ts`;
+    fileName = `provider.${serviceName}.tsx`;
     fileContent = `import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface ${serviceNameCapitalized}State {
@@ -143,7 +143,7 @@ export const ${serviceName}Service = {
 
   const serviceFilePath = path.join(rutas.services, fileName);
   const barrelPath = path.join(rutas.services, 'index.ts');
-  const exportBase = fileName.replace(/\.ts$/, '');
+  const exportBase = fileName.replace(/\.tsx?$/, '');
 
   console.log(`\n=== Comando SERVICE: Crear Servicio ===`);
   console.log(`Nombre: ${serviceName}`);

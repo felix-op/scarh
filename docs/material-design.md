@@ -58,3 +58,42 @@ Sección reservada para documentar las condiciones de uso de cada componente:
   * `Paper` -> contenedor base plano de fondo sin sombra.
   * `Card` -> contenedor con sombra estática o animada (`animated: true`) para resaltar sobre el fondo.
   * `CardStatus` -> contenedor con borde coloreado en una dirección (`left`, `top`, `right`, `bottom`) para indicar estados semánticos (`success`, `error`, `warning`, `info`).
+
+---
+
+## 4. Sistema de Tipografía y Escala de Texto
+
+La aplicación utiliza la tipografía **Outfit** como fuente única de marca. Para lograr accesibilidad y consistencia visual, no se deben hardcodear tamaños fijos en píxeles. En su lugar, se utilizan unidades relativas `rem` y se altera dinámicamente la escala base desde el `ThemeProvider` afectando a toda la interfaz proporcionalmente.
+
+### Clasificación de Textos y Títulos (Material Design)
+
+* **Display / Headline Large (H1)**
+  * *Clases sugeridas*: `text-3xl font-bold tracking-tight text-foreground-title`
+  * *Uso*: Título principal de la página o vista (máximo uno por pantalla para SEO).
+* **Headline Medium / Small (H2)**
+  * *Clases sugeridas*: `text-2xl font-semibold text-foreground-title`
+  * *Uso*: Títulos de secciones principales dentro de la misma página.
+* **Title Large / Medium (H3)**
+  * *Clases sugeridas*: `text-xl font-semibold text-foreground`
+  * *Uso*: Títulos de tarjetas grandes (cards) o subapartados clave.
+* **Title Small (H4)**
+  * *Clases sugeridas*: `text-lg font-medium text-foreground`
+  * *Uso*: Títulos de listas, agrupaciones de datos o subsecciones pequeñas de tarjetas.
+* **Body Large / Medium (`<p>`, spans, labels)**
+  * *Clases sugeridas*: `text-base text-foreground`
+  * *Uso*: Texto de lectura continuo, párrafos informativos, textos de botones.
+* **Body Small / Label (`<span>`, captions)**
+  * *Clases sugeridas*: `text-sm text-text-secondary`
+  * *Uso*: Descripciones secundarias, pies de foto, fechas, labels de campos de entrada o estados inhabilitados.
+
+### Mecanismo de Escala de Texto
+
+Al cambiar la escala de texto en el `ThemeProvider` (`small`, `medium`, `large`, `xlarge`), se reconfigura el `font-size` del elemento raíz `<html>` en el DOM:
+
+* **`small`**: `14px` (reduce el tamaño general un 12.5%).
+* **`medium`**: `16px` (tamaño estándar del navegador).
+* **`large`**: `18px` (aumenta el tamaño general un 12.5%).
+* **`xlarge`**: `20px` (aumenta el tamaño general un 25%).
+
+Al usar exclusivamente clases utilitarias de tamaño de Tailwind (que utilizan `rem` de forma interna), todos los elementos y componentes del sistema escalan de forma unificada sin requerir re-renderizados de React.
+

@@ -92,3 +92,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```
 > [!IMPORTANT]
 > Se añade `suppressHydrationWarning` en la etiqueta `<html>` porque el script de inicialización modificará las clases del elemento HTML antes de la hidratación de React, lo que de otra manera causaría un warning en la consola del navegador.
+
+---
+
+## 4. Estado de Implementación
+
+### ✅ Realizado
+* **Creación de `provider.theme.tsx`**: Se implementó el componente `ThemeProvider` y el hook `useTheme` en `website/app/services/`.
+* **API del Proveedor**: Expone las funciones y propiedades requeridas:
+  - `toggleTheme()`: Cambia imperativamente la clase de tema (`light`/`dark`) en la etiqueta `<html>` sin provocar re-renders reactivos de componentes y persiste en `localStorage`.
+  - `getActualTheme()`: Consulta en tiempo de ejecución las clases del DOM en `document.documentElement` para obtener el tema actual.
+  - `setFontSize(scale)`: Establece el tamaño de fuente base de la etiqueta raíz `<html>` (en píxeles proporcionales: `14px`, `16px`, `18px`, `20px`), re-escalando toda la aplicación basada en `rem` automáticamente.
+  - `getActualFontSize()`: Consulta el tamaño de fuente actual.
+  - `animations`: Booleano de estado que representa si las animaciones están activas.
+  - `toggleAnimations()`: Activa/desactiva las animaciones a través de la inyección de la clase `.no-animations` en la etiqueta raíz `<html>` y lo persiste en `localStorage`.
+* **CSS de Desactivación de Animaciones**: Se inyectó al final de `tema.css` la regla global que inhibe duraciones, delays y transformaciones en cascada cuando `.no-animations` está presente en la raíz.
+* **Integración del Root Layout**: Se configuró la inyección de clases y la etiqueta `suppressHydrationWarning` en el archivo de layout raíz del proyecto.
+

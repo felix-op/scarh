@@ -70,6 +70,7 @@
   background: transparent;
   cursor: pointer;
   box-shadow: none;
+  font-size: 1.5rem; /* Aumenta el tamaño de visualización del icono */
 }
 
 /* Estilos de Colores por Defecto (Variantes Sólidas) */

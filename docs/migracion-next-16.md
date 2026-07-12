@@ -14,7 +14,7 @@ A continuación se listan las tareas clave de la migración con su estado actual
 |---|---|---|---|---|
 | 1 | **Reorganización de Componentes** | Mover los componentes de `shared/componentes` a `app/components` bajo una estructura estricta y clasificada, aislando los componentes genéricos de los de dominio. | 🟡 En Progreso | [Ver especificación](./migracion-componentes.md) |
 | 2 | **Modularización de CSS y Material Design** | Separar `global.css` en múltiples archivos específicos y aplicar variables de diseño basadas en la especificación de Material Design utilizando Tailwind v4. | 🟢 Realizada | [Ver especificación](./migracion-estilos.md) |
-| 3 | **Optimización de ThemeProvider** | Implementar un cambio de tema eficiente mediante la alteración directa del HTML en el DOM, previniendo re-renders masivos en cascada. | 🔴 Pendiente | [Ver especificación](./migracion-theme.md) |
+| 3 | **Optimización de ThemeProvider** | Implementar un cambio de tema eficiente mediante la alteración directa del HTML en el DOM, previniendo re-renders masivos en cascada. | 🟢 Realizada | [Ver especificación](./migracion-theme.md) |
 | 4 | **Cliente HTTP Server-First (Fetch)** | Crear una abstracción sobre `fetch` nativo para llamadas desde el servidor con revalidación e invalidación de caché, eliminando Axios y TanStack Query. | 🔴 Pendiente | [Ver especificación](./migracion-fetch.md) |
 | 5 | **CLI de Generación y Auto-registro** | Desarrollar una herramienta CLI que cree archivos en carpetas específicas y actualice de forma automatizada los exportadores de tipo "barrel" (`index.ts`). | 🟡 En Progreso | [Ver especificación](./migracion-cli.md) |
 
