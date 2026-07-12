@@ -1,0 +1,102 @@
+.dark {
+  /* Fondo y Contenedores */
+  --background-default: rgb(35, 39, 47);
+  --background-paper: rgb(41, 44, 49);
+  --background-muted: rgb(27, 31, 37);
+
+  /* Textos */
+  --text-primary: #e6e1e5;
+  --text-secondary: #cac4d0;
+  --text-title: #f6f6f6;
+
+  /* Colores Principales (Material Design) */
+  /* Primary */
+  --color-primary-main: #0da2f8;
+  --color-primary-light: rgba(13, 162, 248, 0.15);
+  --color-primary-dark: #096092;
+  --color-primary-disabled: #2d4f6c;
+  --color-primary-contrastText: #ffffff;
+
+  /* Secondary */
+  --color-secondary-main: #58a6ff;
+  --color-secondary-light: #58a6ff;
+  --color-secondary-dark: #004499;
+  --color-secondary-disabled: #213547;
+  --color-secondary-contrastText: #121212;
+
+  /* Success / Éxito */
+  --color-success-main: #82d987;
+  --color-success-light: #253d27;
+  --color-success-dark: #2d4f30;
+  --color-success-disabled: #1b2f1f;
+  --color-success-contrastText: #121212;
+
+  /* Error */
+  --color-error-main: #d65757;
+  --color-error-light: #533131;
+  --color-error-dark: #632a2a;
+  --color-error-disabled: #3d1f1f;
+  --color-error-contrastText: #ffffff;
+
+  /* Warn / Advertencia */
+  --color-warn-main: #facc15;
+  --color-warn-light: #422006;
+  --color-warn-dark: #713f12;
+  --color-warn-disabled: #311c03;
+  --color-warn-contrastText: #121212;
+
+  /* Info */
+  --color-info-main: #6e99d5;
+  --color-info-light: #213045;
+  --color-info-dark: #222222;
+  --color-info-disabled: #151e2b;
+  --color-info-contrastText: #121212;
+
+  /* Default */
+  --color-default-main: #a0a0a0;
+  --color-default-light: rgb(27, 31, 37);
+  --color-default-dark: #3a3a3a;
+  --color-default-disabled: #2c2c2c;
+  --color-default-contrastText: #e6e1e5;
+
+  /* Estados de Interacción */
+  --color-hover: #444444;
+  --color-active: #222222;
+  --color-border: #5d6066;
+
+  /* Componentes (Formas y Bordes) */
+  --shape-corner-small: 4px;
+  --shape-corner-medium: 8px;
+  --shape-corner-large: 12px;
+  --shape-corner-full: 9999px;
+
+  /* Cards (Tarjetas) */
+  --card-background: rgb(35, 39, 47);
+  --card-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+  --card-shadow-hover: 0px 4px 8px rgba(0, 0, 0, 0.4);
+  --card-border: #5d6066;
+
+  /* Inputs (Campos de entrada) */
+  --input-background: rgb(35, 39, 47);
+  --input-border: #5d6066;
+  --input-focus-border: #0da2f8;
+  --input-text: #e6e1e5;
+  --input-placeholder: #938f99;
+  --input-disabled: #2c2c2c;
+
+  /* Scrollbar */
+  --scroll-thumb: #272729;
+  --scroll-thumb-hover: #aaaaaa;
+  --scroll-track: #16151a;
+
+  /* Variables de Logo y Sidebar del original */
+  --logo: #0d76b3;
+  --sidebar: rgb(27, 31, 37);
+  --sidebar-foreground: #f9fbff;
+  --sidebar-secondary: #6b6b6b;
+  --sidebar-foreground-hover: #0da2f8;
+  --sidebar-foreground-active: #121212;
+  --sidebar-link: rgb(41, 44, 49);
+  --sidebar-link-hover: rgb(52, 56, 62);
+  --sidebar-link-active: #eef4fb;
+}

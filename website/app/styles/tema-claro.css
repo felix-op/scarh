@@ -1,0 +1,105 @@
+:root {
+  /* Tipografía */
+  --font-outfit: 'Outfit', sans-serif;
+
+  /* Fondo y Contenedores */
+  --background-default: #eef4fb;
+  --background-paper: #ffffff;
+  --background-muted: #f9f9f9;
+
+  /* Textos */
+  --text-primary: #1c1b1f;
+  --text-secondary: #49454f;
+  --text-title: #4e4e4e;
+
+  /* Colores Principales (Material Design) */
+  /* Primary */
+  --color-primary-main: #0982c8;
+  --color-primary-light: #3e99ce;
+  --color-primary-dark: #096092;
+  --color-primary-disabled: #a8d5f0;
+  --color-primary-contrastText: #ffffff;
+
+  /* Secondary */
+  --color-secondary-main: #0066cc;
+  --color-secondary-light: #58a6ff;
+  --color-secondary-dark: #004499;
+  --color-secondary-disabled: #adcfff;
+  --color-secondary-contrastText: #ffffff;
+
+  /* Success / Éxito */
+  --color-success-main: #2e7d32;
+  --color-success-light: #4caf50;
+  --color-success-dark: #1b5e20;
+  --color-success-disabled: #a5d6a7;
+  --color-success-contrastText: #ffffff;
+
+  /* Error */
+  --color-error-main: #d32f2f;
+  --color-error-light: #ef5350;
+  --color-error-dark: #c62828;
+  --color-error-disabled: #ef9a9a;
+  --color-error-contrastText: #ffffff;
+
+  /* Warn / Advertencia */
+  --color-warn-main: #ed6c02;
+  --color-warn-light: #ffb74d;
+  --color-warn-dark: #e65100;
+  --color-warn-disabled: #ffe0b2;
+  --color-warn-contrastText: #ffffff;
+
+  /* Info */
+  --color-info-main: #0288d1;
+  --color-info-light: #03a9f4;
+  --color-info-dark: #01579b;
+  --color-info-disabled: #b3e5fc;
+  --color-info-contrastText: #ffffff;
+
+  /* Default */
+  --color-default-main: #898989;
+  --color-default-light: #f4f4f4;
+  --color-default-dark: #e0e0e0;
+  --color-default-disabled: #f1f1f1;
+  --color-default-contrastText: #1c1b1f;
+
+  /* Estados de Interacción */
+  --color-hover: #dddddd;
+  --color-active: #fafafa;
+  --color-border: #e5e5e5;
+
+  /* Componentes (Formas y Bordes) */
+  --shape-corner-small: 4px;
+  --shape-corner-medium: 8px;
+  --shape-corner-large: 12px;
+  --shape-corner-full: 9999px;
+
+  /* Cards (Tarjetas) */
+  --card-background: #ffffff;
+  --card-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+  --card-shadow-hover: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  --card-border: #e5e5e5;
+
+  /* Inputs (Campos de entrada) */
+  --input-background: #ffffff;
+  --input-border: #e5e5e5;
+  --input-focus-border: #0982c8;
+  --input-text: #1c1b1f;
+  --input-placeholder: #79747e;
+  --input-disabled: #f1f1f1;
+
+  /* Scrollbar */
+  --scroll-thumb: #cccccc;
+  --scroll-thumb-hover: #999999;
+  --scroll-track: #f0f0f0;
+
+  /* Variables de Logo y Sidebar del original */
+  --logo: #0d76b3;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #121212;
+  --sidebar-secondary: #6b6b6b;
+  --sidebar-foreground-hover: #0982c8;
+  --sidebar-foreground-active: #f9fbff;
+  --sidebar-link: #f0f0f0;
+  --sidebar-link-hover: #d0d0d0;
+  --sidebar-link-active: #011018;
+}

@@ -1,0 +1,120 @@
+@theme {
+  /* Tipografía */
+  --font-sans: var(--font-outfit), sans-serif;
+  --font-outfit: var(--font-outfit);
+
+  /* Colores de Material Design */
+  /* Primary */
+  --color-primary: var(--color-primary-main);
+  --color-primary-light: var(--color-primary-light);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-disabled: var(--color-primary-disabled);
+  --color-primary-contrast: var(--color-primary-contrastText);
+
+  /* Secondary */
+  --color-secondary: var(--color-secondary-main);
+  --color-secondary-light: var(--color-secondary-light);
+  --color-secondary-dark: var(--color-secondary-dark);
+  --color-secondary-disabled: var(--color-secondary-disabled);
+  --color-secondary-contrast: var(--color-secondary-contrastText);
+
+  /* Success / Éxito */
+  --color-success: var(--color-success-main);
+  --color-success-light: var(--color-success-light);
+  --color-success-dark: var(--color-success-dark);
+  --color-success-disabled: var(--color-success-disabled);
+  --color-success-contrast: var(--color-success-contrastText);
+
+  /* Error */
+  --color-error: var(--color-error-main);
+  --color-error-light: var(--color-error-light);
+  --color-error-dark: var(--color-error-dark);
+  --color-error-disabled: var(--color-error-disabled);
+  --color-error-contrast: var(--color-error-contrastText);
+
+  /* Warn / Advertencia */
+  --color-warn: var(--color-warn-main);
+  --color-warn-light: var(--color-warn-light);
+  --color-warn-dark: var(--color-warn-dark);
+  --color-warn-disabled: var(--color-warn-disabled);
+  --color-warn-contrast: var(--color-warn-contrastText);
+
+  /* Info */
+  --color-info: var(--color-info-main);
+  --color-info-light: var(--color-info-light);
+  --color-info-dark: var(--color-info-dark);
+  --color-info-disabled: var(--color-info-disabled);
+  --color-info-contrast: var(--color-info-contrastText);
+
+  /* Default */
+  --color-default: var(--color-default-main);
+  --color-default-light: var(--color-default-light);
+  --color-default-dark: var(--color-default-dark);
+  --color-default-disabled: var(--color-default-disabled);
+  --color-default-contrast: var(--color-default-contrastText);
+
+  /* Fondos y Estructuras */
+  --color-background: var(--background-default);
+  --color-background-paper: var(--background-paper);
+  --color-background-muted: var(--background-muted);
+  
+  /* Textos y Bordes */
+  --color-foreground: var(--text-primary);
+  --color-foreground-title: var(--text-title);
+  --color-border: var(--color-border);
+  --color-hover: var(--color-hover);
+  --color-active: var(--color-active);
+
+  /* Componentes Específicos */
+  --color-card: var(--card-background);
+  --color-input: var(--input-background);
+  --color-input-border: var(--input-border);
+  --color-input-focus: var(--input-focus-border);
+
+  /* Layout y Sidebar originales del globals.css */
+  --color-logo: var(--logo);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-secondary: var(--sidebar-secondary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-foreground-hover: var(--sidebar-foreground-hover);
+  --color-sidebar-foreground-active: var(--sidebar-foreground-active);
+  --color-sidebar-link: var(--sidebar-link);
+  --color-sidebar-link-hover: var(--sidebar-link-hover);
+  --color-sidebar-link-active: var(--sidebar-link-active);
+  --color-azul-marino-oscuro: rgba(7, 28, 48, 0.65);
+  --color-azul-marino: rgba(9, 130, 200, 0.35);
+
+  /* BorderRadius (Shapes) */
+  --radius-shape-sm: var(--shape-corner-small);
+  --radius-shape-md: var(--shape-corner-medium);
+  --radius-shape-lg: var(--shape-corner-large);
+  --radius-shape-full: var(--shape-corner-full);
+
+  /* Sombras */
+  --shadow-card: var(--card-shadow);
+  --shadow-card-hover: var(--card-shadow-hover);
+
+  /* Animaciones */
+  --animate-shine: shine 0.6s ease-in-out;
+  --animate-fade-in-up: fade-in-up 0.3s ease-out forwards;
+
+  @keyframes shine {
+    from {
+      left: -100%;
+    }
+    to {
+      left: 125%;
+    }
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

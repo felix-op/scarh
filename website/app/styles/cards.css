@@ -1,0 +1,77 @@
+/* Estilos de Tarjetas (Cards y Paper) */
+
+.paper {
+  background-color: var(--background-paper);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--color-border);
+  border-radius: var(--shape-corner-medium);
+  box-sizing: border-box;
+}
+
+.card {
+  background-color: var(--card-background);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--color-border);
+  border-radius: var(--shape-corner-medium);
+  box-shadow: var(--card-shadow);
+  box-sizing: border-box;
+}
+
+/* Animaciones y transiciones de Tarjetas */
+.card-animated {
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.card-animated:hover {
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* Tarjeta de Estado (CardStatus) */
+.card-status {
+  position: relative;
+  /* El color se inyecta dinámicamente mediante variables o clases */
+  --status-color: var(--color-default-main);
+  background-color: var(--card-background);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--color-border);
+  border-radius: var(--shape-corner-medium);
+  box-shadow: var(--card-shadow);
+  box-sizing: border-box;
+}
+
+/* Colores de Estado */
+.card-status-success {
+  --status-color: var(--color-success-main);
+}
+
+.card-status-error {
+  --status-color: var(--color-error-main);
+}
+
+.card-status-warning {
+  --status-color: var(--color-warn-main);
+}
+
+.card-status-info {
+  --status-color: var(--color-info-main);
+}
+
+/* Direcciones del Borde de Estado */
+.card-status-left {
+  border-left: 4px solid var(--status-color) !important;
+}
+
+.card-status-top {
+  border-top: 4px solid var(--status-color) !important;
+}
+
+.card-status-right {
+  border-right: 4px solid var(--status-color) !important;
+}
+
+.card-status-bottom {
+  border-bottom: 4px solid var(--status-color) !important;
+}

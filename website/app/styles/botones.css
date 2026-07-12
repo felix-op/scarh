@@ -1,0 +1,169 @@
+/* Clases de Botón Básicas y Semánticas */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.125rem; /* text-lg */
+  border-radius: var(--shape-corner-medium);
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 16px;
+  padding-right: 16px;
+  border-width: 1px;
+  border-style: solid;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+/* Animaciones del Botón (Transiciones y Escala Activa) */
+.button-animated {
+  transition: all 0.1s ease-in-out;
+}
+
+.button-animated:active {
+  transform: scale(0.95);
+}
+
+/* Efecto de Brillo (Shine) */
+.button-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.button-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  transform: skewX(-25deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+}
+
+.button-shine:hover::after {
+  animation: shine 0.6s ease-in-out;
+}
+
+/* Botón Deshabilitado */
+.button-disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* Botón de Icono */
+.button-icon {
+  border-radius: var(--shape-corner-full);
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+/* Estilos de Colores por Defecto (Variantes Sólidas) */
+.button-primary {
+  background-color: var(--color-primary-main);
+  color: var(--color-primary-contrastText);
+  border-color: var(--color-primary-main);
+}
+.button-primary:hover:not(.button-disabled) {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.button-success {
+  background-color: var(--color-success-light);
+  color: var(--color-success-contrastText);
+  border-color: var(--color-success-light);
+}
+.button-success:hover:not(.button-disabled) {
+  background-color: var(--color-success-main);
+  border-color: var(--color-success-main);
+}
+
+.button-error {
+  background-color: var(--color-error-light);
+  color: var(--color-error-contrastText);
+  border-color: var(--color-error-light);
+}
+.button-error:hover:not(.button-disabled) {
+  background-color: var(--color-error-main);
+  border-color: var(--color-error-main);
+}
+
+.button-warn {
+  background-color: var(--color-warn-light);
+  color: var(--color-warn-contrastText);
+  border-color: var(--color-warn-light);
+}
+.button-warn:hover:not(.button-disabled) {
+  background-color: var(--color-warn-main);
+  border-color: var(--color-warn-main);
+}
+
+.button-default {
+  background-color: var(--color-default-light);
+  color: var(--color-default-contrastText);
+  border-color: var(--color-default-light);
+}
+.button-default:hover:not(.button-disabled) {
+  background-color: var(--color-default-main);
+  border-color: var(--color-default-main);
+}
+
+/* Estilos de Colores en Modo Outlined (Borde y Texto de Color Semántico, Fondo Transparente) */
+.button-outline {
+  background-color: transparent !important;
+}
+
+.button-outline-primary {
+  color: var(--color-primary-main);
+  border-color: var(--color-primary-main);
+}
+.button-outline-primary:hover:not(.button-disabled) {
+  background-color: rgba(9, 130, 200, 0.08) !important;
+}
+
+.button-outline-success {
+  color: var(--color-success-main);
+  border-color: var(--color-success-main);
+}
+.button-outline-success:hover:not(.button-disabled) {
+  background-color: rgba(46, 125, 50, 0.08) !important;
+}
+
+.button-outline-error {
+  color: var(--color-error-main);
+  border-color: var(--color-error-main);
+}
+.button-outline-error:hover:not(.button-disabled) {
+  background-color: rgba(211, 47, 47, 0.08) !important;
+}
+
+.button-outline-warn {
+  color: var(--color-warn-main);
+  border-color: var(--color-warn-main);
+}
+.button-outline-warn:hover:not(.button-disabled) {
+  background-color: rgba(237, 108, 2, 0.08) !important;
+}
+
+.button-outline-default {
+  color: var(--color-default-main);
+  border-color: var(--color-default-main);
+}
+.button-outline-default:hover:not(.button-disabled) {
+  background-color: rgba(137, 137, 137, 0.08) !important;
+}

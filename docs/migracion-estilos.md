@@ -114,3 +114,19 @@ Se definirán variables CSS para unificar la morfología de la interfaz:
 * **Backgrounds (Fondos de Página)**:
   * `--background-default`: Fondo principal de la aplicación.
   * `--background-paper`: Fondo de elementos sobrepuestos (como sidebars, headers o contenedores).
+
+---
+
+## 3. Estado de Implementación
+
+### ✅ Realizado
+* **Modularización de CSS**: Se crearon los archivos individuales de estilos en `website/app/styles/`:
+  - `tema-claro.css`: Define todas las variables CSS para el modo claro en `:root` siguiendo Material Design.
+  - `tema-oscuro.css`: Define variables CSS para el modo oscuro en el selector `.dark` adaptados para modo noche.
+  - `tema.css`: Extiende de forma unificada el motor de temas de Tailwind v4 (`@theme`) mapeando las variables de colores, radios y sombras, y define las animaciones `shine` y `fade-in-up`.
+  - `scroll.css`: Aísla y define la configuración visual de la barra de desplazamiento personalizada (`.custom-scroll`).
+  - `globals.css`: Punto de entrada que importa Tailwind v4, inyecta plugins de iconify, importa las hojas de estilo modulares y configura los estilos generales del `body`.
+* **Tipografía Outfit**: Se configuró e importó `Outfit` usando la API nativa de `next/font/google` en `website/app/(pages)/layout.tsx` (removiendo Geist).
+* **Metadata de la App**: Se optimizó la metadata principal en `layout.tsx` añadiendo títulos y descripciones apropiadas de la aplicación.
+* **Prevención de Exclusiones**: Se omitieron los estilos específicos de Leaflet (`.leaflet`) para la etapa posterior de migración de mapas.
+

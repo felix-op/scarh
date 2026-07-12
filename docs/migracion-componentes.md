@@ -40,6 +40,19 @@ Los componentes dentro de `website/app/components` deben organizarse en las sigu
    - Ajustar los imports dentro del componente (rutas relativas a otros componentes u utilidades).
    - Asegurar que utilicen aliases de ruta configurados (ej. `@/components/...` o `@/hooks/...`) si se han definido en `tsconfig.json`.
 4. **Auto-registro (Exportación Barrel)**:
-   - Registrar la exportación del componente en el archivo `index.ts` de su subcarpeta correspondiente (ej. `website/app/components/ui/index.ts`).
-   - Actualizar el exportador raíz `website/app/components/index.ts` para exponer el componente a través de la carpeta raíz.
+   * Registrar la exportación del componente en el archivo `index.ts` de su subcarpeta correspondiente (ej. `website/app/components/ui/index.ts`).
+   * Actualizar el exportador raíz `website/app/components/index.ts` para exponer el componente a través de la carpeta raíz.
 5. **Eliminación del Origen**: Borrar el archivo original en el frontend antiguo una vez confirmada su correcta importación y funcionamiento en la nueva estructura.
+
+---
+
+## Estado de Implementación
+
+### ✅ Realizado
+* **Estilos CSS Modulares**: Se crearon las clases visuales de botones y tarjetas en `website/app/styles/botones.css` y `website/app/styles/cards.css`, y se importaron en `globals.css`:
+  - Clases `.button`, `.button-animated`, `.button-shine`, `.button-disabled`, `.button-outline` (con variantes por color) y `.button-icon`.
+  - Clases `.paper`, `.card`, `.card-animated`, y `.card-status` (con soporte para direcciones y estados).
+* **Wrapper de Iconos**: Se creó el componente `IconifyIcon.tsx` en `website/app/components/ui/` con un mapa unificado que reúne todos los iconos del componente original e iconos genéricos de la aplicación.
+* **Componente de Tarjetas**: Se implementó `cards.tsx` exponiendo `Paper`, `Card` (con prop `animated`), y `CardStatus` (con props `status` y `direction`).
+* **Componentes de Botones**: Se implementó `botones.tsx` exponiendo el botón genérico `Boton`, `BotonIcono`, y todos los botones concretos semánticos requeridos (`BotonGuardar`, `BotonEliminar`, `BotonEditar`, `BotonCancelar` -outlined por defecto-, `BotonConfirmar`, `BotonLogin`, `BotonPassword`, `BotonFiltro`, `BotonVolver` y `BotonVerMas`). Se configuró un interruptor local `const animations = true` para activar/desactivar transiciones y brillo.
+* **Actualización de Barrels**: Se crearon/actualizaron los archivos de barril `ui/index.ts` y el general `components/index.ts`.
