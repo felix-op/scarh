@@ -19,6 +19,7 @@
       }
     ],
     "paths": {
+      "@/*": ["./app/*"],
       "@app/*": ["./app/(pages)/*"],
       // Imports de barril para todo
       "@components": ["./app/components/index.ts"],

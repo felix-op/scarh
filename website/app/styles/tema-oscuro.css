@@ -5,9 +5,10 @@
   --background-muted: rgb(27, 31, 37);
 
   /* Textos */
-  --text-primary: #e6e1e5;
-  --text-secondary: #cac4d0;
-  --text-title: #f6f6f6;
+  --color-foreground: #e6e1e5;
+  --color-foreground-secondary: #cac4d0;
+  --color-foreground-title: #f6f6f6;
+  --color-foreground-disabled: #475569;
 
   /* Colores Principales (Material Design) */
   /* Primary */

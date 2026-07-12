@@ -19,6 +19,17 @@ const iconVariants = {
   cerrar: "icon-[material-symbols--close]",
   loading: "icon-[line-md--loading-twotone-loop]",
   
+  // Iconos de control de UI (reemplazo de lucide-react)
+  check: "icon-[material-symbols--check]",
+  search: "icon-[material-symbols--search]",
+  chevronLeft: "icon-[material-symbols--chevron-left]",
+  chevronRight: "icon-[material-symbols--chevron-right]",
+  chevronDown: "icon-[material-symbols--keyboard-arrow-down]",
+  chevronUp: "icon-[material-symbols--keyboard-arrow-up]",
+  circle: "icon-[material-symbols--circle]",
+  calendario: "icon-[material-symbols--calendar-today]",
+  reloj: "icon-[material-symbols--schedule]",
+  
   // Iconos de Icon.tsx del original
   user1: "icon-[qlementine-icons--user-16]",
   rightArrow: "icon-[material-symbols--chevron-right]",

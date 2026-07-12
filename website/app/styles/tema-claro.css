@@ -8,9 +8,10 @@
   --background-muted: #f9f9f9;
 
   /* Textos */
-  --text-primary: #1c1b1f;
-  --text-secondary: #49454f;
-  --text-title: #4e4e4e;
+  --color-foreground: #1c1b1f;
+  --color-foreground-secondary: #49454f;
+  --color-foreground-title: #4e4e4e;
+  --color-foreground-disabled: #94a3b8;
 
   /* Colores Principales (Material Design) */
   /* Primary */

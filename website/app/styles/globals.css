@@ -9,11 +9,12 @@
 @import "./scroll.css";
 @import "./botones.css";
 @import "./cards.css";
+@import "./text.css";
 
 /* Estilos de capa base y body */
 body {
   background: var(--background-default);
-  color: var(--text-primary);
+  color: var(--color-foreground);
   font-family: var(--font-outfit), sans-serif;
   margin: 0;
 }

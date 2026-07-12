@@ -59,8 +59,10 @@
   --color-background-muted: var(--background-muted);
   
   /* Textos y Bordes */
-  --color-foreground: var(--text-primary);
-  --color-foreground-title: var(--text-title);
+  --color-foreground: var(--color-foreground);
+  --color-foreground-secondary: var(--color-foreground-secondary);
+  --color-foreground-title: var(--color-foreground-title);
+  --color-foreground-disabled: var(--color-foreground-disabled);
   --color-border: var(--color-border);
   --color-hover: var(--color-hover);
   --color-active: var(--color-active);
