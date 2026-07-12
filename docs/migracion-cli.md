@@ -159,8 +159,6 @@ npm run g m -enum EstadoUsuario usuarios 0, "suspendido", string, s, number, n
 export type EstadoUsuario = 0 | "suspendido" | string | number;
 ```
 
----
-
 ## 4. Auto-registro de Exportaciones (Barrel Files)
 
 Al crear cualquier archivo en las carpetas `components`, `hooks`, `models`, `screens`, `services`, `styles` o `utils`, el CLI debe realizar lo siguiente:
@@ -172,3 +170,23 @@ Al crear cualquier archivo en las carpetas `components`, `hooks`, `models`, `scr
 3. Para la carpeta **`components`**:
    * Actualiza el `index.ts` de la subcarpeta destino (ej. `components/forms/index.ts`).
    * Actualiza el `index.ts` global del módulo `components` (`website/app/components/index.ts`) para exportar la subcarpeta completa si no estuviera registrada (ej. `export * from './forms'`).
+
+---
+
+## 5. Estado de Implementación
+
+### ✅ Realizado
+* **Infraestructura Base**: CLI configurado en TypeScript (`website/cli`) con ejecución directa vía `tsx` integrada en los comandos de `package.json` (`npm run generate` / `npm run g`).
+* **Análisis de Parámetros**: Función `parseArguments` integrada para clasificar de manera flexible la entrada en `{ comando, args, flags }` y detectar banderas globales como la de simulación.
+* **Simulación / Vista Previa (`--dry-run` / `-d`)**: Lógica implementada en todos los comandos para mostrar en consola las rutas creadas y las líneas indexadas en archivos barrel sin modificar el almacenamiento real.
+* **Ayuda Interactiva**: Mensajes de ayuda automatizados que describen comandos, abreviaturas, descripciones detalladas y ejemplos de uso al disparar el comando base.
+* **Comando `app`**: Generación de páginas en `(pages)` incluyendo sus correspondientes archivos complementarios (`loading.tsx`, `error.tsx`, `not-found.tsx`) con soporte para omitirlos selectivamente.
+* **Comando `component`**: Creación de componentes estructurados en subcarpetas clasificadas (`forms`, `layout`, `ui`, `modals`) actualizando los barrels locales y generales.
+* **Comando `service`**: Soporte para la generación básica de servicios, Context Providers de React completos (`-p` / `--provider`) y plantillas estructuradas de peticiones de API CRUD (`-api` y `-endpoint`).
+* **Comando `model`**: Generación de interfaces estructuradas inyectadas al final del archivo si ya existe (`model.nombre.ts`), y generación limpia de enums/tipos unión (`-enum` y `enum.nombre.ts`) resolviendo tipos abreviados y removiendo duplicados.
+* **Comando Genérico**: Generación básica de ficheros y barrels automatizada para `hooks`, `screens`, `styles` y `utils`.
+
+### ⏳ Pendiente
+* **Validación de Sobrescritura en `app`**: Falta implementar una validación en el comando `app` similar a la de `component` que impida la creación accidental de una página si el directorio o archivo `page.tsx` ya existe en el disco (actualmente no alerta y continuaría con la escritura).
+* **Integración del Cliente de API Real**: En el código generado por el wrapper de API CRUD del comando `service`, se asume la importación de `apiClient`. Dicha importación fallará en tiempo de compilación hasta que se complete la implementación del cliente unificado de `fetch` (Tarea 4).
+
