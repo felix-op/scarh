@@ -19,7 +19,16 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@app/*": ["./app/(pages)/*"],
+      // Imports de barril para todo
+      "@components": ["./app/components/index.ts"],
+      "@hooks": ["./app/hooks/index.ts"],
+      "@models": ["./app/models/index.ts"],
+      "@screens": ["./app/screens"],
+      "@services": ["./app/services/index.ts"],
+      "@utils": ["./app/utils/index.ts"],
+      // Imports específicos para css
+      "@styles/*": ["./app/styles/*"]
     }
   },
   "include": [
@@ -28,7 +37,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "styles.d.ts"
   ],
   "exclude": ["node_modules"]
 }
