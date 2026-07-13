@@ -1,7 +1,7 @@
 "use client";
 
 import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
-import { Download } from "lucide-react";
+import BotonVariante from "@componentes/botones/BotonVariante";
 import { type Dispatch, type SetStateAction } from "react";
 import {
 	type EstadisticaAtributo,
@@ -166,29 +166,34 @@ export default function FiltrosGraficosEstadisticas({
 				</p>
 
 				<div className="flex flex-wrap items-center gap-3">
-					<button
+					<BotonVariante
 						type="button"
 						onClick={onApply}
-						className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)] hover:bg-[#0873B2]"
+						variant="filtro"
+						className="text-[14px]"
 					>
+						<span className="text-2xl icon-[mage--filter]" />
 						Aplicar filtros
-					</button>
-					<button
+					</BotonVariante>
+					<BotonVariante
 						type="button"
 						onClick={onReset}
-						className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] shadow-[0px_4px_10px_rgba(15,23,42,0.08)] hover:bg-[#F8FAFC]"
+						variant="cerrar"
+						className="text-[14px]"
 					>
+						<span className="text-2xl icon-[mdi--restore]" />
 						Restablecer
-					</button>
-					<button
+					</BotonVariante>
+					<BotonVariante
 						type="button"
 						onClick={onExport}
 						disabled={exportDisabled}
-						className="inline-flex items-center gap-2 rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] shadow-[0px_4px_10px_rgba(15,23,42,0.08)] hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:hover:bg-[#1E293B]"
+						variant="guardar"
+						className="text-[14px]"
 					>
-						<Download className="h-4 w-4" />
+						<span className="text-2xl icon-[material-symbols--download]" />
 						Exportar resumen CSV
-					</button>
+					</BotonVariante>
 				</div>
 			</div>
 		</section>

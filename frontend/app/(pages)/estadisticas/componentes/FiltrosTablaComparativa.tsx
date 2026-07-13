@@ -1,6 +1,7 @@
 "use client";
 
 import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
+import BotonVariante from "@componentes/botones/BotonVariante";
 import { type Dispatch, type SetStateAction } from "react";
 import {
 	type EstadisticaAtributo,
@@ -109,20 +110,24 @@ export default function FiltrosTablaComparativa({
 
 			<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
 				<div className="flex flex-wrap items-center gap-3">
-					<button
+					<BotonVariante
 						type="button"
 						onClick={onApply}
-						className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)] hover:bg-[#0873B2]"
+						variant="filtro"
+						className="text-[14px]"
 					>
+						<span className="text-2xl icon-[mage--filter]" />
 						Aplicar filtros
-					</button>
-					<button
+					</BotonVariante>
+					<BotonVariante
 						type="button"
 						onClick={onReset}
-						className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] shadow-[0px_4px_10px_rgba(15,23,42,0.08)] hover:bg-[#F8FAFC]"
+						variant="cerrar"
+						className="text-[14px]"
 					>
+						<span className="text-2xl icon-[mdi--restore]" />
 						Restablecer
-					</button>
+					</BotonVariante>
 				</div>
 			</div>
 		</section>
