@@ -4,7 +4,13 @@
 
 Este documento describe el flujo para trabajar con SCARH en desarrollo local y realizar despliegues de los distintos componentes del sistema.
 
-Las instrucciones de despliegue están destinadas principalmente a **Felix**, ya que es quien tiene acceso a las cuentas de producción y a los servicios configurados.
+Las credenciales de acceso a las cuentas y servicios configurados (Render, Vercel, Supabase, Docker Hub) están actualmente en manos de **Felix**.
+
+> ⚠️ **Importante sobre el estado actual del sistema**
+>
+> Lo que en este documento se llama "producción" (Render, Vercel, Supabase) es en realidad un **entorno de prueba desplegado públicamente**, todavía no es el entorno de producción final del cliente. Nada de lo que ocurre ahí impacta a un cliente real. Cuando el sistema esté completo, se desplegará donde el cliente lo indique, con su propia infraestructura y base de datos.
+>
+> Justamente por ser una base de datos de prueba compartida (no una base local de cada desarrollador), es importante **usar siempre la base de datos de Supabase en el `.env` en vez de una base de datos local** al trabajar en el backend. Así se evita cargar datos de prueba una y otra vez en bases distintas, y todos trabajan sobre el mismo estado de datos.
 
 ---
 
@@ -19,11 +25,11 @@ Actualmente SCARH está compuesto por los siguientes servicios:
 | Frontend (Next.js)          | Vercel     | https://scarh.vercel.app/
 | Imágenes Docker del backend | Docker Hub | https://hub.docker.com/repository/docker/felixop/scarh
 
-La base de datos utilizada en producción ya se encuentra creada y administrada en **Supabase**.
+La base de datos utilizada ya se encuentra creada y administrada en **Supabase**. Es una base de datos de prueba, no la base de datos final del cliente.
 
-La API de producción está desplegada en **Render**.
+La API está desplegada en **Render**.
 
-El frontend de producción está desplegado en **Vercel**.
+El frontend está desplegado en **Vercel**.
 
 ---
 
@@ -35,7 +41,8 @@ En el backend existen los siguientes archivos relacionados con construcción y d
 .
 ├── Dockerfile.production
 ├── compose.production.yml
-├── .release.ps1
+├── release.ps1
+├── release.sh
 ├── VERSION
 └── .env
 ```
@@ -77,11 +84,11 @@ Ejemplos:
 1.0
 ```
 
-## .release.ps1
+## release.ps1 / release.sh
 
-Script utilizado para generar una nueva versión del backend.
+Scripts equivalentes utilizados para generar una nueva versión del backend. `release.ps1` es para PowerShell (Windows) y `release.sh` es su equivalente en Bash (Linux/macOS).
 
-Realiza:
+Realizan:
 
 * Incremento de versión.
 * Construcción de la imagen Docker.
@@ -101,6 +108,14 @@ Instalar:
 * Docker Desktop.
 * Git.
 * PowerShell.
+
+## Requisitos Linux/macOS
+
+Instalar:
+
+* Docker Engine (o Docker Desktop).
+* Git.
+* Bash.
 
 ---
 
@@ -128,6 +143,8 @@ CSRF_TRUSTED_ORIGINS=
 ```
 
 La aplicación utiliza la base de datos alojada en Supabase, por lo que el entorno local puede conectarse utilizando las credenciales configuradas.
+
+> ⚠️ El backend puede ejecutarse directamente desde la máquina local (sin Docker) y ejecutar migraciones (`python manage.py migrate`) contra la base de datos de Supabase configurada en `DB_HOST`/`DB_NAME`/etc. del `.env`. Esto significa que **cualquier migración o comando de gestión ejecutado localmente impacta directamente sobre esa base compartida**, aunque no sea la base de producción final. Verificar siempre qué `DB_HOST` está configurado en el `.env` antes de correr migraciones u otros comandos que modifiquen datos.
 
 El archivo `.env` no debe subirse al repositorio.
 
@@ -199,10 +216,22 @@ Antes de crear una nueva versión:
 2. Verificar que la aplicación inicia correctamente.
 3. Confirmar que no existen errores.
 
-Ejecutar:
+Ejecutar (Windows):
 
 ```powershell
 .\release.ps1
+```
+
+Ejecutar (Linux/macOS):
+
+```bash
+./release.sh
+```
+
+Ambos scripts aceptan opcionalmente el tipo de release (`minor` o `major`) como parámetro:
+
+```bash
+./release.sh minor
 ```
 
 El script realizará automáticamente:
@@ -239,7 +268,7 @@ Después de publicar una nueva imagen Docker:
 1. Actualizar la versión utilizada por Render.
 2. Ejecutar el despliegue desde Render.
 
-La base de datos no se despliega junto con la aplicación porque está gestionada externamente en Supabase.
+La base de datos no se despliega junto con la aplicación porque está gestionada externamente en Supabase (base de prueba, ver advertencia al inicio del documento).
 
 ---
 
