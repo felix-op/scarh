@@ -7,14 +7,22 @@ import {
 	type EstadisticaOutputItem,
 	useGetEstadistica,
 } from "@servicios/api/django.api";
+import BotonVariante from "@componentes/botones/BotonVariante";
 import { useMemo } from "react";
 import { type LimnigrafoResponse } from "types/limnigrafos";
+import {
+	buildTimestampedFileName,
+	downloadCsvRows,
+	formatDateForFileName,
+} from "../lib/exportaciones-estadisticas";
+import { ATRIBUTO_METADATA } from "../lib/estadisticas-domain";
 
 type ComparativaTableRow = {
 	rowId: string;
 	limnigrafo: string;
 	minimo: string;
 	maximo: string;
+	mediana: string;
 	moda: string;
 	desvioEstandar: string;
 	percentil90: string;
@@ -131,6 +139,7 @@ export default function TablaComparativaEstadisticas({
 				limnigrafo: item.id === null ? "Global" : (limnigrafoNameById.get(item.id) ?? `ID ${item.id}`),
 				minimo: formatNumber(item.minimo, 2),
 				maximo: formatNumber(item.maximo, 2),
+				mediana: formatNumber(item.mediana, 2),
 				moda: formatNullableNumber(item.moda, 2),
 				desvioEstandar: formatNumber(item.desvio_estandar, 2),
 				percentil90: formatNumber(item.percentil_90, 2),
@@ -156,6 +165,11 @@ export default function TablaComparativaEstadisticas({
 				accessorKey: "maximo",
 			},
 			{
+				id: "mediana",
+				header: "Mediana",
+				accessorKey: "mediana",
+			},
+			{
 				id: "moda",
 				header: "Moda",
 				accessorKey: "moda",
@@ -174,6 +188,41 @@ export default function TablaComparativaEstadisticas({
 		[],
 	);
 
+	function handleExportCsv() {
+		const rangoArchivo = desdeIso && hastaIso
+			? `${formatDateForFileName(desdeIso)}_a_${formatDateForFileName(hastaIso)}`
+			: "rango_personalizado";
+		const tableHeaders = [
+			"limnigrafo_id",
+			"limnigrafo",
+			"minimo",
+			"maximo",
+			"mediana",
+			"moda",
+			"desvio_estandar",
+			"percentil_90",
+		];
+		const tableRows = estadisticasVisibles.map((item) => [
+			item.id ?? "",
+			item.id === null ? "Global" : (limnigrafoNameById.get(item.id) ?? `ID ${item.id}`),
+			item.minimo,
+			item.maximo,
+			item.mediana,
+			item.moda,
+			item.desvio_estandar,
+			item.percentil_90,
+		]);
+		const rows = [
+			["Variable", ATRIBUTO_METADATA[atributo].label],
+			["Unidad", ATRIBUTO_METADATA[atributo].unit],
+			[],
+			tableHeaders,
+			...tableRows,
+		];
+
+		downloadCsvRows(buildTimestampedFileName(`estadisticas_tabla_comparativa_${rangoArchivo}`), rows);
+	}
+
 	return (
 		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 			<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -185,6 +234,16 @@ export default function TablaComparativaEstadisticas({
 						Cálculo por rango personalizado para limnígrafos seleccionados.
 					</p>
 				</div>
+				<BotonVariante
+					type="button"
+					onClick={handleExportCsv}
+					disabled={estadisticasVisibles.length === 0 || isCalculandoEstadisticas || isActualizandoEstadisticas}
+					variant="guardar"
+					className="text-[14px]"
+				>
+					<span className="text-2xl icon-[material-symbols--download]" />
+					Exportar CSV
+				</BotonVariante>
 			</div>
 
 			{estadisticasErrorVisible ? (
@@ -204,7 +263,7 @@ export default function TablaComparativaEstadisticas({
 				rowIdKey="rowId"
 				showTopBar={false}
 				enableRowAnimation={false}
-				minWidth={760}
+				minWidth={860}
 				emptyStateContent={<span className="text-[#6B7280] dark:text-[#94A3B8]">Sin datos comparativos calculados.</span>}
 				styles={{
 					rootClassName: "pb-0",
