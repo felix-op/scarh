@@ -33,6 +33,7 @@ import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
 const DEFAULT_PAGE_SIZE = 25;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 75, 100] as const;
 const EXPORT_PAGE_SIZE = 1000;
+const MEDICIONES_REFETCH_INTERVAL_MS = 15000;
 
 const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
 	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#1D4ED8] dark:bg-[#0B2A43] dark:text-[#93C5FD] dark:hover:bg-[#12385B]";
@@ -58,7 +59,7 @@ function getDefaultDateRange() {
 
 	return {
 		desde: toDatetimeLocalInputValue(from),
-		hasta: toDatetimeLocalInputValue(now),
+		hasta: "",
 	};
 }
 
@@ -233,6 +234,8 @@ export default function MedicionesPage() {
 		},
 		config: {
 			placeholderData: (previous) => previous,
+			refetchInterval: MEDICIONES_REFETCH_INTERVAL_MS,
+			refetchIntervalInBackground: true,
 		},
 	});
 
