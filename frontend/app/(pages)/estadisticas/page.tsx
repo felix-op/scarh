@@ -41,11 +41,18 @@ import {
 
 export default function EstadisticasPage() {
 	const notificar = useNotificar();
-	const noDataNotificationKeyRef = useRef<string | null>(null);
+	const noDataNotificationRequestIdRef = useRef(0);
+	const noDataNotificationShownIdRef = useRef<number | null>(null);
+	const noDataNotificationSawLoadingRef = useRef(false);
 	const [activeTab, setActiveTab] = useState<EstadisticasTab>("graficos");
 	const [filters, setFilters] = useState<EstadisticasFilters>(getDefaultFilters);
 	const [appliedFilters, setAppliedFilters] = useState<EstadisticasFilters>(getDefaultFilters);
 	const [filterError, setFilterError] = useState<string | null>(null);
+	const [noDataNotificationRequest, setNoDataNotificationRequest] = useState<{
+		id: number;
+		filtersKey: string;
+		requiresLoading: boolean;
+	} | null>(null);
 	const [tablaFilters, setTablaFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
 	const [tablaAppliedFilters, setTablaAppliedFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
 	const [tablaFilterError, setTablaFilterError] = useState<string | null>(null);
@@ -224,29 +231,44 @@ export default function EstadisticasPage() {
 	const shouldShowRateChart = appliedFilters.atributo === "altura_agua";
 
 	useEffect(() => {
-		if (!noDataInRange || fetchError || filterError) {
+		if (isLoadingData && noDataNotificationRequest) {
+			noDataNotificationSawLoadingRef.current = true;
+		}
+	}, [isLoadingData, noDataNotificationRequest]);
+
+	useEffect(() => {
+		if (!noDataNotificationRequest) {
 			return;
 		}
 
-		const notificationKey = JSON.stringify({
-			...appliedFilters,
-			range: activeRange ? {
-				from: activeRange.currentFrom,
-				to: activeRange.currentTo,
-			} : null,
-		});
-
-		if (noDataNotificationKeyRef.current === notificationKey) {
+		const appliedFiltersKey = JSON.stringify(appliedFilters);
+		if (appliedFiltersKey !== noDataNotificationRequest.filtersKey) {
 			return;
 		}
 
-		noDataNotificationKeyRef.current = notificationKey;
+		if (fetchError || filterError) {
+			return;
+		}
+
+		if (isLoadingData || (noDataNotificationRequest.requiresLoading && !noDataNotificationSawLoadingRef.current)) {
+			return;
+		}
+
+		if (!noDataInRange) {
+			return;
+		}
+
+		if (noDataNotificationShownIdRef.current === noDataNotificationRequest.id) {
+			return;
+		}
+
+		noDataNotificationShownIdRef.current = noDataNotificationRequest.id;
 		notificar({
 			titulo: "Sin mediciones para mostrar",
 			mensaje: "No se encontraron mediciones en el período y filtros seleccionados.",
 			variante: "alerta",
 		});
-	}, [activeRange, appliedFilters, fetchError, filterError, noDataInRange, notificar]);
+	}, [appliedFilters, fetchError, filterError, isLoadingData, noDataInRange, noDataNotificationRequest, notificar]);
 
 	function handleApplyFilters() {
 		setFilterError(null);
@@ -266,6 +288,14 @@ export default function EstadisticasPage() {
 			}
 		}
 
+		const filtersKey = JSON.stringify(filters);
+		noDataNotificationRequestIdRef.current += 1;
+		noDataNotificationSawLoadingRef.current = false;
+		setNoDataNotificationRequest({
+			id: noDataNotificationRequestIdRef.current,
+			filtersKey,
+			requiresLoading: filtersKey !== JSON.stringify(appliedFilters),
+		});
 		setAppliedFilters(filters);
 	}
 
