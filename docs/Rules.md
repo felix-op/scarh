@@ -56,3 +56,14 @@ Toda adición de código debe ubicarse estrictamente en la carpeta que le corres
   * Todos los nombres de archivos en el proyecto deben escribirse en minúsculas separadas por guiones (kebab-case).
   * Ej: `iconify-icon.tsx`, `botones.tsx`, `cards.tsx`, `api.usuarios.ts`, `provider.autenticacion.ts`.
   * **No usar CamelCase ni PascalCase** en los nombres de archivos. Esto evita problemas de discrepancia de mayúsculas/minúsculas al compilar e importar en diferentes sistemas operativos (Windows vs Linux).
+
+---
+
+## 5. Importaciones y Uso de React
+
+* **Importación eficiente de React (React 17+ / React 19)**:
+  * Prohibido realizar `import React from "react"` si no es necesario (el compilador de JSX lo maneja de forma automática).
+  * Cuando se requieran elementos internos (como hooks, tipos o referencias), se deben importar de forma destructurada directamente desde `"react"`.
+  * Ejemplo **Correcto**: `import { useState, useEffect, Ref } from "react";`
+  * Ejemplo **Incorrecto**: `import React from "react";` seguido de `React.useState(...)`.
+  * Esto reduce código innecesario, mantiene el estilo consistente y optimiza el proceso de *tree shaking* del empaquetador.
