@@ -17,10 +17,17 @@ import TarjetaTasaCambioNivel from "./componentes/TarjetaTasaCambioNivel";
 import useEstadisticasMediciones from "./hooks/useEstadisticasMediciones";
 import useRateAnalysis from "./hooks/useRateAnalysis";
 import {
+	buildTimestampedFileName,
+	downloadCsvRows,
+	formatDateForFileName,
+	sanitizeFileNamePart,
+} from "./lib/exportaciones-estadisticas";
+import {
 	type EstadisticasFilters,
 	type EstadisticasTab,
 	type TablaComparativaFilters,
 	ATRIBUTO_METADATA,
+	REALTIME_WINDOW_LABELS,
 	computeSummary,
 	formatDateTime,
 	formatMetricValue,
@@ -266,6 +273,56 @@ export default function EstadisticasPage() {
 		setTablaFilterError(null);
 	}
 
+	function handleExportGraficosCsv() {
+		const rangoArchivo = appliedFilters.modo === "realtime"
+			? sanitizeFileNamePart(REALTIME_WINDOW_LABELS[appliedFilters.ventana])
+			: activeRange
+				? `${formatDateForFileName(activeRange.currentFrom)}_a_${formatDateForFileName(activeRange.currentTo)}`
+				: "rango_personalizado";
+		const variableArchivo = sanitizeFileNamePart(ATRIBUTO_METADATA[appliedFilters.atributo].label);
+		const rangoLabel = appliedFilters.modo === "realtime"
+			? REALTIME_WINDOW_LABELS[appliedFilters.ventana]
+			: activeRange
+				? `${formatDateTime(activeRange.currentFrom)} - ${formatDateTime(activeRange.currentTo)}`
+				: "Rango personalizado";
+		const tableHeaders = [
+			"seccion",
+			"metrica",
+			"valor",
+			"detalle",
+		];
+		const tableRows = [
+			["Estadísticas descriptivas", "Registros analizados", currentSummary.registros, "Muestras válidas de la variable en el período actual"],
+			["Estadísticas descriptivas", "Promedio", currentSummary.promedio, formatVariation(averageVariation)],
+			["Estadísticas descriptivas", "Mínimo", currentSummary.minimo, "Valor mínimo observado en el período actual"],
+			["Estadísticas descriptivas", "Máximo", currentSummary.maximo, "Valor máximo observado en el período actual"],
+			["Estadísticas descriptivas", "Desvío estándar", currentSummary.desvio, "Nivel de variabilidad de la serie"],
+			["Estadísticas descriptivas", "Percentil 90", currentSummary.p90, "90% de los datos están por debajo de este valor"],
+			["Calidad operativa", "Total de mediciones", fuenteStats.total, "registros"],
+			["Calidad operativa", "Automático", fuenteStats.automatico, `${fuenteStats.automaticoPct.toFixed(2)} %`],
+			["Calidad operativa", "Manual", fuenteStats.manual, `${fuenteStats.manualPct.toFixed(2)} %`],
+			["Calidad operativa", "Importación CSV", fuenteStats.importCsv, `${fuenteStats.importCsvPct.toFixed(2)} %`],
+			["Calidad operativa", "Importación JSON", fuenteStats.importJson, `${fuenteStats.importJsonPct.toFixed(2)} %`],
+			...(shouldShowRateChart ? [
+				["Tasa de cambio del nivel", "Intervalos calculados", rawRatePoints.length, "intervalos"],
+				["Tasa de cambio del nivel", "Intervalos descartados", discardedRatePoints, "Picos descartados por filtro robusto"],
+				["Tasa de cambio del nivel", "Tasa promedio", rateSummary.promedio, "m/h"],
+				["Tasa de cambio del nivel", "Máxima subida", rateSummary.maxSubida, "m/h"],
+				["Tasa de cambio del nivel", "Máxima bajada", rateSummary.maxBajada, "m/h"],
+			] : []),
+		];
+		const rows = [
+			["Variable", ATRIBUTO_METADATA[appliedFilters.atributo].label],
+			["Unidad", ATRIBUTO_METADATA[appliedFilters.atributo].unit],
+			["Rango", rangoLabel],
+			[],
+			tableHeaders,
+			...tableRows,
+		];
+
+		downloadCsvRows(buildTimestampedFileName(`estadisticas_graficos_${variableArchivo}_${rangoArchivo}`), rows);
+	}
+
 	return (
 		<PaginaBase>
 			<main className="flex flex-1 justify-center px-6 py-10">
@@ -308,6 +365,8 @@ export default function EstadisticasPage() {
 								setFilters={setFilters}
 								onApply={handleApplyFilters}
 								onReset={handleResetFilters}
+								onExport={handleExportGraficosCsv}
+								exportDisabled={currentRows.length === 0}
 							/>
 
 							{filterError ? (

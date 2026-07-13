@@ -1,6 +1,7 @@
 "use client";
 
 import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
+import { Download } from "lucide-react";
 import { type Dispatch, type SetStateAction } from "react";
 import {
 	type EstadisticaAtributo,
@@ -20,6 +21,8 @@ type FiltrosGraficosEstadisticasProps = {
 	setFilters: Dispatch<SetStateAction<EstadisticasFilters>>;
 	onApply: () => void;
 	onReset: () => void;
+	onExport: () => void;
+	exportDisabled: boolean;
 };
 
 export default function FiltrosGraficosEstadisticas({
@@ -30,6 +33,8 @@ export default function FiltrosGraficosEstadisticas({
 	setFilters,
 	onApply,
 	onReset,
+	onExport,
+	exportDisabled,
 }: FiltrosGraficosEstadisticasProps) {
 	const optionsWithAll: MultiSelectOption[] = [
 		{ value: ALL_LIMNIGRAFOS_VALUE, label: "Todos" },
@@ -174,6 +179,15 @@ export default function FiltrosGraficosEstadisticas({
 						className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] shadow-[0px_4px_10px_rgba(15,23,42,0.08)] hover:bg-[#F8FAFC]"
 					>
 						Restablecer
+					</button>
+					<button
+						type="button"
+						onClick={onExport}
+						disabled={exportDisabled}
+						className="inline-flex items-center gap-2 rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] shadow-[0px_4px_10px_rgba(15,23,42,0.08)] hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:hover:bg-[#1E293B]"
+					>
+						<Download className="h-4 w-4" />
+						Exportar resumen CSV
 					</button>
 				</div>
 			</div>

@@ -21,6 +21,7 @@ class EstadisticaOutputSerializer(serializers.Serializer):
     id = serializers.IntegerField(allow_null=True)
     maximo = serializers.FloatField()
     minimo = serializers.FloatField()
+    mediana = serializers.FloatField()
     atributo = serializers.CharField()
     moda = serializers.FloatField(allow_null=True)
     desvio_estandar = serializers.FloatField()
