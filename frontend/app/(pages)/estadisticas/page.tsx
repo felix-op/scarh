@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import PaginaBase from "@componentes/base/PaginaBase";
 import EstadisticaCard from "@componentes/EstadisticaCard";
 import { type MultiSelectOption } from "@componentes/components/ui/multi-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@componentes/components/ui/tabs";
+import { useNotificar } from "@hooks/useNotificar";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
 import { Paginado } from "@servicios/api/types";
 import { LimnigrafoResponse } from "types/limnigrafos";
@@ -39,10 +40,19 @@ import {
 } from "./lib/estadisticas-domain";
 
 export default function EstadisticasPage() {
+	const notificar = useNotificar();
+	const noDataNotificationRequestIdRef = useRef(0);
+	const noDataNotificationShownIdRef = useRef<number | null>(null);
+	const noDataNotificationSawLoadingRef = useRef(false);
 	const [activeTab, setActiveTab] = useState<EstadisticasTab>("graficos");
 	const [filters, setFilters] = useState<EstadisticasFilters>(getDefaultFilters);
 	const [appliedFilters, setAppliedFilters] = useState<EstadisticasFilters>(getDefaultFilters);
 	const [filterError, setFilterError] = useState<string | null>(null);
+	const [noDataNotificationRequest, setNoDataNotificationRequest] = useState<{
+		id: number;
+		filtersKey: string;
+		requiresLoading: boolean;
+	} | null>(null);
 	const [tablaFilters, setTablaFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
 	const [tablaAppliedFilters, setTablaAppliedFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
 	const [tablaFilterError, setTablaFilterError] = useState<string | null>(null);
@@ -220,6 +230,46 @@ export default function EstadisticasPage() {
 	const noDataInRange = !isLoadingData && currentRows.length === 0;
 	const shouldShowRateChart = appliedFilters.atributo === "altura_agua";
 
+	useEffect(() => {
+		if (isLoadingData && noDataNotificationRequest) {
+			noDataNotificationSawLoadingRef.current = true;
+		}
+	}, [isLoadingData, noDataNotificationRequest]);
+
+	useEffect(() => {
+		if (!noDataNotificationRequest) {
+			return;
+		}
+
+		const appliedFiltersKey = JSON.stringify(appliedFilters);
+		if (appliedFiltersKey !== noDataNotificationRequest.filtersKey) {
+			return;
+		}
+
+		if (fetchError || filterError) {
+			return;
+		}
+
+		if (isLoadingData || (noDataNotificationRequest.requiresLoading && !noDataNotificationSawLoadingRef.current)) {
+			return;
+		}
+
+		if (!noDataInRange) {
+			return;
+		}
+
+		if (noDataNotificationShownIdRef.current === noDataNotificationRequest.id) {
+			return;
+		}
+
+		noDataNotificationShownIdRef.current = noDataNotificationRequest.id;
+		notificar({
+			titulo: "Sin mediciones para mostrar",
+			mensaje: "No se encontraron mediciones en el período y filtros seleccionados.",
+			variante: "alerta",
+		});
+	}, [appliedFilters, fetchError, filterError, isLoadingData, noDataInRange, noDataNotificationRequest, notificar]);
+
 	function handleApplyFilters() {
 		setFilterError(null);
 
@@ -238,6 +288,14 @@ export default function EstadisticasPage() {
 			}
 		}
 
+		const filtersKey = JSON.stringify(filters);
+		noDataNotificationRequestIdRef.current += 1;
+		noDataNotificationSawLoadingRef.current = false;
+		setNoDataNotificationRequest({
+			id: noDataNotificationRequestIdRef.current,
+			filtersKey,
+			requiresLoading: filtersKey !== JSON.stringify(appliedFilters),
+		});
 		setAppliedFilters(filters);
 	}
 
@@ -382,12 +440,6 @@ export default function EstadisticasPage() {
 							{limnigrafosError ? (
 								<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
 									No se pudieron cargar los limnígrafos para filtros.
-								</p>
-							) : null}
-
-							{noDataInRange ? (
-								<p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-[14px] text-[#475569] dark:border-[#334155] dark:bg-[#0F172A] dark:text-[#CBD5E1]">
-									No se encontraron mediciones en el período y filtros seleccionados.
 								</p>
 							) : null}
 
