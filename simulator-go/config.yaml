@@ -2,6 +2,7 @@ backend_url: http://localhost:8000
 interval_seconds: 5
 interval_minutes_min: 0.08
 interval_minutes_max: 0.15
+force_alerts: true
 
 # Escenario dinámico y más real:
 # - Todos arrancan enviando datos (activos)

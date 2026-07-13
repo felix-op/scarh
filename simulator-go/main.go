@@ -49,6 +49,9 @@ func main() {
 		cfg.IntervalMaxMinutes*60,
 	))
 	Info(fmt.Sprintf("Limnígrafos configurados: %d", len(cfg.Limnigrafos)))
+	if cfg.ForceAlerts {
+		Warning("Modo de prueba de alertas activado: el simulador generará anomalías de forma intencional")
+	}
 
 	// Mostrar información de cada limnígrafo
 	for _, l := range cfg.Limnigrafos {
@@ -89,8 +92,8 @@ func runLimnigrafo(wg *sync.WaitGroup, cfg LimnigrafoConfig, globalCfg *Config) 
 	}
 
 	Info(fmt.Sprintf(
-		"Limnígrafo #%d iniciado (intervalo[%s]: %.2f-%.2f min, prob. falla: %.3f%%, duración: %s)",
-		cfg.ID, origenIntervalo, intervaloMin, intervaloMax, cfg.ProbabilidadFalla*100, duracionFallaInfo,
+		"Limnígrafo #%d iniciado (intervalo[%s]: %.2f-%.2f min, prob. falla: %.3f%%, duración: %s, force_alerts: %t)",
+		cfg.ID, origenIntervalo, intervaloMin, intervaloMax, cfg.ProbabilidadFalla*100, duracionFallaInfo, cfg.ForceAlerts,
 	))
 
 	// Desfase inicial para evitar que todos reporten al mismo tiempo.

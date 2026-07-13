@@ -3,7 +3,7 @@ from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from api.models import Limnigrafo, ConfiguracionLimnigrafo
+from api.models import Alerta, ConfiguracionLimnigrafo, Limnigrafo, UsuarioNotificacion
 from api.models.medicion import Medicion
 from rest_framework_api_key.models import APIKey
 from datetime import timedelta
@@ -27,6 +27,12 @@ class MedicionTests(APITestCase):
             bateria_min=10.0,
             tiempo_advertencia=3600,
             tiempo_peligro=7200,
+            altura_minima_agua=0.5,
+            altura_maxima_agua=2.8,
+            temperatura_minima=-5.0,
+            temperatura_maxima=35.0,
+            presion_minima=950.0,
+            presion_maxima=1050.0,
         )
         
         self.list_url = reverse('medicion-list')
@@ -100,6 +106,28 @@ class MedicionTests(APITestCase):
         self.assertIsNotNone(self.limnigrafo.ultima_conexion)
         
         self.assertEqual(self.limnigrafo.estado, 'peligro')
+        self.assertTrue(Alerta.objects.filter(tipo='peligro_limnigrafo', limnigrafo=self.limnigrafo).exists())
+        self.assertTrue(UsuarioNotificacion.objects.filter(usuario=self.user).exists())
+
+    def test_create_medicion_creates_out_of_range_alert(self):
+        self.client.force_authenticate(user=self.user)
+
+        data = {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 4.2,
+            'nivel_de_bateria': 11.2,
+            'presion': 1105,
+            'temperatura': 42,
+            'fecha_hora': timezone.now().isoformat(),
+        }
+        response = self.client.post(self.list_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        alerta = Alerta.objects.filter(tipo='fuera_rango_medicion', limnigrafo=self.limnigrafo).latest('id')
+        self.assertIn('altura_agua', alerta.descripcion)
+        self.assertIn('temperatura', alerta.descripcion)
+        self.assertIn('presion', alerta.descripcion)
+        self.assertTrue(UsuarioNotificacion.objects.filter(alerta=alerta, usuario=self.user).exists())
 
     def test_create_medicion_sets_fuera_de_servicio_when_time_exceeds_triple_peligro(self):
         self.client.force_authenticate(user=self.user)

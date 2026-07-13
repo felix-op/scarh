@@ -16,7 +16,8 @@ from ..utils.audit import (
     construir_cambios_instancia,
     construir_descripcion_modificacion,
 )
-from django.contrib.auth.hashers import make_password
+
+
 class UsuarioPagination(PageNumberPagination):
     page_size = 10               
     page_size_query_param = 'limit' 
@@ -168,6 +169,108 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             {
                 "message": "Roles actualizados correctamente.",
                 "roles": roles_nuevos
+            },
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=['post'], url_path='roles/bulk')
+    def asignar_roles_bulk(self, request):
+        """Endpoint POST /usuarios/roles/bulk/ para modificar roles de varios usuarios."""
+        user_ids = request.data.get('user_ids')
+        roles_nombres = request.data.get('roles')
+        mode = request.data.get('mode')
+
+        if not isinstance(user_ids, list) or not user_ids:
+            return Response(
+                {"error": "El campo 'user_ids' debe ser una lista con al menos un usuario."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not isinstance(roles_nombres, list):
+            return Response(
+                {"error": "El campo 'roles' debe ser una lista de strings."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if mode not in {'add', 'remove', 'replace'}:
+            return Response(
+                {"error": "El campo 'mode' debe ser uno de: add, remove, replace."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if len(set(user_ids)) != len(user_ids):
+            return Response(
+                {"error": "El campo 'user_ids' no debe contener IDs repetidos."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        roles_set = set(roles_nombres)
+        roles_invalidos = roles_set - PREDEFINED_ROLE_NAMES
+        if roles_invalidos:
+            return Response(
+                {"error": f"Roles inválidos: {sorted(roles_invalidos)}. Solo se permiten roles predefinidos."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        usuarios = list(Usuario.objects.filter(id__in=user_ids).order_by('id'))
+        if len(usuarios) != len(user_ids):
+            usuarios_encontrados = {usuario.id for usuario in usuarios}
+            usuarios_faltantes = sorted(set(user_ids) - usuarios_encontrados)
+            return Response(
+                {"error": f"Usuarios no encontrados: {usuarios_faltantes}."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        roles_objetos = list(Rol.objects.filter(nombre__in=roles_set))
+        if len(roles_objetos) != len(roles_set):
+            roles_encontrados = {rol.nombre for rol in roles_objetos}
+            roles_faltantes = sorted(roles_set - roles_encontrados)
+            return Response(
+                {"error": f"Roles no encontrados en la base de datos: {roles_faltantes}. Ejecutá: python manage.py loaddata roles.json"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        usuarios_actualizados = []
+
+        for usuario in usuarios:
+            roles_anteriores = set(usuario.roles.values_list('nombre', flat=True))
+
+            if mode == 'replace':
+                roles_resultantes = roles_set
+            elif mode == 'add':
+                roles_resultantes = roles_anteriores | roles_set
+            else:
+                roles_resultantes = roles_anteriores - roles_set
+
+            usuario.roles.set(Rol.objects.filter(nombre__in=roles_resultantes))
+
+            roles_nuevos = sorted(set(usuario.roles.values_list('nombre', flat=True)))
+            usuarios_actualizados.append({
+                "id": usuario.id,
+                "username": usuario.username,
+                "roles_anteriores": sorted(roles_anteriores),
+                "roles_nuevos": roles_nuevos,
+            })
+
+            registrar_accion_auditoria(
+                request=self.request,
+                tipo_accion="modified",
+                entidad="Usuario",
+                entidad_id=usuario.id,
+                descripcion=f"Modificó los roles del usuario '{usuario.username}' en lote.",
+                metadata={
+                    "target_username": usuario.username,
+                    "roles_anteriores": sorted(roles_anteriores),
+                    "roles_nuevos": roles_nuevos,
+                    "bulk_mode": mode,
+                },
+            )
+
+        return Response(
+            {
+                "message": "Roles actualizados correctamente.",
+                "mode": mode,
+                "updated_users": usuarios_actualizados,
             },
             status=status.HTTP_200_OK
         )

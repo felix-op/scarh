@@ -2,6 +2,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from api.models import Rol
 
 class UsuarioTests(APITestCase):
     def setUp(self):
@@ -27,6 +28,16 @@ class UsuarioTests(APITestCase):
         )
         self.list_url = reverse('usuarios-list')
         self.detail_url = reverse('usuarios-detail', args=[self.usuario.id])
+        self.roles_url = reverse('usuarios-asignar-roles', args=[self.usuario.id])
+        self.bulk_roles_url = reverse('usuarios-asignar-roles-bulk')
+        self.rol_mediciones_visualizar = Rol.objects.create(
+            nombre='mediciones-visualizar',
+            descripcion='Permite visualizar mediciones.',
+        )
+        self.rol_historial_visualizar = Rol.objects.create(
+            nombre='historial-visualizar',
+            descripcion='Permite visualizar historial de acciones.',
+        )
 
     def test_list_usuarios(self):
         response = self.client.get(self.list_url)
@@ -103,6 +114,102 @@ class UsuarioTests(APITestCase):
         
         self.usuario.refresh_from_db()
         self.assertFalse(self.usuario.check_password('newsecurepassword'))
+
+    def test_assign_roles_to_single_user(self):
+        response = self.client.put(
+            self.roles_url,
+            {'roles': ['mediciones-visualizar']},
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.usuario.refresh_from_db()
+        self.assertEqual(
+            sorted(self.usuario.roles.values_list('nombre', flat=True)),
+            ['mediciones-visualizar']
+        )
+
+    def test_bulk_add_roles(self):
+        segundo_usuario = get_user_model().objects.create_user(
+            username='segundousuario',
+            password='password123',
+            email='segundo@example.com',
+        )
+
+        response = self.client.post(
+            self.bulk_roles_url,
+            {
+                'user_ids': [self.usuario.id, segundo_usuario.id],
+                'roles': ['mediciones-visualizar'],
+                'mode': 'add',
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.usuario.refresh_from_db()
+        segundo_usuario.refresh_from_db()
+        self.assertEqual(
+            sorted(self.usuario.roles.values_list('nombre', flat=True)),
+            ['mediciones-visualizar']
+        )
+        self.assertEqual(
+            sorted(segundo_usuario.roles.values_list('nombre', flat=True)),
+            ['mediciones-visualizar']
+        )
+
+    def test_bulk_remove_roles(self):
+        self.usuario.roles.add(self.rol_mediciones_visualizar, self.rol_historial_visualizar)
+
+        response = self.client.post(
+            self.bulk_roles_url,
+            {
+                'user_ids': [self.usuario.id],
+                'roles': ['mediciones-visualizar'],
+                'mode': 'remove',
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.usuario.refresh_from_db()
+        self.assertEqual(
+            sorted(self.usuario.roles.values_list('nombre', flat=True)),
+            ['historial-visualizar']
+        )
+
+    def test_bulk_replace_roles(self):
+        self.usuario.roles.add(self.rol_historial_visualizar)
+
+        response = self.client.post(
+            self.bulk_roles_url,
+            {
+                'user_ids': [self.usuario.id],
+                'roles': ['mediciones-visualizar'],
+                'mode': 'replace',
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.usuario.refresh_from_db()
+        self.assertEqual(
+            sorted(self.usuario.roles.values_list('nombre', flat=True)),
+            ['mediciones-visualizar']
+        )
+
+    def test_bulk_roles_validates_mode(self):
+        response = self.client.post(
+            self.bulk_roles_url,
+            {
+                'user_ids': [self.usuario.id],
+                'roles': ['mediciones-visualizar'],
+                'mode': 'merge',
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_delete_usuario(self):
         User = get_user_model()

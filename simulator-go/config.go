@@ -36,6 +36,7 @@ type Config struct {
 	IntervalSeconds    int                `yaml:"interval_seconds"`
 	IntervalMinMinutes float64            `yaml:"interval_minutes_min"`
 	IntervalMaxMinutes float64            `yaml:"interval_minutes_max"`
+	ForceAlerts        bool               `yaml:"force_alerts"`
 	Limnigrafos        []LimnigrafoConfig `yaml:"limnigrafos"`
 }
 
@@ -60,6 +61,7 @@ type LimnigrafoConfig struct {
 	DuracionFallaMin int `yaml:"duracion_falla_min"`
 	// Duración máxima de la falla en minutos (si no está, se usa DuracionFallaMin)
 	DuracionFallaMax int `yaml:"duracion_falla_max"`
+	ForceAlerts      bool `yaml:"force_alerts"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -171,6 +173,10 @@ func LoadConfig(path string) (*Config, error) {
 		}
 		if l.DuracionFallaMin > l.DuracionFallaMax {
 			l.DuracionFallaMin, l.DuracionFallaMax = l.DuracionFallaMax, l.DuracionFallaMin
+		}
+
+		if cfg.ForceAlerts {
+			l.ForceAlerts = true
 		}
 	}
 

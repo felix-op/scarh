@@ -1,5 +1,5 @@
 import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
-import { TFormCrearUsuario, TFormEditarUsuario, TEntidadRoles } from "./types";
+import { TFormCrearUsuario, TFormEditarUsuario, TEntidadRoles, TFormPermisosMasivos } from "./types";
 
 export const defaultFormCrearUsuario: TFormCrearUsuario = {
 	first_name: "",
@@ -26,10 +26,21 @@ export const defaultMessage: VentanaAceptarOptions = {
 	variant: "info",
 };
 
+export const defaultFormPermisosMasivos: TFormPermisosMasivos = {
+	mode: "add",
+	roles: [],
+};
+
 export const opcionesEstado = [
 	{ label: "Todos", value: "" },
 	{ label: "Activo", value: "true" },
 	{ label: "Inactivo", value: "false" },
+];
+
+export const opcionesModoPermisosMasivos = [
+	{ label: "Agregar permisos", value: "add" },
+	{ label: "Quitar permisos", value: "remove" },
+	{ label: "Reemplazar permisos", value: "replace" },
 ];
 
 export const opcionesRoles: TEntidadRoles[] = [
@@ -152,3 +163,10 @@ export const opcionesRoles: TEntidadRoles[] = [
 		],
 	},
 ];
+
+export const opcionesRolesPlanas = opcionesRoles.flatMap((entidad) => (
+	entidad.roles.map((rol) => ({
+		label: `${entidad.entidad}: ${rol.label}`,
+		value: rol.value,
+	}))
+));

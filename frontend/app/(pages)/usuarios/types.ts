@@ -1,5 +1,6 @@
 import { BackendError } from "@servicios/api/types";
 import { AxiosError } from "axios";
+import { BulkRolesMode } from "types/usuarios";
 
 export type TFormEditarUsuario = {
     first_name: string;
@@ -38,4 +39,9 @@ export type TRole = {
 export type TEntidadRoles = {
 	entidad: string;
 	roles: TRole[];
+};
+
+export type TFormPermisosMasivos = {
+    mode: BulkRolesMode;
+    roles: string[];
 };

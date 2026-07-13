@@ -6,6 +6,7 @@ from ..serializer import MedicionSerializer
 from ..permissions import MedicionesPermissionWithAPIKey
 from ..filters import MedicionFilter
 from ..utils.audit import registrar_accion_auditoria
+from ..utils.alertas import generar_alertas_medicion
 from ..utils.estado_limnigrafo import calcular_estado_limnigrafo
 
 class MedicionPagination(PageNumberPagination):
@@ -34,6 +35,8 @@ class MedicionViewSet(
 
     
     def perform_create(self, serializer):
+        limnigrafo = serializer.validated_data["limnigrafo"]
+        estado_anterior = limnigrafo.estado
         medicion_instance = serializer.save()
         limnigrafo = medicion_instance.limnigrafo
         
@@ -50,6 +53,7 @@ class MedicionViewSet(
         limnigrafo.estado = nuevo_estado
         
         limnigrafo.save(update_fields=['bateria_actual', 'ultima_conexion', 'estado'])
+        generar_alertas_medicion(medicion_instance, estado_anterior, nuevo_estado)
 
         if medicion_instance.fuente == "manual":
             registrar_accion_auditoria(

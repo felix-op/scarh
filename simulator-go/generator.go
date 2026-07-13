@@ -22,10 +22,17 @@ import (
 // Estado interno del limnígrafo (actualmente sin uso, preparado para futuro)
 type LimnigrafoState struct {
 	BateriaActual float64
+	MeasurementsGenerated int
 }
 
 // GenerateMeasurement genera una medición aleatoria realista
 func GenerateMeasurement(cfg LimnigrafoConfig, state *LimnigrafoState) Medicion {
+	state.MeasurementsGenerated++
+
+	if cfg.ForceAlerts {
+		return generateAlertMeasurement(cfg, state)
+	}
+
 	// Inicializar medición base con altura (siempre presente)
 	altura := cfg.AlturaMin + rand.Float64()*(cfg.AlturaMax-cfg.AlturaMin)
 	medicion := Medicion{
@@ -87,6 +94,40 @@ func GenerateMeasurement(cfg LimnigrafoConfig, state *LimnigrafoState) Medicion 
 			bateria := cfg.BateriaMin + rand.Float64()*(cfg.BateriaMax-cfg.BateriaMin)
 			medicion.NivelDeBateria = &bateria
 		}
+	}
+
+	return medicion
+}
+
+func generateAlertMeasurement(cfg LimnigrafoConfig, state *LimnigrafoState) Medicion {
+	medicion := Medicion{
+		FechaHora:    time.Now().UTC(),
+		LimnigrafoID: cfg.ID,
+	}
+
+	switch state.MeasurementsGenerated % 3 {
+	case 1:
+		medicion.Altura = cfg.AlturaMin + rand.Float64()*(cfg.AlturaMax-cfg.AlturaMin)
+		temperatura := cfg.TemperaturaMin + rand.Float64()*(cfg.TemperaturaMax-cfg.TemperaturaMin)
+		presion := cfg.PresionMin + rand.Float64()*(cfg.PresionMax-cfg.PresionMin)
+		bateria := cfg.BateriaMin - 0.6
+		medicion.Temperatura = &temperatura
+		medicion.Presion = &presion
+		medicion.NivelDeBateria = &bateria
+	case 2:
+		medicion.Altura = cfg.AlturaMax + 1.0
+		temperatura := cfg.TemperaturaMax + 8.0
+		presion := cfg.PresionMax + 35.0
+		bateria := cfg.BateriaMax
+		medicion.Temperatura = &temperatura
+		medicion.Presion = &presion
+		medicion.NivelDeBateria = &bateria
+	default:
+		medicion.Altura = cfg.AlturaMin + rand.Float64()*(cfg.AlturaMax-cfg.AlturaMin)
+		temperatura := cfg.TemperaturaMin + rand.Float64()*(cfg.TemperaturaMax-cfg.TemperaturaMin)
+		presion := cfg.PresionMin + rand.Float64()*(cfg.PresionMax-cfg.PresionMin)
+		medicion.Temperatura = &temperatura
+		medicion.Presion = &presion
 	}
 
 	return medicion
