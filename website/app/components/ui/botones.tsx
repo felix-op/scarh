@@ -8,6 +8,7 @@ export interface BotonProps {
   disabled?: boolean;
   onClick?: () => void;
   outlined?: boolean;
+  type?: "button" | "submit" | "reset";
 }
 
 // Props para el botón genérico que permite configurar variante e icono interno
@@ -25,6 +26,7 @@ export function Boton({
   outlined = false,
   variant = "default",
   icon = "none",
+  type = "button",
 }: BotonGenericoProps) {
   const animations = true;
 
@@ -43,7 +45,7 @@ export function Boton({
     .join(" ");
 
   return (
-    <button className={classes} disabled={disabled} onClick={onClick} type="button">
+    <button className={classes} disabled={disabled} onClick={onClick} type={type}>
       {loading ? (
         <IconifyIcon variant="loading" />
       ) : (
@@ -62,6 +64,7 @@ export function BotonGuardar({
   disabled = false,
   onClick,
   outlined = false,
+  type = "button",
 }: BotonProps) {
   return (
     <Boton
@@ -70,6 +73,7 @@ export function BotonGuardar({
       disabled={disabled}
       onClick={onClick}
       outlined={outlined}
+      type={type}
       variant="success"
       icon="guardar"
     />
@@ -82,6 +86,7 @@ export function BotonEliminar({
   disabled = false,
   onClick,
   outlined = false,
+  type = "button",
 }: BotonProps) {
   return (
     <Boton
@@ -90,6 +95,7 @@ export function BotonEliminar({
       disabled={disabled}
       onClick={onClick}
       outlined={outlined}
+      type={type}
       variant="error"
       icon="eliminar"
     />
@@ -102,6 +108,7 @@ export function BotonEditar({
   disabled = false,
   onClick,
   outlined = false,
+  type = "button",
 }: BotonProps) {
   return (
     <Boton
@@ -110,6 +117,7 @@ export function BotonEditar({
       disabled={disabled}
       onClick={onClick}
       outlined={outlined}
+      type={type}
       variant="success"
       icon="editar"
     />
@@ -122,6 +130,7 @@ export function BotonCancelar({
   disabled = false,
   onClick,
   outlined = true, // Outlined por defecto
+  type = "button",
 }: BotonProps) {
   return (
     <Boton
@@ -130,6 +139,7 @@ export function BotonCancelar({
       disabled={disabled}
       onClick={onClick}
       outlined={outlined}
+      type={type}
       variant="error"
       icon="cancelar"
     />
@@ -142,6 +152,7 @@ export function BotonConfirmar({
   disabled = false,
   onClick,
   outlined = false,
+  type = "button",
 }: BotonProps) {
   return (
     <Boton
@@ -150,6 +161,7 @@ export function BotonConfirmar({
       disabled={disabled}
       onClick={onClick}
       outlined={outlined}
+      type={type}
       variant="success"
       icon="none" // Sin icono por defecto
     />
@@ -162,6 +174,7 @@ export function BotonLogin({
   disabled = false,
   onClick,
   outlined = false,
+  type = "button",
 }: BotonProps) {
   return (
     <Boton
@@ -170,6 +183,7 @@ export function BotonLogin({
       disabled={disabled}
       onClick={onClick}
       outlined={outlined}
+      type={type}
       variant="primary"
       icon="login"
     />
@@ -182,6 +196,7 @@ export function BotonPassword({
   disabled = false,
   onClick,
   outlined = false,
+  type = "button",
 }: BotonProps) {
   return (
     <Boton
@@ -190,6 +205,7 @@ export function BotonPassword({
       disabled={disabled}
       onClick={onClick}
       outlined={outlined}
+      type={type}
       variant="primary"
       icon="perfilPassword"
     />
@@ -202,6 +218,7 @@ export function BotonFiltro({
   disabled = false,
   onClick,
   outlined = false,
+  type = "button",
 }: BotonProps) {
   return (
     <Boton
@@ -210,6 +227,7 @@ export function BotonFiltro({
       disabled={disabled}
       onClick={onClick}
       outlined={outlined}
+      type={type}
       variant="default"
       icon="filtro"
     />
@@ -222,6 +240,7 @@ export function BotonVolver({
   disabled = false,
   onClick,
   outlined = false,
+  type = "button",
 }: BotonProps) {
   return (
     <Boton
@@ -230,6 +249,7 @@ export function BotonVolver({
       disabled={disabled}
       onClick={onClick}
       outlined={outlined}
+      type={type}
       variant="default"
       icon="volver"
     />
@@ -242,6 +262,7 @@ export function BotonVerMas({
   disabled = false,
   onClick,
   outlined = false,
+  type = "button",
 }: BotonProps) {
   return (
     <Boton
@@ -250,6 +271,7 @@ export function BotonVerMas({
       disabled={disabled}
       onClick={onClick}
       outlined={outlined}
+      type={type}
       variant="default"
       icon="ir"
     />
@@ -262,6 +284,7 @@ export interface BotonIconoProps {
   loading?: boolean;
   disabled?: boolean;
   onClick?: () => void;
+  type?: "button" | "submit" | "reset";
 }
 
 export function BotonIcono({
@@ -269,9 +292,10 @@ export function BotonIcono({
   loading = false,
   disabled = false,
   onClick,
+  type = "button",
 }: BotonIconoProps) {
   const animations = true;
-  
+
   const classes = [
     "button-icon",
     disabled ? "button-disabled" : "",
@@ -281,7 +305,7 @@ export function BotonIcono({
     .join(" ");
 
   return (
-    <button className={classes} disabled={disabled} onClick={onClick} type="button">
+    <button className={classes} disabled={disabled} onClick={onClick} type={type}>
       {loading ? (
         <IconifyIcon variant="loading" />
       ) : (

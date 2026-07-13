@@ -51,7 +51,8 @@ const iconVariants = {
   file: "icon-[pepicons-pop--file]",
   llave: "icon-[wpf--key-security]",
   ver: "icon-[zondicons--view-show]",
-  ocultar: "icon-[zondicons--view-hide]"
+  ocultar: "icon-[zondicons--view-hide]",
+  ubicacionOff: "lucide:map-pin-off",
 };
 
 export type IconVariants = keyof typeof iconVariants;
