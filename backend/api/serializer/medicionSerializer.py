@@ -28,9 +28,10 @@ class MedicionSerializer(serializers.ModelSerializer):
                 validated_data['fuente'] = requested_fuente
             else:
                 validated_data['fuente'] = 'manual'
+            if 'fecha_hora' not in validated_data or validated_data['fecha_hora'] is None:
+                validated_data['fecha_hora'] = timezone.now()
         else:
             validated_data['fuente'] = 'automatico'
-        if 'fecha_hora' not in validated_data or validated_data['fecha_hora'] is None:
             validated_data['fecha_hora'] = timezone.now()
 
         return Medicion.objects.create(**validated_data)
