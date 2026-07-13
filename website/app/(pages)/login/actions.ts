@@ -1,6 +1,8 @@
 "use server";
 
 import { z } from "zod";
+import { AuthError } from "next-auth";
+import { signIn } from "@auth";
 
 const loginSchema = z.object({
   username: z.string().min(1, "El nombre de usuario es requerido"),
@@ -18,9 +20,6 @@ export async function loginAction(
   _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  // Simulamos un retraso para ver el estado de carga (isPending)
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-
   const rawUsername = formData.get("username");
   const rawPassword = formData.get("password");
 
@@ -42,28 +41,39 @@ export async function loginAction(
   const { username, password } = validation.data;
 
   try {
-    // Simulación de credenciales de ejemplo
-    if (username === "admin" && password === "password123") {
-      return {
-        success: true,
-        message: "Inicio de sesión exitoso",
-        values: rawValues,
-      };
-    }
+    await signIn("credentials", {
+      username,
+      password,
+      redirectTo: "/dashboard",
+    });
 
     return {
-      success: false,
-      errors: {
-        username: ["Credenciales incorrectas"],
-        password: ["Credenciales incorrectas"],
-      },
+      success: true,
+      message: "Inicio de sesión exitoso",
       values: rawValues,
     };
   } catch (error) {
-    return {
-      success: false,
-      message: "Ocurrió un error inesperado en el servidor.",
-      values: rawValues,
-    };
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return {
+            success: false,
+            errors: {
+              username: ["Credenciales incorrectas"],
+              password: ["Credenciales incorrectas"],
+            },
+            values: rawValues,
+          };
+        default:
+          return {
+            success: false,
+            message: "Ocurrió un error inesperado en el servidor.",
+            values: rawValues,
+          };
+      }
+    }
+
+    // signIn lanza un error interno de redirección cuando el login es exitoso: debe propagarse.
+    throw error;
   }
 }

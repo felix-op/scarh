@@ -21,6 +21,8 @@
     "paths": {
       "@/*": ["./app/*"],
       "@app/*": ["./app/(pages)/*"],
+      "@auth": ["./auth.ts"],
+      "@auth-config": ["./auth.config.ts"],
       // Imports de barril para todo
       "@components": ["./app/components/index.ts"],
       "@hooks": ["./app/hooks/index.ts"],
