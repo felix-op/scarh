@@ -67,3 +67,47 @@ Toda adición de código debe ubicarse estrictamente en la carpeta que le corres
   * Ejemplo **Correcto**: `import { useState, useEffect, Ref } from "react";`
   * Ejemplo **Incorrecto**: `import React from "react";` seguido de `React.useState(...)`.
   * Esto reduce código innecesario, mantiene el estilo consistente y optimiza el proceso de *tree shaking* del empaquetador.
+
+---
+
+## 6. TypeScript: Prohibición de `any` y Manejo de Errores
+
+* **Evitar el uso de `any`**:
+  * Queda estrictamente prohibido el uso de `any` para resolver conflictos de tipado. Toda variable, parámetro, retorno de función y payload de API debe estar tipado correctamente.
+  * Para peticiones, se deben definir tipos genéricos (ej: `TBody` para el cuerpo y `TResponse` para la respuesta).
+* **Uso de Directivas de Supresión**:
+  * En casos excepcionales donde el tipado de librerías de terceros (como NextAuth/Auth.js) presente limitaciones de diseño o intersecciones de tipos forzadas (ej: inyección de propiedades de `AdapterUser` en flujos de `CredentialsProvider`), se debe utilizar la directiva `// @ts-expect-error` explicativa antes de recurrir a casts con `as any`.
+  * Ejemplo:
+    ```typescript
+    // @ts-expect-error - NextAuth v5 fuerza la compatibilidad con el tipo AdapterUser en session.user
+    session.user = token.user;
+    ```
+
+---
+
+## 7. Evitar Nombres Reservados de Next.js en Utilidades
+
+* **Prohibición de Nombres Reservados**:
+  * Dentro de la carpeta de desarrollo `website/app/` (incluso en subdirectorios como `models`, `services`, `utils`), no se deben nombrar archivos generales de código usando nombres de enrutamiento reservados de Next.js.
+  * Evita nombres de archivo como `page.ts`, `layout.ts`, `error.ts`, `loading.ts`, `not-found.ts`, `template.ts`.
+  * Ej: Utiliza `backend.ts` o `api.ts` en lugar de `error.ts` para modelos o utilidades, previniendo malentendidos y conflictos en el ruteador del framework.
+
+---
+
+## 8. Convención JSDoc para VS Code
+
+* **Documentación a Nivel de Clase o Interfaz**:
+  * Para asegurar que VS Code renderice correctamente las descripciones de las propiedades durante el autocompletado y al pasar el cursor sobre las variables (hover), documenta todas las propiedades utilizando etiquetas `@property {tipo} [nombre] Descripción` dentro del bloque principal de JSDoc de la interfaz o clase.
+  * Evita documentar las propiedades de forma inline dentro del cuerpo de la interfaz para mantener el código limpio y maximizar la visibilidad en los tooltips.
+  * Ejemplo:
+    ```typescript
+    /**
+     * Opciones para peticiones HTTP.
+     * @property {string} [url] URL opcional de destino.
+     * @property {string[]} [tags] Etiquetas de caché de Next.
+     */
+    export interface RequestOptions {
+      url?: string;
+      tags?: string[];
+    }
+    ```

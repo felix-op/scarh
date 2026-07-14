@@ -52,7 +52,7 @@ const iconVariants = {
   llave: "icon-[wpf--key-security]",
   ver: "icon-[zondicons--view-show]",
   ocultar: "icon-[zondicons--view-hide]",
-  ubicacionOff: "lucide:map-pin-off",
+  ubicacionOff: "icon-[lucide--map-pin-off]",
 };
 
 export type IconVariants = keyof typeof iconVariants;
