@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type ButtonHTMLAttributes, type Ref } from "react";
 import { IconifyIcon, IconVariants } from "./iconify-icon";
 
 // Interface común de props para todos los botones semánticos
@@ -311,6 +311,37 @@ export function BotonIcono({
       ) : (
         <IconifyIcon variant={icon} />
       )}
+    </button>
+  );
+}
+
+// 4. Botón de menú (trigger de 3 puntos), reutilizable en dropdowns/menús contextuales
+export interface BotonMenuProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  disabled?: boolean;
+  ref?: Ref<HTMLButtonElement>;
+}
+
+export function BotonMenu({
+  disabled = false,
+  className = "",
+  "aria-label": ariaLabel = "Abrir menú",
+  ref,
+  ...props
+}: BotonMenuProps) {
+  const animations = true;
+
+  const classes = [
+    "button-icon button-sidebar",
+    disabled ? "button-disabled" : "",
+    animations && !disabled ? "button-animated" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <button ref={ref} type="button" className={classes} disabled={disabled} aria-label={ariaLabel} {...props}>
+      <IconifyIcon variant="puntosVerticales" />
     </button>
   );
 }

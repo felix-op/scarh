@@ -73,6 +73,19 @@
   --color-input-border: var(--input-border);
   --color-input-focus: var(--input-focus-border);
 
+  /* Alias de tokens usados por los primitivos de shadcn/Radix */
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-accent: var(--color-default-light);
+  --color-accent-foreground: var(--color-default-contrastText);
+  --color-muted: var(--color-background-muted);
+  --color-muted-foreground: var(--color-foreground-secondary);
+  --color-ring: var(--color-primary-main);
+  --color-primary-foreground: var(--color-primary-contrastText);
+  --color-secondary-foreground: var(--color-secondary-contrastText);
+  --color-destructive: var(--color-error-main);
+  --color-destructive-foreground: var(--color-error-contrastText);
+
   /* Layout y Sidebar originales del globals.css */
   --color-logo: var(--logo);
   --color-sidebar: var(--sidebar);

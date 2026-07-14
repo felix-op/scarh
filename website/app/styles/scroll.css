@@ -1,23 +1,40 @@
 /* Scroll Personalizado */
+
+/* Permite que los controles nativos del navegador (incluida la barra de scroll
+   por defecto en plataformas donde no aplican los pseudo-elementos webkit)
+   respeten el esquema de color del tema activo. */
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+html,
 .custom-scroll {
   scrollbar-width: thin;
   scrollbar-color: var(--scroll-thumb) var(--scroll-track);
 }
 
-.custom-scroll::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 10px;
+  height: 10px;
 }
 
-.custom-scroll::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: var(--scroll-track);
   border-radius: 9999px;
 }
 
-.custom-scroll::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: var(--scroll-thumb);
   border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
-.custom-scroll::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
   background: var(--scroll-thumb-hover);
+  background-clip: padding-box;
 }

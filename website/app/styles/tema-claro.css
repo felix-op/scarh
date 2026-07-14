@@ -96,11 +96,15 @@
   /* Variables de Logo y Sidebar del original */
   --logo: #0d76b3;
   --sidebar: #ffffff;
-  --sidebar-foreground: #121212;
+  --sidebar-foreground: #1c1b1f;
   --sidebar-secondary: #6b6b6b;
   --sidebar-foreground-hover: #0982c8;
-  --sidebar-foreground-active: #f9fbff;
-  --sidebar-link: #f0f0f0;
-  --sidebar-link-hover: #d0d0d0;
-  --sidebar-link-active: #011018;
+  --sidebar-foreground-active: #0982c8;
+  --sidebar-link: #ffffff;
+  --sidebar-link-hover: #dceafd;
+  --sidebar-link-active: #dceafd;
+
+  /* Popover / Menús flotantes (Radix) */
+  --popover: #ffffff;
+  --popover-foreground: #1c1b1f;
 }

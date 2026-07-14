@@ -91,13 +91,17 @@
   --scroll-track: #16151a;
 
   /* Variables de Logo y Sidebar del original */
-  --logo: #0d76b3;
+  --logo: #0da2f8;
   --sidebar: rgb(27, 31, 37);
   --sidebar-foreground: #f9fbff;
   --sidebar-secondary: #6b6b6b;
   --sidebar-foreground-hover: #0da2f8;
-  --sidebar-foreground-active: #121212;
-  --sidebar-link: rgb(41, 44, 49);
-  --sidebar-link-hover: rgb(52, 56, 62);
-  --sidebar-link-active: #eef4fb;
+  --sidebar-foreground-active: #0da2f8;
+  --sidebar-link: rgb(27, 31, 37);
+  --sidebar-link-hover: rgb(39, 49, 65);
+  --sidebar-link-active: rgb(39, 49, 65);
+
+  /* Popover / Menús flotantes (Radix) */
+  --popover: rgb(41, 44, 49);
+  --popover-foreground: #e6e1e5;
 }

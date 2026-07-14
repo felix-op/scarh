@@ -73,6 +73,15 @@
   font-size: 1.5rem; /* Aumenta el tamaño de visualización del icono */
 }
 
+/* Botón con la paleta del sidebar (fondo sutil + hover consistente con los ítems de navegación) */
+.button-sidebar {
+  background-color: var(--color-sidebar-link);
+  color: var(--color-sidebar-foreground);
+}
+.button-sidebar:hover:not(.button-disabled) {
+  background-color: var(--color-sidebar-link-hover);
+}
+
 /* Estilos de Colores por Defecto (Variantes Sólidas) */
 .button-primary {
   background-color: var(--color-primary-main);

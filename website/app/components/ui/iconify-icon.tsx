@@ -53,6 +53,8 @@ const iconVariants = {
   ver: "icon-[zondicons--view-show]",
   ocultar: "icon-[zondicons--view-hide]",
   ubicacionOff: "icon-[lucide--map-pin-off]",
+  puntosVerticales: "icon-[qlementine-icons--menu-dots-16]",
+  tuerca: "icon-[dashicons--admin-generic]",
 };
 
 export type IconVariants = keyof typeof iconVariants;
