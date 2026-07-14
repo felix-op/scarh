@@ -1,6 +1,6 @@
 "use client";
 
-import React, { forwardRef } from "react";
+import { Ref } from "react";
 import { Checkbox as ShadcnCheckbox } from "../shadcn/checkbox";
 
 export interface CheckboxProps {
@@ -13,66 +13,62 @@ export interface CheckboxProps {
   checked?: boolean;
   onChange?: (checked: boolean) => void;
   className?: string;
+  ref?: Ref<HTMLButtonElement>; // ref nativo de React 19
 }
 
-export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
-  (
-    {
-      label,
-      name,
-      description,
-      errors,
-      disabled = false,
-      required = false,
-      checked,
-      onChange,
-      className = "",
-    },
-    ref
-  ) => {
-    const hasError = errors && errors.length > 0;
-    const checkboxClasses = `
-      border rounded-shape-sm transition-colors
-      ${hasError ? "border-error focus-visible:ring-error" : "border-input-border focus-visible:ring-input-focus"}
-      ${className}
-    `.trim();
+export function Checkbox({
+  label,
+  name,
+  description,
+  errors,
+  disabled = false,
+  required = false,
+  checked,
+  onChange,
+  className = "",
+  ref,
+}: CheckboxProps) {
+  const hasError = errors && errors.length > 0;
+  const checkboxClasses = `
+    border rounded-shape-sm transition-colors
+    ${hasError ? "border-error focus-visible:ring-error" : "border-input-border focus-visible:ring-input-focus"}
+    ${className}
+  `.trim();
 
-    return (
-      <div className="flex flex-col gap-1.5 w-full">
-        {/* Label principal arriba */}
-        <span className="text-sm font-medium text-foreground">
-          {label} {required && <span className="text-error">*</span>}
-        </span>
+  return (
+    <div className="flex flex-col gap-1.5 w-full">
+      {/* Label principal arriba */}
+      <span className="text-sm font-medium text-foreground">
+        {label} {required && <span className="text-error">*</span>}
+      </span>
 
-        {/* Checkbox y su descripción al lado */}
-        <div className="flex items-center gap-2.5 py-1">
-          <ShadcnCheckbox
-            id={name}
-            name={name}
-            checked={checked}
-            onCheckedChange={onChange}
-            disabled={disabled}
-            ref={ref}
-            className={checkboxClasses}
-          />
-          <label
-            htmlFor={name}
-            className={`text-sm text-foreground select-none ${
-              disabled ? "text-foreground-disabled cursor-not-allowed" : "cursor-pointer"
-            }`}
-          >
-            {description || label}
-          </label>
-        </div>
-
-        {/* Error abajo */}
-        {hasError && (
-          <span className="text-xs text-error font-medium">{errors[0]}</span>
-        )}
+      {/* Checkbox y su descripción al lado */}
+      <div className="flex items-center gap-2.5 py-1">
+        <ShadcnCheckbox
+          id={name}
+          name={name}
+          checked={checked}
+          onCheckedChange={onChange}
+          disabled={disabled}
+          ref={ref}
+          className={checkboxClasses}
+        />
+        <label
+          htmlFor={name}
+          className={`text-sm text-foreground select-none ${
+            disabled ? "text-foreground-disabled cursor-not-allowed" : "cursor-pointer"
+          }`}
+        >
+          {description || label}
+        </label>
       </div>
-    );
-  }
-);
 
-Checkbox.displayName = "Checkbox";
+      {/* Error debajo */}
+      {hasError && (
+        <span className="text-xs text-error font-medium">{errors[0]}</span>
+      )}
+    </div>
+  );
+}
+
 export default Checkbox;
