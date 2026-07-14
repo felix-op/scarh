@@ -34,6 +34,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend', '*']
 
+csrf_trusted_env = os.getenv('CSRF_TRUSTED_ORIGINS')
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in csrf_trusted_env.split(',') if origin.strip()
+] if csrf_trusted_env else []
+
 
 # Application definition
 
