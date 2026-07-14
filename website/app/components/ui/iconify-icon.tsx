@@ -55,6 +55,7 @@ const iconVariants = {
   ubicacionOff: "icon-[lucide--map-pin-off]",
   puntosVerticales: "icon-[qlementine-icons--menu-dots-16]",
   tuerca: "icon-[dashicons--admin-generic]",
+  accesoDenegado: "icon-[mdi--account-lock-outline]",
 };
 
 export type IconVariants = keyof typeof iconVariants;
