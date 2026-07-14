@@ -1,14 +1,22 @@
-import NextAuth from "next-auth";
+import NextAuth, { type User } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
-import type { LoginPayload, LoginResponse, RefreshPayload, RefreshResponse, Usuario } from "@models";
+import type { LoginPayload, LoginResponse, RefreshPayload, RefreshResponse } from "@models";
 
 const API_URL = process.env.API_URL;
 
 // Margen de seguridad: refrescar el access token 1 minuto antes de que expire.
 const REFRESH_MARGIN_MS = 60_000;
 
-async function refreshAccessToken(token: any) {
+async function refreshAccessToken(token: JWT): Promise<JWT> {
+  if (!token.refreshToken) {
+    return {
+      ...token,
+      error: "RefreshAccessTokenError" as const,
+    };
+  }
+
   try {
     const response = await fetch(`${API_URL}/auth/refresh/`, {
       method: "POST",
@@ -29,7 +37,7 @@ async function refreshAccessToken(token: any) {
       accessTokenExpires: Date.now() + refreshed.access_token_lifetime * 1000,
       error: undefined,
     };
-  } catch (error) {
+  } catch (_error) {
     return { ...token, error: "RefreshAccessTokenError" as const };
   }
 }
@@ -43,6 +51,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: {},
       },
       async authorize(credentials) {
+        if (!credentials) {
+          return null;
+        }
+
         const payload: LoginPayload = {
           username: credentials.username as string,
           password: credentials.password as string,
@@ -75,17 +87,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       // Primer inicio de sesión: se vuelcan los datos recibidos de Django al JWT.
       if (user) {
+        const u = user as User;
         return {
           ...token,
-          accessToken: (user as any).accessToken,
-          refreshToken: (user as any).refreshToken,
-          accessTokenExpires: (user as any).accessTokenExpires,
-          user: (user as any).usuario as Usuario,
+          accessToken: u.accessToken,
+          refreshToken: u.refreshToken,
+          accessTokenExpires: u.accessTokenExpires,
+          user: u.usuario,
         };
       }
 
       // El access token todavía es válido.
-      if (Date.now() < (token.accessTokenExpires as number) - REFRESH_MARGIN_MS) {
+      if (token.accessTokenExpires && Date.now() < token.accessTokenExpires - REFRESH_MARGIN_MS) {
         return token;
       }
 
@@ -93,9 +106,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return refreshAccessToken(token);
     },
     async session({ session, token }) {
-      session.user = token.user as any;
-      session.accessToken = token.accessToken as string;
-      session.error = token.error as "RefreshAccessTokenError" | undefined;
+      if (token.user) {
+        // @ts-expect-error - NextAuth v5 forces AdapterUser type compatibility on session.user
+        session.user = token.user;
+      }
+      session.accessToken = token.accessToken;
+      session.error = token.error;
       return session;
     },
   },
