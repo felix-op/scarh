@@ -1,4 +1,6 @@
+import { RequestSSR, RequestSSROptions } from "@/services";
 import { auth } from "@auth";
+import { ButtonCloseSesion } from "./close-session";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -6,6 +8,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
       <h1>Bienvenido, {session?.user?.first_name || session?.user?.username}</h1>
+      <ButtonCloseSesion />
     </div>
   );
 }

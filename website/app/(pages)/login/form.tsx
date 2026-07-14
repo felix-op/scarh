@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { BotonLogin, IconifyIcon, TextField } from "@components";
 import { loginAction, ActionState } from "./actions";
 
@@ -57,9 +58,9 @@ export function LoginForm() {
         <a href="#" className="text-foreground-secondary underline text-sm hover:text-foreground transition-colors">
           ¿Olvidaste tu nombre de usuario?
         </a>
-        <a href="#" className="text-foreground-secondary underline text-sm hover:text-foreground transition-colors">
+        <Link href="/login/recovery-password" className="text-foreground-secondary underline text-sm hover:text-foreground transition-colors">
           ¿Olvidaste tu contraseña?
-        </a>
+        </Link>
       </div>
     </form>
   );

@@ -9,3 +9,4 @@ export * from "./checkbox";
 export * from "./switch";
 export * from "./datefield";
 export * from "./timefield";
+export * from "./stepper";
