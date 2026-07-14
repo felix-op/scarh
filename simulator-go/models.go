@@ -14,7 +14,7 @@
 //     - timestamp: Fecha y hora de la medición (RFC3339)
 //     - altura: Nivel del agua en metros (obligatorio)
 //     - temperatura: Temperatura en °C (opcional, puede ser nil)
-//     - presion: Presión atmosférica en hPa (opcional, puede ser nil)
+//     - presion: Presión en hPa (opcional, puede ser nil)
 //     - nivel_de_bateria: Nivel de batería en % (opcional, puede ser nil)
 //
 //   LimnigrafoState: Estado interno del limnígrafo
