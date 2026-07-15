@@ -23,7 +23,6 @@ class MedicionTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=self.limnigrafo,
-            bateria_max=12.0,
             bateria_min=10.0,
             tiempo_advertencia=3600,
             tiempo_peligro=7200,
@@ -105,9 +104,25 @@ class MedicionTests(APITestCase):
         
         self.assertIsNotNone(self.limnigrafo.ultima_conexion)
         
+        self.assertEqual(self.limnigrafo.estado, 'advertencia')
+        self.assertTrue(Alerta.objects.filter(tipo='advertencia_limnigrafo', limnigrafo=self.limnigrafo).exists())
+        self.assertTrue(UsuarioNotificacion.objects.filter(usuario=self.user).exists())
+
+    def test_create_medicion_sets_peligro_when_water_height_reaches_maximum(self):
+        self.client.force_authenticate(user=self.user)
+
+        data = {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 3.0,
+            'nivel_de_bateria': 11.5,
+            'fecha_hora': timezone.now().isoformat()
+        }
+        response = self.client.post(self.list_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado, 'peligro')
         self.assertTrue(Alerta.objects.filter(tipo='peligro_limnigrafo', limnigrafo=self.limnigrafo).exists())
-        self.assertTrue(UsuarioNotificacion.objects.filter(usuario=self.user).exists())
 
     def test_create_medicion_creates_out_of_range_alert(self):
         self.client.force_authenticate(user=self.user)
@@ -129,7 +144,7 @@ class MedicionTests(APITestCase):
         self.assertIn('presion', alerta.descripcion)
         self.assertTrue(UsuarioNotificacion.objects.filter(alerta=alerta, usuario=self.user).exists())
 
-    def test_create_medicion_sets_fuera_de_servicio_when_time_exceeds_triple_peligro(self):
+    def test_create_medicion_sets_fuera_de_rango_when_time_exceeds_peligro_threshold(self):
         self.client.force_authenticate(user=self.user)
 
         data = {
@@ -142,7 +157,7 @@ class MedicionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.limnigrafo.refresh_from_db()
-        self.assertEqual(self.limnigrafo.estado, 'fuera_de_servicio')
+        self.assertEqual(self.limnigrafo.estado, 'fuera_de_rango')
 
     def test_retrieve_medicion(self):
         self.client.force_authenticate(user=self.user)
@@ -168,7 +183,6 @@ class MedicionTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=other_limnigrafo,
-            bateria_max=12,
             bateria_min=10,
             tiempo_advertencia=3600,
             tiempo_peligro=7200,
@@ -192,7 +206,6 @@ class MedicionTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=other_limnigrafo,
-            bateria_max=12,
             bateria_min=10,
             tiempo_advertencia=3600,
             tiempo_peligro=7200,
@@ -205,7 +218,6 @@ class MedicionTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=another_limnigrafo,
-            bateria_max=12,
             bateria_min=10,
             tiempo_advertencia=3600,
             tiempo_peligro=7200,

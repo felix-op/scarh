@@ -12,7 +12,12 @@ export type TFormEditarLimnigrafo = {
   descripcion: string;
   ultimo_mantenimiento: string;
   bateria_min: number;
-  bateria_max: number;
+  altura_minima_agua: number;
+  altura_maxima_agua: number;
+  temperatura_minima: number;
+  temperatura_maxima: number;
+  presion_minima: number;
+  presion_maxima: number;
   tiempo_advertencia_segundos?: string | null;
   tiempo_advertencia_minutos?: string | null;
   tiempo_advertencia_horas?: string | null;

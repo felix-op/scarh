@@ -22,7 +22,6 @@ class EstadisticaTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=self.limnigrafo,
-            bateria_max=12.0,
             bateria_min=10.0,
             tiempo_advertencia=3600,
             tiempo_peligro=7200
@@ -36,7 +35,6 @@ class EstadisticaTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=self.limnigrafo2,
-            bateria_max=12.0,
             bateria_min=10.0,
             tiempo_advertencia=3600,
             tiempo_peligro=7200

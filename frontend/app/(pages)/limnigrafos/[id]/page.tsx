@@ -81,9 +81,29 @@ export default function DetalleLimnigrafo() {
 			configuracion?.bateria_min != null
 				? `${configuracion.bateria_min}v`
 				: "-";
-		const bateria_max =
-			configuracion?.bateria_max != null
-				? `${configuracion.bateria_max}v`
+		const altura_minima_agua =
+			configuracion?.altura_minima_agua != null
+				? `${configuracion.altura_minima_agua} m`
+				: "-";
+		const altura_maxima_agua =
+			configuracion?.altura_maxima_agua != null
+				? `${configuracion.altura_maxima_agua} m`
+				: "-";
+		const temperatura_minima =
+			configuracion?.temperatura_minima != null
+				? `${configuracion.temperatura_minima} °`
+				: "-";
+		const temperatura_maxima =
+			configuracion?.temperatura_maxima != null
+				? `${configuracion.temperatura_maxima} °`
+				: "-";
+		const presion_minima =
+			configuracion?.presion_minima != null
+				? `${configuracion.presion_minima}`
+				: "-";
+		const presion_maxima =
+			configuracion?.presion_maxima != null
+				? `${configuracion.presion_maxima}`
 				: "-";
 		const ubicacion = limnigrafo?.ubicacion
 			? limnigrafo.ubicacion.nombre
@@ -102,7 +122,7 @@ export default function DetalleLimnigrafo() {
 					value: tiempo_advertencia,
 				},
 				{
-					label: "Tiempo máximo antes de peligro:",
+					label: "Tiempo máximo antes de fuera de rango:",
 					value: tiempo_peligro,
 				},
 			],
@@ -110,7 +130,12 @@ export default function DetalleLimnigrafo() {
 				{ label: "Memoria total:", value: memoria },
 				{ label: "Tipo de comunicación:", value: tipo_comunicacion },
 				{ label: "Batería mínima:", value: bateria_min },
-				{ label: "Batería máxima:", value: bateria_max },
+				{ label: "Mínima altura del nivel del agua:", value: altura_minima_agua },
+				{ label: "Máxima altura del nivel del agua:", value: altura_maxima_agua },
+				{ label: "Temperatura mínima:", value: temperatura_minima },
+				{ label: "Temperatura máxima:", value: temperatura_maxima },
+				{ label: "Presión mínima:", value: presion_minima },
+				{ label: "Presión máxima:", value: presion_maxima },
 			],
 			estadoActual: [
 				{ label: "Estado:", value: estado },

@@ -30,7 +30,6 @@ class HistorialTests(APITestCase):
             "descripcion": "Historial Test",
             "memoria": 1024,
             "tipo_comunicacion": ["fisico-usb"],
-            "bateria_max": 12.0,
             "bateria_min": 10.0,
             "tiempo_advertencia": "01:00:00",
             "tiempo_peligro": "02:00:00",
@@ -237,7 +236,6 @@ class HistorialTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=limnigrafo,
-            bateria_max=12.0,
             bateria_min=10.0,
             tiempo_advertencia=3600,
             tiempo_peligro=7200,

@@ -13,14 +13,15 @@ import type { EstadoLimnigrafo } from "@componentes/BotonEstadoLimnigrafo";
 /**
  * Convierte el estado del backend al formato del frontend
  * 
- * Backend: "normal" | "advertencia" | "peligro" | "fuera_de_servicio"
- * Frontend: { variante: "activo" | "advertencia" | "peligro" | "fuera" | "prueba" }
+ * Backend: "normal" | "advertencia" | "peligro" | "fuera_de_rango"
+ * Frontend: { variante: "activo" | "advertencia" | "peligro" | "fuera" }
  */
 export function mapearEstado(estadoBackend: string): EstadoLimnigrafo {
 	const mapeo: Record<string, EstadoLimnigrafo["variante"]> = {
 		"normal": "activo",
 		"advertencia": "advertencia",
 		"peligro": "peligro",
+		"fuera_de_rango": "fuera",
 		"fuera_de_servicio": "fuera",
 		"critico": "fuera",
 	};
@@ -32,35 +33,19 @@ export function mapearEstado(estadoBackend: string): EstadoLimnigrafo {
 /**
  * Formatea el nivel de batería como string
  * 
- * Calcula el porcentaje basado en bateria_actual, bateria_min y bateria_max
- * Entrada: bateria=11.5V, min=10.5V, max=13.0V
- * Salida: "Bateria 40%" (string)
+ * Formatea el valor de batería como voltaje legible.
+ *
+ * Entrada: bateria=11.5V
+ * Salida: "Bateria 11.5V" (string)
  */
 export function formatearBateria(
-	bateriaActual: number | null,
-	bateriaMin: number | null,
-	bateriaMax: number | null
+	bateriaActual: number | null
 ): string {
 	if (bateriaActual === null || bateriaActual === undefined) {
 		return "Bateria N/A";
 	}
 
-	if (
-		bateriaMin === null ||
-		bateriaMin === undefined ||
-		bateriaMax === null ||
-		bateriaMax === undefined ||
-		bateriaMax <= bateriaMin
-	) {
-		return "Bateria N/A";
-	}
-
-	// Calcular porcentaje: (actual - min) / (max - min) * 100
-	const porcentaje = ((bateriaActual - bateriaMin) / (bateriaMax - bateriaMin)) * 100;
-
-	// Redondear a entero y limitar entre 0-100
-	const nivel = Math.max(0, Math.min(100, Math.round(porcentaje)));
-	return `Bateria ${nivel}%`;
+	return `Bateria ${bateriaActual.toFixed(1)}V`;
 }
 
 /**
@@ -149,11 +134,7 @@ export function transformarLimnigrafoConMedicion(
 		ubicacion: limnigrafo.ubicacion?.nombre || "Sin ubicación",
 
 		// Batería: formatear con cálculo de porcentaje
-		bateria: formatearBateria(
-			limnigrafo.bateria,
-			configuracion?.bateria_min ?? null,
-			configuracion?.bateria_max ?? null
-		),
+		bateria: formatearBateria(limnigrafo.bateria),
 
 		// Tiempo del último dato: calcular desde última conexión
 		tiempoUltimoDato: calcularTiempoUltimoDato(timestampCompleto),
@@ -204,7 +185,6 @@ export function transformarLimnigrafoConMedicion(
 
 		// Datos extra (pueden agregarse más según necesidad)
 		datosExtra: [
-			{ label: "Batería máx", value: configuracion?.bateria_max != null ? `${configuracion.bateria_max}V` : "N/D" },
 			{ label: "Batería mín", value: configuracion?.bateria_min != null ? `${configuracion.bateria_min}V` : "N/D" },
 			{ label: "Advertencia", value: configuracion?.tiempo_advertencia != null ? `${configuracion.tiempo_advertencia}s` : "N/D" },
 			{ label: "Peligro", value: configuracion?.tiempo_peligro != null ? `${configuracion.tiempo_peligro}s` : "N/D" },

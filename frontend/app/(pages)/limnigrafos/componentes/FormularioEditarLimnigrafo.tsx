@@ -74,7 +74,7 @@ export default function FormularioEditarLimnigrafo({
 								type="number"
 							/>
 						</div>
-						<Label text="Tiempo máximo antes de Peligro:"  />
+						<Label text="Tiempo máximo antes de Fuera de rango:"  />
 						<div className="flex gap-2">
 							<CampoInput
 								name="tiempo_peligro_horas"
@@ -123,8 +123,33 @@ export default function FormularioEditarLimnigrafo({
 						/>
 						<CampoInput
 							type="number"
-							name="bateria_max"
-							label="Cantidad máxima de batería:"
+							name="altura_maxima_agua"
+							label="Máxima altura del nivel del agua:"
+						/>
+						<CampoInput
+							type="number"
+							name="altura_minima_agua"
+							label="Mínima altura del nivel del agua:"
+						/>
+						<CampoInput
+							type="number"
+							name="temperatura_minima"
+							label="Temperatura mínima:"
+						/>
+						<CampoInput
+							type="number"
+							name="temperatura_maxima"
+							label="Temperatura máxima:"
+						/>
+						<CampoInput
+							type="number"
+							name="presion_minima"
+							label="Presión mínima:"
+						/>
+						<CampoInput
+							type="number"
+							name="presion_maxima"
+							label="Presión máxima:"
 						/>
 						<CampoMultiCheckbox
 							name="tipo_comunicacion"
