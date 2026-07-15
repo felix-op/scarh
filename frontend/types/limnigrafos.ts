@@ -7,7 +7,6 @@ export type Ubicacion = {
 
 export type EstadoLimnigrafo =
   | "normal"
-  | "prueba"
   | "fuera"
   | "peligro"
   | "advertencia";
@@ -24,7 +23,6 @@ export type ConfiguracionLimnigrafoResponse = {
     id: number
     tiempo_advertencia: number | null
     tiempo_peligro: number | null
-    bateria_max: number | null
     bateria_min: number | null
     altura_minima_agua: number | null
     altura_maxima_agua: number | null
@@ -76,7 +74,6 @@ export type LimnigrafoPatchtRequest = {
 export type ConfiguracionLimnigrafoUpdateRequest = {
     tiempo_advertencia?: number | null
     tiempo_peligro?: number | null
-    bateria_max?: number | null
     bateria_min?: number | null
     altura_minima_agua?: number | null
     altura_maxima_agua?: number | null

@@ -29,7 +29,6 @@ const DEFAULT_CENTER: [number, number] = [-54.79930469196583, -68.30601485928138
 
 const estadoColor: Record<string, string> = {
 	activo: "#82d987",
-	prueba: "#0EA5E9",
 	advertencia: "#facc15",
 	fuera: "#d65757",
 };

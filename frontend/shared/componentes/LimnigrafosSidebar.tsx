@@ -16,7 +16,6 @@ export type LimnigrafosSidebarProps = {
 
 const estadoColor: Record<string, string> = {
 	activo: "#82d987",
-	prueba: "#0EA5E9",
 	advertencia: "#facc15",
 	fuera: "#d65757",
 };
