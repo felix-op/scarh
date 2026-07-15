@@ -21,7 +21,7 @@ class Limnigrafo(models.Model):
     bateria_actual = models.FloatField(blank=True,null=True)
     ultima_conexion = models.DateTimeField(blank=True,null=True)
     token_hash = models.CharField(max_length=64, null=True, blank=True)
-    estado = models.CharField(max_length=20, choices=[('normal', 'Normal'), ('advertencia', 'Advertencia'),('peligro', 'Peligro'), ('fuera_de_servicio', 'Fuera de servicio')], default='normal')
+    estado = models.CharField(max_length=20, choices=[('normal', 'Normal'), ('advertencia', 'Advertencia'),('peligro', 'Peligro'), ('fuera_de_rango', 'Fuera de rango')], default='normal')
     ubicacion = models.ForeignKey('Ubicacion', on_delete=models.PROTECT, related_name='limnigrafo', null=True, blank=True)
 
     def __str__(self):

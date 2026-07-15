@@ -47,8 +47,6 @@ def _campos_fuera_de_rango(medicion, config):
     if medicion.nivel_de_bateria is not None:
         if config.bateria_min is not None and medicion.nivel_de_bateria < config.bateria_min:
             campos.append("nivel_de_bateria")
-        elif config.bateria_max is not None and medicion.nivel_de_bateria > config.bateria_max:
-            campos.append("nivel_de_bateria")
 
     return campos
 
@@ -71,16 +69,32 @@ def generar_alertas_medicion(medicion, estado_anterior, nuevo_estado):
                 medicion=medicion,
             )
 
+    generar_alerta_cambio_estado(
+        limnigrafo=limnigrafo,
+        estado_anterior=estado_anterior,
+        nuevo_estado=nuevo_estado,
+        medicion=medicion,
+    )
+
+
+def generar_alerta_cambio_estado(*, limnigrafo, estado_anterior, nuevo_estado, medicion=None):
     if nuevo_estado == estado_anterior:
         return
 
     if nuevo_estado == "advertencia":
-        descripcion = f"El limnígrafo '{limnigrafo.codigo}' entró en estado de advertencia."
+        descripcion = (
+            f"Advertencia al limnígrafo {limnigrafo.codigo}: no está enviando datos "
+            f"dentro del tiempo esperado o alcanzó la batería mínima."
+        )
         tipo = "advertencia_limnigrafo"
-    elif nuevo_estado in {"peligro", "fuera_de_servicio"}:
-        descripcion = f"El limnígrafo '{limnigrafo.codigo}' entró en estado de peligro."
-        if nuevo_estado == "fuera_de_servicio":
-            descripcion = f"El limnígrafo '{limnigrafo.codigo}' quedó fuera de servicio por falta de conexión."
+    elif nuevo_estado == "fuera_de_rango":
+        descripcion = f"Limnígrafo {limnigrafo.codigo} - Fuera de rango por falta de envío de datos."
+        tipo = "fuera_de_rango_limnigrafo"
+    elif nuevo_estado == "peligro":
+        descripcion = (
+            f"Limnígrafo {limnigrafo.codigo} en peligro: la altura del nivel del agua "
+            f"alcanzó o superó el máximo configurado."
+        )
         tipo = "peligro_limnigrafo"
     else:
         return
