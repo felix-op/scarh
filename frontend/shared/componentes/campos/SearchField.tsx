@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import TextField from "./TextField";
 
 type SearchFieldProps = {
@@ -13,16 +13,25 @@ export default function SearchField({
 	initialSearch = "",
 }: SearchFieldProps) {
 	const [busqueda, setBusqueda] = useState(initialSearch);
+	const onSearchRef = useRef(onSearch);
+
+	useEffect(() => {
+		onSearchRef.current = onSearch;
+	}, [onSearch]);
+
+	useEffect(() => {
+		setBusqueda(initialSearch);
+	}, [initialSearch]);
 	
 	useEffect(() => {
 		const timeOut = setTimeout(() => {
-			if (onSearch) {
-				onSearch(busqueda);
+			if (onSearchRef.current) {
+				onSearchRef.current(busqueda);
 			}
 		}, 300);
 
 		return () => clearTimeout(timeOut);
-	}, [busqueda, onSearch]);
+	}, [busqueda]);
 
 	return (
 		<TextField
