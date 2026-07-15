@@ -59,7 +59,7 @@ export const ATRIBUTO_METADATA: Record<EstadisticaAtributo, { label: string; uni
 		decimals: 2,
 	},
 	presion: {
-		label: "Presión atmosférica",
+		label: "Presión",
 		unit: "hPa",
 		decimals: 2,
 	},

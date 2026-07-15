@@ -78,7 +78,7 @@ export default function FiltrosGraficosEstadisticas({
 						className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 					>
 						<option value="altura_agua">Nivel del agua</option>
-						<option value="presion">Presión atmosférica</option>
+						<option value="presion">Presión</option>
 						<option value="temperatura">Temperatura</option>
 					</select>
 				</label>
