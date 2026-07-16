@@ -1,214 +1,27 @@
 "use client";
 
-import PaginaBase from "@componentes/base/PaginaBase";
-import BotonVariante from "@componentes/botones/BotonVariante";
-import SeccionInfo from "@componentes/secciones/SeccionInfo";
-import SeccionInfoHeader from "@componentes/secciones/SeccionInfoHeader";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import LimnigrafoMenu from "../componentes/LimnigrafoMenu";
-import { useGetLimnigrafo } from "@servicios/api/limnigrafos";
-import { useMemo, useState } from "react";
-import normalizarString from "@lib/normalizarString";
-import { opcionesTipoComunicacion } from "../constantes";
-import { valuesToLabels } from "@lib/valuesToLabels";
-import { memoriaLegible } from "@lib/memoriaLegible";
-import { hmsLegibles } from "@lib/hmsLegibles";
-import { normalizarFechaAFormatoLatino } from "@lib/normalizarFechaAFormatoLatino";
-import Tabs from "@componentes/tabs/Tabs";
-import CargandoDatos from "@componentes/animaciones/CargandoDatos";
-import MensajeError from "@componentes/mensajes/MensajeError";
-import DetallesLimnigrafo from "../componentes/DetallesLimnigrafo";
-import ImportarDatos from "app/(pages)/componentes/ImportarDatos";
-import { useTieneRol } from "@hooks/useTieneRol";
-import Alerta from "@componentes/alertas/Alerta";
-import type { UltimaMedicionResponse } from "types/limnigrafos";
 
-function formatUltimaMedicion(medicion?: UltimaMedicionResponse | null): string {
-	if (!medicion?.fecha_hora) {
-		return "-";
-	}
-
-	const fecha = new Date(medicion.fecha_hora);
-	if (Number.isNaN(fecha.getTime())) {
-		return "-";
-	}
-
-	return `${fecha.toLocaleDateString("es-AR")} ${fecha.toLocaleTimeString("es-AR", {
-		hour: "2-digit",
-		minute: "2-digit",
-	})}`;
-}
-
-export default function DetalleLimnigrafo() {
-	const esAdministrador = useTieneRol("administracion");
-	const esEditor = useTieneRol("limnigrafos-editar");
-	const puedeEditarMediciones = useTieneRol("mediciones-editar");
+export default function RedireccionDetalleLimnigrafo() {
 	const router = useRouter();
 	const params = useParams<{ id: string }>();
 	const limnigrafoID = params?.id || "";
-	const { data: limnigrafo, isFetching: isLoadingLimnigrafo, isError: isErrorLimnigrafo, refetch } = useGetLimnigrafo({
-		params: { id: limnigrafoID },
-		configuracion: {
-			enabled: !!limnigrafoID,
-		},
-	});
 
-	const {
-		datosGenerales,
-		mantenimiento,
-		especificacionesTecnicas,
-		estadoActual,
-	} = useMemo(() => {
-		const configuracion = limnigrafo?.configuracion;
-		const codigo = normalizarString(limnigrafo?.codigo);
-		const descripcion = normalizarString(limnigrafo?.descripcion);
-		const memoria = memoriaLegible(limnigrafo?.memoria);
-		const tipo_comunicacion = valuesToLabels(
-			limnigrafo?.tipo_comunicacion,
-			opcionesTipoComunicacion,
+	useEffect(() => {
+		if (!limnigrafoID) {
+			router.replace("/limnigrafos");
+			return;
+		}
+
+		router.replace(
+			`/limnigrafos/detalleLimnigrafo?id=${encodeURIComponent(limnigrafoID)}`,
 		);
-		const estado = normalizarString(limnigrafo?.estado);
-		const ultimo_mantenimiento = normalizarFechaAFormatoLatino(
-			limnigrafo?.ultimo_mantenimiento,
-		);
-		const tiempo_advertencia = hmsLegibles(configuracion?.tiempo_advertencia);
-		const tiempo_peligro = hmsLegibles(configuracion?.tiempo_peligro);
-		const ultima_conexion = normalizarString(limnigrafo?.ultima_conexion);
-		const ultima_medicion = formatUltimaMedicion(limnigrafo?.ultima_medicion);
-		const bateria =
-			limnigrafo?.bateria != null ? `${limnigrafo.bateria}v` : "-";
-		const bateria_min =
-			configuracion?.bateria_min != null
-				? `${configuracion.bateria_min}v`
-				: "-";
-		const altura_minima_agua =
-			configuracion?.altura_minima_agua != null
-				? `${configuracion.altura_minima_agua} m`
-				: "-";
-		const altura_maxima_agua =
-			configuracion?.altura_maxima_agua != null
-				? `${configuracion.altura_maxima_agua} m`
-				: "-";
-		const temperatura_minima =
-			configuracion?.temperatura_minima != null
-				? `${configuracion.temperatura_minima} °`
-				: "-";
-		const temperatura_maxima =
-			configuracion?.temperatura_maxima != null
-				? `${configuracion.temperatura_maxima} °`
-				: "-";
-		const presion_minima =
-			configuracion?.presion_minima != null
-				? `${configuracion.presion_minima}`
-				: "-";
-		const presion_maxima =
-			configuracion?.presion_maxima != null
-				? `${configuracion.presion_maxima}`
-				: "-";
-		const ubicacion = limnigrafo?.ubicacion
-			? limnigrafo.ubicacion.nombre
-			: "-";
-		const radio_cobertura =
-			limnigrafo?.radio_cobertura_metros != null
-				? `${limnigrafo.radio_cobertura_metros} m`
-				: "-";
-
-		return {
-			datosGenerales: [
-				{ label: "Identificador:", value: codigo },
-				{ label: "Descripción:", value: descripcion },
-				{ label: "Ubicación:", value: ubicacion },
-			],
-			mantenimiento: [
-				{ label: "Último mantenimiento:", value: ultimo_mantenimiento },
-				{
-					label: "Tiempo máximo antes de advertencias:",
-					value: tiempo_advertencia,
-				},
-				{
-					label: "Tiempo máximo antes de fuera de rango:",
-					value: tiempo_peligro,
-				},
-			],
-			especificacionesTecnicas: [
-				{ label: "Memoria total:", value: memoria },
-				{ label: "Tipo de comunicación:", value: tipo_comunicacion },
-				{ label: "Radio de cobertura estimada:", value: radio_cobertura },
-				{ label: "Batería mínima:", value: bateria_min },
-				{ label: "Mínima altura del nivel del agua:", value: altura_minima_agua },
-				{ label: "Máxima altura del nivel del agua:", value: altura_maxima_agua },
-				{ label: "Temperatura mínima:", value: temperatura_minima },
-				{ label: "Temperatura máxima:", value: temperatura_maxima },
-				{ label: "Presión mínima:", value: presion_minima },
-				{ label: "Presión máxima:", value: presion_maxima },
-			],
-			estadoActual: [
-				{ label: "Estado:", value: estado },
-				{ label: "Última conexión:", value: ultima_conexion },
-				{ label: "Última medición:", value: ultima_medicion },
-				{ label: "Batería actual:", value: bateria },
-			],
-		};
-	}, [limnigrafo]);
-
-	const handleVolver = () => {
-		router.push("/limnigrafos");
-	};
-
-	const handleEditar = () => {
-		router.push(`/limnigrafos/editar/${limnigrafoID}`);
-	};
-
-	const [tab, setTab] = useState(1);
-	const handleChange = (t: number) => setTab(t);
-	const opciones = [
-		{ label: "Detalles", value: 1 },
-		{ label: "Importar Datos", value: 2 },
-	];
+	}, [limnigrafoID, router]);
 
 	return (
-		<PaginaBase>
-			<BotonVariante variant="volver" onClick={handleVolver} />
-			{!(esAdministrador || esEditor) && (
-				<div className="my-4">
-					<Alerta variant="alerta">
-						<p>No tenés permisos para editar o eliminar el limnígrafo. Contactá a un administrador si necesitás acceso.</p>
-					</Alerta>
-				</div>
-			)}
-			{(puedeEditarMediciones) && (
-				<Tabs tab={tab} handleChange={handleChange} options={opciones} />
-			)}
-			<br />
-			{tab === 1 && (
-				<SeccionInfo>
-					<SeccionInfoHeader>
-						{(esAdministrador || esEditor) && (
-							<BotonVariante variant="editar" onClick={handleEditar} />
-						)}
-						<LimnigrafoMenu />
-					</SeccionInfoHeader>
-					{isLoadingLimnigrafo ? (
-						<CargandoDatos />
-					) : isErrorLimnigrafo ? (
-						<MensajeError titulo="Error" handleReintentar={() => refetch()}>
-							No se pudo obtener los datos del limnígrafo. Inténtelo de
-							nuevo más tarde.
-						</MensajeError>
-					) : (
-						<DetallesLimnigrafo
-							datosGenerales={datosGenerales}
-							mantenimiento={mantenimiento}
-							especificacionesTecnicas={especificacionesTecnicas}
-							estadoActual={estadoActual}
-						/>
-					)}
-				</SeccionInfo>
-			)}
-			{tab === 2 && (
-				<ImportarDatos />
-			)}
-			<br />
-		</PaginaBase>
+		<div className="flex min-h-screen items-center justify-center bg-[#EEF4FB] text-xl text-[#4B4B4B] dark:bg-[#0B1220] dark:text-[#94A3B8]">
+			Redirigiendo al detalle del limnigrafo...
+		</div>
 	);
 }
