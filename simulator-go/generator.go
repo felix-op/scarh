@@ -15,6 +15,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -40,6 +41,7 @@ func GenerateMeasurement(cfg LimnigrafoConfig, state *LimnigrafoState) Medicion 
 		Altura:       altura,
 		LimnigrafoID: cfg.ID,
 	}
+	medicion.IdempotencyKey = buildIdempotencyKey(cfg.ID, medicion.FechaHora)
 
 	// Probabilidad de falla de sensores: 10%
 	tieneError := rand.Float64() < 0.1
@@ -104,6 +106,7 @@ func generateAlertMeasurement(cfg LimnigrafoConfig, state *LimnigrafoState) Medi
 		FechaHora:    time.Now().UTC(),
 		LimnigrafoID: cfg.ID,
 	}
+	medicion.IdempotencyKey = buildIdempotencyKey(cfg.ID, medicion.FechaHora)
 
 	switch state.MeasurementsGenerated % 3 {
 	case 1:
@@ -131,4 +134,8 @@ func generateAlertMeasurement(cfg LimnigrafoConfig, state *LimnigrafoState) Medi
 	}
 
 	return medicion
+}
+
+func buildIdempotencyKey(limnigrafoID int, fechaHora time.Time) string {
+	return fmt.Sprintf("lm-%d-%d", limnigrafoID, fechaHora.UTC().UnixNano())
 }

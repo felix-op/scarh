@@ -39,5 +39,6 @@ type Medicion struct {
 	Presion        *float64  `json:"presion,omitempty"`
 	Temperatura    *float64  `json:"temperatura,omitempty"`
 	NivelDeBateria *float64  `json:"nivel_de_bateria,omitempty"`
+	IdempotencyKey string    `json:"idempotency_key,omitempty"`
 	LimnigrafoID   int       `json:"limnigrafo"`
 }

@@ -19,6 +19,7 @@ export type MedicionResponse = {
 	presion: number | null, // Presión en hPa
 	temperatura: number | null, // Temperatura en grados Celsius
 	nivel_de_bateria: number | null, // Nivel de batería en porcentaje (0-100)
+	idempotency_key?: string | null,
 	fuente: "automatico" | "manual" | "import_csv" | "import_json", // Origen de la medición
 	limnigrafo: number, // ID del limnígrafo que envió la medición
 };
@@ -70,6 +71,7 @@ export type MedicionPostRequest = {
 	presion?: number | null,
 	temperatura?: number | null,
 	nivel_de_bateria?: number | null,
+	idempotency_key?: string,
 	fuente?: "manual" | "automatico" | "import_csv" | "import_json",
 };
 

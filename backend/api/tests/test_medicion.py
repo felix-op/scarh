@@ -7,6 +7,7 @@ from api.models import Alerta, ConfiguracionLimnigrafo, Limnigrafo, UsuarioNotif
 from api.models.medicion import Medicion
 from rest_framework_api_key.models import APIKey
 from datetime import timedelta
+from django.utils.dateparse import parse_datetime
 
 class MedicionTests(APITestCase):
     def setUp(self):
@@ -74,15 +75,108 @@ class MedicionTests(APITestCase):
         self.client.force_authenticate(user=None)
         self.client.credentials(HTTP_AUTHORIZATION=f"Api-Key {self.key_secret}")
         
+        fecha_hora = '2024-01-01T10:00:00Z'
         data = {
             'limnigrafo': self.limnigrafo.id,
             'altura_agua': 2.6,
             'nivel_de_bateria': 11.7,
-            'fecha_hora': '2024-01-01T10:00:00Z'
+            'fecha_hora': fecha_hora
         }
         response = self.client.post(self.list_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['fuente'], 'automatico')
+        self.assertEqual(
+            Medicion.objects.get().fecha_hora,
+            parse_datetime(fecha_hora),
+        )
+
+    def test_reject_duplicate_medicion_for_same_limnigrafo_and_fecha_hora(self):
+        self.client.force_authenticate(user=self.user)
+        fecha_hora = '2024-01-01T10:00:00Z'
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=2.5,
+            fecha_hora=fecha_hora,
+            fuente='manual',
+        )
+
+        response = self.client.post(self.list_url, {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 2.7,
+            'fecha_hora': fecha_hora,
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Ya existe una medición para este limnígrafo en esa fecha y hora.', response.data['descripcion_usuario'])
+
+    def test_allow_same_fecha_hora_for_different_limnigrafos(self):
+        self.client.force_authenticate(user=self.user)
+        other_limnigrafo = Limnigrafo.objects.create(
+            codigo='LMG-010',
+            descripcion='Other',
+            memoria=1024,
+            bateria_actual=12,
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=other_limnigrafo,
+            bateria_min=10,
+            tiempo_advertencia=3600,
+            tiempo_peligro=7200,
+        )
+
+        fecha_hora = '2024-01-01T10:00:00Z'
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=2.5,
+            fecha_hora=fecha_hora,
+            fuente='manual',
+        )
+
+        response = self.client.post(self.list_url, {
+            'limnigrafo': other_limnigrafo.id,
+            'altura_agua': 2.7,
+            'fecha_hora': fecha_hora,
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_reject_duplicate_idempotency_key_for_same_limnigrafo(self):
+        self.client.force_authenticate(user=None)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Api-Key {self.key_secret}")
+
+        first_response = self.client.post(self.list_url, {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 2.1,
+            'fecha_hora': '2024-01-01T10:00:00Z',
+            'idempotency_key': 'lm-1-20240101-100000',
+        }, format='json')
+        self.assertEqual(first_response.status_code, status.HTTP_201_CREATED)
+
+        second_response = self.client.post(self.list_url, {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 2.2,
+            'fecha_hora': '2024-01-01T10:05:00Z',
+            'idempotency_key': 'lm-1-20240101-100000',
+        }, format='json')
+
+        self.assertEqual(second_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Ya se procesó una medición con esta clave de idempotencia', second_response.data['descripcion_usuario'])
+
+    def test_reject_impossible_values_before_saving(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(self.list_url, {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': -1,
+            'presion': 0,
+            'temperatura': 140,
+            'nivel_de_bateria': -2,
+            'fecha_hora': '2024-01-01T10:00:00Z',
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Medicion.objects.count(), 0)
+        self.assertIn('altura_agua', response.data['descripcion_usuario'])
 
     def test_create_medicion_updates_limnigrafo_state(self):
         self.client.force_authenticate(user=self.user)
