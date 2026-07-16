@@ -1,0 +1,10 @@
+/* Drawer (vaul) */
+
+/* Vaul agrega un ::after del color de fondo del drawer para tapar el hueco que deja
+   el "overscroll" elástico cuando el panel está pegado al borde de la pantalla.
+   Nuestros drawers laterales van con margen/esquinas redondeadas en móvil, así que
+   ese relleno queda sobresaliendo del panel y se ve como un bloque suelto. */
+[data-vaul-drawer][data-vaul-drawer-direction="right"]::after,
+[data-vaul-drawer][data-vaul-drawer-direction="left"]::after {
+  content: none !important;
+}

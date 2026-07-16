@@ -31,7 +31,7 @@ import {
 export default function DocumentacionBotonesPage() {
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 w-full max-w-6xl mx-auto font-outfit">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col-reverse items-start gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold text-foreground-title">Documentación — Botones</h1>
           <p className="text-foreground-secondary">

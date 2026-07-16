@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@services";
@@ -8,9 +8,10 @@ import { Menu, type MenuItemConfig } from "../ui/menu";
 
 export interface SidebarProfileMenuProps {
   triggerClassName?: string;
+  trigger?: ReactNode;
 }
 
-export function SidebarProfileMenu({ triggerClassName = "" }: SidebarProfileMenuProps) {
+export function SidebarProfileMenu({ triggerClassName = "", trigger }: SidebarProfileMenuProps) {
   const router = useRouter();
   const { toggleTheme, getActualTheme } = useTheme();
   const [isDark, setIsDark] = useState(false);
@@ -33,5 +34,5 @@ export function SidebarProfileMenu({ triggerClassName = "" }: SidebarProfileMenu
     },
   ];
 
-  return <Menu items={items} ariaLabel="Abrir menú de usuario" triggerClassName={triggerClassName} />;
+  return <Menu items={items} ariaLabel="Abrir menú de usuario" triggerClassName={triggerClassName} trigger={trigger} />;
 }

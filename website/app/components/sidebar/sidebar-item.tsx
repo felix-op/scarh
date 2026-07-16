@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { Usuario } from "@models";
+import { puedeVer } from "@utils";
 import { IconifyIcon, type IconVariants } from "../ui/iconify-icon";
 
 export interface SidebarLink {
@@ -23,6 +25,24 @@ export type SidebarNavItem = SidebarLink | SidebarGroup;
 
 export function esGrupo(item: SidebarNavItem): item is SidebarGroup {
   return "children" in item;
+}
+
+export function filtrarNav(items: SidebarNavItem[], usuario: Usuario): SidebarNavItem[] {
+  const resultado: SidebarNavItem[] = [];
+  for (const item of items) {
+    if (esGrupo(item)) {
+      const hijosVisibles = item.children.filter((child) => {
+        if (child.href === "/dashboard/admin/documentacion") {
+          return process.env.NODE_ENV === "development";
+        }
+        return puedeVer(usuario, child.permiso);
+      });
+      if (hijosVisibles.length > 0) resultado.push({ ...item, children: hijosVisibles });
+      continue;
+    }
+    if (puedeVer(usuario, item.permiso)) resultado.push(item);
+  }
+  return resultado;
 }
 
 interface SidebarItemProps {

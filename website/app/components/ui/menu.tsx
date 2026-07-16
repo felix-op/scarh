@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { cn } from "@utils";
 import { IconifyIcon, type IconVariants } from "./iconify-icon";
 import { BotonMenu } from "./botones";
@@ -24,6 +25,7 @@ export interface MenuProps {
   side?: "top" | "right" | "bottom" | "left";
   align?: "start" | "center" | "end";
   triggerClassName?: string;
+  trigger?: ReactNode;
 }
 
 export function Menu({
@@ -33,20 +35,24 @@ export function Menu({
   side = "right",
   align = "start",
   triggerClassName = "",
+  trigger,
 }: MenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <BotonMenu aria-label={ariaLabel} className={triggerClassName} />
+        {trigger ?? <BotonMenu aria-label={ariaLabel} className={triggerClassName} />}
       </DropdownMenuTrigger>
-      <DropdownMenuContent side={side} align={align} sideOffset={8} className={cn("min-w-52", className)}>
+      <DropdownMenuContent side={side} align={align} sideOffset={8} className={cn("min-w-56 md:min-w-52", className)}>
         {items.map((item) => (
           <DropdownMenuItem
             key={item.label}
             onClick={item.action}
-            className={cn("cursor-pointer hover:bg-default-light hover:text-default-contrast", item.className)}
+            className={cn(
+              "cursor-pointer gap-3 py-2.5 text-base md:gap-2 md:py-1.5 md:text-sm hover:bg-default-light hover:text-default-contrast",
+              item.className,
+            )}
           >
-            {item.icon && <IconifyIcon variant={item.icon} className="text-lg" />}
+            {item.icon && <IconifyIcon variant={item.icon} className="text-xl md:text-lg" />}
             <span>{item.label}</span>
           </DropdownMenuItem>
         ))}

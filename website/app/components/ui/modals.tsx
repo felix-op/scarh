@@ -1,6 +1,7 @@
 "use client";
 
 import React, { ReactNode, useState, useEffect } from "react";
+import { useCerrarConAtras } from "@hooks";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,8 @@ export function Ventana({
   children,
   className = "",
 }: VentanaProps) {
+  useCerrarConAtras(open, handleClose);
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className={`rounded-shape-lg border-border bg-background-paper p-6 shadow-card ${className}`.trim()}>
@@ -115,6 +118,8 @@ export function VentanaConfirmar({
   const config = variantConfig[variant] || variantConfig.info;
   const activeIcon = icon || config.defaultIcon;
 
+  useCerrarConAtras(open, () => !isLoading && onClose());
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && !isLoading && onClose()}>
       <DialogContent className="rounded-shape-lg border-border bg-background-paper p-6 max-w-sm md:max-w-lg shadow-card flex flex-col items-center text-center">
@@ -176,6 +181,8 @@ export function VentanaInfo({
   children,
   className = "",
 }: VentanaInfoProps) {
+  useCerrarConAtras(open, handleClose);
+
   return (
     <Drawer open={open} onOpenChange={(isOpen) => !isOpen && handleClose()} direction="right">
       <DrawerContent className={`h-full border-l border-border bg-background-paper shadow-card ${className}`.trim()}>
@@ -189,6 +196,7 @@ export function VentanaInfo({
             </div>
             <button
               type="button"
+              aria-label="Cerrar"
               className="flex bg-background-default hover:bg-hover rounded-full cursor-pointer text-foreground hover:text-error p-2 outline-none border-none transition-colors"
               onClick={handleClose}
             >
@@ -255,6 +263,8 @@ export function VentanaFormulario({
     }
   };
 
+  useCerrarConAtras(open, handleAttemptClose);
+
   return (
     <>
       <Sheet open={open} onOpenChange={(isOpen) => !isOpen && handleAttemptClose()}>
@@ -279,6 +289,7 @@ export function VentanaFormulario({
               </div>
               <button
                 type="button"
+                aria-label="Cerrar"
                 className="flex bg-background-default hover:bg-hover rounded-full cursor-pointer text-foreground hover:text-error p-2 outline-none border-none transition-colors"
                 onClick={handleAttemptClose}
               >
