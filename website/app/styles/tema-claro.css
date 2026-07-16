@@ -16,9 +16,9 @@
   /* Colores Principales (Material Design) */
   /* Primary */
   --color-primary-main: #0982c8;
-  --color-primary-light: #3e99ce;
-  --color-primary-dark: #096092;
-  --color-primary-disabled: #a8d5f0;
+  --color-primary-light: #dceafd;
+  --color-primary-dark: #b0d7f5;
+  --color-primary-disabled: #e6f0fd;
   --color-primary-contrastText: #ffffff;
 
   /* Secondary */
@@ -29,31 +29,31 @@
   --color-secondary-contrastText: #ffffff;
 
   /* Success / Éxito */
-  --color-success-main: #2e7d32;
-  --color-success-light: #4caf50;
-  --color-success-dark: #1b5e20;
-  --color-success-disabled: #a5d6a7;
+  --color-success-main: #5aa76b;
+  --color-success-light: #f3fcf6;
+  --color-success-dark: #d2eed8;
+  --color-success-disabled: #f6fdf9;
   --color-success-contrastText: #ffffff;
 
   /* Error */
   --color-error-main: #d32f2f;
-  --color-error-light: #ef5350;
-  --color-error-dark: #c62828;
-  --color-error-disabled: #ef9a9a;
+  --color-error-light: #fdf2f2;
+  --color-error-dark: #f8d7da;
+  --color-error-disabled: #fdf8f8;
   --color-error-contrastText: #ffffff;
 
   /* Warn / Advertencia */
   --color-warn-main: #ed6c02;
-  --color-warn-light: #ffb74d;
-  --color-warn-dark: #e65100;
-  --color-warn-disabled: #ffe0b2;
+  --color-warn-light: #fff3e0;
+  --color-warn-dark: #ffe0b2;
+  --color-warn-disabled: #fffbf5;
   --color-warn-contrastText: #ffffff;
 
   /* Info */
   --color-info-main: #0288d1;
-  --color-info-light: #03a9f4;
-  --color-info-dark: #01579b;
-  --color-info-disabled: #b3e5fc;
+  --color-info-light: #e1f5fe;
+  --color-info-dark: #b3e5fc;
+  --color-info-disabled: #f0fafe;
   --color-info-contrastText: #ffffff;
 
   /* Default */

@@ -26,7 +26,7 @@ export interface SelectProps {
   onChange?: (value: string) => void;
   className?: string;
   /** Posición del label. `"top"` (default): encima del selector. `"right"`: a la derecha, en línea. */
-  labelPosition?: "top" | "right";
+  labelPosition?: "top" | "right" | "left";
   ref?: Ref<HTMLButtonElement>;
 }
 
@@ -90,7 +90,21 @@ export function Select({
     );
   }
 
-  return (
+  if (labelPosition === "left") {
+    return (
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          {labelEl}
+          {trigger}
+        </div>
+        {hasError && (
+          <span className="text-xs text-error font-medium">{errors![0]}</span>
+        )}
+      </div>
+    );
+  }
+
+    return (
     <div className="flex flex-col gap-1.5 w-full">
       {labelEl}
       {trigger}

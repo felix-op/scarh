@@ -74,7 +74,7 @@ export function BotonGuardar({
       onClick={onClick}
       outlined={outlined}
       type={type}
-      variant="success"
+      variant="primary"
       icon="guardar"
     />
   );
@@ -278,6 +278,28 @@ export function BotonVerMas({
   );
 }
 
+export function BotonAgregar({
+  content = "Agregar",
+  loading = false,
+  disabled = false,
+  onClick,
+  outlined = false,
+  type = "button",
+}: BotonProps) {
+  return (
+    <Boton
+      content={content}
+      loading={loading}
+      disabled={disabled}
+      onClick={onClick}
+      outlined={outlined}
+      type={type}
+      variant="primary"
+      icon="agregar"
+    />
+  );
+}
+
 // 3. Botón exclusivo de icono (sin borde ni fondo de forma normal)
 export interface BotonIconoProps {
   icon: IconVariants;
@@ -285,6 +307,7 @@ export interface BotonIconoProps {
   disabled?: boolean;
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
+  className?: string;
 }
 
 export function BotonIcono({
@@ -293,6 +316,7 @@ export function BotonIcono({
   disabled = false,
   onClick,
   type = "button",
+  className = ""
 }: BotonIconoProps) {
   const animations = true;
 
@@ -300,6 +324,7 @@ export function BotonIcono({
     "button-icon",
     disabled ? "button-disabled" : "",
     animations && !disabled ? "button-animated" : "",
+    className
   ]
     .filter(Boolean)
     .join(" ");
@@ -312,6 +337,168 @@ export function BotonIcono({
         <IconifyIcon variant={icon} />
       )}
     </button>
+  );
+}
+
+export function BotonIconoEditar({
+    className = "",
+    ...props
+}: Omit<BotonIconoProps, "icon">) {
+
+  return (
+      <BotonIcono icon="editar" className={`button-success ${className}`} {...props} />
+  );
+}
+
+export function BotonIconoEliminar({
+    className = "",
+    ...props
+}: Omit<BotonIconoProps, "icon">) {
+
+  return (
+      <BotonIcono icon="eliminar" className={`button-error ${className}`} {...props} />
+  );
+}
+
+export function BotonIconoPermisos({
+    className = "",
+    ...props
+}: Omit<BotonIconoProps, "icon">) {
+
+  return (
+      <BotonIcono icon="candado" className={`button-warn ${className}`} {...props} />
+  );
+}
+
+export function BotonPermisosMasivos({
+  content = "Gestionar Permisos",
+  loading = false,
+  disabled = false,
+  onClick,
+  outlined = false,
+  type = "button",
+}: BotonProps) {
+  return (
+    <Boton
+      content={content}
+      loading={loading}
+      disabled={disabled}
+      onClick={onClick}
+      outlined={outlined}
+      type={type}
+      variant="warn"
+      icon="candado"
+    />
+  );
+}
+
+export function BotonImportar({
+  content = "Importar",
+  loading = false,
+  disabled = false,
+  onClick,
+  outlined = false,
+  type = "button",
+}: BotonProps) {
+  return (
+    <Boton
+      content={content}
+      loading={loading}
+      disabled={disabled}
+      onClick={onClick}
+      outlined={outlined}
+      type={type}
+      variant="default"
+      icon="importar"
+    />
+  );
+}
+
+export function BotonExportar({
+  content = "Exportar",
+  loading = false,
+  disabled = false,
+  onClick,
+  outlined = false,
+  type = "button",
+}: BotonProps) {
+  return (
+    <Boton
+      content={content}
+      loading={loading}
+      disabled={disabled}
+      onClick={onClick}
+      outlined={outlined}
+      type={type}
+      variant="default"
+      icon="exportar"
+    />
+  );
+}
+
+export function BotonEstadisticas({
+  content = "Estadísticas",
+  loading = false,
+  disabled = false,
+  onClick,
+  outlined = false,
+  type = "button",
+}: BotonProps) {
+  return (
+    <Boton
+      content={content}
+      loading={loading}
+      disabled={disabled}
+      onClick={onClick}
+      outlined={outlined}
+      type={type}
+      variant="default"
+      icon="funcion"
+    />
+  );
+}
+
+export function BotonMediciones({
+  content = "Mediciones",
+  loading = false,
+  disabled = false,
+  onClick,
+  outlined = false,
+  type = "button",
+}: BotonProps) {
+  return (
+    <Boton
+      content={content}
+      loading={loading}
+      disabled={disabled}
+      onClick={onClick}
+      outlined={outlined}
+      type={type}
+      variant="default"
+      icon="documento"
+    />
+  );
+}
+
+export function BotonUbicacion({
+  content = "Ubicación",
+  loading = false,
+  disabled = false,
+  onClick,
+  outlined = false,
+  type = "button",
+}: BotonProps) {
+  return (
+    <Boton
+      content={content}
+      loading={loading}
+      disabled={disabled}
+      onClick={onClick}
+      outlined={outlined}
+      type={type}
+      variant="default"
+      icon="ubicacion"
+    />
   );
 }
 

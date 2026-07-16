@@ -30,7 +30,7 @@ export function TablaSimpleContent<T>({
 
   return (
     <>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-hidden">
         <table className="w-full border-collapse">
           <TableHeader>
             <tr>
@@ -39,7 +39,20 @@ export function TablaSimpleContent<T>({
                   key={col.id}
                   className="py-4 px-4 text-foreground-title font-medium text-sm"
                 >
-                  {col.header}
+                  {col.sort ? (
+                    <button
+                      onClick={col.sort}
+                      className="flex items-center gap-1.5 hover:text-foreground transition-colors group"
+                    >
+                      {col.header}
+                      <IconifyIcon
+                        variant="sortear"
+                        className="text-base text-foreground-disabled group-hover:text-foreground transition-colors shrink-0"
+                      />
+                    </button>
+                  ) : (
+                    col.header
+                  )}
                 </th>
               ))}
             </tr>

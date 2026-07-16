@@ -36,7 +36,12 @@ function filtrarNav(items: SidebarNavItem[], usuario: Usuario): SidebarNavItem[]
   const resultado: SidebarNavItem[] = [];
   for (const item of items) {
     if (esGrupo(item)) {
-      const hijosVisibles = item.children.filter((child) => puedeVer(usuario, child.permiso));
+      const hijosVisibles = item.children.filter((child) => {
+        if (child.href === "/dashboard/admin/documentacion") {
+          return process.env.NODE_ENV === "development";
+        }
+        return puedeVer(usuario, child.permiso);
+      });
       if (hijosVisibles.length > 0) resultado.push({ ...item, children: hijosVisibles });
       continue;
     }

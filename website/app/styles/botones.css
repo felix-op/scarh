@@ -52,13 +52,6 @@
   animation: shine 0.6s ease-in-out;
 }
 
-/* Botón Deshabilitado */
-.button-disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-  box-shadow: none;
-}
-
 /* Botón de Icono */
 .button-icon {
   border-radius: var(--shape-corner-full);
@@ -73,6 +66,13 @@
   font-size: 1.5rem; /* Aumenta el tamaño de visualización del icono */
 }
 
+/* Botón Deshabilitado */
+.button-disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
 /* Botón con la paleta del sidebar (fondo sutil + hover consistente con los ítems de navegación) */
 .button-sidebar {
   background-color: var(--color-sidebar-link);
@@ -84,42 +84,42 @@
 
 /* Estilos de Colores por Defecto (Variantes Sólidas) */
 .button-primary {
-  background-color: var(--color-primary-main);
-  color: var(--color-primary-contrastText);
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-main);
   border-color: var(--color-primary-main);
 }
 .button-primary:hover:not(.button-disabled) {
   background-color: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
+  border-color: var(--color-primary-main);
 }
 
 .button-success {
   background-color: var(--color-success-light);
-  color: var(--color-success-contrastText);
-  border-color: var(--color-success-light);
+  color: var(--color-success-main);
+  border-color: var(--color-success-main);
 }
 .button-success:hover:not(.button-disabled) {
-  background-color: var(--color-success-main);
+  background-color: var(--color-success-dark);
   border-color: var(--color-success-main);
 }
 
 .button-error {
   background-color: var(--color-error-light);
-  color: var(--color-error-contrastText);
-  border-color: var(--color-error-light);
+  color: var(--color-error-main);
+  border-color: var(--color-error-main);
 }
 .button-error:hover:not(.button-disabled) {
-  background-color: var(--color-error-main);
+  background-color: var(--color-error-dark);
   border-color: var(--color-error-main);
 }
 
 .button-warn {
   background-color: var(--color-warn-light);
-  color: var(--color-warn-contrastText);
-  border-color: var(--color-warn-light);
+  color: var(--color-warn-main);
+  border-color: var(--color-warn-main);
 }
 .button-warn:hover:not(.button-disabled) {
-  background-color: var(--color-warn-main);
+  background-color: var(--color-warn-dark);
   border-color: var(--color-warn-main);
 }
 

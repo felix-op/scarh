@@ -8,6 +8,7 @@ import { TableRow } from "./primitivos/table-row";
 import { IconifyIcon } from "../iconify-icon";
 import { BotonIcono } from "../botones";
 import { Menu } from "../menu";
+import { Checkbox } from "../../shadcn/checkbox";
 import type { TablaBaseProps, ActionConfig, CheckboxConfig } from "./tabla.types";
 
 export interface TablaConAccionesProps<T> extends TablaBaseProps<T> {
@@ -73,23 +74,19 @@ export function TablaConAccionesContent<T>({
 
   return (
     <>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-hidden">
         <table className="w-full border-collapse">
           <TableHeader>
             <tr>
               {/* Checkbox sticky izquierda */}
               {hasCheckbox && (
-                <th className="sticky left-0 z-20 bg-background-muted w-12 px-4 py-4">
-                  <input
+                <th className="sticky left-0 z-20 bg-background-muted w-12 px-4 py-4 border-r border-border">
+                  <Checkbox
                     id={`${checkboxId}-all`}
-                    type="checkbox"
-                    checked={isAllSelected}
-                    ref={(el) => {
-                      if (el) el.indeterminate = isIndeterminate;
-                    }}
-                    onChange={toggleAll}
-                    className="cursor-pointer accent-primary"
+                    checked={isIndeterminate ? "indeterminate" : isAllSelected}
+                    onCheckedChange={toggleAll}
                     aria-label="Seleccionar todas las filas"
+                    className="cursor-pointer"
                   />
                 </th>
               )}
@@ -100,7 +97,20 @@ export function TablaConAccionesContent<T>({
                   key={col.id}
                   className="py-4 px-4 text-foreground-title font-medium text-sm whitespace-nowrap"
                 >
-                  {col.header}
+                  {col.sort ? (
+                    <button
+                      onClick={col.sort}
+                      className="flex items-center gap-1.5 hover:text-foreground transition-colors group"
+                    >
+                      {col.header}
+                      <IconifyIcon
+                        variant="sortear"
+                        className="text-base text-foreground-disabled group-hover:text-foreground transition-colors shrink-0"
+                      />
+                    </button>
+                  ) : (
+                    col.header
+                  )}
                 </th>
               ))}
 
@@ -124,14 +134,13 @@ export function TablaConAccionesContent<T>({
                 <TableRow key={rowId} row={row} index={index}>
                   {/* Checkbox sticky izquierda */}
                   {hasCheckbox && (
-                    <td className="sticky left-0 z-10 bg-background-muted w-12 px-4 py-4 border-b border-border">
-                      <input
+                    <td className="sticky left-0 z-10 bg-background-muted w-12 px-4 py-4 border-b border-r border-border">
+                      <Checkbox
                         id={`${checkboxId}-${rowId}`}
-                        type="checkbox"
                         checked={selected}
-                        onChange={() => toggleRow(row)}
-                        className="cursor-pointer accent-primary"
+                        onCheckedChange={() => toggleRow(row)}
                         aria-label={`Seleccionar fila ${rowId}`}
+                        className="cursor-pointer"
                       />
                     </td>
                   )}

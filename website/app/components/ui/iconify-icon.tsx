@@ -26,6 +26,7 @@ const iconVariants = {
   chevronRight: "icon-[material-symbols--chevron-right]",
   chevronDown: "icon-[material-symbols--keyboard-arrow-down]",
   chevronUp: "icon-[material-symbols--keyboard-arrow-up]",
+  sortear: "icon-[material-symbols--swap-vert]",
   circle: "icon-[material-symbols--circle]",
   calendario: "icon-[material-symbols--calendar-today]",
   reloj: "icon-[material-symbols--schedule]",
@@ -56,6 +57,10 @@ const iconVariants = {
   puntosVerticales: "icon-[qlementine-icons--menu-dots-16]",
   tuerca: "icon-[dashicons--admin-generic]",
   accesoDenegado: "icon-[mdi--account-lock-outline]",
+  candado: "icon-[solar--lock-outline]",
+  importar: "icon-[material-symbols--download]",
+  exportar: "icon-[material-symbols--upload]",
+  ubicacion: "icon-[material-symbols--location-on-outline]",
 };
 
 export type IconVariants = keyof typeof iconVariants;

@@ -61,13 +61,14 @@ export function Paginado({ config, idSuffix = "", className = "" }: PaginadoProp
             value={String(pageLength)}
             options={pageLengthOptions.map((n) => ({ value: String(n), label: String(n) }))}
             onChange={(value) => onChangePageLength(Number(value))}
-            labelPosition="right"
+            labelPosition="left"
           />
         </div>
         <BotonIcono
           icon="chevronRight"
           onClick={onNext}
           disabled={page >= maxPage}
+          className="button-default-icon"
         />
       </div>
     </div>

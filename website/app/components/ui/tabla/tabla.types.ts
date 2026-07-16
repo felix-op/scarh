@@ -8,12 +8,15 @@ import type { IconVariants } from "../iconify-icon";
  * @property {string | ReactNode} header Contenido del encabezado.
  * @property {keyof T} [accessorKey] Clave del dato a mostrar si no hay `cell`.
  * @property {(row: T) => ReactNode} [cell] Renderer personalizado de la celda.
+ * @property {() => void} [sort] Si se provee, muestra un botón de ordenamiento a la derecha
+ *   del header. La lógica de ordenamiento (estado, dirección) vive en el padre.
  */
 export interface TableColumn<T> {
   id: string;
   header: string | ReactNode;
   accessorKey?: keyof T;
   cell?: (row: T) => ReactNode;
+  sort?: () => void;
 }
 
 /**

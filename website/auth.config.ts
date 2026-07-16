@@ -9,11 +9,6 @@ import { ROLES, puedeVer } from "@utils";
 const RUTAS_PROTEGIDAS: { prefix: string; permiso?: string | string[] }[] = [
   { prefix: "/dashboard/admin/usuarios", permiso: ROLES.USUARIOS_VISUALIZAR },
   { prefix: "/dashboard/admin/historial", permiso: ROLES.HISTORIAL_VISUALIZAR },
-  { prefix: "/dashboard/admin/documentacion", permiso: ROLES.ADMINISTRACION },
-  {
-    prefix: "/dashboard/admin",
-    permiso: [ROLES.USUARIOS_VISUALIZAR, ROLES.HISTORIAL_VISUALIZAR, ROLES.ADMINISTRACION],
-  },
   { prefix: "/dashboard/mapa", permiso: ROLES.MAPA_VISUALIZAR },
   { prefix: "/dashboard/limnigrafos", permiso: ROLES.LIMNIGRAFOS_VISUALIZAR },
   { prefix: "/dashboard/mediciones", permiso: ROLES.MEDICIONES_VISUALIZAR },

@@ -31,17 +31,12 @@ export function Checkbox({
   const hasError = errors && errors.length > 0;
   const checkboxClasses = `
     border rounded-shape-sm transition-colors
-    ${hasError ? "border-error focus-visible:ring-error" : "border-input-border focus-visible:ring-input-focus"}
+    ${hasError ? "border-error focus-visible:ring-error" : "border-default focus-visible:ring-input-focus"}
     ${className}
   `.trim();
 
   return (
     <div className="flex flex-col gap-1.5 w-full">
-      {/* Label principal arriba */}
-      <span className="text-sm font-medium text-foreground">
-        {label} {required && <span className="text-error">*</span>}
-      </span>
-
       {/* Checkbox y su descripción al lado */}
       <div className="flex items-center gap-2.5 py-1">
         <ShadcnCheckbox
@@ -53,14 +48,16 @@ export function Checkbox({
           ref={ref}
           className={checkboxClasses}
         />
-        <label
-          htmlFor={name}
-          className={`text-sm text-foreground select-none ${
-            disabled ? "text-foreground-disabled cursor-not-allowed" : "cursor-pointer"
-          }`}
-        >
-          {description || label}
-        </label>
+        {label ? (
+          <label
+            htmlFor={name}
+            className={`text-sm text-foreground select-none ${
+              disabled ? "text-foreground-disabled cursor-not-allowed" : "cursor-pointer"
+            }`}
+          >
+            {description || label}
+          </label>
+        ) : null}
       </div>
 
       {/* Error debajo */}
