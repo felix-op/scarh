@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
-import { Map, MapTileLayer, MapZoomControl, MapMarker, MapTooltip } from "@componentes/components/ui/map";
+import { Fragment, useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { Map, MapTileLayer, MapZoomControl, MapMarker, MapTooltip, MapCircle } from "@componentes/components/ui/map";
 import { useMapEvents } from "react-leaflet";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@componentes/components/ui/button";
@@ -30,6 +30,7 @@ const DEFAULT_CENTER: [number, number] = [-54.79930469196583, -68.30601485928138
 const estadoColor: Record<string, string> = {
 	activo: "#82d987",
 	advertencia: "#facc15",
+	peligro: "#ef4444",
 	fuera: "#d65757",
 };
 
@@ -278,22 +279,40 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 					{markers.map((limnigrafo) => {
 						const color = getEstadoColor(limnigrafo.estado.variante);
 						return (
-							<MapMarker
-								key={limnigrafo.id}
-								position={[limnigrafo.coordenadas.lat, limnigrafo.coordenadas.lng]}
-								iconAnchor={[12, 12]}
-								eventHandlers={{
-									click: () => setSelectedLimnigrafo(limnigrafo)
-								}}
-								icon={
-									<div 
-										className={`w-6 h-6 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-110 transition-transform ${selectedLimnigrafo?.id === limnigrafo.id ? 'ring-4 ring-principal' : ''}`}
-										style={{ backgroundColor: color }}
+							<Fragment key={limnigrafo.id}>
+								{limnigrafo.radioCoberturaMetros && limnigrafo.radioCoberturaMetros > 0 ? (
+									<MapCircle
+										center={[limnigrafo.coordenadas.lat, limnigrafo.coordenadas.lng]}
+										radius={limnigrafo.radioCoberturaMetros}
+										pathOptions={{
+											color,
+											weight: selectedLimnigrafo?.id === limnigrafo.id ? 3 : 2,
+											opacity: 0.55,
+											fillColor: color,
+											fillOpacity: selectedLimnigrafo?.id === limnigrafo.id ? 0.22 : 0.14,
+										}}
 									/>
-								}
-							>
-								<MapTooltip>{limnigrafo.nombre} - Click para ver detalles</MapTooltip>
-							</MapMarker>
+								) : null}
+								<MapMarker
+									key={limnigrafo.id}
+									position={[limnigrafo.coordenadas.lat, limnigrafo.coordenadas.lng]}
+									iconAnchor={[12, 12]}
+									eventHandlers={{
+										click: () => setSelectedLimnigrafo(limnigrafo)
+									}}
+									icon={
+										<div 
+											className={`w-6 h-6 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-110 transition-transform ${selectedLimnigrafo?.id === limnigrafo.id ? 'ring-4 ring-principal' : ''}`}
+											style={{ backgroundColor: color }}
+										/>
+									}
+								>
+									<MapTooltip>
+										{limnigrafo.nombre}
+										{limnigrafo.radioCoberturaMetros ? ` - Cobertura ${limnigrafo.radioCoberturaMetros} m` : ""}
+									</MapTooltip>
+								</MapMarker>
+							</Fragment>
 						);
 					})}
 				</Map>

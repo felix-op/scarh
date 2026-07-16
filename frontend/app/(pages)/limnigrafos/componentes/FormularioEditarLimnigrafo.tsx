@@ -122,6 +122,12 @@ export default function FormularioEditarLimnigrafo({
 							label="Cantidad mínima de batería:"
 						/>
 						<CampoInput
+							type="integer"
+							name="radio_cobertura_metros"
+							label="Radio de cobertura estimada (m):"
+							placeholder="Ej. 500"
+						/>
+						<CampoInput
 							type="number"
 							name="altura_maxima_agua"
 							label="Máxima altura del nivel del agua:"

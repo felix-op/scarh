@@ -108,6 +108,10 @@ export default function DetalleLimnigrafo() {
 		const ubicacion = limnigrafo?.ubicacion
 			? limnigrafo.ubicacion.nombre
 			: "-";
+		const radio_cobertura =
+			limnigrafo?.radio_cobertura_metros != null
+				? `${limnigrafo.radio_cobertura_metros} m`
+				: "-";
 
 		return {
 			datosGenerales: [
@@ -129,6 +133,7 @@ export default function DetalleLimnigrafo() {
 			especificacionesTecnicas: [
 				{ label: "Memoria total:", value: memoria },
 				{ label: "Tipo de comunicación:", value: tipo_comunicacion },
+				{ label: "Radio de cobertura estimada:", value: radio_cobertura },
 				{ label: "Batería mínima:", value: bateria_min },
 				{ label: "Mínima altura del nivel del agua:", value: altura_minima_agua },
 				{ label: "Máxima altura del nivel del agua:", value: altura_maxima_agua },

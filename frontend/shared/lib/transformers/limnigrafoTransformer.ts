@@ -158,6 +158,7 @@ export function transformarLimnigrafoConMedicion(
 		// Datos adicionales (para página de detalle)
 		ultimoMantenimiento: limnigrafo.ultimo_mantenimiento || "Sin información",
 		descripcion: limnigrafo.descripcion || "Sin descripción",
+		radioCoberturaMetros: limnigrafo.radio_cobertura_metros ?? null,
 
 		// Coordenadas (para el mapa)
 		coordenadas: (() => {
@@ -185,6 +186,7 @@ export function transformarLimnigrafoConMedicion(
 
 		// Datos extra (pueden agregarse más según necesidad)
 		datosExtra: [
+			{ label: "Cobertura", value: limnigrafo.radio_cobertura_metros != null ? `${limnigrafo.radio_cobertura_metros}m` : "N/D" },
 			{ label: "Batería mín", value: configuracion?.bateria_min != null ? `${configuracion.bateria_min}V` : "N/D" },
 			{ label: "Advertencia", value: configuracion?.tiempo_advertencia != null ? `${configuracion.tiempo_advertencia}s` : "N/D" },
 			{ label: "Peligro", value: configuracion?.tiempo_peligro != null ? `${configuracion.tiempo_peligro}s` : "N/D" },

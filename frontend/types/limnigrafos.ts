@@ -43,6 +43,7 @@ export type LimnigrafoResponse = {
     ultima_conexion: string
     bateria: number // Voltios
     memoria: number // Bytes
+    radio_cobertura_metros: number | null
     ubicacion: Ubicacion
     configuracion: ConfiguracionLimnigrafoResponse | null
 }
@@ -51,6 +52,7 @@ export type LimnigrafoPostRequest = {
     codigo: string
     memoria?: number | null // Bytes
     tipo_comunicacion?: string[] | null
+    radio_cobertura_metros?: number | null
 }
 
 export type LimnigrafoPutRequest = {
@@ -59,6 +61,7 @@ export type LimnigrafoPutRequest = {
 	ultimo_mantenimiento?: string | null; // Fecha
     tipo_comunicacion?: string[]
     memoria?: number // Bytes
+    radio_cobertura_metros?: number | null
 	ubicacion_id?: string | null;
 }
 
@@ -68,6 +71,7 @@ export type LimnigrafoPatchtRequest = {
     ultimo_mantenimiento?: string
     tipo_comunicacion?: string[]
     memoria?: number // Bytes
+    radio_cobertura_metros?: number | null
     ubicacion_id?: string
 }
 

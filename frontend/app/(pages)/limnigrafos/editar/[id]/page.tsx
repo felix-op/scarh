@@ -117,6 +117,9 @@ export default function PaginaEditarLimnigrafo() {
 			temperatura_maxima: configuracion?.temperatura_maxima || 100,
 			presion_minima: configuracion?.presion_minima || 0,
 			presion_maxima: configuracion?.presion_maxima || 0,
+			radio_cobertura_metros: limnigrafo.radio_cobertura_metros != null
+				? String(limnigrafo.radio_cobertura_metros)
+				: null,
 			tiempo_advertencia_horas,
 			tiempo_advertencia_minutos,
 			tiempo_advertencia_segundos,
@@ -151,6 +154,9 @@ export default function PaginaEditarLimnigrafo() {
 						unit: data.memoria_unit,
 						value: Number(data.memoria_value),
 					}),
+					radio_cobertura_metros: data.radio_cobertura_metros
+						? Number(data.radio_cobertura_metros)
+						: null,
 					tipo_comunicacion: data.tipo_comunicacion,
 					ultimo_mantenimiento: data.ultimo_mantenimiento || null,
 				},

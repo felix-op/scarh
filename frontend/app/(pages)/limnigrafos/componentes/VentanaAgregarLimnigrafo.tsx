@@ -50,6 +50,7 @@ export default function VentanaAgregrarLimnigrafo({
 		memoria_unit: "B",
 		memoria_value: "",
 		tipo_de_comunicacion: [],
+		radio_cobertura_metros: "",
 	};
 
 	const onSubmit = (data: TCrearLimnigrafo) => {
@@ -61,6 +62,9 @@ export default function VentanaAgregrarLimnigrafo({
 					unit: data.memoria_unit,
 					value: Number(data.memoria_value),
 				}),
+				radio_cobertura_metros: data.radio_cobertura_metros
+					? Number(data.radio_cobertura_metros)
+					: null,
 			},
 		});
 	};
@@ -105,6 +109,13 @@ export default function VentanaAgregrarLimnigrafo({
 				options={opcionesTipoComunicacion}
 				className="md:grid-cols-2"
 				label="Tipo de comunicación"
+			/>
+			<CampoInput
+				type="integer"
+				name="radio_cobertura_metros"
+				label="Radio de cobertura estimada (m):"
+				placeholder="Ej. 500"
+				disabled={isPending}
 			/>
 		</VentanaFormulario>
 	);

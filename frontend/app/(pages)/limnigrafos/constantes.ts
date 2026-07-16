@@ -22,6 +22,7 @@ export const defaultFormEditarLimnigrafo: TFormEditarLimnigrafo = {
 	memoria_value: null,
 	memoria_unit: "MB",
 	tipo_comunicacion: [],
+	radio_cobertura_metros: null,
 };
 
 export const defaultMessage: VentanaAceptarOptions = {

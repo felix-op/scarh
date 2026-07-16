@@ -20,6 +20,7 @@ export type LimnigrafoDetalleData = LimnigrafoRowData & {
 	presion: string;
 	ultimoMantenimiento: string;
 	descripcion: string;
+	radioCoberturaMetros?: number | null;
 	datosExtra: { label: string; value: string }[];
 	coordenadas?: LimnigrafoCoordenadas;
 };
