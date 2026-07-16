@@ -12,3 +12,5 @@ export * from "./timefield";
 export * from "./stepper";
 export * from "./avatar";
 export * from "./menu";
+export * from "./paginado";
+export * from "./tabla";

@@ -328,12 +328,10 @@ export function BotonMenu({
   ref,
   ...props
 }: BotonMenuProps) {
-  const animations = true;
 
   const classes = [
-    "button-icon button-sidebar",
+    "button-icon button-default-icon",
     disabled ? "button-disabled" : "",
-    animations && !disabled ? "button-animated" : "",
     className,
   ]
     .filter(Boolean)

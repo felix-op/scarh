@@ -133,6 +133,13 @@
   border-color: var(--color-default-main);
 }
 
+.button-default-icon {
+  color: var(--color-default-contrastText);
+}
+.button-default-icon:hover:not(.button-disabled) {
+  background-color: var(--color-default-main);
+}
+
 /* Estilos de Colores en Modo Outlined (Borde y Texto de Color Semántico, Fondo Transparente) */
 .button-outline {
   background-color: transparent !important;

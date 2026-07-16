@@ -25,7 +25,9 @@ export interface SelectProps {
   value?: string;
   onChange?: (value: string) => void;
   className?: string;
-  ref?: Ref<HTMLButtonElement>; // ref nativo de React 19
+  /** Posición del label. `"top"` (default): encima del selector. `"right"`: a la derecha, en línea. */
+  labelPosition?: "top" | "right";
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export function Select({
@@ -39,6 +41,7 @@ export function Select({
   value,
   onChange,
   className = "",
+  labelPosition = "top",
   ref,
 }: SelectProps) {
   const hasError = errors && errors.length > 0;
@@ -49,31 +52,50 @@ export function Select({
     ${className}
   `.trim().replace(/\s+/g, " ");
 
+  const labelEl = (
+    <label
+      htmlFor={name}
+      className={`text-sm font-medium text-foreground${labelPosition === "right" ? " whitespace-nowrap" : ""}`}
+    >
+      {label} {required && <span className="text-error">*</span>}
+    </label>
+  );
+
+  const trigger = (
+    <ShadcnSelect value={value} onValueChange={onChange} disabled={disabled}>
+      <SelectTrigger ref={ref} id={name} className={triggerClasses}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent className="border-border bg-background-paper text-foreground shadow-card rounded-shape-sm">
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value} className="focus:bg-input-hover focus:text-foreground">
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </ShadcnSelect>
+  );
+
+  if (labelPosition === "right") {
+    return (
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          {trigger}
+          {labelEl}
+        </div>
+        {hasError && (
+          <span className="text-xs text-error font-medium">{errors![0]}</span>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-1.5 w-full">
-      <label htmlFor={name} className="text-sm font-medium text-foreground">
-        {label} {required && <span className="text-error">*</span>}
-      </label>
-      
-      <ShadcnSelect
-        value={value}
-        onValueChange={onChange}
-        disabled={disabled}
-      >
-        <SelectTrigger ref={ref} id={name} className={triggerClasses}>
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent className="border-border bg-background-paper text-foreground shadow-card rounded-shape-sm">
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value} className="focus:bg-input-hover focus:text-foreground">
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </ShadcnSelect>
-
+      {labelEl}
+      {trigger}
       {hasError && (
-        <span className="text-xs text-error font-medium">{errors[0]}</span>
+        <span className="text-xs text-error font-medium">{errors![0]}</span>
       )}
     </div>
   );
