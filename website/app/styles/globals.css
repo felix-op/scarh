@@ -2,6 +2,7 @@
 
 @custom-variant dark (&:is(.dark *));
 @plugin "@iconify/tailwind4";
+@plugin "tailwindcss-animate";
 
 @import "./tema-claro.css";
 @import "./tema-oscuro.css";

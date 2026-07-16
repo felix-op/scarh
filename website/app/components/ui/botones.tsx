@@ -9,6 +9,7 @@ export interface BotonProps {
   onClick?: () => void;
   outlined?: boolean;
   type?: "button" | "submit" | "reset";
+  className?: string;
 }
 
 // Props para el botón genérico que permite configurar variante e icono interno
@@ -27,6 +28,7 @@ export function Boton({
   variant = "default",
   icon = "none",
   type = "button",
+  className = "",
 }: BotonGenericoProps) {
   const animations = true;
 
@@ -40,6 +42,7 @@ export function Boton({
     disabled ? "button-disabled" : "",
     animations && !disabled ? "button-animated" : "",
     animations && !disabled && !outlined ? "button-shine" : "",
+    className,
   ]
     .filter(Boolean)
     .join(" ");

@@ -36,7 +36,14 @@ export default function DocumentacionPage() {
       desc: "Flujos de navegación paso a paso, visualización de perfiles de usuario y elementos visuales auxiliares.",
       href: "/dashboard/admin/documentacion/ux",
       icon: "user1",
-      components: ["Stepper", "Avatar"]
+      components: ["Stepper", "Avatar", "Tabs", "SegmentedControl"]
+    },
+    {
+      title: "Ventanas y Modales",
+      desc: "Diálogos de confirmación, paneles informativos laterales, formularios de inserción/edición y modales de eliminación.",
+      href: "/dashboard/admin/documentacion/modals",
+      icon: "file",
+      components: ["VentanaConfirmar", "VentanaInfo", "VentanaFormulario", "VentanaEliminar"]
     }
   ];
 

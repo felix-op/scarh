@@ -15,3 +15,5 @@ export * from "./menu";
 export * from "./paginado";
 export * from "./tabla";
 export * from "./radio-button";
+export * from "./tabs";
+export * from "./segmented-control";
