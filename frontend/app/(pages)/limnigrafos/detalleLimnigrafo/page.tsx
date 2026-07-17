@@ -14,6 +14,8 @@ import {
 } from "@servicios/api/limnigrafos";
 import { transformarLimnigrafoConMedicion } from "@lib/transformers/limnigrafoTransformer";
 import { useNotificar } from "@hooks/useNotificar";
+import { useTieneRol } from "@hooks/useTieneRol";
+import RutasAccesoLimnigrafo from "../componentes/RutasAccesoLimnigrafo";
 import { CamposFormularioEditarLimnigrafo } from "../componentes/FormularioEditarLimnigrafo";
 import { defaultFormEditarLimnigrafo, opcionesTipoComunicacion } from "../constantes";
 import type { TFormEditarLimnigrafo } from "../types";
@@ -66,6 +68,8 @@ function DetalleLimnigrafoContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const notificar = useNotificar();
+	const esAdministrador = useTieneRol("administracion");
+	const esEditor = useTieneRol("limnigrafos-editar");
 	const selectedId = searchParams.get("id");
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -448,6 +452,14 @@ function DetalleLimnigrafoContent() {
 									<MapIcon size={24} color="currentColor" />
 									<span className="text-[16px] font-medium">Agregar ubicacion</span>
 								</Boton>
+							</div>
+							<div className="w-full max-w-[1350px]">
+								<RutasAccesoLimnigrafo
+									limnigrafoId={String(limnigrafo.id)}
+									limnigrafoCodigo={limnigrafo.codigo}
+									ubicacion={limnigrafo.ubicacion}
+									puedeEditar={esAdministrador || esEditor}
+								/>
 							</div>
 						</>
 					) : (

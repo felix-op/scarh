@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1"
+     creator="SCARH - Archivo de prueba"
+     xmlns="http://www.topografix.com/GPX/1/1"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Ruta de prueba hacia limnígrafo</name>
+    <desc>Recorrido ficticio creado exclusivamente para probar la carga y visualización de rutas en SCARH.</desc>
+    <time>2026-07-15T18:00:00Z</time>
+  </metadata>
+
+  <wpt lat="-54.801900" lon="-68.302500">
+    <ele>18.0</ele>
+    <name>Inicio de la ruta</name>
+  </wpt>
+
+  <wpt lat="-54.805600" lon="-68.312800">
+    <ele>31.0</ele>
+    <name>Limnígrafo de prueba</name>
+  </wpt>
+
+  <trk>
+    <name>Acceso de prueba LM-01</name>
+    <desc>Ruta ficticia para validar importación GPX, asociación y representación en el mapa.</desc>
+    <type>walking</type>
+    <trkseg>
+      <trkpt lat="-54.801900" lon="-68.302500">
+        <ele>18.0</ele>
+        <time>2026-07-15T18:00:00Z</time>
+      </trkpt>
+      <trkpt lat="-54.802400" lon="-68.304000">
+        <ele>19.5</ele>
+        <time>2026-07-15T18:02:00Z</time>
+      </trkpt>
+      <trkpt lat="-54.802900" lon="-68.305800">
+        <ele>21.0</ele>
+        <time>2026-07-15T18:04:00Z</time>
+      </trkpt>
+      <trkpt lat="-54.803500" lon="-68.307400">
+        <ele>23.0</ele>
+        <time>2026-07-15T18:06:00Z</time>
+      </trkpt>
+      <trkpt lat="-54.804100" lon="-68.309100">
+        <ele>25.5</ele>
+        <time>2026-07-15T18:08:00Z</time>
+      </trkpt>
+      <trkpt lat="-54.804700" lon="-68.310500">
+        <ele>27.0</ele>
+        <time>2026-07-15T18:10:00Z</time>
+      </trkpt>
+      <trkpt lat="-54.805200" lon="-68.311700">
+        <ele>29.0</ele>
+        <time>2026-07-15T18:12:00Z</time>
+      </trkpt>
+      <trkpt lat="-54.805600" lon="-68.312800">
+        <ele>31.0</ele>
+        <time>2026-07-15T18:14:00Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
