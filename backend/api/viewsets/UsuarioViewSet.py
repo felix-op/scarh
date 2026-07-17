@@ -71,6 +71,12 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         )
 
     def perform_destroy(self, instance):
+        if instance == self.request.user:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({
+                "usuario": "No podés eliminar tu propio usuario."
+            })
+
         usuario_id = instance.id
         username = instance.username
         instance.delete()

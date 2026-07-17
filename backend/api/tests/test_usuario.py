@@ -113,6 +113,13 @@ class UsuarioTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(User.objects.filter(id=temp_user.id).exists())
 
+    def test_delete_self_user_fails(self):
+        url = reverse('usuarios-detail', args=[self.admin.id])
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('descripcion_tecnica', response.data)
+        self.assertIn("No podés eliminar tu propio usuario.", response.data['descripcion_tecnica'])
+
     def test_unauthenticated_access(self):
         self.client.force_authenticate(user=None)
         response = self.client.get(self.list_url)

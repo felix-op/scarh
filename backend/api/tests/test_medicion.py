@@ -69,6 +69,11 @@ class MedicionTests(APITestCase):
         self.client.force_authenticate(user=None)
         self.client.credentials(HTTP_AUTHORIZATION=f"Api-Key {self.key_secret}")
         
+
+    def test_create_medicion_automatico(self):
+        self.client.force_authenticate(user=None)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Api-Key {self.key_secret}")
+        
         data = {
             'limnigrafo': self.limnigrafo.id,
             'altura_agua': 2.6,
@@ -78,6 +83,69 @@ class MedicionTests(APITestCase):
         response = self.client.post(self.list_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['fuente'], 'automatico')
+
+    def test_create_medicion_automatico_sin_limnigrafo_en_body(self):
+        # Generar clave de API estructurada como LMG-{id}
+        key_name = f"LMG-{self.limnigrafo.id}_LM99_desc"
+        _, key_secret = APIKey.objects.create_key(name=key_name)
+        
+        self.client.force_authenticate(user=None)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Api-Key {key_secret}")
+        
+        data = {
+            'altura_agua': 2.65,
+            'nivel_de_bateria': 11.9,
+            'fecha_hora': '2024-01-01T10:00:00Z'
+        }
+        response = self.client.post(self.list_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['fuente'], 'automatico')
+        self.assertEqual(response.data['limnigrafo'], self.limnigrafo.id)
+
+    def test_create_medicion_automatico_con_limnigrafo_distinto_falla(self):
+        # Crear otro limnígrafo
+        otro_limnigrafo = Limnigrafo.objects.create(
+            codigo='LMG-999',
+            descripcion='Otro Limnigrafo',
+            memoria=1024,
+            tipo_de_comunicacion=['fisico-usb'],
+            bateria_actual=11.5,
+            estado='normal'
+        )
+        
+        # Generar clave de API estructurada para el primer limnígrafo
+        key_name = f"LMG-{self.limnigrafo.id}_LM99_desc"
+        _, key_secret = APIKey.objects.create_key(name=key_name)
+        
+        self.client.force_authenticate(user=None)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Api-Key {key_secret}")
+        
+        # Intentar enviar datos indicando el ID del otro limnígrafo en el body
+        data = {
+            'limnigrafo': otro_limnigrafo.id,
+            'altura_agua': 2.65,
+            'nivel_de_bateria': 11.9,
+            'fecha_hora': '2024-01-01T10:00:00Z'
+        }
+        response = self.client.post(self.list_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('descripcion_tecnica', response.data)
+        self.assertIn("El limnígrafo enviado no coincide con la clave de API utilizada.", response.data['descripcion_tecnica'])
+
+    def test_create_medicion_manual_sin_limnigrafo_falla(self):
+        self.client.force_authenticate(user=self.user)
+        # Intentar crear una medición manual sin pasar el campo limnigrafo
+        data = {
+            'altura_agua': 2.5,
+            'nivel_de_bateria': 11.8,
+            'presion': 1013,
+            'temperatura': 20,
+            'fecha_hora': '2024-01-01T10:00:00Z'
+        }
+        response = self.client.post(self.list_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('descripcion_tecnica', response.data)
+        self.assertIn("El campo limnígrafo es requerido.", response.data['descripcion_tecnica'])
 
     def test_create_medicion_updates_limnigrafo_state(self):
         self.client.force_authenticate(user=self.user)
@@ -215,6 +283,26 @@ class MedicionTests(APITestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['fuente'], 'manual')
 
+    def test_filter_medicion_by_fuente(self):
+        self.client.force_authenticate(user=self.user)
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=1.1,
+            fecha_hora='2024-01-01T10:00:00Z',
+            fuente='manual'
+        )
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=1.2,
+            fecha_hora='2024-01-01T11:00:00Z',
+            fuente='automatico'
+        )
+
+        response = self.client.get(self.list_url, {'fuente': 'manual'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['fuente'], 'manual')
+
     def test_filter_medicion_by_date_range(self):
         self.client.force_authenticate(user=self.user)
         Medicion.objects.create(
@@ -243,3 +331,24 @@ class MedicionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['altura_agua'], 2.0)
+
+    def test_create_medicion_duplicate_limnigrafo_and_fecha_hora_fails(self):
+        self.client.force_authenticate(user=self.user)
+        # Crear primera medición
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=1.5,
+            fecha_hora='2024-01-01T10:00:00Z',
+            fuente='manual'
+        )
+        # Intentar crear una segunda medición para el mismo limnígrafo y fecha_hora
+        data = {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 2.5,
+            'nivel_de_bateria': 11.8,
+            'fecha_hora': '2024-01-01T10:00:00Z'
+        }
+        response = self.client.post(self.list_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('descripcion_tecnica', response.data)
+        self.assertIn("Ya existe una medición para este limnígrafo en la fecha y hora especificadas.", response.data['descripcion_tecnica'])

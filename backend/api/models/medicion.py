@@ -18,5 +18,10 @@ class Medicion(models.Model):
     )
     limnigrafo = models.ForeignKey('Limnigrafo', on_delete=models.PROTECT, related_name='mediciones')
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['limnigrafo', 'fecha_hora'], name='unique_limnigrafo_fecha_hora')
+        ]
+
     def __str__(self):
         return f"{self.limnigrafo.codigo} - {self.fecha_hora.strftime('%Y-%m-%d %H:%M:%S')}"
