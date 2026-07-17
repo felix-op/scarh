@@ -329,7 +329,7 @@ function DetalleLimnigrafoContent() {
 
 	function irAPaginaMediciones() {
 		if (!limnigrafo) return;
-		router.push(`/mediciones?id=${encodeURIComponent(String(limnigrafo.id))}`);
+		router.push(`/mediciones?limnigrafo=${encodeURIComponent(String(limnigrafo.id))}`);
 	}
 
 	function irAPaginaEstadisticas() {
