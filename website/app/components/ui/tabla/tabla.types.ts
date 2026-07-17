@@ -25,7 +25,8 @@ export interface TableColumn<T> {
  * @property {(row: T) => ReactNode} [render] Renderer alternativo utilizado cuando
  *   `ActionConfig.menu` es `false`. Permite mostrar botones de ícono directos, links, etc.
  */
-export interface TableMenuOption<T> extends MenuItemConfig {
+export interface TableMenuOption<T> extends Omit<MenuItemConfig, "action"> {
+  action: (row: T) => void;
   render?: (row: T) => ReactNode;
 }
 
@@ -68,4 +69,5 @@ export interface TablaBaseProps<T> {
   isLoading?: boolean;
   loadingRowCount?: number;
   emptyStateContent?: ReactNode;
+  bordered?: boolean;
 }

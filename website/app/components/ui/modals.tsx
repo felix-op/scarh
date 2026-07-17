@@ -17,7 +17,7 @@ import {
   DrawerContent,
   DrawerTitle,
 } from "../shadcn/drawer";
-import { Boton } from "./botones";
+import { Boton, BotonGuardar, BotonCancelar } from "./botones";
 import { IconifyIcon, IconVariants } from "./iconify-icon";
 
 // 1. Ventana Base (Dialog)
@@ -308,15 +308,13 @@ export function VentanaFormulario({
 
             {/* Footer */}
             <div className="flex justify-between items-center p-5 shrink-0 gap-4">
-              <Boton
-                variant="default"
+              <BotonCancelar
                 content={cancelText}
                 onClick={handleAttemptClose}
                 disabled={isLoading}
                 className="flex-1"
               />
-              <Boton
-                variant="primary"
+              <BotonGuardar
                 type="submit"
                 content={submitText}
                 loading={isLoading}

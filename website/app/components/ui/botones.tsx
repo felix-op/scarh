@@ -521,7 +521,7 @@ export function BotonMenu({
 
   const classes = [
     "button-icon button-default-icon",
-    disabled ? "button-disabled" : "",
+    disabled ? "button-disabled opacity-50 cursor-not-allowed" : "",
     className,
   ]
     .filter(Boolean)
