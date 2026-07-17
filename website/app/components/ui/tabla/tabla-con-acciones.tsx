@@ -20,6 +20,7 @@ export interface TablaConAccionesProps<T> extends TablaBaseProps<T> {
 interface TablaConAccionesContentProps<T> extends TablaBaseProps<T> {
   actionConfig: ActionConfig<T>;
   checkboxConfig?: CheckboxConfig<T>;
+  bordered?: boolean;
 }
 
 /** Contenido interno de TablaConAcciones, sin el Card wrapper. Reutilizable en variantes paginadas. */
@@ -32,6 +33,7 @@ export function TablaConAccionesContent<T>({
   isLoading = false,
   loadingRowCount = 5,
   emptyStateContent,
+  bordered = false,
 }: TablaConAccionesContentProps<T>) {
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
   const checkboxId = useId();
@@ -80,7 +82,7 @@ export function TablaConAccionesContent<T>({
             <tr>
               {/* Checkbox sticky izquierda */}
               {hasCheckbox && (
-                <th className="sticky left-0 z-20 bg-background-muted w-12 px-4 py-4 border-r border-border">
+                <th className={`sticky left-0 z-20 bg-background-muted w-12 px-4 py-4 border-b border-r border-border ${bordered ? "border-l border-t" : ""}`}>
                   <Checkbox
                     id={`${checkboxId}-all`}
                     checked={isIndeterminate ? "indeterminate" : isAllSelected}
@@ -95,7 +97,7 @@ export function TablaConAccionesContent<T>({
               {columns.map((col) => (
                 <th
                   key={col.id}
-                  className="py-4 px-4 text-foreground-title font-medium text-sm whitespace-nowrap"
+                  className={`py-4 px-4 text-foreground-title font-medium text-sm whitespace-nowrap border-b border-border ${bordered ? "border" : ""}`}
                 >
                   {col.sort ? (
                     <button
@@ -115,7 +117,7 @@ export function TablaConAccionesContent<T>({
               ))}
 
               {/* Acciones sticky derecha */}
-              <th className="sticky right-0 z-20 bg-background-muted py-4 px-4 text-foreground-title font-medium text-sm text-center">
+              <th className={`sticky right-0 z-20 bg-background-muted py-4 px-4 text-foreground-title font-medium text-sm text-center w-1 whitespace-nowrap border-b border-border ${bordered ? "border-l border-t border-r" : ""}`}>
                 Acciones
               </th>
             </tr>
@@ -134,7 +136,7 @@ export function TablaConAccionesContent<T>({
                 <TableRow key={rowId} row={row} index={index}>
                   {/* Checkbox sticky izquierda */}
                   {hasCheckbox && (
-                    <td className="sticky left-0 z-10 bg-background-muted w-12 px-4 py-4 border-b border-r border-border">
+                    <td className={`sticky left-0 z-10 bg-background-muted w-12 px-4 py-4 border-b border-r border-border ${bordered ? "border-l" : ""}`}>
                       <Checkbox
                         id={`${checkboxId}-${rowId}`}
                         checked={selected}
@@ -152,7 +154,7 @@ export function TablaConAccionesContent<T>({
                     return (
                       <td
                         key={col.id}
-                        className={col.cell ? "" : "px-4 py-4 text-sm text-foreground whitespace-nowrap"}
+                        className={`px-4 py-4 text-sm whitespace-nowrap border-b border-border ${bordered ? "border" : ""} ${col.cell ? "" : "text-foreground"}`}
                       >
                         {col.cell ? col.cell(row) : String(value ?? "")}
                       </td>
@@ -160,14 +162,15 @@ export function TablaConAccionesContent<T>({
                   })}
 
                   {/* Acciones sticky derecha */}
-                  <td className="sticky right-0 z-10 bg-background-muted px-2 py-2 text-center border-b border-border">
+                  <td className={`sticky right-0 z-10 bg-background-muted px-2 py-2 text-center border-b border-border w-1 whitespace-nowrap ${bordered ? "border-r border-l" : ""}`}>
                     {useMenu ? (
                       <Menu
                         items={actionConfig.options.map((opt) => ({
                           label: opt.label,
-                          action: opt.action,
+                          action: () => opt.action(row),
                           icon: opt.icon,
                           className: opt.className,
+                          disabled: opt.disabled,
                         }))}
                         side="left"
                         align="start"
@@ -181,7 +184,8 @@ export function TablaConAccionesContent<T>({
                             <BotonIcono
                               key={i}
                               icon={opt.icon}
-                              onClick={opt.action}
+                              disabled={opt.disabled}
+                              onClick={() => opt.action(row)}
                             />
                           ) : null
                         )}

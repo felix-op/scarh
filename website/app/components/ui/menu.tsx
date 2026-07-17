@@ -16,6 +16,7 @@ export interface MenuItemConfig {
   action: () => void;
   icon?: IconVariants;
   className?: string;
+  disabled?: boolean;
 }
 
 export interface MenuProps {
@@ -47,6 +48,7 @@ export function Menu({
           <DropdownMenuItem
             key={item.label}
             onClick={item.action}
+            disabled={item.disabled}
             className={cn(
               "cursor-pointer gap-3 py-2.5 text-base md:gap-2 md:py-1.5 md:text-sm hover:bg-default-light hover:text-default-contrast",
               item.className,

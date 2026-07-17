@@ -19,7 +19,7 @@ export default async function DashboardLayout({
       <div className="flex h-dvh w-full flex-col overflow-hidden bg-background md:flex-row">
         <Sidebar usuario={session.user} />
         <SidebarMobile usuario={session.user} />
-        <main className="flex flex-1 flex-col overflow-y-auto">{children}</main>
+        <main className="flex flex-1 flex-col overflow-y-auto p-4">{children}</main>
       </div>
     </AutenticacionProvider>
   );
