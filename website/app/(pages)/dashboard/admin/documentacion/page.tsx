@@ -44,6 +44,13 @@ export default function DocumentacionPage() {
       href: "/dashboard/admin/documentacion/modals",
       icon: "file",
       components: ["VentanaConfirmar", "VentanaInfo", "VentanaFormulario", "VentanaEliminar"]
+    },
+    {
+      title: "React Hook Form + Zod",
+      desc: "Sistema de formularios type-safe con validación automática, manejo de errores del servidor e integración con TanStack Query.",
+      href: "/dashboard/admin/documentacion/formularios",
+      icon: "tuerca",
+      components: ["Formulario", "TextFieldRHF", "SelectRHF", "CheckboxRHF", "DateFieldRHF", "SwitchRHF"]
     }
   ];
 

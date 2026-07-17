@@ -1,14 +1,9 @@
 import { getUsuarios } from "@/services/api/usuarios";
 import { TablaUsuarios } from "@/components/usuarios/tabla-usuarios";
 import { opcionesRoles } from "@/models/roles";
-
 import { auth } from "@auth";
 
-export default async function UsuariosPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+export default async function UsuariosPage() {
   const session = await auth();
   const userRoles = session?.user?.roles || [];
   const esAdministrador = userRoles.includes("administracion");
@@ -16,7 +11,7 @@ export default async function UsuariosPage({
   // 2. Traer todos los usuarios del backend usando limit alto para saltar paginación temporalmente
   // Esperamos que en un futuro el backend simplemente no pagine.
   const response = await getUsuarios({ limit: 9999 });
-  let usuarios = response.results || [];
+  const usuarios = response.results || [];
 
   // 3. Preparar opciones de roles para el Select de filtro
   const rolesOpciones = opcionesRoles
