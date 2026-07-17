@@ -219,6 +219,11 @@ export default function MedicionesPage() {
 			params.fecha_hasta = hastaIso;
 		}
 
+		const search = appliedHistorialFilters.busqueda.trim();
+		if (search) {
+			params.search = search;
+		}
+
 		return params;
 	}, [appliedHistorialFilters, currentPage, pageSize]);
 
@@ -241,38 +246,15 @@ export default function MedicionesPage() {
 
 	const postMedicion = usePostMedicion();
 
-	const visibleMediciones = useMemo(() => {
-		const source = medicionesData?.results ?? [];
-		const search = appliedHistorialFilters.busqueda.trim().toLowerCase();
-		if (!search) {
-			return source;
-		}
-
-		return source.filter((medicion) => {
-			const limnigrafoName = (limnigrafoNameById.get(medicion.limnigrafo) ?? "").toLowerCase();
-			const target = [
-				String(medicion.id),
-				limnigrafoName,
-				medicion.fuente,
-				medicion.fecha_hora,
-				String(medicion.altura_agua ?? ""),
-				String(medicion.presion ?? ""),
-				String(medicion.temperatura ?? ""),
-			].join(" ").toLowerCase();
-
-			return target.includes(search);
-		});
-	}, [appliedHistorialFilters.busqueda, limnigrafoNameById, medicionesData]);
-
 	const tableRows = useMemo(
 		() =>
-			visibleMediciones.map((medicion) =>
+			(medicionesData?.results ?? []).map((medicion) =>
 				mapMedicionToRow(
 					medicion,
 					limnigrafoNameById.get(medicion.limnigrafo) ?? `ID ${medicion.limnigrafo}`,
 				),
 			),
-		[limnigrafoNameById, visibleMediciones],
+		[limnigrafoNameById, medicionesData],
 	);
 
 	const serverCount = medicionesData?.count ?? 0;

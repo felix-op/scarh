@@ -377,3 +377,63 @@ class MedicionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['altura_agua'], 2.0)
+
+    def test_filter_medicion_by_search_matches_limnigrafo_code(self):
+        self.client.force_authenticate(user=self.user)
+
+        other_limnigrafo = Limnigrafo.objects.create(
+            codigo='LMG-SEARCH',
+            descripcion='Punto de control norte',
+            memoria=1024,
+            bateria_actual=12,
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=other_limnigrafo,
+            bateria_min=10,
+            tiempo_advertencia=3600,
+            tiempo_peligro=7200,
+        )
+
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=1.0,
+            fecha_hora='2024-01-01T10:00:00Z',
+            fuente='manual'
+        )
+        target = Medicion.objects.create(
+            limnigrafo=other_limnigrafo,
+            altura_agua=2.0,
+            fecha_hora='2024-01-01T11:00:00Z',
+            fuente='automatico'
+        )
+
+        response = self.client.get(self.list_url, {'search': 'search'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], target.id)
+
+    def test_filter_medicion_by_search_matches_numeric_value(self):
+        self.client.force_authenticate(user=self.user)
+
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=1.45,
+            fecha_hora='2024-01-01T10:00:00Z',
+            fuente='manual'
+        )
+        target = Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=9.99,
+            presion=1005.4,
+            temperatura=6.7,
+            nivel_de_bateria=87.0,
+            fecha_hora='2024-01-01T11:00:00Z',
+            fuente='import_csv'
+        )
+
+        response = self.client.get(self.list_url, {'search': '1005.4'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], target.id)
