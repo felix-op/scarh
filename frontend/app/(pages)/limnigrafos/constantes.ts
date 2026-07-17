@@ -46,7 +46,7 @@ export const opcionesEstado = [
 	{ label: "Normal", value: "normal" },
 	{ label: "Advertencia", value: "advertencia" },
 	{ label: "Peligro", value: "peligro" },
-	{ label: "Fuera de rango", value: "fuera" },
+	{ label: "Fuera de rango", value: "fuera_de_rango" },
 ];
 
 export const opcionesMemoria = [
