@@ -1,6 +1,6 @@
 "use server";
 
-import { putUsuarioRoles, getUsuario } from "./api/usuarios";
+import { putUsuarioRoles, getUsuario, putUsuario } from "./api/usuarios";
 import { revalidateTag } from "next/cache";
 
 export type ActionState = {
@@ -78,6 +78,78 @@ export async function guardarPermisosMasivosAction(
     return {
       status: "error",
       message: error?.message || "Ocurrió un error al actualizar permisos masivos.",
+      timestamp: Date.now(),
+    };
+  }
+}
+
+export async function editarUsuarioAction(
+  prevState: ActionState,
+  formData: FormData,
+  id: string
+): Promise<ActionState> {
+  try {
+    if (!id) return { status: "none" };
+
+    const first_name = formData.get("first_name") as string;
+    const last_name = formData.get("last_name") as string;
+    const nombre_usuario = formData.get("nombre_usuario") as string;
+    const legajo = formData.get("legajo") as string;
+    const email = formData.get("email") as string;
+
+    await putUsuario(id, {
+      first_name,
+      last_name,
+      nombre_usuario,
+      legajo,
+      email,
+    });
+    revalidateTag("usuarios");
+    revalidateTag(`usuario-${id}`);
+
+    return {
+      status: "ok",
+      message: "Los datos del usuario se actualizaron correctamente.",
+      timestamp: Date.now(),
+    };
+  } catch (error: any) {
+    return {
+      status: "error",
+      message: error?.message || "No se pudo editar el usuario.",
+      timestamp: Date.now(),
+    };
+  }
+}
+
+export async function toggleUsuarioEstadoAction(
+  id: string,
+  nuevoEstado: boolean
+): Promise<ActionState> {
+  try {
+    if (!id) return { status: "none" };
+
+    const user = await getUsuario(id);
+    await putUsuario(id, {
+      first_name: user.first_name,
+      last_name: user.last_name,
+      nombre_usuario: user.nombre_usuario,
+      legajo: user.legajo,
+      email: user.email,
+      estado: nuevoEstado,
+    });
+    
+    revalidateTag("usuarios");
+    revalidateTag(`usuario-${id}`);
+
+    return {
+      status: "ok",
+      message: `El usuario fue ${nuevoEstado ? "activado" : "desactivado"} correctamente.`,
+      timestamp: Date.now(),
+    };
+  } catch (error: any) {
+    return {
+      status: "error",
+      message: error?.message || `No se pudo ${nuevoEstado ? "activar" : "desactivar"} el usuario.`,
       timestamp: Date.now(),
     };
   }

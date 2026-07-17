@@ -11,6 +11,7 @@ import { IconifyIcon } from "@/components/ui/iconify-icon";
 import { Chip } from "@/components/ui/chip";
 import type { UsuarioResponse } from "@/models/usuarios";
 import VentanaAgregarUsuario from "./ventana-agregar-usuario";
+import VentanaEditarUsuario from "./ventana-editar-usuario";
 import VentanaEliminarUsuario from "./ventana-eliminar-usuario";
 import VentanaInfoUsuario from "./ventana-info-usuario";
 import VentanaPermisosUsuario from "./ventana-permisos-usuario";
@@ -35,6 +36,7 @@ export function TablaUsuarios({ usuarios, rolesOpciones, esAdministrador }: Tabl
 
   // Modales states
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editUser, setEditUser] = useState<UsuarioResponse | null>(null);
   const [deleteUser, setDeleteUser] = useState<UsuarioResponse | null>(null);
   const [infoUser, setInfoUser] = useState<UsuarioResponse | null>(null);
   const [permissionsUser, setPermissionsUser] = useState<UsuarioResponse | null>(null);
@@ -70,10 +72,10 @@ export function TablaUsuarios({ usuarios, rolesOpciones, esAdministrador }: Tabl
   if (filtros.search) {
     const s = filtros.search.toLowerCase();
     usuariosFiltrados = usuariosFiltrados.filter((u) => 
-      u.nombre_usuario.toLowerCase().includes(s) ||
-      u.first_name.toLowerCase().includes(s) ||
-      u.last_name.toLowerCase().includes(s) ||
-      u.email.toLowerCase().includes(s) ||
+      u.nombre_usuario?.toLowerCase().includes(s) ||
+      u.first_name?.toLowerCase().includes(s) ||
+      u.last_name?.toLowerCase().includes(s) ||
+      u.email?.toLowerCase().includes(s) ||
       (u.legajo && u.legajo.toString().includes(s))
     );
   }
@@ -117,6 +119,16 @@ export function TablaUsuarios({ usuarios, rolesOpciones, esAdministrador }: Tabl
       cell: (row) => `${row.first_name} ${row.last_name}`,
     },
     {
+      id: "nombre_usuario",
+      header: "Usuario",
+      accessorKey: "nombre_usuario",
+    },
+    {
+      id: "email",
+      header: "Email",
+      accessorKey: "email",
+    },
+    {
       id: "legajo",
       header: "Legajo",
       accessorKey: "legajo",
@@ -148,7 +160,25 @@ export function TablaUsuarios({ usuarios, rolesOpciones, esAdministrador }: Tabl
         icon: "editar",
         className: "text-success",
         disabled: !canEdit,
-        action: (row) => router.push(`/dashboard/admin/usuarios/${row.id}/editar`),
+        action: (row) => setEditUser(row),
+      },
+      {
+        label: "Cambiar Estado",
+        icon: "logout",
+        className: "text-warn",
+        disabled: !canEdit,
+        action: async (row) => {
+          const { toggleUsuarioEstadoAction } = await import("@/services/usuarios.actions");
+          startTransition(async () => {
+            const result = await toggleUsuarioEstadoAction(String(row.id), !row.estado);
+            setToastMessage({
+              title: result.status === "ok" ? "Éxito" : "Error",
+              description: result.message || "",
+              variant: result.status === "ok" ? "exito" : "error",
+            });
+            refreshData();
+          });
+        },
       },
       {
         label: "Eliminar",
@@ -262,6 +292,14 @@ export function TablaUsuarios({ usuarios, rolesOpciones, esAdministrador }: Tabl
       <VentanaAgregarUsuario
         open={isAddOpen}
         onClose={() => setIsAddOpen(false)}
+        onSuccess={refreshData}
+        handleMessage={setToastMessage}
+      />
+
+      <VentanaEditarUsuario
+        open={!!editUser}
+        onClose={() => setEditUser(null)}
+        usuario={editUser}
         onSuccess={refreshData}
         handleMessage={setToastMessage}
       />
