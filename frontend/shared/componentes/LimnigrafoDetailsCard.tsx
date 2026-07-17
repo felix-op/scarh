@@ -127,6 +127,10 @@ export default function LimnigrafoDetailsCard({
 							{statusLabel}
 						</p>
 						<BotonEstadoLimnigrafo estado={status} />
+						<p className="max-w-[360px] text-center text-sm leading-6 text-[#6B7280] dark:text-[#94A3B8]">
+							El estado se calcula automáticamente. "Fuera de rango" depende del
+							tiempo transcurrido desde la última conexión y del umbral configurado.
+						</p>
 					</div>
 				</div>
 			</div>

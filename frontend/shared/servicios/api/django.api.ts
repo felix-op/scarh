@@ -40,6 +40,7 @@ type UseGetMedicionesParams = {
 		fuente?: "manual" | "automatico" | "import_csv" | "import_json", // Filtrar por origen
 		fecha_desde?: string, // Fecha/hora de inicio ISO 8601
 		fecha_hasta?: string, // Fecha/hora de fin ISO 8601
+		search?: string, // Búsqueda textual general
 		limit?: string, // Cantidad de resultados por página
 		page?: string, // Número de página
 	}
