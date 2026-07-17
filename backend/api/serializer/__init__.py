@@ -8,6 +8,7 @@ from .customTokenRefreshView import CustomTokenRefreshSerializer
 from .changePasswordSerializer import ChangePasswordSerializer
 from .alertaSerializer import AlertaSerializer
 from .configuracion_limnigrafoSerializer import ConfiguracionLimnigrafoSerializer
+from .ruta_accesoSerializer import RutaAccesoSerializer
 __all__ = [
     "UsuarioSerializer",
     "LimnigrafoSerializer",
@@ -22,4 +23,5 @@ __all__ = [
     "ChangePasswordSerializer",
     "AlertaSerializer",
     "ConfiguracionLimnigrafoSerializer",
+    "RutaAccesoSerializer",
 ]
