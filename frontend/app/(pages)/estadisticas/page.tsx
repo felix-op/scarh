@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import EstadisticaCard from "@componentes/EstadisticaCard";
 import { type MultiSelectOption } from "@componentes/components/ui/multi-select";
@@ -39,22 +40,39 @@ import {
 	toIsoString,
 } from "./lib/estadisticas-domain";
 
-export default function EstadisticasPage() {
+function EstadisticasContent() {
 	const notificar = useNotificar();
+	const searchParams = useSearchParams();
+	const limnigrafoIdParam = searchParams.get("limnigrafo");
+	const limnigrafoInicial = limnigrafoIdParam && /^\d+$/.test(limnigrafoIdParam)
+		? [limnigrafoIdParam]
+		: [];
 	const noDataNotificationRequestIdRef = useRef(0);
 	const noDataNotificationShownIdRef = useRef<number | null>(null);
 	const noDataNotificationSawLoadingRef = useRef(false);
 	const [activeTab, setActiveTab] = useState<EstadisticasTab>("graficos");
-	const [filters, setFilters] = useState<EstadisticasFilters>(getDefaultFilters);
-	const [appliedFilters, setAppliedFilters] = useState<EstadisticasFilters>(getDefaultFilters);
+	const [filters, setFilters] = useState<EstadisticasFilters>(() => ({
+		...getDefaultFilters(),
+		limnigrafos: limnigrafoInicial,
+	}));
+	const [appliedFilters, setAppliedFilters] = useState<EstadisticasFilters>(() => ({
+		...getDefaultFilters(),
+		limnigrafos: limnigrafoInicial,
+	}));
 	const [filterError, setFilterError] = useState<string | null>(null);
 	const [noDataNotificationRequest, setNoDataNotificationRequest] = useState<{
 		id: number;
 		filtersKey: string;
 		requiresLoading: boolean;
 	} | null>(null);
-	const [tablaFilters, setTablaFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
-	const [tablaAppliedFilters, setTablaAppliedFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
+	const [tablaFilters, setTablaFilters] = useState<TablaComparativaFilters>(() => ({
+		...getDefaultTablaComparativaFilters(),
+		limnigrafos: limnigrafoInicial,
+	}));
+	const [tablaAppliedFilters, setTablaAppliedFilters] = useState<TablaComparativaFilters>(() => ({
+		...getDefaultTablaComparativaFilters(),
+		limnigrafos: limnigrafoInicial,
+	}));
 	const [tablaFilterError, setTablaFilterError] = useState<string | null>(null);
 
 	const { data: limnigrafosData, error: limnigrafosError } = useGetLimnigrafos({
@@ -68,6 +86,7 @@ export default function EstadisticasPage() {
 			refetchInterval: 300000,
 		},
 	});
+
 	const {
 		isLoadingData,
 		fetchError,
@@ -561,5 +580,19 @@ export default function EstadisticasPage() {
 				</div>
 			</main>
 		</PaginaBase>
+	);
+}
+
+export default function EstadisticasPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="flex min-h-screen items-center justify-center text-xl text-[#4B4B4B] dark:text-[#94A3B8]">
+					Cargando estadísticas...
+				</div>
+			}
+		>
+			<EstadisticasContent />
+		</Suspense>
 	);
 }

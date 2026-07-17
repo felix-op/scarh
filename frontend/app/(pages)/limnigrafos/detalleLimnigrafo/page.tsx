@@ -332,6 +332,11 @@ function DetalleLimnigrafoContent() {
 		router.push(`/mediciones?id=${encodeURIComponent(String(limnigrafo.id))}`);
 	}
 
+	function irAPaginaEstadisticas() {
+		if (!limnigrafo) return;
+		router.push(`/estadisticas?limnigrafo=${encodeURIComponent(String(limnigrafo.id))}`);
+	}
+
 	function handleDelete() {
 		setMostrarConfirmacionEliminar(true);
 	}
@@ -432,6 +437,7 @@ function DetalleLimnigrafoContent() {
 								</Boton>
 
 								<Boton
+									onClick={irAPaginaEstadisticas}
 									className="!mx-0 !bg-white !text-[#898989] dark:!bg-[#1E293B] dark:!text-[#CBD5E1] !h-[48px] !px-8 shadow-[0px_2px_4px_rgba(0,0,0,0.15)] hover:!bg-[#F6F6F6] dark:hover:!bg-[#334155] border border-[#E2E8F0] dark:border-[#334155] gap-2"
 								>
 									<Ruler size={24} color="currentColor" />
