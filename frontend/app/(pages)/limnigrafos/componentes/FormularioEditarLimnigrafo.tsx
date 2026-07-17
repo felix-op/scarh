@@ -53,6 +53,10 @@ export function CamposFormularioEditarLimnigrafo({
 						Actualizá la configuración operativa, los umbrales de alerta y los datos
 						generales del dispositivo desde un solo lugar.
 					</p>
+					<p className="mt-3 text-sm leading-6 text-muted-foreground">
+						El estado del limnígrafo no se edita manualmente. "Fuera de rango" se
+						calcula según la última conexión y el tiempo configurado en este formulario.
+					</p>
 				</div>
 			) : null}
 
@@ -106,6 +110,10 @@ export function CamposFormularioEditarLimnigrafo({
 						/>
 					</div>
 					<Label text="Tiempo máximo antes de Fuera de rango:" />
+					<p className="text-sm leading-6 text-muted-foreground">
+						Si no llegan mediciones dentro de este plazo, el sistema marcará el
+						limnígrafo como fuera de rango automáticamente.
+					</p>
 					<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 						<CampoInput
 							name="tiempo_peligro_horas"
