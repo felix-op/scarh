@@ -13,9 +13,11 @@ from ..permissions import LimnigrafosPermission
 from ..utils.alertas import generar_alerta_cambio_estado
 from ..utils.estado_limnigrafo import calcular_estado_limnigrafo
 from ..utils.audit import (
-    registrar_accion_auditoria,
+    registrar_accion_auditoria_en_commit,
     construir_cambios_instancia,
     construir_descripcion_modificacion,
+    obtener_nombre_ubicacion,
+    sanitizar_auditoria,
 )
 
 class LimnigrafoPagination(PageNumberPagination):
@@ -83,7 +85,7 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         limnigrafo = serializer.save()
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="created",
             entidad="Limnígrafo",
@@ -95,27 +97,50 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
+        limnigrafo_original = serializer.instance
+        ubicacion_anterior = limnigrafo_original.ubicacion
         cambios = construir_cambios_instancia(
-            serializer.instance,
+            limnigrafo_original,
             serializer.validated_data,
         )
         limnigrafo = serializer.save()
+        ubicacion_nueva = limnigrafo.ubicacion
 
-        descripcion = construir_descripcion_modificacion(
-            f"Modificó el limnígrafo '{limnigrafo.codigo}'.",
-            cambios,
+        cambio_ubicacion = next(
+            (cambio for cambio in cambios if cambio["field"] == "ubicacion"),
+            None,
         )
 
-        registrar_accion_auditoria(
+        if cambio_ubicacion is not None:
+            if ubicacion_anterior is None and ubicacion_nueva is not None:
+                descripcion = f"Asignó una nueva ubicación al limnígrafo '{limnigrafo.codigo}'."
+            elif ubicacion_anterior is not None and ubicacion_nueva is None:
+                descripcion = f"Quitó la ubicación del limnígrafo '{limnigrafo.codigo}'."
+            else:
+                descripcion = f"Reasignó la ubicación del limnígrafo '{limnigrafo.codigo}'."
+        else:
+            descripcion = construir_descripcion_modificacion(
+                f"Modificó el limnígrafo '{limnigrafo.codigo}'.",
+                cambios,
+            )
+
+        metadata = {
+            "codigo": limnigrafo.codigo,
+            "changes": cambios,
+        }
+        if cambio_ubicacion is not None:
+            metadata["ubicacion_anterior"] = obtener_nombre_ubicacion(ubicacion_anterior)
+            metadata["ubicacion_nueva"] = obtener_nombre_ubicacion(ubicacion_nueva)
+            metadata["ubicacion_anterior_id"] = getattr(ubicacion_anterior, "id", None)
+            metadata["ubicacion_nueva_id"] = getattr(ubicacion_nueva, "id", None)
+
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="modified",
             entidad="Limnígrafo",
             entidad_id=limnigrafo.id,
             descripcion=descripcion,
-            metadata={
-                "codigo": limnigrafo.codigo,
-                "changes": cambios,
-            },
+            metadata=sanitizar_auditoria(metadata),
         )
 
     def perform_destroy(self, instance):
@@ -123,7 +148,7 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
         codigo = instance.codigo
         instance.delete()
 
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="deleted",
             entidad="Limnígrafo",
@@ -143,7 +168,7 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
         full_key_name = f"{key_name_prefix}_{limnigrafo.codigo}_{limnigrafo.descripcion[:10]}"
         key_obj, key_secret = APIKey.objects.create_key(name=full_key_name)
 
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=request,
             tipo_accion="modified",
             entidad="Limnígrafo",
@@ -184,7 +209,7 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             
-            registrar_accion_auditoria(
+            registrar_accion_auditoria_en_commit(
                 request=request,
                 tipo_accion="modified",
                 entidad="Configuración Limnígrafo",

@@ -51,6 +51,8 @@ class HistorialViewSet(viewsets.ReadOnlyModelViewSet):
                 "deleted": "deleted",
                 "manual_data_load": "manual_data_load",
                 "carga_manual_de_datos": "manual_data_load",
+                "import_data_load": "import_data_load",
+                "importacion_de_datos": "import_data_load",
             }
             tipo = mapa_tipo.get(type_param.lower().strip())
             if tipo:

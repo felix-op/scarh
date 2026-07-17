@@ -12,9 +12,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
 from ..utils.audit import (
-    registrar_accion_auditoria,
+    registrar_accion_auditoria_en_commit,
     construir_cambios_instancia,
     construir_descripcion_modificacion,
+    sanitizar_auditoria,
 )
 
 
@@ -35,7 +36,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         usuario = serializer.save()
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="created",
             entidad="Usuario",
@@ -47,28 +48,38 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
+        usuario_original = serializer.instance
         cambios = construir_cambios_instancia(
-            serializer.instance,
+            usuario_original,
             serializer.validated_data,
             campos_excluidos={"password"},
         )
         usuario = serializer.save()
 
-        descripcion = construir_descripcion_modificacion(
-            f"Modificó el usuario '{usuario.username}'.",
-            cambios,
-        )
+        if len(cambios) == 1 and cambios[0]["field"] == "is_active":
+            descripcion = (
+                f"Activó el usuario '{usuario.username}'."
+                if cambios[0]["new"]
+                else f"Desactivó el usuario '{usuario.username}'."
+            )
+        else:
+            descripcion = construir_descripcion_modificacion(
+                f"Modificó el usuario '{usuario.username}'.",
+                cambios,
+            )
 
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="modified",
             entidad="Usuario",
             entidad_id=usuario.id,
             descripcion=descripcion,
-            metadata={
-                "target_username": usuario.username,
-                "changes": cambios,
-            },
+            metadata=sanitizar_auditoria(
+                {
+                    "target_username": usuario.username,
+                    "changes": cambios,
+                },
+            ),
         )
 
     def perform_destroy(self, instance):
@@ -76,7 +87,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         username = instance.username
         instance.delete()
 
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="deleted",
             entidad="Usuario",
@@ -97,6 +108,17 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             user.set_password(serializer.validated_data['password_nueva'])
             user.save()
+            registrar_accion_auditoria_en_commit(
+                request=request,
+                tipo_accion="modified",
+                entidad="Usuario",
+                entidad_id=user.id,
+                descripcion=f"Cambió la contraseña del usuario '{user.username}'.",
+                metadata={
+                    "target_username": user.username,
+                    "contrasena_cambiada": True,
+                },
+            )
             return Response({"message": "Contraseña actualizada correctamente."}, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -152,7 +174,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         roles_nuevos = sorted(set(usuario.roles.values_list('nombre', flat=True)))
         
         # Registrar en auditoría
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="modified",
             entidad="Usuario",
@@ -252,7 +274,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                 "roles_nuevos": roles_nuevos,
             })
 
-            registrar_accion_auditoria(
+            registrar_accion_auditoria_en_commit(
                 request=self.request,
                 tipo_accion="modified",
                 entidad="Usuario",

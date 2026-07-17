@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import Accion, Limnigrafo, ConfiguracionLimnigrafo
+from api.models import Accion, Limnigrafo, ConfiguracionLimnigrafo, UsuarioNotificacion, Alerta, Ubicacion
 
 
 class HistorialTests(APITestCase):
@@ -275,3 +275,153 @@ class HistorialTests(APITestCase):
 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_create_update_delete_ubicacion_logged(self):
+        create_response = self.client.post(
+            reverse("ubicacion-list"),
+            {
+                "nombre": "Río Olivia",
+                "latitud": -54.81,
+                "longitud": -68.31,
+            },
+            format="json",
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        ubicacion_id = create_response.data["id"]
+
+        update_response = self.client.patch(
+            reverse("ubicacion-detail", args=[ubicacion_id]),
+            {"nombre": "Río Olivia Norte"},
+            format="json",
+        )
+        self.assertEqual(update_response.status_code, status.HTTP_200_OK)
+
+        delete_response = self.client.delete(reverse("ubicacion-detail", args=[ubicacion_id]))
+        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+
+        acciones = list(Accion.objects.filter(entidad="Ubicación").order_by("id"))
+        self.assertEqual([accion.tipo_accion for accion in acciones], ["created", "modified", "deleted"])
+        self.assertEqual(acciones[0].descripcion, "Creó la ubicación 'Río Olivia'.")
+        self.assertIn("Río Olivia Norte", acciones[1].descripcion)
+        self.assertEqual(acciones[2].descripcion, "Eliminó la ubicación 'Río Olivia Norte'.")
+
+    def test_assign_location_to_limnigrafo_logged(self):
+        limnigrafo_response = self._crear_limnigrafo(codigo="LMG-H-020")
+        self.assertEqual(limnigrafo_response.status_code, status.HTTP_201_CREATED)
+        limnigrafo_id = limnigrafo_response.data["id"]
+
+        ubicacion = Ubicacion.objects.create(
+            nombre="Río Pipo",
+            latitud=-54.79,
+            longitud=-68.28,
+        )
+
+        response = self.client.patch(
+            reverse("limnigrafos-detail", args=[limnigrafo_id]),
+            {"ubicacion_id": ubicacion.id},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        accion = Accion.objects.filter(entidad="Limnígrafo", entidad_id=str(limnigrafo_id)).latest("id")
+        self.assertEqual(accion.tipo_accion, "modified")
+        self.assertEqual(accion.descripcion, "Asignó una nueva ubicación al limnígrafo 'LMG-H-020'.")
+        self.assertEqual(accion.metadata["ubicacion_nueva"], "Río Pipo")
+
+    def test_change_password_logged_without_sensitive_data(self):
+        response = self.client.post(
+            reverse("usuarios-cambiar-password", args=[self.other_user.id]),
+            {
+                "password_actual": "otherpassword",
+                "password_nueva": "nueva-password-segura",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        accion = Accion.objects.filter(entidad="Usuario", entidad_id=str(self.other_user.id)).latest("id")
+        self.assertEqual(accion.descripcion, "Cambió la contraseña del usuario 'otheruser'.")
+        metadata_text = str(accion.metadata).lower()
+        descripcion_text = accion.descripcion.lower()
+        self.assertNotIn("password_actual", metadata_text)
+        self.assertNotIn("password_nueva", metadata_text)
+        self.assertNotIn("otherpassword", metadata_text)
+        self.assertNotIn("nueva-password-segura", metadata_text)
+        self.assertNotIn("password", descripcion_text.replace("contraseña", ""))
+
+    def test_password_recovery_reset_logged_without_sensitive_data(self):
+        self.client.force_authenticate(user=self.other_user)
+        response = self.client.post(
+            reverse("recuperar_password_nueva"),
+            {
+                "password": "otra-clave-super-segura",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        accion = Accion.objects.filter(entidad="Usuario", entidad_id=str(self.other_user.id)).latest("id")
+        self.assertEqual(accion.descripcion, "Restableció la contraseña del usuario 'otheruser'.")
+        metadata_text = str(accion.metadata).lower()
+        self.assertNotIn("password", metadata_text)
+        self.assertNotIn("otra-clave-super-segura", metadata_text)
+        self.client.force_authenticate(user=self.user)
+
+    def test_import_summary_logged_grouped(self):
+        limnigrafo = Limnigrafo.objects.create(
+            codigo="LMG-H-040",
+            descripcion="Import Test",
+            memoria=1024,
+            tipo_de_comunicacion=["fisico-usb"],
+            bateria_actual=12.0,
+        )
+
+        response = self.client.post(
+            reverse("medicion-import-summary"),
+            {
+                "file_name": "mediciones_junio.csv",
+                "fuente": "import_csv",
+                "limnigrafo_id": limnigrafo.id,
+                "loaded_rows": 350,
+                "rejected_rows": 12,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        accion = Accion.objects.filter(tipo_accion="import_data_load").latest("id")
+        self.assertEqual(
+            accion.descripcion,
+            "Importó 350 mediciones desde 'mediciones_junio.csv' para el limnígrafo 'LMG-H-040'.",
+        )
+        self.assertEqual(accion.metadata["filas_cargadas"], 350)
+        self.assertEqual(accion.metadata["filas_rechazadas"], 12)
+
+    def test_failed_operation_does_not_create_audit_record(self):
+        acciones_antes = Accion.objects.count()
+        response = self.client.post(
+            reverse("ubicacion-list"),
+            {
+                "nombre": "Inválida",
+                "latitud": -54.8,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Accion.objects.count(), acciones_antes)
+
+    def test_generate_key_does_not_store_api_key_secret(self):
+        limnigrafo = Limnigrafo.objects.create(
+            codigo="LMG-H-050",
+            descripcion="Token Test",
+            memoria=1024,
+            tipo_de_comunicacion=["fisico-usb"],
+            bateria_actual=12.0,
+        )
+
+        response = self.client.post(reverse("limnigrafos-generate-key", args=[limnigrafo.id]), {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        accion = Accion.objects.filter(entidad="Limnígrafo", entidad_id=str(limnigrafo.id)).latest("id")
+        self.assertNotIn("secret_key", accion.metadata)
+        self.assertNotIn("key_name", accion.metadata)

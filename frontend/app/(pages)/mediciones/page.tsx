@@ -512,6 +512,40 @@ export default function MedicionesPage() {
 			setMensaje(importSummary);
 		}
 
+		if (importFuente && importFileName && importedByLimnigrafo.size > 0) {
+			await Promise.all(
+				[...importedByLimnigrafo.entries()].map(async ([limnigrafoId, count]) => {
+					const rejectedForLimnigrafo = importErrors.filter((error) => {
+						const rowMatch = error.match(/^Fila (\d+):/);
+						if (!rowMatch) {
+							return false;
+						}
+
+						const rowIndex = Number.parseInt(rowMatch[1] ?? "", 10) - 1;
+						if (Number.isNaN(rowIndex) || rowIndex < 0 || rowIndex >= importRows.length) {
+							return false;
+						}
+
+						const row = importRows[rowIndex];
+						const rowLimnigrafoId = row.limnigrafo ?? fallbackLimnigrafoId;
+						return rowLimnigrafoId === limnigrafoId;
+					}).length;
+
+					await fetch("/api/proxy/medicion/import-summary/", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							file_name: importFileName,
+							fuente: importFuente,
+							limnigrafo_id: limnigrafoId,
+							loaded_rows: count,
+							rejected_rows: rejectedForLimnigrafo,
+						}),
+					});
+				}),
+			);
+		}
+
 		if (importErrors.length > 0) {
 			setImportModalError(importErrors.slice(0, 4).join(" "));
 		}
