@@ -29,42 +29,89 @@ type LimnigrafoDetailsCardProps = {
   onEditDescription?: () => void;
 };
 
-function InfoColumn({ items }: { items: InfoItem[] }) {
+function InfoItemView({ item }: { item: InfoItem }) {
 	return (
-		<div className="flex flex-1 flex-col items-center gap-4 py-4">
-			{items.map((item) => (
-				<div key={item.label} className="flex w-full flex-col items-center gap-2">
-					<p className="text-center text-[20px] font-normal text-[#838383] dark:text-[#94A3B8]">
-						{item.label}
+		<div className="flex w-full flex-col items-center gap-2">
+			<p className="text-center text-[20px] font-normal text-[#838383] dark:text-[#94A3B8]">
+				{item.label}
+			</p>
+			<div className="flex min-h-[32px] items-center justify-center gap-2">
+				{item.isEditing && item.onChange ? (
+					<input
+						type="text"
+						value={item.value}
+						onChange={(e) => item.onChange?.(e.target.value)}
+						placeholder={item.placeholder}
+						className="rounded-lg border-2 border-blue-400 bg-blue-50 px-3 py-1 text-center text-[24px] font-semibold text-black focus:border-blue-600 focus:outline-none dark:border-sky-500 dark:bg-[#102A43] dark:text-[#E2E8F0] dark:focus:border-sky-400"
+						autoFocus
+					/>
+				) : (
+					<p className="text-center text-[24px] font-semibold leading-7 text-black dark:text-[#E2E8F0]">
+						{item.value}
 					</p>
-					<div className="flex items-center gap-2">
-						{item.isEditing && item.onChange ? (
-							<input
-								type="text"
-								value={item.value}
-								onChange={(e) => item.onChange?.(e.target.value)}
-								placeholder={item.placeholder}
-								className="rounded-lg border-2 border-blue-400 bg-blue-50 px-3 py-1 text-center text-[24px] font-semibold text-black focus:border-blue-600 focus:outline-none dark:border-sky-500 dark:bg-[#102A43] dark:text-[#E2E8F0] dark:focus:border-sky-400"
-								autoFocus
-							/>
-						) : (
-							<p className="text-center text-[24px] font-semibold text-black dark:text-[#E2E8F0]">
-								{item.value}
-							</p>
-						)}
-						{item.editable && item.onEdit && !item.isEditing && (
-							<button
-								onClick={item.onEdit}
-								className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-[#1E293B]"
-								title="Editar"
-							>
-								<Edit size={18} color="#898989" />
-							</button>
-						)}
-					</div>
-					<div className="h-px w-full max-w-[360px] bg-[#D8D8D8] dark:bg-[#334155]" />
-				</div>
-			))}
+				)}
+				{item.editable && item.onEdit && !item.isEditing && (
+					<button
+						onClick={item.onEdit}
+						className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-[#1E293B]"
+						title="Editar"
+					>
+						<Edit size={18} color="#898989" />
+					</button>
+				)}
+			</div>
+			<div className="h-px w-full max-w-[360px] bg-[#D8D8D8] dark:bg-[#334155]" />
+		</div>
+	);
+}
+
+function DetailsSection({
+	title,
+	items,
+	columns = "lg:grid-cols-3",
+}: {
+	title: string;
+	items: InfoItem[];
+	columns?: string;
+}) {
+	return (
+		<section className="space-y-8">
+			<SectionTitle>{title}</SectionTitle>
+			<div className={`grid gap-x-10 gap-y-4 ${columns}`}>
+				{items.map((item) => (
+					<InfoItemView key={item.label} item={item} />
+				))}
+			</div>
+		</section>
+	);
+}
+
+function SectionTitle({ children }: { children: string }) {
+	return (
+		<div className="flex justify-center">
+			<h3 className="shrink-0 text-center text-[19px] font-bold uppercase tracking-[0.12em] text-[#4F7EAA] dark:text-[#B8D7F4]">
+				{children}
+			</h3>
+		</div>
+	);
+}
+
+function StatusItem({
+	status,
+	statusLabel,
+}: {
+	status: EstadoLimnigrafo;
+	statusLabel: string;
+}) {
+	return (
+		<div className="flex w-full flex-col items-center gap-2">
+			<p className="text-center text-[20px] font-normal text-[#838383] dark:text-[#94A3B8]">
+				{statusLabel}
+			</p>
+			<div className="flex min-h-[32px] items-center justify-center">
+				<BotonEstadoLimnigrafo estado={status} />
+			</div>
+			<div className="h-px w-full max-w-[360px] bg-[#D8D8D8] dark:bg-[#334155]" />
 		</div>
 	);
 }
@@ -102,42 +149,24 @@ export default function LimnigrafoDetailsCard({
 				<h2 className="text-[36px] font-bold">{title}</h2>
 			</header>
 
-			<div className="grid gap-4 border-b border-[#D8D8D8] py-8 dark:border-[#334155] lg:grid-cols-3">
-				<InfoColumn items={identification} />
-				<InfoColumn items={measurements} />
+			<div className="space-y-16 border-b border-[#D8D8D8] py-10 dark:border-[#334155]">
+				<DetailsSection title="Identificación" items={identification} />
+				<DetailsSection title="Mediciones" items={measurements} />
 
-				<div className="flex flex-1 flex-col items-center gap-4 py-4">
-					{extraData.map((item) => (
-						<div
-							key={item.label}
-							className="flex w-full flex-col items-center gap-2"
-						>
-							<p className="text-center text-[20px] font-normal text-[#838383] dark:text-[#94A3B8]">
-								{item.label}
-							</p>
-							<p className="text-center text-[24px] font-semibold text-black dark:text-[#E2E8F0]">
-								{item.value}
-							</p>
-							<div className="h-px w-full max-w-[360px] bg-[#D8D8D8] dark:bg-[#334155]" />
-						</div>
-					))}
-
-					<div className="flex w-full flex-col items-center gap-3 pt-2">
-						<p className="text-center text-[20px] font-normal text-[#838383] dark:text-[#94A3B8]">
-							{statusLabel}
-						</p>
-						<BotonEstadoLimnigrafo estado={status} />
-						<p className="max-w-[360px] text-center text-sm leading-6 text-[#6B7280] dark:text-[#94A3B8]">
-							El estado se calcula automáticamente. "Fuera de rango" depende del
-							tiempo transcurrido desde la última conexión y del umbral configurado.
-						</p>
+				<section className="space-y-8">
+					<SectionTitle>Configuración</SectionTitle>
+					<div className="grid gap-x-10 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+						{extraData.map((item) => (
+							<InfoItemView key={item.label} item={item} />
+						))}
+						<StatusItem status={status} statusLabel={statusLabel} />
 					</div>
-				</div>
+				</section>
 			</div>
 
-			<footer className="pt-6 text-center">
-				<p className="text-[20px] font-normal text-[#838383] dark:text-[#94A3B8]">Descripción</p>
-				<div className="mt-2 flex items-center justify-center gap-2">
+			<footer className="pt-10 text-center">
+				<SectionTitle>Descripción</SectionTitle>
+				<div className="mt-8 flex items-center justify-center gap-2">
 					{isEditingDescription && onDescriptionChange ? (
 						<textarea
 							value={description}

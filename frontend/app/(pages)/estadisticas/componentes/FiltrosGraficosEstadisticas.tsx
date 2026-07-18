@@ -168,12 +168,13 @@ export default function FiltrosGraficosEstadisticas({
 				<div className="flex flex-wrap items-center gap-3">
 					<BotonVariante
 						type="button"
-						onClick={onApply}
+						onClick={onExport}
+						disabled={exportDisabled}
 						variant="filtro"
 						className="text-[14px]"
 					>
-						<span className="text-2xl icon-[mage--filter]" />
-						Aplicar filtros
+						<span className="text-2xl icon-[material-symbols--download]" />
+						Exportar resumen CSV
 					</BotonVariante>
 					<BotonVariante
 						type="button"
@@ -186,13 +187,12 @@ export default function FiltrosGraficosEstadisticas({
 					</BotonVariante>
 					<BotonVariante
 						type="button"
-						onClick={onExport}
-						disabled={exportDisabled}
+						onClick={onApply}
 						variant="guardar"
 						className="text-[14px]"
 					>
-						<span className="text-2xl icon-[material-symbols--download]" />
-						Exportar resumen CSV
+						<span className="text-2xl icon-[mage--filter]" />
+						Aplicar filtros
 					</BotonVariante>
 				</div>
 			</div>

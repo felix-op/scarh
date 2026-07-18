@@ -64,6 +64,9 @@ function formatOptionalMetric(value?: number | null, suffix = ""): string {
 	return `${value}${suffix}`;
 }
 
+const TOP_ACTION_BUTTON_CLASS =
+	"relative !mx-0 !h-[44px] !px-6 !rounded-full !bg-white !text-[#64748B] dark:!bg-[#1E293B] dark:!text-[#CBD5E1] border border-[#CBD5E1] dark:border-[#334155] shadow-[0px_4px_4px_rgba(0,0,0,0.18)] hover:!brightness-95 active:!brightness-105 active:scale-95 transition-all duration-100 gap-2 overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-1/2 after:h-full after:skew-x-[-25deg] after:bg-linear-to-r after:from-transparent after:via-white/40 after:to-transparent hover:after:animate-shine before:content-[''] before:absolute before:inset-0 before:rounded-full before:transition-opacity before:duration-100 before:opacity-0 active:before:opacity-100 active:before:shadow-[inset_0px_4px_8px_rgba(0,0,0,0.2)]";
+
 function DetalleLimnigrafoContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -329,7 +332,17 @@ function DetalleLimnigrafoContent() {
 
 	function irAPaginaMediciones() {
 		if (!limnigrafo) return;
-		router.push(`/mediciones?id=${encodeURIComponent(String(limnigrafo.id))}`);
+		router.push(`/mediciones?limnigrafo=${encodeURIComponent(String(limnigrafo.id))}`);
+	}
+
+	function irAPaginaEstadisticas() {
+		if (!limnigrafo) return;
+		router.push(`/estadisticas?limnigrafo=${encodeURIComponent(String(limnigrafo.id))}`);
+	}
+
+	function irAPaginaMapa() {
+		if (!limnigrafo) return;
+		router.push(`/mapa?limnigrafo=${encodeURIComponent(String(limnigrafo.id))}`);
 	}
 
 	function handleDelete() {
@@ -348,7 +361,7 @@ function DetalleLimnigrafoContent() {
 		<div className="flex flex-col h-full w-full">
 			<main className="flex flex-1 justify-center bg-[#EEF4FB] px-6 py-10 dark:bg-[#0B1220]">
 				<div className="flex w-full max-w-[1350px] flex-col items-center gap-12">
-					<div className="flex w-full max-w-[1350px] justify-start">
+					<div className="flex w-full max-w-[1350px] flex-wrap items-center justify-between gap-6">
 						<Link href="/limnigrafos" className="inline-flex">
 							<Boton
 								type="button"
@@ -357,6 +370,42 @@ function DetalleLimnigrafoContent() {
 								← Volver
 							</Boton>
 						</Link>
+
+						{detalles ? (
+							<div className="flex flex-wrap items-center justify-end gap-4">
+								<Boton
+									onClick={irAPaginaImportacion}
+									className={TOP_ACTION_BUTTON_CLASS}
+								>
+									<AddIcon size={20} color="currentColor" />
+									<span className="text-[15px] font-semibold">Importar datos</span>
+								</Boton>
+
+								<Boton
+									onClick={irAPaginaEstadisticas}
+									className={TOP_ACTION_BUTTON_CLASS}
+								>
+									<Ruler size={22} color="currentColor" />
+									<span className="text-[15px] font-semibold">Estadisticas Del Limnigrafo</span>
+								</Boton>
+
+								<Boton
+									onClick={irAPaginaMediciones}
+									className={TOP_ACTION_BUTTON_CLASS}
+								>
+									<Ruler size={22} color="currentColor" />
+									<span className="text-[15px] font-semibold">Ver mediciones</span>
+								</Boton>
+
+								<Boton
+									onClick={irAPaginaMapa}
+									className={TOP_ACTION_BUTTON_CLASS}
+								>
+									<MapIcon size={22} color="currentColor" />
+									<span className="text-[15px] font-semibold">Ver en el mapa</span>
+								</Boton>
+							</div>
+						) : null}
 					</div>
 
 					{detalles ? (
@@ -366,7 +415,7 @@ function DetalleLimnigrafoContent() {
 									<Boton
 										onClick={handleDelete}
 										disabled={isDeleting}
-										className="!mx-0 !bg-[#FDECEC] !text-[#B42318] dark:!bg-[#3A1818] dark:!text-[#FCA5A5] !h-[40px] !px-5 text-[14px] shadow-[0px_3px_6px_rgba(0,0,0,0.15)] hover:!bg-[#f8dede] dark:hover:!bg-[#4B1D1D] gap-2 border border-[#FECACA] dark:border-[#7F1D1D] disabled:opacity-60 absolute top-6 left-8"
+										className="!mx-0 !bg-[#FDECEC] !text-[#B42318] dark:!bg-[#3A1818] dark:!text-[#FCA5A5] !h-[40px] !px-5 text-[14px] shadow-[0px_4px_4px_rgba(0,0,0,0.25)] hover:!brightness-95 active:!brightness-105 active:scale-95 transition-all duration-100 gap-2 border border-[#FECACA] dark:border-[#7F1D1D] disabled:opacity-60 absolute top-6 left-8 !rounded-full overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-1/2 after:h-full after:skew-x-[-25deg] after:bg-linear-to-r after:from-transparent after:via-white/40 after:to-transparent hover:after:animate-shine before:content-[''] before:absolute before:inset-0 before:rounded-full before:transition-opacity before:duration-100 before:opacity-0 active:before:opacity-100 active:before:shadow-[inset_0px_4px_8px_rgba(0,0,0,0.2)]"
 									>
 										{isDeleting ? "Eliminando..." : "Eliminar limnigrafo"}
 									</Boton>
@@ -383,7 +432,7 @@ function DetalleLimnigrafoContent() {
 
 								<Boton
 									onClick={() => setIsEditModalOpen(true)}
-									className="!mx-0 !h-[40px] !px-5 text-[14px] shadow-[0px_3px_6px_rgba(0,0,0,0.15)] absolute top-6 right-8 gap-2"
+									className="!mx-0 !h-[40px] !px-5 text-[14px] absolute top-6 right-8 gap-2 !rounded-full !bg-[#DDEEFF] !text-[#258CC6] dark:!bg-[#0B2A43] dark:!text-[#93C5FD] border border-[#CFE2F1] dark:border-[#1D4ED8] shadow-[0px_4px_4px_rgba(0,0,0,0.25)] hover:!brightness-95 active:!brightness-105 active:scale-95 transition-all duration-100 overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-1/2 after:h-full after:skew-x-[-25deg] after:bg-linear-to-r after:from-transparent after:via-white/40 after:to-transparent hover:after:animate-shine before:content-[''] before:absolute before:inset-0 before:rounded-full before:transition-opacity before:duration-100 before:opacity-0 active:before:opacity-100 active:before:shadow-[inset_0px_4px_8px_rgba(0,0,0,0.2)]"
 								>
 									<Edit size={18} color="currentColor" />
 									Editar
@@ -422,37 +471,6 @@ function DetalleLimnigrafoContent() {
 								</div>
 							) : null}
 
-							<div className="flex w-full max-w-[1200px] flex-wrap items-center justify-center gap-4">
-								<Boton
-									onClick={irAPaginaImportacion}
-									className="!mx-0 !bg-white !text-[#898989] dark:!bg-[#1E293B] dark:!text-[#CBD5E1] !h-[48px] !px-8 !rounded-[28px] shadow-[0px_2px_4px_rgba(0,0,0,0.15)] hover:!bg-[#F6F6F6] dark:hover:!bg-[#334155] border border-[#E2E8F0] dark:border-[#334155] gap-2"
-								>
-									<AddIcon size={20} color="currentColor" />
-									<span className="text-[16px] font-medium">Importar datos</span>
-								</Boton>
-
-								<Boton
-									className="!mx-0 !bg-white !text-[#898989] dark:!bg-[#1E293B] dark:!text-[#CBD5E1] !h-[48px] !px-8 shadow-[0px_2px_4px_rgba(0,0,0,0.15)] hover:!bg-[#F6F6F6] dark:hover:!bg-[#334155] border border-[#E2E8F0] dark:border-[#334155] gap-2"
-								>
-									<Ruler size={24} color="currentColor" />
-									<span className="text-[16px] font-medium">Estadisticas Del Limnigrafo</span>
-								</Boton>
-
-								<Boton
-									onClick={irAPaginaMediciones}
-									className="!mx-0 !bg-white !text-[#898989] dark:!bg-[#1E293B] dark:!text-[#CBD5E1] !h-[48px] !px-8 shadow-[0px_2px_4px_rgba(0,0,0,0.15)] hover:!bg-[#F6F6F6] dark:hover:!bg-[#334155] border border-[#E2E8F0] dark:border-[#334155] gap-2"
-								>
-									<Ruler size={24} color="currentColor" />
-									<span className="text-[16px] font-medium">Ver mediciones</span>
-								</Boton>
-
-								<Boton
-									className="!mx-0 !bg-white !text-[#898989] dark:!bg-[#1E293B] dark:!text-[#CBD5E1] !h-[48px] !px-8 shadow-[0px_2px_4px_rgba(0,0,0,0.15)] hover:!bg-[#F6F6F6] dark:hover:!bg-[#334155] border border-[#E2E8F0] dark:border-[#334155] gap-2"
-								>
-									<MapIcon size={24} color="currentColor" />
-									<span className="text-[16px] font-medium">Agregar ubicacion</span>
-								</Boton>
-							</div>
 							<div className="w-full max-w-[1350px]">
 								<RutasAccesoLimnigrafo
 									limnigrafoId={String(limnigrafo.id)}

@@ -1,6 +1,7 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, Suspense, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import {
 	ImportPreviewRow,
@@ -142,9 +143,20 @@ function mapMedicionToRow(medicion: MedicionResponse, limnigrafoName: string): M
 	};
 }
 
-export default function MedicionesPage() {
-	const [historialFilters, setHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
-	const [appliedHistorialFilters, setAppliedHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
+function MedicionesContent() {
+	const searchParams = useSearchParams();
+	const limnigrafoIdParam = searchParams.get("limnigrafo") ?? searchParams.get("id");
+	const limnigrafoInicial = limnigrafoIdParam && /^\d+$/.test(limnigrafoIdParam)
+		? [limnigrafoIdParam]
+		: [];
+	const [historialFilters, setHistorialFilters] = useState<HistorialFilters>(() => ({
+		...getDefaultHistorialFilters(),
+		limnigrafo: limnigrafoInicial,
+	}));
+	const [appliedHistorialFilters, setAppliedHistorialFilters] = useState<HistorialFilters>(() => ({
+		...getDefaultHistorialFilters(),
+		limnigrafo: limnigrafoInicial,
+	}));
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [mensaje, setMensaje] = useState<string | null>(null);
@@ -656,5 +668,19 @@ export default function MedicionesPage() {
 				</div>
 			</main>
 		</PaginaBase>
+	);
+}
+
+export default function MedicionesPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="flex min-h-screen items-center justify-center text-xl text-[#4B4B4B] dark:text-[#94A3B8]">
+					Cargando mediciones...
+				</div>
+			}
+		>
+			<MedicionesContent />
+		</Suspense>
 	);
 }
