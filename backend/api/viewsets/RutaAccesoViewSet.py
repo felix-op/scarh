@@ -32,7 +32,7 @@ class RutaAccesoViewSet(viewsets.ModelViewSet):
     pagination_class = RutaAccesoPagination
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['id', 'nombre', 'tipo_acceso', 'distancia_km', 'creado_en', 'actualizado_en']
+    ordering_fields = ['id', 'nombre', 'distancia_km', 'creado_en', 'actualizado_en']
     ordering = ['id']
 
     def get_queryset(self):

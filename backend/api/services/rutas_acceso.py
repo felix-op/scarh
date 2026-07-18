@@ -179,6 +179,85 @@ def _extraer_observaciones_kml(contenido: bytes) -> str:
     return _primer_texto_util(textos)
 
 
+def insertar_observaciones_en_archivo_ruta(
+    contenido: bytes,
+    observaciones: str,
+    formato_origen: str,
+) -> bytes:
+    texto_observaciones = (observaciones or "").strip()
+    if not texto_observaciones:
+        return contenido
+
+    try:
+        root = ET.fromstring(contenido)
+    except ET.ParseError:
+        return contenido
+
+    if formato_origen == "gpx":
+        _insertar_observaciones_gpx(root, texto_observaciones)
+    elif formato_origen == "kml":
+        _insertar_observaciones_kml(root, texto_observaciones)
+    else:
+        return contenido
+
+    return ET.tostring(root, encoding="utf-8", xml_declaration=True)
+
+
+def _insertar_observaciones_gpx(root: ET.Element, observaciones: str) -> None:
+    metadata = _primer_hijo_directo(root, "metadata")
+    contenedores = [root]
+    if metadata is not None:
+        contenedores.append(metadata)
+    contenedores.extend(element for element in root.iter() if _local_name(element.tag) in ("trk", "rte"))
+
+    elementos = [
+        child
+        for contenedor in contenedores
+        for child in list(contenedor)
+        if _local_name(child.tag) in ("desc", "cmt")
+    ]
+
+    if elementos:
+        for element in elementos:
+            element.text = observaciones
+        return
+
+    destino = metadata if metadata is not None else root
+    nuevo_desc = ET.Element(_tag_con_namespace(destino, "desc"))
+    nuevo_desc.text = observaciones
+    destino.insert(0, nuevo_desc)
+
+
+def _insertar_observaciones_kml(root: ET.Element, observaciones: str) -> None:
+    document = next((element for element in root.iter() if _local_name(element.tag) == "Document"), root)
+    descriptions = [
+        child
+        for child in list(document)
+        if _local_name(child.tag) == "description"
+    ]
+
+    if descriptions:
+        for element in descriptions:
+            element.text = observaciones
+        return
+
+    nuevo_description = ET.Element(_tag_con_namespace(document, "description"))
+    nuevo_description.text = observaciones
+    document.insert(0, nuevo_description)
+
+
+def _primer_hijo_directo(parent: ET.Element, tag_name: str) -> ET.Element | None:
+    return next((child for child in list(parent) if _local_name(child.tag) == tag_name), None)
+
+
+def _tag_con_namespace(parent: ET.Element, tag_name: str) -> str:
+    tag = parent.tag
+    if tag.startswith("{") and "}" in tag:
+        namespace = tag[1:].split("}", 1)[0]
+        return f"{{{namespace}}}{tag_name}"
+    return tag_name
+
+
 def _primer_texto_util(textos: list[str]) -> str:
     vistos = set()
     for texto in textos:

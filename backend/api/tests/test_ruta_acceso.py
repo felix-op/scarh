@@ -58,7 +58,6 @@ class RutaAccesoTests(APITestCase):
         data = {
             'limnigrafo_id': limnigrafo_id or self.limnigrafo.id,
             'nombre': 'Ruta de acceso test',
-            'tipo_acceso': 'vehiculo',
             'tiempo_estimado_minutos': '35',
             'observaciones': 'Observación de prueba',
         }
@@ -159,7 +158,6 @@ class RutaAccesoTests(APITestCase):
         RutaAcceso.objects.create(
             limnigrafo=otro,
             nombre='Otra ruta',
-            tipo_acceso='caminata',
             formato_origen='gpx',
             geometria={'type': 'FeatureCollection', 'features': []},
         )
@@ -175,12 +173,39 @@ class RutaAccesoTests(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('attachment', response['Content-Disposition'])
+        contenido = b''.join(response.streaming_content)
+        self.assertIn(b'Observaci\xc3\xb3n de prueba', contenido)
+
+    def test_guarda_archivo_con_observaciones(self):
+        created = self.crear_ruta()
+        ruta = RutaAcceso.objects.get(pk=created.data['id'])
+
+        with ruta.archivo_original.open('rb') as archivo:
+            contenido = archivo.read()
+
+        self.assertIn(b'Observaci\xc3\xb3n de prueba', contenido)
+
+    def test_actualiza_archivo_guardado_al_editar_observaciones(self):
+        created = self.crear_ruta()
+        ruta = RutaAcceso.objects.get(pk=created.data['id'])
+
+        response = self.client.patch(
+            reverse('rutas-acceso-detail', args=[ruta.id]),
+            {'observaciones': 'Observación editada'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ruta.refresh_from_db()
+        with ruta.archivo_original.open('rb') as archivo:
+            contenido = archivo.read()
+
+        self.assertIn(b'Observaci\xc3\xb3n editada', contenido)
 
     def test_permisos_lectura_y_edicion(self):
         ruta = RutaAcceso.objects.create(
             limnigrafo=self.limnigrafo,
             nombre='Ruta existente',
-            tipo_acceso='vehiculo',
             formato_origen='gpx',
             geometria={'type': 'FeatureCollection', 'features': []},
         )
@@ -276,7 +301,6 @@ class RutaAccesoMigrationTests(TransactionTestCase):
     def test_preserva_y_asocia_rutas_existentes_durante_migracion(self):
         RutaAccesoMigrada = self.apps.get_model('api', 'RutaAcceso')
         ruta = RutaAccesoMigrada.objects.get(nombre='Ruta histórica')
-        self.assertEqual(ruta.tipo_acceso, 'vehiculo')
         self.assertEqual(ruta.distancia_km, 1.2)
         self.assertIsNotNone(ruta.ubicacion_id)
         self.assertIsNotNone(ruta.limnigrafo_id)
