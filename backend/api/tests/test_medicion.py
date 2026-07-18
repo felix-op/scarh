@@ -36,6 +36,8 @@ class MedicionTests(APITestCase):
         )
         
         self.list_url = reverse('medicion-list')
+        self.validate_import_url = reverse('medicion-validate-import')
+        self.bulk_import_url = reverse('medicion-bulk-import')
         
         self.api_key, self.key_secret = APIKey.objects.create_key(name="test-key")
     def test_list_mediciones(self):
@@ -437,3 +439,132 @@ class MedicionTests(APITestCase):
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['id'], target.id)
+
+    def test_validate_import_detects_duplicate_in_file_and_database(self):
+        self.client.force_authenticate(user=self.user)
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=1.2,
+            fecha_hora='2024-01-01T10:00:00Z',
+            fuente='manual',
+        )
+
+        response = self.client.post(
+            self.validate_import_url,
+            {
+                "file_name": "mediciones.csv",
+                "fuente": "import_csv",
+                "rows": [
+                    {
+                        "row_number": 2,
+                        "limnigrafo_id": self.limnigrafo.id,
+                        "fecha_hora": "2024-01-01T10:00:00Z",
+                        "altura_agua": 1.2,
+                        "presion": 1000.0,
+                        "temperatura": 12.0,
+                        "nivel_de_bateria": 11.0,
+                    },
+                    {
+                        "row_number": 3,
+                        "limnigrafo_id": self.limnigrafo.id,
+                        "fecha_hora": "2024-01-01T11:00:00Z",
+                        "altura_agua": 1.3,
+                        "presion": 1001.0,
+                        "temperatura": 12.5,
+                        "nivel_de_bateria": 11.1,
+                    },
+                    {
+                        "row_number": 4,
+                        "limnigrafo_id": self.limnigrafo.id,
+                        "fecha_hora": "2024-01-01T11:00:00Z",
+                        "altura_agua": 1.4,
+                        "presion": 1002.0,
+                        "temperatura": 13.0,
+                        "nivel_de_bateria": 11.2,
+                    },
+                ],
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["is_valid"])
+        rows_by_number = {row["rowNumber"]: row for row in response.data["rows"]}
+        self.assertEqual(rows_by_number[2]["status"], "duplicate_database")
+        self.assertEqual(rows_by_number[3]["status"], "duplicate_file")
+        self.assertEqual(rows_by_number[4]["status"], "duplicate_file")
+
+    def test_bulk_import_creates_measurements_transactionally(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            self.bulk_import_url,
+            {
+                "file_name": "mediciones_lote.csv",
+                "fuente": "import_csv",
+                "rows": [
+                    {
+                        "row_number": 2,
+                        "limnigrafo_id": self.limnigrafo.id,
+                        "fecha_hora": "2024-01-01T10:00:00Z",
+                        "altura_agua": 1.2,
+                        "presion": 1000.0,
+                        "temperatura": 12.0,
+                        "nivel_de_bateria": 10.5,
+                    },
+                    {
+                        "row_number": 3,
+                        "limnigrafo_id": self.limnigrafo.id,
+                        "fecha_hora": "2024-01-01T11:00:00Z",
+                        "altura_agua": 1.4,
+                        "presion": 1001.0,
+                        "temperatura": 13.0,
+                        "nivel_de_bateria": 10.2,
+                    },
+                ],
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["imported_rows"], 2)
+        self.assertEqual(Medicion.objects.count(), 2)
+
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.bateria_actual, 10.2)
+        self.assertEqual(self.limnigrafo.ultima_conexion, parse_datetime("2024-01-01T11:00:00Z"))
+
+    def test_bulk_import_rejects_invalid_batch_without_saving(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            self.bulk_import_url,
+            {
+                "file_name": "mediciones_invalidas.csv",
+                "fuente": "import_csv",
+                "rows": [
+                    {
+                        "row_number": 2,
+                        "limnigrafo_id": self.limnigrafo.id,
+                        "fecha_hora": "2024-01-01T10:00:00Z",
+                        "altura_agua": 1.2,
+                        "presion": 1000.0,
+                        "temperatura": 12.0,
+                        "nivel_de_bateria": 10.5,
+                    },
+                    {
+                        "row_number": 3,
+                        "limnigrafo_id": self.limnigrafo.id,
+                        "fecha_hora": "2024-01-01T11:00:00Z",
+                        "altura_agua": None,
+                        "presion": 1001.0,
+                        "temperatura": 13.0,
+                        "nivel_de_bateria": 10.2,
+                    },
+                ],
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Medicion.objects.count(), 0)

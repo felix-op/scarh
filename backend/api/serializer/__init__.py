@@ -1,7 +1,11 @@
 from .usuarioSerializer import UsuarioSerializer
 from .limnigrafoSerializer import LimnigrafoSerializer
 from .historialListSerializer import HistorialListSerializer, HistorialDetailSerializer
-from .medicionSerializer import MedicionSerializer
+from .medicionSerializer import (
+    MedicionSerializer,
+    MedicionImportPayloadSerializer,
+    MedicionImportRowSerializer,
+)
 from .ubicacionSerializer import UbicacionSerializer, UbicacionOutputSerializer
 from .estadisticaSerializer import EstadisticaInputSerializer, EstadisticaOutputSerializer
 from .customTokenRefreshView import CustomTokenRefreshSerializer
@@ -15,6 +19,8 @@ __all__ = [
     "HistorialListSerializer",
     "HistorialDetailSerializer",
     "MedicionSerializer",
+    "MedicionImportPayloadSerializer",
+    "MedicionImportRowSerializer",
     "UbicacionSerializer",
     "UbicacionOutputSerializer",
     "EstadisticaInputSerializer",

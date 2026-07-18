@@ -397,6 +397,61 @@ class HistorialTests(APITestCase):
         self.assertEqual(accion.metadata["filas_cargadas"], 350)
         self.assertEqual(accion.metadata["filas_rechazadas"], 12)
 
+    def test_bulk_import_logged_once(self):
+        limnigrafo = Limnigrafo.objects.create(
+            codigo="LMG-H-041",
+            descripcion="Import Bulk Test",
+            memoria=1024,
+            tipo_de_comunicacion=["fisico-usb"],
+            bateria_actual=12.0,
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=limnigrafo,
+            bateria_min=10.0,
+            tiempo_advertencia=3600,
+            tiempo_peligro=7200,
+        )
+
+        response = self.client.post(
+            reverse("medicion-bulk-import"),
+            {
+                "file_name": "mediciones_julio.csv",
+                "fuente": "import_csv",
+                "rows": [
+                    {
+                        "row_number": 2,
+                        "limnigrafo_id": limnigrafo.id,
+                        "fecha_hora": "2024-07-01T10:00:00Z",
+                        "altura_agua": 1.2,
+                        "presion": 1001.0,
+                        "temperatura": 14.0,
+                        "nivel_de_bateria": 11.9,
+                    },
+                    {
+                        "row_number": 3,
+                        "limnigrafo_id": limnigrafo.id,
+                        "fecha_hora": "2024-07-01T11:00:00Z",
+                        "altura_agua": 1.3,
+                        "presion": 1002.0,
+                        "temperatura": 14.5,
+                        "nivel_de_bateria": 11.8,
+                    },
+                ],
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        acciones = Accion.objects.filter(tipo_accion="import_data_load").order_by("id")
+        self.assertEqual(acciones.count(), 1)
+        accion = acciones.first()
+        self.assertEqual(
+            accion.descripcion,
+            "Importó 2 mediciones desde 'mediciones_julio.csv'.",
+        )
+        self.assertEqual(accion.metadata["filas_cargadas"], 2)
+        self.assertEqual(accion.metadata["filas_rechazadas"], 0)
+
     def test_failed_operation_does_not_create_audit_record(self):
         acciones_antes = Accion.objects.count()
         response = self.client.post(

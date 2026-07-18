@@ -51,23 +51,31 @@ def _campos_fuera_de_rango(medicion, config):
     return campos
 
 
-def generar_alertas_medicion(medicion, estado_anterior, nuevo_estado):
+def generar_alerta_medicion_fuera_de_rango(medicion):
     limnigrafo = medicion.limnigrafo
     config = getattr(limnigrafo, "configuracion", None)
+    if not config:
+        return
 
-    if config:
-        campos_fuera_de_rango = _campos_fuera_de_rango(medicion, config)
-        if campos_fuera_de_rango:
-            descripcion = (
-                f"Medición fuera de rango en {', '.join(campos_fuera_de_rango)} "
-                f"para el limnígrafo '{limnigrafo.codigo}'."
-            )
-            _crear_alerta_para_usuarios(
-                tipo="fuera_rango_medicion",
-                descripcion=descripcion,
-                limnigrafo=limnigrafo,
-                medicion=medicion,
-            )
+    campos_fuera_de_rango = _campos_fuera_de_rango(medicion, config)
+    if not campos_fuera_de_rango:
+        return
+
+    descripcion = (
+        f"Medición fuera de rango en {', '.join(campos_fuera_de_rango)} "
+        f"para el limnígrafo '{limnigrafo.codigo}'."
+    )
+    _crear_alerta_para_usuarios(
+        tipo="fuera_rango_medicion",
+        descripcion=descripcion,
+        limnigrafo=limnigrafo,
+        medicion=medicion,
+    )
+
+
+def generar_alertas_medicion(medicion, estado_anterior, nuevo_estado):
+    limnigrafo = medicion.limnigrafo
+    generar_alerta_medicion_fuera_de_rango(medicion)
 
     generar_alerta_cambio_estado(
         limnigrafo=limnigrafo,

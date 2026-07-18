@@ -24,6 +24,67 @@ export type MedicionResponse = {
 	limnigrafo: number, // ID del limnígrafo que envió la medición
 };
 
+export type ImportRowStatus =
+	| "valid"
+	| "error"
+	| "duplicate_file"
+	| "duplicate_database"
+	| "warning";
+
+export type ImportRowIssue = {
+	field: string,
+	code: string,
+	message: string,
+};
+
+export type ImportMeasurementRow = {
+	rowNumber: number,
+	limnigrafoId: number | null,
+	fechaHora: string,
+	alturaAgua: number | null,
+	presion: number | null,
+	temperatura: number | null,
+	nivelBateria: number | null,
+};
+
+export type ImportPreviewRow = ImportMeasurementRow & {
+	status: ImportRowStatus,
+	issues: ImportRowIssue[],
+};
+
+export type MedicionImportRequest = {
+	file_name: string,
+	fuente: "import_csv" | "import_json",
+	fallback_limnigrafo_id?: number | null,
+	rows: Array<{
+		row_number: number,
+		limnigrafo_id?: number | null,
+		fecha_hora: string,
+		altura_agua: number | null,
+		presion: number | null,
+		temperatura: number | null,
+		nivel_de_bateria: number | null,
+	}>,
+};
+
+export type MedicionImportValidationResponse = {
+	file_name: string,
+	fuente: "import_csv" | "import_json",
+	is_valid: boolean,
+	summary: {
+		total_rows: number,
+		valid_rows: number,
+		error_rows: number,
+	},
+	rows: ImportPreviewRow[],
+};
+
+export type MedicionBulkImportResponse = {
+	message: string,
+	imported_rows: number,
+	rows: ImportPreviewRow[],
+};
+
 // Respuesta paginada del backend (50 mediciones por página)
 export type MedicionPaginatedResponse = {
 	count: number, // Total de mediciones
@@ -91,6 +152,40 @@ export function usePostMedicion({ params, configuracion }: UsePostMedicionOption
 	return usePost<MedicionPostRequest, MedicionResponse, ParamsBase>({
 		url: `${NEXT_PROXY_URL}/medicion/`,
 		configuracion: configuracion ?? defaultConfig,
+		params: params ?? {},
+	});
+}
+
+type UsePostMedicionImportOptions = {
+	params?: ParamsBase,
+	configuracion?: MutationConfig<
+		MedicionImportRequest,
+		MedicionImportValidationResponse,
+		ParamsBase
+	>
+};
+
+export function usePostValidarImportacionMediciones({ params, configuracion }: UsePostMedicionImportOptions = {}) {
+	return usePost<MedicionImportRequest, MedicionImportValidationResponse, ParamsBase>({
+		url: `${NEXT_PROXY_URL}/medicion/validate-import/`,
+		configuracion: configuracion ?? {},
+		params: params ?? {},
+	});
+}
+
+type UsePostBulkImportOptions = {
+	params?: ParamsBase,
+	configuracion?: MutationConfig<
+		MedicionImportRequest,
+		MedicionBulkImportResponse,
+		ParamsBase
+	>
+};
+
+export function usePostImportarMedicionesLote({ params, configuracion }: UsePostBulkImportOptions = {}) {
+	return usePost<MedicionImportRequest, MedicionBulkImportResponse, ParamsBase>({
+		url: `${NEXT_PROXY_URL}/medicion/bulk-import/`,
+		configuracion: configuracion ?? {},
 		params: params ?? {},
 	});
 }
