@@ -8,6 +8,7 @@ import { type MultiSelectOption } from "@componentes/components/ui/multi-select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@componentes/components/ui/tabs";
 import { useNotificar } from "@hooks/useNotificar";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
+import { type EstadisticaOutputItem } from "@servicios/api/django.api";
 import { Paginado } from "@servicios/api/types";
 import { LimnigrafoResponse } from "types/limnigrafos";
 import FiltrosGraficosEstadisticas from "./componentes/FiltrosGraficosEstadisticas";
@@ -74,6 +75,7 @@ function EstadisticasContent() {
 		limnigrafos: limnigrafoInicial,
 	}));
 	const [tablaFilterError, setTablaFilterError] = useState<string | null>(null);
+	const [isExportingTabla, setIsExportingTabla] = useState(false);
 
 	const { data: limnigrafosData, error: limnigrafosError } = useGetLimnigrafos({
 		params: {
@@ -350,6 +352,98 @@ function EstadisticasContent() {
 		setTablaFilterError(null);
 	}
 
+	async function handleExportTablaCsv() {
+		setTablaFilterError(null);
+		const desdeIso = toIsoString(tablaAppliedFilters.desde);
+		const hastaIso = toIsoString(tablaAppliedFilters.hasta);
+
+		if (!desdeIso || !hastaIso) {
+			setTablaFilterError("Completá un rango de fechas válido para exportar.");
+			return;
+		}
+
+		if (new Date(desdeIso).getTime() >= new Date(hastaIso).getTime()) {
+			setTablaFilterError("La fecha desde debe ser anterior a la fecha hasta.");
+			return;
+		}
+
+		const selectedIds = tablaAppliedFilters.limnigrafos
+			.map((item) => Number.parseInt(item, 10))
+			.filter((item) => !Number.isNaN(item));
+		const limnigrafosIds = selectedIds.length > 0
+			? selectedIds
+			: limnigrafos.map((limnigrafo) => limnigrafo.id);
+
+		if (limnigrafosIds.length === 0) {
+			setTablaFilterError("No hay limnígrafos disponibles para exportar.");
+			return;
+		}
+
+		setIsExportingTabla(true);
+		try {
+			const query = new URLSearchParams({
+				limnigrafos: limnigrafosIds.join(","),
+				atributo: tablaAppliedFilters.atributo,
+				fecha_inicio: desdeIso,
+				fecha_fin: hastaIso,
+			});
+			const response = await fetch(`/api/proxy/estadistica/?${query.toString()}`, {
+				method: "GET",
+				cache: "no-store",
+			});
+
+			if (!response.ok) {
+				const errorBody = await response.json().catch(() => ({}));
+				const errorText =
+					typeof errorBody === "string"
+						? errorBody
+						: errorBody?.detail ?? errorBody?.error ?? "No se pudo exportar la tabla comparativa.";
+				throw new Error(errorText);
+			}
+
+			const estadisticas = (await response.json()) as EstadisticaOutputItem[];
+			if (estadisticas.length === 0) {
+				setTablaFilterError("No hay datos comparativos para exportar con los filtros aplicados.");
+				return;
+			}
+
+			const rangoArchivo = `${formatDateForFileName(desdeIso)}_a_${formatDateForFileName(hastaIso)}`;
+			const tableHeaders = [
+				"limnigrafo_id",
+				"limnigrafo",
+				"minimo",
+				"maximo",
+				"mediana",
+				"moda",
+				"desvio_estandar",
+				"percentil_90",
+			];
+			const tableRows = estadisticas.map((item) => [
+				item.id ?? "",
+				item.id === null ? "Global" : (limnigrafoLabels[item.id] ?? `ID ${item.id}`),
+				item.minimo,
+				item.maximo,
+				item.mediana,
+				item.moda,
+				item.desvio_estandar,
+				item.percentil_90,
+			]);
+			const rows = [
+				["Variable", ATRIBUTO_METADATA[tablaAppliedFilters.atributo].label],
+				["Unidad", ATRIBUTO_METADATA[tablaAppliedFilters.atributo].unit],
+				[],
+				tableHeaders,
+				...tableRows,
+			];
+
+			downloadCsvRows(buildTimestampedFileName(`estadisticas_tabla_comparativa_${rangoArchivo}`), rows);
+		} catch (error) {
+			setTablaFilterError(error instanceof Error ? error.message : "No se pudo exportar la tabla comparativa.");
+		} finally {
+			setIsExportingTabla(false);
+		}
+	}
+
 	function handleExportGraficosCsv() {
 		const rangoArchivo = appliedFilters.modo === "realtime"
 			? sanitizeFileNamePart(REALTIME_WINDOW_LABELS[appliedFilters.ventana])
@@ -555,6 +649,8 @@ function EstadisticasContent() {
 								setFilters={setTablaFilters}
 								onApply={handleApplyTablaFilters}
 								onReset={handleResetTablaFilters}
+								onExport={handleExportTablaCsv}
+								exportDisabled={isExportingTabla}
 							/>
 
 							{tablaFilterError ? (

@@ -16,6 +16,8 @@ type FiltrosTablaComparativaProps = {
 	setFilters: Dispatch<SetStateAction<TablaComparativaFilters>>;
 	onApply: () => void;
 	onReset: () => void;
+	onExport: () => void;
+	exportDisabled: boolean;
 };
 
 export default function FiltrosTablaComparativa({
@@ -24,6 +26,8 @@ export default function FiltrosTablaComparativa({
 	setFilters,
 	onApply,
 	onReset,
+	onExport,
+	exportDisabled,
 }: FiltrosTablaComparativaProps) {
 	const optionsWithAll: MultiSelectOption[] = [
 		{ value: ALL_LIMNIGRAFOS_VALUE, label: "Todos" },
@@ -108,16 +112,17 @@ export default function FiltrosTablaComparativa({
 				</div>
 			</div>
 
-			<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+			<div className="mt-4 flex flex-wrap items-center justify-end gap-3">
 				<div className="flex flex-wrap items-center gap-3">
 					<BotonVariante
 						type="button"
-						onClick={onApply}
+						onClick={onExport}
+						disabled={exportDisabled}
 						variant="filtro"
 						className="text-[14px]"
 					>
-						<span className="text-2xl icon-[mage--filter]" />
-						Aplicar filtros
+						<span className="text-2xl icon-[material-symbols--download]" />
+						Exportar CSV
 					</BotonVariante>
 					<BotonVariante
 						type="button"
@@ -127,6 +132,15 @@ export default function FiltrosTablaComparativa({
 					>
 						<span className="text-2xl icon-[mdi--restore]" />
 						Restablecer
+					</BotonVariante>
+					<BotonVariante
+						type="button"
+						onClick={onApply}
+						variant="guardar"
+						className="text-[14px]"
+					>
+						<span className="text-2xl icon-[mage--filter]" />
+						Aplicar filtros
 					</BotonVariante>
 				</div>
 			</div>
