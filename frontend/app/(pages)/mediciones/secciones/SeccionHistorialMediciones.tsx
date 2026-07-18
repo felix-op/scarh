@@ -275,32 +275,44 @@ export default function SeccionHistorialMediciones({
 					</div>
 				</div>
 
-				<div className="mt-4 flex flex-wrap gap-3">
+				<div className="mt-4 flex flex-wrap items-center justify-end gap-3">
 					<BotonVariante
-						variant="guardar"
-						onClick={onApplyFilters}
-					>
-						<span>Aplicar filtros</span>
-					</BotonVariante>
-					<BotonVariante
-						variant="default"
-						onClick={onClearFilters}
-					>
-						<span>Limpiar</span>
-					</BotonVariante>
-					<BotonVariante
-						variant="default"
+						type="button"
 						onClick={() => onExport("csv")}
 						disabled={isExporting}
+						variant="filtro"
+						className="text-[14px]"
 					>
-						<span>Exportar CSV</span>
+						<span className="text-2xl icon-[material-symbols--download]" />
+						Exportar CSV
 					</BotonVariante>
 					<BotonVariante
-						variant="default"
+						type="button"
 						onClick={() => onExport("json")}
 						disabled={isExporting}
+						variant="filtro"
+						className="text-[14px]"
 					>
-						<span>Exportar JSON</span>
+						<span className="text-2xl icon-[material-symbols--download]" />
+						Exportar JSON
+					</BotonVariante>
+					<BotonVariante
+						type="button"
+						onClick={onClearFilters}
+						variant="cerrar"
+						className="text-[14px]"
+					>
+						<span className="text-2xl icon-[mdi--restore]" />
+						Restablecer
+					</BotonVariante>
+					<BotonVariante
+						type="button"
+						variant="guardar"
+						onClick={onApplyFilters}
+						className="text-[14px]"
+					>
+						<span className="text-2xl icon-[mage--filter]" />
+						Aplicar filtros
 					</BotonVariante>
 				</div>
 			</FiltrosContenedor>
