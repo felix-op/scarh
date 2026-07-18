@@ -346,7 +346,7 @@ export default function NotificacionesProvider({ children }: NotificacionesProvi
 			marcarTodasComoLeidas,
 		}}>
 			{children}
-			<div className="pointer-events-none fixed top-4 right-4 z-[120] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-3">
+			<div className="pointer-events-none fixed top-4 right-4 z-[1300] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-3">
 				{notificaciones.map((notificacion) => {
 					const config = varianteConfig[notificacion.variante];
 					const Icono = config.Icono;
