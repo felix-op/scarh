@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import { ReactNode } from "react";
 import { IconifyIcon, IconVariants } from "./iconify-icon";
 
 const variantConfig: Record<
@@ -15,13 +15,13 @@ const variantConfig: Record<
     bg: "bg-error-light/10",
     border: "border-error",
     color: "text-error",
-    icon: "eliminar",
+    icon: "cancelar",
   },
   info: {
     bg: "bg-primary-light/10",
     border: "border-primary",
     color: "text-primary",
-    icon: "info",
+    icon: "documento",
   },
   alerta: {
     bg: "bg-warn-light/10",
