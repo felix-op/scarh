@@ -29,3 +29,22 @@ export interface Paginado<T> {
   previous: string | null;
   results: T[];
 }
+
+export type TQueryParams = Record<string, string | number | boolean>;
+
+export type TPaginatedQueryParams = TQueryParams & {
+  page?: number;
+  page_size?: number;
+  limit?: number;
+  offset?: number;
+};
+
+export type ParamsBase = {
+  [key: string]: string | number | boolean | Record<string, unknown> | undefined;
+  queryParams?: TQueryParams;
+};
+
+export type ParamsPaginated = {
+  [key: string]: string | number | boolean | Record<string, unknown> | undefined;
+  queryParams?: TPaginatedQueryParams;
+}

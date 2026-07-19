@@ -1,11 +1,9 @@
-import React from "react";
-import { opcionesRoles } from "@/models/roles";
+import { opcionesRoles } from "@utils";
 import { Checkbox } from "@/components/shadcn/checkbox";
-import Alert from "@/components/ui/alerts";
 
 export interface EntidadPermisosProps {
   selectedRoles: string[];
-  toggleRole: (roleValue: string) => void;
+  toggleRole: (_roleValue: string) => void;
   hasAdmin: boolean;
   isDisabled?: boolean;
 }

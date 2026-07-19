@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { solicitarRecuperacion, verificarCodigo, cambiarPasswordRecuperada } from "@/services/api/password";
+import { postServerAuthRecuperarPasswordSolicitar, postServerAuthRecuperarPasswordValidar, postServerAuthRecuperarPasswordNueva } from "@services";
 import { ApiError } from "@models";
 
 export type ActionState = {
@@ -47,7 +47,7 @@ export async function solicitarCodigoAction(
   }
 
   try {
-    const res = await solicitarRecuperacion(email);
+    const res = await postServerAuthRecuperarPasswordSolicitar({ data: { email } });
     return {
       success: true,
       message: res.detail || "Se ha enviado un código a tu correo.",
@@ -87,10 +87,10 @@ export async function verificarCodigoAction(
   }
 
   try {
-    const res = await verificarCodigo(email, codigo);
+    const res = await postServerAuthRecuperarPasswordValidar({ data: { email, codigo } });
     return {
       success: true,
-      accessToken: res.accessToken,
+      accessToken: res.access,
       values,
     };
   } catch (err) {
@@ -128,7 +128,7 @@ export async function cambiarPasswordAction(
   }
 
   try {
-    await cambiarPasswordRecuperada(password, token);
+    await postServerAuthRecuperarPasswordNueva({ data: { password }, token });
     return {
       success: true,
       message: "Contraseña actualizada con éxito.",

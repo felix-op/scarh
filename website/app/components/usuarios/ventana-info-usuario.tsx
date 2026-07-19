@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
 import { VentanaInfo } from "@/components/ui/modals";
 import { Chip } from "@/components/ui/chip";
-import type { UsuarioResponse } from "@/models/usuarios";
+import type { UsuarioResponse } from "@models";
 
 export interface VentanaInfoUsuarioProps {
   open: boolean;

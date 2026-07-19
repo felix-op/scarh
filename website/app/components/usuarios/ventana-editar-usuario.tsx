@@ -3,8 +3,8 @@
 import { useActionState, useEffect, useRef } from "react";
 import { VentanaFormulario } from "@/components/ui/modals";
 import { TextField } from "@/components/ui/textfield";
-import type { UsuarioResponse } from "@/models/usuarios";
-import { editarUsuarioAction } from "@/services/usuarios.actions";
+import type { UsuarioResponse } from "@models";
+import { editarUsuarioAction } from "@/services/actions/actions.usuarios";
 
 export interface VentanaEditarUsuarioProps {
   open: boolean;

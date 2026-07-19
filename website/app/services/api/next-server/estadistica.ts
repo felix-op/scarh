@@ -1,6 +1,12 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
+import type { EstadisticaResponse, ParamsBase } from "@models";
 
-export async function getServerEstadistica(queryParams?: Record<string, any>) {
-  return RequestSSR<any>({ url: "estadistica/", method: "GET", params: { queryParams }, tags: ["estadistica"] });
+export async function getServerEstadistica(params?: ParamsBase): Promise<EstadisticaResponse> {
+  return RequestSSR<EstadisticaResponse, ParamsBase>({
+    url: "estadistica/",
+    method: "GET",
+    params,
+    tags: ["estadistica"],
+  });
 }

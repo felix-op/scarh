@@ -1,10 +1,27 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
+import type { PaginatedHistorialResponse, HistorialResponse, ParamsPaginated } from "@models";
 
-export async function getServerHistorial(queryParams?: Record<string, any>) {
-  return RequestSSR<any>({ url: "historial/", method: "GET", params: { queryParams }, tags: ["historial"] });
+export async function getServerHistorial(params?: ParamsPaginated): Promise<PaginatedHistorialResponse> {
+  return RequestSSR<PaginatedHistorialResponse, ParamsPaginated>({
+    url: "historial/",
+    method: "GET",
+    params,
+    tags: ["historial"],
+  });
 }
 
-export async function getServerHistorialDetalle(id: string) {
-  return RequestSSR<any>({ url: "historial/{id}/", method: "GET", params: { id }, tags: [`historial-${id}`] });
+type GetServerHistorialDetalleOptions = {
+  params: {
+    id: string;
+  };
+};
+
+export async function getServerHistorialDetalle({ params }: GetServerHistorialDetalleOptions): Promise<HistorialResponse> {
+  return RequestSSR<HistorialResponse, GetServerHistorialDetalleOptions["params"]>({
+    url: "historial/{id}/",
+    method: "GET",
+    params,
+    tags: [`historial-${params.id}`],
+  });
 }

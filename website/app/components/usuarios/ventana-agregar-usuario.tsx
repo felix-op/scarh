@@ -37,13 +37,15 @@ export function VentanaAgregarUsuario({
     setIsLoading(true);
     try {
       await postServerUsuario({
-        first_name: data.first_name as string,
-        last_name: data.last_name as string,
-        nombre_usuario: data.nombre_usuario as string,
-        legajo: data.legajo as string,
-        email: data.email as string,
-        contraseña: data.password as string,
-        estado: true,
+        data: {
+          first_name: data.first_name as string,
+          last_name: data.last_name as string,
+          nombre_usuario: data.nombre_usuario as string,
+          legajo: data.legajo as string,
+          email: data.email as string,
+          contraseña: data.password as string,
+          estado: true,
+        }
       });
       
       onSuccess();

@@ -1,8 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export type ParamsBase = {
-  [key: string]: string | number | boolean | Record<string, any> | undefined;
-  queryParams?: Record<string, any>;
-};
+import type { ParamsBase } from "@models";
 
 export function urlConParametros<TParams extends ParamsBase>(
   baseUrl: string,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useActionState, useState, useEffect } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TextField, Boton } from "@components";
 import { cambiarPasswordAction, ActionState } from "./actions";
@@ -105,7 +105,7 @@ export function PasoNuevaPassword({ token }: PasoNuevaPasswordProps) {
         />
 
         <Boton
-          content="Saltar por ahora"
+          content="Cancelar recuperación"
           type="button"
           onClick={onSkip}
           disabled={isPending || state.success}

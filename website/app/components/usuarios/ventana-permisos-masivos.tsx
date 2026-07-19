@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useActionState, useRef } from "react";
+import { useState, useEffect, useActionState, useRef } from "react";
 import { VentanaFormulario } from "@/components/ui/modals";
-import type { UsuarioResponse } from "@/models/usuarios";
+import type { UsuarioResponse } from "@models";
 import { EntidadPermisos } from "./entidad-permisos";
-import { guardarPermisosMasivosAction } from "@/services/usuarios.actions";
+import { guardarPermisosMasivosAction } from "@/services/actions/actions.usuarios";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Chip } from "@/components/ui/chip";
 

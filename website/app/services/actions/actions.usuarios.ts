@@ -1,6 +1,6 @@
 "use server";
 
-import { putServerUsuarioRoles, putServerUsuario, getServerUsuario } from "./api/next-server/usuarios";
+import { putServerUsuarioRoles, putServerUsuario, getServerUsuario } from "../api/next-server/usuarios";
 import { revalidateTag } from "next/cache";
 
 export type ActionState = {
@@ -18,7 +18,7 @@ export async function guardarPermisosIndividualAction(
   try {
     if (!id) return { status: "none" };
     
-    await putServerUsuarioRoles(id, { roles });
+    await putServerUsuarioRoles({ params: { id }, data: { roles } });
     revalidateTag("usuarios");
     revalidateTag(`usuario-${id}`);
     
@@ -48,10 +48,10 @@ export async function guardarPermisosMasivosAction(
 
     for (const id of ids) {
       if (modo === "reemplazar") {
-        await putServerUsuarioRoles(id, { roles: rolesAfectados });
+        await putServerUsuarioRoles({ params: { id }, data: { roles: rolesAfectados } });
       } else {
         // Necesitamos conocer los roles actuales para agregar o quitar
-        const user = await getServerUsuario(id);
+        const user = await getServerUsuario({ params: { id } });
         const rolesActuales = user.roles || [];
         
         let nuevosRoles = [...rolesActuales];
@@ -63,7 +63,7 @@ export async function guardarPermisosMasivosAction(
           nuevosRoles = nuevosRoles.filter(r => !rolesAfectados.includes(r));
         }
 
-        await putServerUsuarioRoles(id, { roles: nuevosRoles });
+        await putServerUsuarioRoles({ params: { id }, data: { roles: nuevosRoles } });
       }
       revalidateTag(`usuario-${id}`);
     }
@@ -97,13 +97,13 @@ export async function editarUsuarioAction(
     const legajo = formData.get("legajo") as string;
     const email = formData.get("email") as string;
 
-    await putServerUsuario(id, {
+    await putServerUsuario({ params: { id }, data: {
       first_name,
       last_name,
       nombre_usuario,
       legajo,
       email,
-    });
+    } });
     revalidateTag("usuarios");
     revalidateTag(`usuario-${id}`);
 
@@ -128,15 +128,15 @@ export async function toggleUsuarioEstadoAction(
   try {
     if (!id) return { status: "none" };
 
-    const user = await getServerUsuario(id);
-    await putServerUsuario(id, {
+    const user = await getServerUsuario({ params: { id } });
+    await putServerUsuario({ params: { id }, data: {
       first_name: user.first_name,
       last_name: user.last_name,
       nombre_usuario: user.nombre_usuario,
       legajo: user.legajo,
       email: user.email,
       estado: nuevoEstado,
-    });
+    } });
     
     revalidateTag("usuarios");
     revalidateTag(`usuario-${id}`);

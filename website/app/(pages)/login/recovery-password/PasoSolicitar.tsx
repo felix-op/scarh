@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useActionState, useEffect } from "react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { TextField, Boton } from "@components";
 import { solicitarCodigoAction, ActionState } from "./actions";
 
 interface PasoSolicitarProps {
-  onNext: (email: string) => void;
+  onNext: (_email: string) => void;
 }
 
 const initialState: ActionState = {

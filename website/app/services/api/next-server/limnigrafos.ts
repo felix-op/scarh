@@ -1,42 +1,144 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
+import type { LimnigrafoResponse, LimnigrafoPayload, PaginatedLimnigrafoResponse, ParamsPaginated, ConfiguracionLimnigrafoResponse, ConfiguracionLimnigrafoPayload } from "@models";
 
-export async function getServerLimnigrafos(queryParams?: Record<string, any>) {
-  return RequestSSR<any>({ url: "limnigrafos/", method: "GET", params: { queryParams }, tags: ["limnigrafos"] });
+export async function getServerLimnigrafos(params?: ParamsPaginated): Promise<PaginatedLimnigrafoResponse> {
+  return RequestSSR<PaginatedLimnigrafoResponse, ParamsPaginated>({
+    url: "limnigrafos/",
+    method: "GET",
+    params,
+    tags: ["limnigrafos"],
+  });
 }
 
-export async function postServerLimnigrafo(data: any) {
-  return RequestSSR<any>({ url: "limnigrafos/", method: "POST", body: data });
+type PostServerLimnigrafoOptions = {
+  data: LimnigrafoPayload;
+};
+
+export async function postServerLimnigrafo({ data }: PostServerLimnigrafoOptions): Promise<LimnigrafoResponse> {
+  return RequestSSR<LimnigrafoResponse, Record<string, never>, LimnigrafoPayload>({ url: "limnigrafos/", method: "POST", body: data });
 }
 
-export async function getServerLimnigrafo(id: string) {
-  return RequestSSR<any>({ url: "limnigrafos/{id}/", method: "GET", params: { id }, tags: [`limnigrafo-${id}`] });
+type GetServerLimnigrafoOptions = {
+  params: {
+    id: string;
+  };
+};
+
+export async function getServerLimnigrafo({ params }: GetServerLimnigrafoOptions): Promise<LimnigrafoResponse> {
+  return RequestSSR<LimnigrafoResponse, GetServerLimnigrafoOptions["params"]>({
+    url: "limnigrafos/{id}/",
+    method: "GET",
+    params,
+    tags: [`limnigrafo-${params.id}`],
+  });
 }
 
-export async function putServerLimnigrafo(id: string, data: any) {
-  return RequestSSR<any>({ url: "limnigrafos/{id}/", method: "PUT", params: { id }, body: data });
+type PutServerLimnigrafoOptions = {
+  params: {
+    id: string;
+  };
+  data: LimnigrafoPayload;
+};
+
+export async function putServerLimnigrafo({ params, data }: PutServerLimnigrafoOptions): Promise<LimnigrafoResponse> {
+  return RequestSSR<LimnigrafoResponse, PutServerLimnigrafoOptions["params"], LimnigrafoPayload>({
+    url: "limnigrafos/{id}/",
+    method: "PUT",
+    params,
+    body: data,
+  });
 }
 
-export async function patchServerLimnigrafo(id: string, data: any) {
-  return RequestSSR<any>({ url: "limnigrafos/{id}/", method: "PATCH", params: { id }, body: data });
+type PatchServerLimnigrafoOptions = {
+  params: {
+    id: string;
+  };
+  data: Partial<LimnigrafoPayload>;
+};
+
+export async function patchServerLimnigrafo({ params, data }: PatchServerLimnigrafoOptions): Promise<LimnigrafoResponse> {
+  return RequestSSR<LimnigrafoResponse, PatchServerLimnigrafoOptions["params"], Partial<LimnigrafoPayload>>({
+    url: "limnigrafos/{id}/",
+    method: "PATCH",
+    params,
+    body: data,
+  });
 }
 
-export async function deleteServerLimnigrafo(id: string) {
-  return RequestSSR<any>({ url: "limnigrafos/{id}/", method: "DELETE", params: { id } });
+type DeleteServerLimnigrafoOptions = {
+  params: {
+    id: string;
+  };
+};
+
+export async function deleteServerLimnigrafo({ params }: DeleteServerLimnigrafoOptions): Promise<void> {
+  return RequestSSR<void, DeleteServerLimnigrafoOptions["params"]>({
+    url: "limnigrafos/{id}/",
+    method: "DELETE",
+    params,
+  });
 }
 
-export async function getServerLimnigrafoConfiguracion(id: string) {
-  return RequestSSR<any>({ url: "limnigrafos/{id}/configuracion/", method: "GET", params: { id }, tags: [`limnigrafo-config-${id}`] });
+type GetServerLimnigrafoConfiguracionOptions = {
+  params: {
+    id: string;
+  };
+};
+
+export async function getServerLimnigrafoConfiguracion({ params }: GetServerLimnigrafoConfiguracionOptions): Promise<ConfiguracionLimnigrafoResponse> {
+  return RequestSSR<ConfiguracionLimnigrafoResponse, GetServerLimnigrafoConfiguracionOptions["params"]>({
+    url: "limnigrafos/{id}/configuracion/",
+    method: "GET",
+    params,
+    tags: [`limnigrafo-config-${params.id}`],
+  });
 }
 
-export async function putServerLimnigrafoConfiguracion(id: string, data: any) {
-  return RequestSSR<any>({ url: "limnigrafos/{id}/configuracion/", method: "PUT", params: { id }, body: data });
+type PutServerLimnigrafoConfiguracionOptions = {
+  params: {
+    id: string;
+  };
+  data: ConfiguracionLimnigrafoPayload;
+};
+
+export async function putServerLimnigrafoConfiguracion({ params, data }: PutServerLimnigrafoConfiguracionOptions): Promise<ConfiguracionLimnigrafoResponse> {
+  return RequestSSR<ConfiguracionLimnigrafoResponse, PutServerLimnigrafoConfiguracionOptions["params"], ConfiguracionLimnigrafoPayload>({
+    url: "limnigrafos/{id}/configuracion/",
+    method: "PUT",
+    params,
+    body: data,
+  });
 }
 
-export async function patchServerLimnigrafoConfiguracion(id: string, data: any) {
-  return RequestSSR<any>({ url: "limnigrafos/{id}/configuracion/", method: "PATCH", params: { id }, body: data });
+type PatchServerLimnigrafoConfiguracionOptions = {
+  params: {
+    id: string;
+  };
+  data: Partial<ConfiguracionLimnigrafoPayload>;
+};
+
+export async function patchServerLimnigrafoConfiguracion({ params, data }: PatchServerLimnigrafoConfiguracionOptions): Promise<ConfiguracionLimnigrafoResponse> {
+  return RequestSSR<ConfiguracionLimnigrafoResponse, PatchServerLimnigrafoConfiguracionOptions["params"], Partial<ConfiguracionLimnigrafoPayload>>({
+    url: "limnigrafos/{id}/configuracion/",
+    method: "PATCH",
+    params,
+    body: data,
+  });
 }
 
-export async function postServerLimnigrafoGenerateKey(id: string, data: any) {
-  return RequestSSR<any>({ url: "limnigrafos/{id}/generate_key/", method: "POST", params: { id }, body: data });
+type PostServerLimnigrafoGenerateKeyOptions = {
+  params: {
+    id: string;
+  };
+  data: Record<string, never>;
+};
+
+export async function postServerLimnigrafoGenerateKey({ params, data }: PostServerLimnigrafoGenerateKeyOptions): Promise<LimnigrafoResponse> {
+  return RequestSSR<LimnigrafoResponse, PostServerLimnigrafoGenerateKeyOptions["params"], Record<string, never>>({
+    url: "limnigrafos/{id}/generate_key/",
+    method: "POST",
+    params,
+    body: data,
+  });
 }

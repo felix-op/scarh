@@ -1,4 +1,4 @@
-import { Usuario } from "./usuarios";
+import type { Usuario } from "./models.usuarios";
 
 export interface LoginPayload {
   username: string;

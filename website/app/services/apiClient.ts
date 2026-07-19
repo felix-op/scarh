@@ -1,6 +1,6 @@
 import { auth } from "@auth";
-import { ApiError } from "@models";
-import { convertBody, urlConParametros, type ParamsBase } from "@utils";
+import { ApiError, type ParamsBase } from "@models";
+import { convertBody, urlConParametros } from "@utils";
 import { redirect } from "next/navigation";
 
 /**

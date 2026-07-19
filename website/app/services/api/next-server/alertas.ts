@@ -1,18 +1,59 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
+import type { AlertaResponse, AlertaPayload, PaginatedAlertaResponse, ParamsPaginated } from "@models";
 
-export async function getServerAlertas(queryParams?: Record<string, any>) {
-  return RequestSSR<any>({ url: "alertas/", method: "GET", params: { queryParams }, tags: ["alertas"] });
+export async function getServerAlertas(params?: ParamsPaginated): Promise<PaginatedAlertaResponse> {
+  return RequestSSR<PaginatedAlertaResponse, ParamsPaginated>({
+    url: "alertas/",
+    method: "GET",
+    params,
+    tags: ["alertas"],
+  });
 }
 
-export async function getServerAlerta(id: string) {
-  return RequestSSR<any>({ url: "alertas/{id}/", method: "GET", params: { id }, tags: [`alerta-${id}`] });
+type GetServerAlertaOptions = {
+  params: {
+    id: string;
+  };
+};
+
+export async function getServerAlerta({ params }: GetServerAlertaOptions): Promise<AlertaResponse> {
+  return RequestSSR<AlertaResponse, GetServerAlertaOptions["params"]>({
+    url: "alertas/{id}/",
+    method: "GET",
+    params,
+    tags: [`alerta-${params.id}`],
+  });
 }
 
-export async function putServerAlerta(id: string, data: any) {
-  return RequestSSR<any>({ url: "alertas/{id}/", method: "PUT", params: { id }, body: data });
+type PutServerAlertaOptions = {
+  params: {
+    id: string;
+  };
+  data: AlertaPayload;
+};
+
+export async function putServerAlerta({ params, data }: PutServerAlertaOptions): Promise<AlertaResponse> {
+  return RequestSSR<AlertaResponse, PutServerAlertaOptions["params"], AlertaPayload>({
+    url: "alertas/{id}/",
+    method: "PUT",
+    params,
+    body: data,
+  });
 }
 
-export async function patchServerAlerta(id: string, data: any) {
-  return RequestSSR<any>({ url: "alertas/{id}/", method: "PATCH", params: { id }, body: data });
+type PatchServerAlertaOptions = {
+  params: {
+    id: string;
+  };
+  data: Partial<AlertaPayload>;
+};
+
+export async function patchServerAlerta({ params, data }: PatchServerAlertaOptions): Promise<AlertaResponse> {
+  return RequestSSR<AlertaResponse, PatchServerAlertaOptions["params"], Partial<AlertaPayload>>({
+    url: "alertas/{id}/",
+    method: "PATCH",
+    params,
+    body: data,
+  });
 }

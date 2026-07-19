@@ -1,5 +1,5 @@
 import { TablaUsuarios } from "@/components/usuarios/tabla-usuarios";
-import { opcionesRoles } from "@/models/roles";
+import { opcionesRoles } from "@utils";
 import { auth } from "@auth";
 import { getServerUsuarios } from "@services";
 
@@ -10,7 +10,7 @@ export default async function UsuariosPage() {
 
   // 2. Traer todos los usuarios del backend usando limit alto para saltar paginación temporalmente
   // Esperamos que en un futuro el backend simplemente no pagine.
-  const response = await getServerUsuarios({ limit: 9999 });
+  const response = await getServerUsuarios({ queryParams: { limit: 9999 } });
   const usuarios = response.results || [];
 
   // 3. Preparar opciones de roles para el Select de filtro

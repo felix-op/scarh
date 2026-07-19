@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useActionState, useRef } from "react";
+import { useState, useEffect, useMemo, useActionState, useRef } from "react";
 import { VentanaFormulario } from "@/components/ui/modals";
-import type { UsuarioResponse } from "@/models/usuarios";
-import { opcionesRoles } from "@/models/roles";
+import type { UsuarioResponse } from "@models";
+import { opcionesRoles } from "@utils";
 import { Chip } from "@/components/ui/chip";
 import { EntidadPermisos } from "./entidad-permisos";
-import { guardarPermisosIndividualAction } from "@/services/usuarios.actions";
+import { guardarPermisosIndividualAction } from "@/services/actions/actions.usuarios";
 
 export interface VentanaPermisosUsuarioProps {
   open: boolean;

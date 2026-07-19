@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { VentanaConfirmar } from "@/components/ui/modals";
 import { deleteServerUsuario } from "@services";
-import type { UsuarioResponse } from "@/models/usuarios";
+import type { UsuarioResponse } from "@models";
 
 export interface VentanaEliminarUsuarioProps {
   open: boolean;
@@ -26,7 +26,7 @@ export function VentanaEliminarUsuario({
     if (!usuario?.id) return;
     setIsLoading(true);
     try {
-      await deleteServerUsuario(String(usuario.id));
+      await deleteServerUsuario({ params: { id: String(usuario.id) } });
       onSuccess();
       handleMessage({
         title: "Eliminado Correctamente",

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { TextField, Boton } from "@components";
 import { verificarCodigoAction, solicitarCodigoAction, ActionState } from "./actions";
 
 interface PasoVerificarProps {
   email: string;
-  onNext: (token: string) => void;
+  onNext: (_token: string) => void;
   onBack: () => void;
 }
 

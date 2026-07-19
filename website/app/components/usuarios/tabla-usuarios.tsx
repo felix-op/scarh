@@ -4,12 +4,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { TablaConAcciones } from "@/components/ui/tabla/tabla-con-acciones";
 import { ActionConfig, TableColumn } from "@/components/ui/tabla/tabla.types";
-import { BotonAgregar, BotonPermisosMasivos, BotonIconoEditar, BotonIconoEliminar, BotonMenu } from "@/components/ui/botones";
+import { BotonAgregar, BotonPermisosMasivos } from "@/components/ui/botones";
 import { TextField } from "@/components/ui/textfield";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { IconifyIcon } from "@/components/ui/iconify-icon";
 import { Chip } from "@/components/ui/chip";
-import type { UsuarioResponse } from "@/models/usuarios";
+import type { UsuarioResponse } from "@models";
 import VentanaAgregarUsuario from "./ventana-agregar-usuario";
 import VentanaEditarUsuario from "./ventana-editar-usuario";
 import VentanaEliminarUsuario from "./ventana-eliminar-usuario";
@@ -168,7 +168,7 @@ export function TablaUsuarios({ usuarios, rolesOpciones, esAdministrador }: Tabl
         className: "text-warn",
         disabled: !canEdit,
         action: async (row) => {
-          const { toggleUsuarioEstadoAction } = await import("@/services/usuarios.actions");
+          const { toggleUsuarioEstadoAction } = await import("@/services/actions/actions.usuarios");
           startTransition(async () => {
             const result = await toggleUsuarioEstadoAction(String(row.id), !row.estado);
             setToastMessage({

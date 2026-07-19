@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Stepper } from "@components";
 import PasoSolicitar from "./PasoSolicitar";
 import PasoVerificar from "./PasoVerificar";

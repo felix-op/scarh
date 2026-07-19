@@ -1,10 +1,4 @@
 export {
-  solicitarRecuperacion,
-  verificarCodigo,
-  cambiarPasswordRecuperada
-} from "./password";
-
-export {
   getServerAlertas,
   getServerAlerta,
   putServerAlerta,
@@ -12,12 +6,9 @@ export {
 } from "./next-server/alertas";
 
 export {
-  postServerAuthLogin,
-  postServerAuthLogout,
   postServerAuthRecuperarPasswordNueva,
   postServerAuthRecuperarPasswordSolicitar,
   postServerAuthRecuperarPasswordValidar,
-  postServerAuthRefresh
 } from "./next-server/auth";
 
 export {
@@ -28,10 +19,6 @@ export {
   getServerHistorial,
   getServerHistorialDetalle
 } from "./next-server/historial";
-
-export {
-  getServerHola
-} from "./next-server/hola";
 
 export {
   getServerLimnigrafos,
