@@ -51,6 +51,13 @@ export default function DocumentacionPage() {
       href: "/dashboard/admin/documentacion/formularios",
       icon: "tuerca",
       components: ["Formulario", "TextFieldRHF", "SelectRHF", "CheckboxRHF", "DateFieldRHF", "SwitchRHF"]
+    },
+    {
+      title: "Recursos Disponibles",
+      desc: "Listado interactivo de todos los endpoints disponibles en el servidor para realizar peticiones (Next.js Server Actions).",
+      href: "/dashboard/admin/documentacion/endpoints",
+      icon: "dashboard",
+      components: ["RenderServerResponse"]
     }
   ];
 

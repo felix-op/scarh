@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { VentanaFormulario } from "@/components/ui/modals";
 import { TextField } from "@/components/ui/textfield";
-import { postUsuario } from "@/services/api/usuarios";
+import { postServerUsuario } from "@services";
 
 export interface VentanaAgregarUsuarioProps {
   open: boolean;
@@ -36,7 +36,7 @@ export function VentanaAgregarUsuario({
 
     setIsLoading(true);
     try {
-      await postUsuario({
+      await postServerUsuario({
         first_name: data.first_name as string,
         last_name: data.last_name as string,
         nombre_usuario: data.nombre_usuario as string,

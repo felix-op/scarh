@@ -1,6 +1,6 @@
 "use server";
 
-import { putUsuarioRoles, getUsuario, putUsuario } from "./api/usuarios";
+import { putServerUsuarioRoles, putServerUsuario, getServerUsuario } from "./api/next-server/usuarios";
 import { revalidateTag } from "next/cache";
 
 export type ActionState = {
@@ -18,7 +18,7 @@ export async function guardarPermisosIndividualAction(
   try {
     if (!id) return { status: "none" };
     
-    await putUsuarioRoles(id, { roles });
+    await putServerUsuarioRoles(id, { roles });
     revalidateTag("usuarios");
     revalidateTag(`usuario-${id}`);
     
@@ -48,10 +48,10 @@ export async function guardarPermisosMasivosAction(
 
     for (const id of ids) {
       if (modo === "reemplazar") {
-        await putUsuarioRoles(id, { roles: rolesAfectados });
+        await putServerUsuarioRoles(id, { roles: rolesAfectados });
       } else {
         // Necesitamos conocer los roles actuales para agregar o quitar
-        const user = await getUsuario(id);
+        const user = await getServerUsuario(id);
         const rolesActuales = user.roles || [];
         
         let nuevosRoles = [...rolesActuales];
@@ -63,7 +63,7 @@ export async function guardarPermisosMasivosAction(
           nuevosRoles = nuevosRoles.filter(r => !rolesAfectados.includes(r));
         }
 
-        await putUsuarioRoles(id, { roles: nuevosRoles });
+        await putServerUsuarioRoles(id, { roles: nuevosRoles });
       }
       revalidateTag(`usuario-${id}`);
     }
@@ -97,7 +97,7 @@ export async function editarUsuarioAction(
     const legajo = formData.get("legajo") as string;
     const email = formData.get("email") as string;
 
-    await putUsuario(id, {
+    await putServerUsuario(id, {
       first_name,
       last_name,
       nombre_usuario,
@@ -128,8 +128,8 @@ export async function toggleUsuarioEstadoAction(
   try {
     if (!id) return { status: "none" };
 
-    const user = await getUsuario(id);
-    await putUsuario(id, {
+    const user = await getServerUsuario(id);
+    await putServerUsuario(id, {
       first_name: user.first_name,
       last_name: user.last_name,
       nombre_usuario: user.nombre_usuario,

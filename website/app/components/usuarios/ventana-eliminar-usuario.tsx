@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { VentanaConfirmar } from "@/components/ui/modals";
-import { deleteUsuario } from "@/services/api/usuarios";
+import { deleteServerUsuario } from "@services";
 import type { UsuarioResponse } from "@/models/usuarios";
 
 export interface VentanaEliminarUsuarioProps {
@@ -26,7 +26,7 @@ export function VentanaEliminarUsuario({
     if (!usuario?.id) return;
     setIsLoading(true);
     try {
-      await deleteUsuario(String(usuario.id));
+      await deleteServerUsuario(String(usuario.id));
       onSuccess();
       handleMessage({
         title: "Eliminado Correctamente",
