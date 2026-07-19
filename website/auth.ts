@@ -10,7 +10,9 @@ const API_URL = process.env.API_URL;
 const REFRESH_MARGIN_MS = 60_000;
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
+  console.log("[Auth] Intentando refrescar token...");
   if (!token.refreshToken) {
+    console.error("[Auth] No hay refreshToken disponible en el JWT.");
     return {
       ...token,
       error: "RefreshAccessTokenError" as const,
@@ -25,10 +27,14 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
     });
 
     if (!response.ok) {
+      console.error(`[Auth] Falló el refresco de token en Django. Status HTTP: ${response.status}`);
+      const text = await response.text();
+      console.error(`[Auth] Detalles de la respuesta de Django:`, text);
       throw new Error("No se pudo refrescar el token de acceso");
     }
 
     const refreshed: RefreshResponse = await response.json();
+    console.log("[Auth] Token refrescado exitosamente. Nueva vida útil:", refreshed.access_token_lifetime, "segundos");
 
     return {
       ...token,
@@ -37,7 +43,8 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
       accessTokenExpires: Date.now() + refreshed.access_token_lifetime * 1000,
       error: undefined,
     };
-  } catch (_error) {
+  } catch (error) {
+    console.error("[Auth] Error atrapado en refreshAccessToken:", error);
     return { ...token, error: "RefreshAccessTokenError" as const };
   }
 }
@@ -87,6 +94,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       // Primer inicio de sesión: se vuelcan los datos recibidos de Django al JWT.
       if (user) {
+        console.log("[Auth] Primer inicio de sesión. Guardando token.");
         const u = user as User;
         return {
           ...token,
@@ -97,9 +105,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       }
 
-      // El access token todavía es válido.
-      if (token.accessTokenExpires && Date.now() < token.accessTokenExpires - REFRESH_MARGIN_MS) {
-        return token;
+      // Evaluar la validez del token
+      if (token.accessTokenExpires) {
+        const timeLeftMs = token.accessTokenExpires - Date.now();
+        if (timeLeftMs > REFRESH_MARGIN_MS) {
+          // El access token todavía es válido y seguro.
+          return token;
+        }
+        console.warn(`[Auth] El token está vencido o por vencer en ${timeLeftMs} ms. Iniciando rotación...`);
+      } else {
+         console.warn("[Auth] El token no tiene fecha de expiración. Iniciando rotación por precaución...");
       }
 
       // Access token vencido (o por vencer): se refresca contra Django.

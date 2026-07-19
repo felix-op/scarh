@@ -32,7 +32,10 @@ export const authConfig = {
     },
     authorized({ auth, request: { nextUrl } }) {
       const usuario = auth?.user;
-      const isLoggedIn = !!usuario;
+      // Si el token falló al refrescarse, lo tratamos como "deslogueado"
+      const hasAuthError = (auth as any)?.error === "RefreshAccessTokenError";
+      const isLoggedIn = !!usuario && !hasAuthError;
+      
       const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
 
       if (isOnDashboard) {

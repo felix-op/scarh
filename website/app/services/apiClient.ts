@@ -1,6 +1,7 @@
 import { auth } from "@auth";
 import { ApiError } from "@models";
 import { convertBody, urlConParametros, type ParamsBase } from "@utils";
+import { redirect } from "next/navigation";
 
 /**
  * Opciones de configuración para las peticiones HTTP con RequestSSR.
@@ -134,6 +135,12 @@ export async function RequestSSR<TResponse, TParams extends ParamsBase = ParamsB
 
   // Procesamiento de error del Backend (BackendError)
   if (!response.ok) {
+    if (response.status === 401) {
+      // Redirigimos a una página de logout en el cliente para que borre la cookie
+      // ya que Next.js no permite borrar cookies durante el renderizado de un Server Component.
+      redirect("/logout");
+    }
+
     let errorPayload: {
       codigo?: number,
       descripcion_usuario?: string,
