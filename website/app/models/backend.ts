@@ -30,13 +30,13 @@ export interface Paginado<T> {
   results: T[];
 }
 
-export type TQueryParams = Record<string, string | number | boolean>;
+export type TQueryParams = Record<string, string | number | boolean | undefined>;
 
 export type TPaginatedQueryParams = TQueryParams & {
-  page?: number;
-  page_size?: number;
-  limit?: number;
-  offset?: number;
+  page?: string | number;
+  page_size?: string | number;
+  limit?: string | number;
+  offset?: string | number;
 };
 
 export type ParamsBase = {

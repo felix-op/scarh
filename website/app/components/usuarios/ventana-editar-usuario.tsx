@@ -1,119 +1,135 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { VentanaFormulario } from "@/components/ui/modals";
-import { TextField } from "@/components/ui/textfield";
+import { TextFieldRHF } from "@/components/formularios";
 import type { UsuarioResponse } from "@models";
-import { editarUsuarioAction } from "@/services/actions/actions.usuarios";
+import { usePutUsuario } from "@hooks";
+import { useMensajes } from "@services";
+import { usuarioPutSchema } from "@utils";
+
+type FormValues = z.infer<typeof usuarioPutSchema>;
 
 export interface VentanaEditarUsuarioProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
   usuario?: UsuarioResponse | null;
-  handleMessage: (msg: { title: string; description: string; variant: "exito" | "error" }) => void;
 }
 
 export function VentanaEditarUsuario({
   open,
   onClose,
-  onSuccess,
   usuario,
-  handleMessage,
 }: VentanaEditarUsuarioProps) {
-  // Integración con Server Action vía useActionState
-  const [state, formAction, isPending] = useActionState(
-    (prevState: any, formData: FormData) => 
-      editarUsuarioAction(prevState, formData, usuario ? String(usuario.id) : ""),
-    { status: "none", timestamp: 0 }
-  );
+  const mensajes = useMensajes();
+  const { mutate: editarUsuario, isPending } = usePutUsuario();
 
-  const handledTimestamp = useRef<number | undefined>(0);
+  const methods = useForm<FormValues>({
+    resolver: zodResolver(usuarioPutSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      nombre_usuario: "",
+      legajo: "",
+      email: "",
+      estado: true,
+    },
+    mode: "onSubmit",
+  });
 
   useEffect(() => {
-    if (state.timestamp && state.timestamp !== handledTimestamp.current) {
-      handledTimestamp.current = state.timestamp;
-      
-      if (state.status === "ok") {
-        onSuccess();
-        handleMessage({
-          title: "Usuario Editado",
-          description: state.message || "Los datos del usuario se actualizaron correctamente.",
-          variant: "exito",
-        });
-        onClose();
-      } else if (state.status === "error") {
-        handleMessage({
-          title: "Error",
-          description: state.message || "No se pudo editar el usuario.",
-          variant: "error",
-        });
-      }
+    if (open && usuario) {
+      methods.reset({
+        first_name: usuario.first_name || "",
+        last_name: usuario.last_name || "",
+        nombre_usuario: usuario.nombre_usuario || "",
+        legajo: usuario.legajo ? String(usuario.legajo) : "",
+        email: usuario.email || "",
+        estado: usuario.estado,
+      });
     }
-  }, [state, handleMessage, onSuccess, onClose]);
+  }, [open, usuario, methods]);
+
+  const onSubmit = (data: FormValues) => {
+    if (!usuario) return;
+
+    editarUsuario({
+      id: String(usuario.id),
+      data: {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        nombre_usuario: data.nombre_usuario,
+        legajo: data.legajo,
+        email: data.email,
+        estado: data.estado,
+      }
+    }, {
+      onSuccess: () => {
+        mensajes.success("Usuario Editado", "Los datos del usuario se actualizaron correctamente.");
+        onClose();
+      },
+      onError: (error: any) => {
+        mensajes.error("Error", error?.message || "No se pudo editar el usuario.");
+      }
+    });
+  };
 
   return (
-    <VentanaFormulario
-      open={open}
-      handleClose={onClose}
-      action={formAction}
-      title="Editar Usuario"
-      icon="editar"
-      isLoading={isPending}
-      className="md:max-w-xl w-full"
-    >
-      {usuario && (
+    <FormProvider {...methods}>
+      <VentanaFormulario
+        open={open}
+        handleClose={onClose}
+        onSubmit={methods.handleSubmit(onSubmit)}
+        title="Editar Usuario"
+        icon="editar"
+        isLoading={isPending}
+        className="md:max-w-xl w-full"
+      >
         <div className="flex flex-col gap-6">
           <div className="flex flex-col md:flex-row gap-4">
-            <TextField
+            <TextFieldRHF
               name="first_name"
               label="Nombre"
               placeholder="Nombres"
-              defaultValue={usuario.first_name}
-              disabled={isPending}
               required
             />
-            <TextField
+            <TextFieldRHF
               name="last_name"
               label="Apellido"
               placeholder="Apellidos"
-              defaultValue={usuario.last_name}
-              disabled={isPending}
               required
             />
           </div>
 
           <div className="flex flex-col md:flex-row gap-4">
-            <TextField
+            <TextFieldRHF
               name="nombre_usuario"
               label="Nombre de usuario"
               placeholder="Nombre de usuario"
-              defaultValue={usuario.nombre_usuario}
-              disabled={isPending}
               required
             />
-            <TextField
+            <TextFieldRHF
               name="legajo"
               label="Legajo"
               type="number"
               placeholder="Legajo"
-              defaultValue={usuario.legajo}
-              disabled={isPending}
+              required
             />
           </div>
 
-          <TextField
+          <TextFieldRHF
             name="email"
             label="Correo Electrónico"
             type="email"
             placeholder="Email"
-            defaultValue={usuario.email}
-            disabled={isPending}
             required
           />
         </div>
-      )}
-    </VentanaFormulario>
+      </VentanaFormulario>
+    </FormProvider>
   );
 }
 

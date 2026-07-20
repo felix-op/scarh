@@ -52,31 +52,13 @@ export async function RequestSSR<TResponse, TParams extends ParamsBase = ParamsB
 
   const baseUrl = process.env.API_URL!;
   
-  // Substituir variables de ruta URL
+  // Substituir variables de ruta URL y queryParams
   let processedPath = urlPath;
   if (finalOptions.params && Object.keys(finalOptions.params).length > 0) {
     processedPath = urlConParametros(urlPath, finalOptions.params);
   }
 
-  // Construir query parameters
-  let queryString = "";
-  if (finalOptions.params?.queryParams) {
-    const queryParams = finalOptions.params.queryParams;
-    const searchParams = new URLSearchParams();
-    
-    Object.entries(queryParams).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        searchParams.append(key, String(value));
-      }
-    });
-    
-    const paramsStr = searchParams.toString();
-    if (paramsStr) {
-      queryString = `?${paramsStr}`;
-    }
-  }
-
-  const fullUrl = `${baseUrl}${processedPath.startsWith("/") ? "" : "/"}${processedPath}${queryString}`;
+  const fullUrl = `${baseUrl}${processedPath.startsWith("/") ? "" : "/"}${processedPath}`;
 
   // Obtener el token de sesión si no se pasó token = ""
   let token = finalOptions.token;

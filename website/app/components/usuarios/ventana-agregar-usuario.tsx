@@ -1,138 +1,138 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { VentanaFormulario } from "@/components/ui/modals";
-import { TextField } from "@/components/ui/textfield";
-import { postServerUsuario } from "@services";
+import { TextFieldRHF } from "@/components/formularios";
+import { usePostUsuario } from "@hooks";
+import { useMensajes } from "@services";
+import { usuarioPostSchema } from "@utils";
+
+const formSchema = usuarioPostSchema.extend({
+  passwordConfirm: z.string().min(1, "Confirme la contraseña")
+}).refine((data) => data.contraseña === data.passwordConfirm, {
+  message: "Las contraseñas no coinciden",
+  path: ["passwordConfirm"],
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 export interface VentanaAgregarUsuarioProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
-  handleMessage: (msg: { title: string; description: string; variant: "exito" | "error" }) => void;
 }
 
 export function VentanaAgregarUsuario({
   open,
   onClose,
-  onSuccess,
-  handleMessage,
 }: VentanaAgregarUsuarioProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string[] }>({});
+  const mensajes = useMensajes();
+  const { mutate: crearUsuario, isPending: isLoading } = usePostUsuario();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setErrors({});
-    
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
-    
-    // Validación básica de contraseñas
-    if (data.password !== data.passwordConfirm) {
-      setErrors({ passwordConfirm: ["Las contraseñas no coinciden"] });
-      return;
-    }
+  const methods = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      nombre_usuario: "",
+      legajo: "",
+      email: "",
+      contraseña: "",
+      passwordConfirm: "",
+      estado: true,
+    },
+    mode: "onSubmit",
+  });
 
-    setIsLoading(true);
-    try {
-      await postServerUsuario({
-        data: {
-          first_name: data.first_name as string,
-          last_name: data.last_name as string,
-          nombre_usuario: data.nombre_usuario as string,
-          legajo: data.legajo as string,
-          email: data.email as string,
-          contraseña: data.password as string,
-          estado: true,
-        }
-      });
-      
-      onSuccess();
-      handleMessage({
-        title: "Creado Correctamente",
-        description: `El usuario ${data.nombre_usuario} se creó correctamente`,
-        variant: "exito",
-      });
-      onClose();
-    } catch (error: any) {
-      console.error(error);
-      handleMessage({
-        title: "Error al crear",
-        description: error?.message || "No se pudo crear el usuario",
-        variant: "error",
-      });
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (open) {
+      methods.reset();
     }
+  }, [open, methods]);
+
+  const onSubmit = (data: FormValues) => {
+    crearUsuario({
+      first_name: data.first_name,
+      last_name: data.last_name,
+      nombre_usuario: data.nombre_usuario,
+      legajo: data.legajo,
+      email: data.email,
+      contraseña: data.contraseña,
+      estado: data.estado,
+    }, {
+      onSuccess: () => {
+        mensajes.success("Creado Correctamente", `El usuario ${data.nombre_usuario} se creó correctamente.`);
+        onClose();
+      },
+      onError: (error: any) => {
+        mensajes.error("Error al crear", error?.message || "No se pudo crear el usuario");
+      }
+    });
   };
 
   return (
-    <VentanaFormulario
-      open={open}
-      handleClose={onClose}
-      onSubmit={handleSubmit}
-      title="Agregar Usuario"
-      icon="agregar"
-      isLoading={isLoading}
-      className="md:max-w-md w-full"
-    >
-      <div className="flex flex-col gap-4 py-2">
-        <TextField
-          name="first_name"
-          label="Nombre"
-          placeholder="Ingrese el o los nombres del usuario"
-          disabled={isLoading}
-          required
-        />
-        <TextField
-          name="last_name"
-          label="Apellido"
-          placeholder="Ingrese el o los apellidos del usuario"
-          disabled={isLoading}
-          required
-        />
-        <TextField
-          name="nombre_usuario"
-          label="Nombre de usuario"
-          placeholder="Ingrese el nombre de usuario"
-          disabled={isLoading}
-          required
-        />
-        <TextField
-          name="legajo"
-          label="Legajo"
-          type="number"
-          placeholder="Ingrese el legajo"
-          disabled={isLoading}
-        />
-        <TextField
-          name="email"
-          label="Correo Electrónico"
-          type="email"
-          placeholder="Ingrese el correo electrónico"
-          disabled={isLoading}
-          required
-        />
-        <TextField
-          name="password"
-          label="Contraseña"
-          type="password"
-          placeholder="Ingrese una contraseña segura"
-          disabled={isLoading}
-          required
-        />
-        <TextField
-          name="passwordConfirm"
-          label="Confirmar Contraseña"
-          type="password"
-          placeholder="Confirme la contraseña"
-          errors={errors.passwordConfirm}
-          disabled={isLoading}
-          required
-        />
-      </div>
-    </VentanaFormulario>
+    <FormProvider {...methods}>
+      <VentanaFormulario
+        open={open}
+        handleClose={onClose}
+        onSubmit={methods.handleSubmit(onSubmit)}
+        title="Agregar Usuario"
+        icon="agregar"
+        isLoading={isLoading}
+        className="md:max-w-md w-full"
+      >
+        <div className="flex flex-col gap-4 py-2">
+          <TextFieldRHF
+            name="first_name"
+            label="Nombre"
+            placeholder="Ingrese el o los nombres del usuario"
+            required
+          />
+          <TextFieldRHF
+            name="last_name"
+            label="Apellido"
+            placeholder="Ingrese el o los apellidos del usuario"
+            required
+          />
+          <TextFieldRHF
+            name="nombre_usuario"
+            label="Nombre de usuario"
+            placeholder="Ingrese el nombre de usuario"
+            required
+          />
+          <TextFieldRHF
+            name="legajo"
+            label="Legajo"
+            type="number"
+            placeholder="Ingrese el legajo"
+            required
+          />
+          <TextFieldRHF
+            name="email"
+            label="Correo Electrónico"
+            type="email"
+            placeholder="Ingrese el correo electrónico"
+            required
+          />
+          <TextFieldRHF
+            name="contraseña"
+            label="Contraseña"
+            type="password"
+            placeholder="Ingrese una contraseña segura"
+            required
+          />
+          <TextFieldRHF
+            name="passwordConfirm"
+            label="Confirmar Contraseña"
+            type="password"
+            placeholder="Confirme la contraseña"
+            required
+          />
+        </div>
+      </VentanaFormulario>
+    </FormProvider>
   );
 }
 

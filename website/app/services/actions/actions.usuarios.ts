@@ -97,12 +97,15 @@ export async function editarUsuarioAction(
     const legajo = formData.get("legajo") as string;
     const email = formData.get("email") as string;
 
+    const user = await getServerUsuario({ params: { id } });
+
     await putServerUsuario({ params: { id }, data: {
       first_name,
       last_name,
       nombre_usuario,
       legajo,
       email,
+      estado: user.estado,
     } });
     revalidateTag("usuarios");
     revalidateTag(`usuario-${id}`);

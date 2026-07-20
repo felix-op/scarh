@@ -4,3 +4,4 @@ export * from "./api";
 export * from "./constantes-roles";
 export * from "./roles";
 export * from "./zod-rhf";
+export * from "./usuarios.schemas";

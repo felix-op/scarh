@@ -30,6 +30,21 @@ export function urlConParametros<TParams extends ParamsBase>(
     });
   }
 
+  // Procesar queryParams si existen
+  if (parametros.queryParams) {
+    const searchParams = new URLSearchParams();
+    Object.entries(parametros.queryParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, String(value));
+      }
+    });
+    
+    const paramsStr = searchParams.toString();
+    if (paramsStr) {
+      url += url.includes("?") ? `&${paramsStr}` : `?${paramsStr}`;
+    }
+  }
+
   return url;
 }
 

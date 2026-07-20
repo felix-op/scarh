@@ -13,7 +13,7 @@ const loginSchema = z.object({
 export type ActionState = {
   success: boolean;
   errors?: Record<string, string[]>;
-  values?: LoginPayload;
+  values?: Partial<LoginPayload>;
   message?: string;
   code?: string | number;
 };

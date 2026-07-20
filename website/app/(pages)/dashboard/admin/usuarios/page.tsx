@@ -13,7 +13,6 @@ export default async function UsuariosPage() {
   // 2. Traer todos los usuarios del backend usando limit alto para saltar paginación temporalmente
   // Esperamos que en un futuro el backend simplemente no pagine.
   const response = await getServerUsuarios({ queryParams: { limit: 9999 } });
-  const usuarios = response.results || [];
 
   // 3. Preparar opciones de roles para el Select de filtro
   const rolesOpciones = opcionesRoles
@@ -32,24 +31,10 @@ export default async function UsuariosPage() {
       </div>
 
       <TablaUsuarios 
-        usuarios={usuarios} 
+        initialData={response} 
         rolesOpciones={rolesOpciones}
         esAdministrador={esAdministrador}
       />
-
-      <Alert variant="exito" title="Proceso completado" className="">
-        Se actualizo el usuario con éxito
-      </Alert>
-
-      <Alert variant="error" title="Error 409">
-        No se pudo eliminar el usuario, tiene historial asociado
-      </Alert>
-      <Alert variant="alerta" title="¡Atención!">
-        No tiene permisos para editar en esta página
-      </Alert>
-      <Alert variant="info" title="Filtros">
-        Recuerde que puede utilizar diferentes filtros
-      </Alert>
     </div>
   );
 }

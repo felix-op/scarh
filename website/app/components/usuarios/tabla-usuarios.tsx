@@ -9,7 +9,8 @@ import { TextField } from "@/components/ui/textfield";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { IconifyIcon } from "@/components/ui/iconify-icon";
 import { Chip } from "@/components/ui/chip";
-import type { UsuarioResponse } from "@models";
+import { useGetUsuarios } from "@hooks";
+import type { UsuarioResponse, PaginatedResponse } from "@models";
 import VentanaAgregarUsuario from "./ventana-agregar-usuario";
 import VentanaEditarUsuario from "./ventana-editar-usuario";
 import VentanaEliminarUsuario from "./ventana-eliminar-usuario";
@@ -25,12 +26,12 @@ const OpcionesEstado = [
 ];
 
 export interface TablaUsuariosProps {
-  usuarios: UsuarioResponse[];
+  initialData: PaginatedResponse<UsuarioResponse>;
   rolesOpciones: { label: string; value: string }[];
   esAdministrador: boolean;
 }
 
-export function TablaUsuarios({ usuarios, rolesOpciones, esAdministrador }: TablaUsuariosProps) {
+export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: TablaUsuariosProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -62,9 +63,12 @@ export function TablaUsuarios({ usuarios, rolesOpciones, esAdministrador }: Tabl
 
   const refreshData = () => {
     startTransition(() => {
-      router.refresh(); // Invalida la caché de Server Components para actualizar los datos
+      router.refresh(); 
     });
   };
+
+  const { data: paginatedData, isPending: isLoadingQuery } = useGetUsuarios(initialData);
+  const usuarios = paginatedData?.results || [];
 
   // Filtrado local de usuarios
   let usuariosFiltrados = [...usuarios];
@@ -281,7 +285,7 @@ export function TablaUsuarios({ usuarios, rolesOpciones, esAdministrador }: Tabl
         data={usuariosFiltrados}
         rowIdKey="id"
         actionConfig={actionConfig}
-        isLoading={isPending}
+        isLoading={isPending || isLoadingQuery}
         bordered={true}
         checkboxConfig={{
           onSelectionChange: setSelectedUsers
@@ -292,16 +296,12 @@ export function TablaUsuarios({ usuarios, rolesOpciones, esAdministrador }: Tabl
       <VentanaAgregarUsuario
         open={isAddOpen}
         onClose={() => setIsAddOpen(false)}
-        onSuccess={refreshData}
-        handleMessage={setToastMessage}
       />
 
       <VentanaEditarUsuario
         open={!!editUser}
         onClose={() => setEditUser(null)}
         usuario={editUser}
-        onSuccess={refreshData}
-        handleMessage={setToastMessage}
       />
 
       <VentanaEliminarUsuario
