@@ -62,6 +62,7 @@ const iconVariants = {
   candado: "icon-[solar--lock-outline]",
   importar: "icon-[material-symbols--download]",
   exportar: "icon-[material-symbols--upload]",
+  descargar: "icon-[material-symbols--download]",
   ubicacion: "icon-[material-symbols--location-on-outline]",
 };
 

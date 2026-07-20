@@ -20,3 +20,5 @@ export * from "./segmented-control";
 export * from "./alerts";
 export * from "./password";
 export * from "./mensaje-flotante";
+export * from "./filters-placeholder";
+export * from "./table-placeholder";
