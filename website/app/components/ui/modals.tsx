@@ -1,6 +1,13 @@
 "use client";
 
 import React, { ReactNode, useState, useEffect } from "react";
+import {
+  FieldValues,
+  DefaultValues,
+  SubmitHandler,
+  UseFormProps,
+} from "react-hook-form";
+import { ZodType } from "zod";
 import { useCerrarConAtras } from "@hooks";
 import {
   Dialog,
@@ -19,6 +26,7 @@ import {
 } from "../shadcn/drawer";
 import { Boton, BotonGuardar, BotonCancelar } from "./botones";
 import { IconifyIcon, IconVariants } from "./iconify-icon";
+import { Formulario } from "../formularios/formulario";
 
 // 1. Ventana Base (Dialog)
 export interface VentanaProps {
@@ -323,6 +331,146 @@ export function VentanaFormulario({
               />
             </div>
           </form>
+        </SheetContent>
+      </Sheet>
+
+      <VentanaConfirmar
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={() => {
+          setShowConfirm(false);
+          handleClose();
+        }}
+        variant="cierre"
+        title="¿Descartar cambios?"
+        description="Tienes cambios sin guardar. Si cierras ahora, se perderán."
+        confirmText="Sí, descartar"
+        cancelText="Volver al formulario"
+      />
+    </>
+  );
+}
+
+// 5. Ventana Formulario RHF (Sheet por la Derecha usando react-hook-form + Zod)
+export interface VentanaFormularioRHFProps<T extends FieldValues = FieldValues> {
+  open: boolean;
+  handleClose: () => void;
+  title: string;
+  icon?: IconVariants;
+  /** Esquema de validación de Zod */
+  zodSchema: ZodType<T>;
+  /** Valores iniciales del formulario */
+  initialValues: DefaultValues<T>;
+  /** Función a ejecutar al enviar el formulario */
+  onSubmit: SubmitHandler<T>;
+  /** Errores devueltos por el servidor mapeables a campos */
+  errorResponse?: Record<string, string | string[]>;
+  children: ReactNode;
+  className?: string;
+  isLoading?: boolean;
+  submitText?: string;
+  cancelText?: string;
+  askForConfirmation?: boolean;
+  /** Props adicionales de useForm */
+  formProps?: Omit<UseFormProps<T>, "resolver" | "defaultValues">;
+}
+
+export function VentanaFormularioRHF<T extends FieldValues = FieldValues>({
+  open,
+  handleClose,
+  title,
+  icon,
+  zodSchema,
+  initialValues,
+  onSubmit,
+  errorResponse,
+  children,
+  className = "",
+  isLoading = false,
+  submitText = "Guardar",
+  cancelText = "Cancelar",
+  askForConfirmation = true,
+}: VentanaFormularioRHFProps<T>) {
+  const [isDirty, setIsDirty] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setIsDirty(false);
+      setShowConfirm(false);
+    }
+  }, [open]);
+
+  const handleAttemptClose = () => {
+    if (askForConfirmation && isDirty) {
+      setShowConfirm(true);
+    } else {
+      handleClose();
+    }
+  };
+
+  useCerrarConAtras(open, handleAttemptClose);
+
+  return (
+    <>
+      <Sheet open={open} onOpenChange={(isOpen) => !isOpen && handleAttemptClose()}>
+        <SheetContent
+          side="right"
+          hideCloseButton={true}
+          className={`border-border bg-background-paper p-0 shadow-card h-full w-[90%] sm:w-md lg:w-lg xl:w-xl ${className}`.trim()}
+        >
+          <Formulario<T>
+            zodSchema={zodSchema}
+            initialValues={initialValues}
+            onSubmit={onSubmit}
+            onDirty={() => setIsDirty(true)}
+            errorResponse={errorResponse}
+            className="flex flex-col h-full w-full"
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center p-5 shrink-0">
+              <div className="flex items-center gap-2">
+                {icon && <IconifyIcon variant={icon} className="text-3xl text-primary" />}
+                <SheetTitle className="text-2xl text-foreground-title font-bold">
+                  {title}
+                </SheetTitle>
+              </div>
+              <button
+                type="button"
+                aria-label="Cerrar"
+                className="flex bg-background-default hover:bg-hover rounded-full cursor-pointer text-foreground hover:text-error p-2 outline-none border-none transition-colors"
+                onClick={handleAttemptClose}
+              >
+                <IconifyIcon variant="cancelar" className="text-xl" />
+              </button>
+            </div>
+
+            <hr className="h-px bg-border border-0 m-0 shrink-0" />
+
+            {/* Form Content */}
+            <div className="p-5 grow overflow-y-auto custom-scroll text-foreground">
+              {children}
+            </div>
+
+            <hr className="h-px bg-border border-0 m-0 shrink-0" />
+
+            {/* Footer */}
+            <div className="flex justify-between items-center p-5 shrink-0 gap-4">
+              <BotonCancelar
+                content={cancelText}
+                onClick={handleAttemptClose}
+                disabled={isLoading}
+                className="flex-1"
+              />
+              <BotonGuardar
+                type="submit"
+                content={submitText}
+                loading={isLoading}
+                disabled={isLoading}
+                className="flex-1"
+              />
+            </div>
+          </Formulario>
         </SheetContent>
       </Sheet>
 

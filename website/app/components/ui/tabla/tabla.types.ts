@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import type { MenuItemConfig } from "../menu";
-import type { IconVariants } from "../iconify-icon";
 
 /**
  * Definición de una columna de la tabla.
@@ -24,10 +23,13 @@ export interface TableColumn<T> {
  * `action` es el callback de clic del ítem en el dropdown.
  * @property {(row: T) => ReactNode} [render] Renderer alternativo utilizado cuando
  *   `ActionConfig.menu` es `false`. Permite mostrar botones de ícono directos, links, etc.
+ * @property {(row: T) => boolean} [condition] Si se provee, la opción sólo se renderiza para
+ *   una fila cuando devuelve `true`. Si no se provee, la opción siempre se renderiza.
  */
 export interface TableMenuOption<T> extends Omit<MenuItemConfig, "action"> {
   action: (row: T) => void;
   render?: (row: T) => ReactNode;
+  condition?: (row: T) => boolean;
 }
 
 /**

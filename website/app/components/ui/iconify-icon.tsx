@@ -9,6 +9,8 @@ const iconVariants = {
   guardar: "icon-[material-symbols--save]",
   eliminar: "icon-[line-md--trash]",
   logout: "icon-[line-md--logout]",
+  activar: "icon-[material-symbols--toggle-on]",
+  desactivar: "icon-[material-symbols--toggle-off-outline]",
   ir: "icon-[oui--arrow-right]",
   volver: "icon-[mdi--arrow-left]",
   filtro: "icon-[mage--filter]",

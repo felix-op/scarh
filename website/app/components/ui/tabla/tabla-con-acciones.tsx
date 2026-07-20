@@ -165,30 +165,34 @@ export function TablaConAccionesContent<T>({
                   <td className={`sticky right-0 z-10 bg-background-muted px-2 py-2 text-center border-b border-border w-1 whitespace-nowrap ${bordered ? "border-r border-l" : ""}`}>
                     {useMenu ? (
                       <Menu
-                        items={actionConfig.options.map((opt) => ({
-                          label: opt.label,
-                          action: () => opt.action(row),
-                          icon: opt.icon,
-                          className: opt.className,
-                          disabled: opt.disabled,
-                        }))}
+                        items={actionConfig.options
+                          .filter((opt) => !opt.condition || opt.condition(row))
+                          .map((opt) => ({
+                            label: opt.label,
+                            action: () => opt.action(row),
+                            icon: opt.icon,
+                            className: opt.className,
+                            disabled: opt.disabled,
+                          }))}
                         side="left"
                         align="start"
                       />
                     ) : (
                       <div className="flex items-center justify-center gap-1">
-                        {actionConfig.options.map((opt, i) =>
-                          opt.render ? (
-                            <span key={i}>{opt.render(row)}</span>
-                          ) : opt.icon ? (
-                            <BotonIcono
-                              key={i}
-                              icon={opt.icon}
-                              disabled={opt.disabled}
-                              onClick={() => opt.action(row)}
-                            />
-                          ) : null
-                        )}
+                        {actionConfig.options
+                          .filter((opt) => !opt.condition || opt.condition(row))
+                          .map((opt, i) =>
+                            opt.render ? (
+                              <span key={i}>{opt.render(row)}</span>
+                            ) : opt.icon ? (
+                              <BotonIcono
+                                key={i}
+                                icon={opt.icon}
+                                disabled={opt.disabled}
+                                onClick={() => opt.action(row)}
+                              />
+                            ) : null
+                          )}
                       </div>
                     )}
                   </td>

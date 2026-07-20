@@ -1,49 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { VentanaConfirmar } from "@/components/ui/modals";
-import { deleteServerUsuario } from "@services";
+import { VentanaConfirmar } from "../ui/modals";
 import type { UsuarioResponse } from "@models";
+import { useDeleteUsuario } from "@hooks";
+import { useMensajes } from "@services";
 
 export interface VentanaEliminarUsuarioProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
   usuario?: UsuarioResponse | null;
-  handleMessage: (msg: { title: string; description: string; variant: "exito" | "error" }) => void;
 }
 
 export function VentanaEliminarUsuario({
   open,
   onClose,
-  onSuccess,
   usuario,
-  handleMessage,
 }: VentanaEliminarUsuarioProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const mensajes = useMensajes();
+  const { mutate: eliminarUsuario, isPending } = useDeleteUsuario();
 
-  const onConfirm = async () => {
+  const onConfirm = () => {
     if (!usuario?.id) return;
-    setIsLoading(true);
-    try {
-      await deleteServerUsuario({ params: { id: String(usuario.id) } });
-      onSuccess();
-      handleMessage({
-        title: "Eliminado Correctamente",
-        description: `El usuario ${usuario.nombre_usuario} se eliminó correctamente`,
-        variant: "exito",
-      });
-    } catch (error: any) {
-      console.error(error);
-      handleMessage({
-        title: "Error al eliminar",
-        description: error?.message || `El usuario ${usuario.nombre_usuario} no se pudo eliminar`,
-        variant: "error",
-      });
-    } finally {
-      setIsLoading(false);
-      onClose();
-    }
+
+    eliminarUsuario(String(usuario.id), {
+      onSuccess: () => {
+        mensajes.success("Eliminado Correctamente", `El usuario ${usuario.nombre_usuario} se eliminó correctamente`);
+      },
+      onError: (error: Error) => {
+        mensajes.error("Error al eliminar", error.message || `El usuario ${usuario.nombre_usuario} no se pudo eliminar`);
+      },
+      onSettled: () => {
+        onClose();
+      },
+    });
   };
 
   return (
@@ -54,7 +43,7 @@ export function VentanaEliminarUsuario({
       title="Eliminar Usuario"
       description={`¿Está seguro de que desea eliminar el usuario ${usuario?.nombre_usuario || ""}?`}
       variant="eliminar"
-      isLoading={isLoading}
+      isLoading={isPending}
     />
   );
 }

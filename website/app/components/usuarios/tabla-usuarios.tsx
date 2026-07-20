@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { TablaConAcciones } from "@/components/ui/tabla/tabla-con-acciones";
-import { ActionConfig, TableColumn } from "@/components/ui/tabla/tabla.types";
-import { BotonAgregar, BotonPermisosMasivos } from "@/components/ui/botones";
-import { TextField } from "@/components/ui/textfield";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
-import { IconifyIcon } from "@/components/ui/iconify-icon";
-import { Chip } from "@/components/ui/chip";
+import { useState } from "react";
+import { TablaConAcciones } from "../ui/tabla/tabla-con-acciones";
+import { ActionConfig, TableColumn } from "../ui/tabla/tabla.types";
+import { BotonAgregar, BotonPermisosMasivos } from "../ui/botones";
+import { TextField } from "../ui/textfield";
+import { Select } from "../ui/select";
+import { IconifyIcon } from "../ui/iconify-icon";
+import { Chip } from "../ui/chip";
 import { useGetUsuarios } from "@hooks";
 import type { UsuarioResponse, PaginatedResponse } from "@models";
 import VentanaAgregarUsuario from "./ventana-agregar-usuario";
@@ -17,13 +16,21 @@ import VentanaEliminarUsuario from "./ventana-eliminar-usuario";
 import VentanaInfoUsuario from "./ventana-info-usuario";
 import VentanaPermisosUsuario from "./ventana-permisos-usuario";
 import VentanaPermisosMasivos from "./ventana-permisos-masivos";
-import Alert from "@/components/ui/alerts";
+import VentanaCambiarEstadoUsuario from "./ventana-cambiar-estado-usuario";
+import Alert from "../ui/alerts";
 
 const OpcionesEstado = [
   { label: "Todos", value: "todos" },
   { label: "Activo", value: "true" },
   { label: "Inactivo", value: "false" },
 ];
+
+type ModalUsuario =
+  | { type: "info"; usuario: UsuarioResponse }
+  | { type: "editar"; usuario: UsuarioResponse }
+  | { type: "eliminar"; usuario: UsuarioResponse }
+  | { type: "permisos"; usuario: UsuarioResponse }
+  | { type: "cambiar-estado"; usuario: UsuarioResponse };
 
 export interface TablaUsuariosProps {
   initialData: PaginatedResponse<UsuarioResponse>;
@@ -32,17 +39,10 @@ export interface TablaUsuariosProps {
 }
 
 export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: TablaUsuariosProps) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
   // Modales states
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [editUser, setEditUser] = useState<UsuarioResponse | null>(null);
-  const [deleteUser, setDeleteUser] = useState<UsuarioResponse | null>(null);
-  const [infoUser, setInfoUser] = useState<UsuarioResponse | null>(null);
-  const [permissionsUser, setPermissionsUser] = useState<UsuarioResponse | null>(null);
+  const [modal, setModal] = useState<ModalUsuario | null>(null);
   const [permissionsMasivosUsers, setPermissionsMasivosUsers] = useState<UsuarioResponse[]>([]);
-  const [toastMessage, setToastMessage] = useState<{ title: string; description: string; variant: "exito" | "error" } | null>(null);
 
   // Filtros locales
   const [filtros, setFiltros] = useState({
@@ -61,21 +61,17 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
     setFiltros((prev) => ({ ...prev, [key]: value }));
   };
 
-  const refreshData = () => {
-    startTransition(() => {
-      router.refresh(); 
-    });
-  };
+  const closeModal = () => setModal(null);
 
   const { data: paginatedData, isPending: isLoadingQuery } = useGetUsuarios(initialData);
   const usuarios = paginatedData?.results || [];
 
   // Filtrado local de usuarios
   let usuariosFiltrados = [...usuarios];
-  
+
   if (filtros.search) {
     const s = filtros.search.toLowerCase();
-    usuariosFiltrados = usuariosFiltrados.filter((u) => 
+    usuariosFiltrados = usuariosFiltrados.filter((u) =>
       u.nombre_usuario?.toLowerCase().includes(s) ||
       u.first_name?.toLowerCase().includes(s) ||
       u.last_name?.toLowerCase().includes(s) ||
@@ -83,12 +79,12 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
       (u.legajo && u.legajo.toString().includes(s))
     );
   }
-  
+
   if (filtros.estado !== "todos") {
     const isActive = filtros.estado === "true";
     usuariosFiltrados = usuariosFiltrados.filter((u) => u.estado === isActive);
   }
-  
+
   if (filtros.rol !== "todos") {
     usuariosFiltrados = usuariosFiltrados.filter((u) => u.roles && u.roles.includes(filtros.rol));
   }
@@ -101,7 +97,7 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
       return;
     }
     if (selectedUsers.length === 1) {
-      setPermissionsUser(selectedUsers[0]);
+      setModal({ type: "permisos", usuario: selectedUsers[0] });
     } else {
       setPermissionsMasivosUsers(selectedUsers);
     }
@@ -147,7 +143,7 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
         label: "Detalles",
         icon: "documento",
         className: "text-primary",
-        action: (row) => setInfoUser(row),
+        action: (row) => setModal({ type: "info", usuario: row }),
       },
       {
         label: "Permisos",
@@ -156,7 +152,7 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
         disabled: !canEdit,
         action: (row) => {
           setSelectedUsers([row]);
-          setPermissionsUser(row);
+          setModal({ type: "permisos", usuario: row });
         },
       },
       {
@@ -164,51 +160,36 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
         icon: "editar",
         className: "text-success",
         disabled: !canEdit,
-        action: (row) => setEditUser(row),
+        action: (row) => setModal({ type: "editar", usuario: row }),
       },
       {
-        label: "Cambiar Estado",
-        icon: "logout",
+        label: "Activar",
+        icon: "activar",
+        className: "text-success",
+        disabled: !canEdit,
+        condition: (row) => !row.estado,
+        action: (row) => setModal({ type: "cambiar-estado", usuario: row }),
+      },
+      {
+        label: "Desactivar",
+        icon: "desactivar",
         className: "text-warn",
         disabled: !canEdit,
-        action: async (row) => {
-          const { toggleUsuarioEstadoAction } = await import("@/services/actions/actions.usuarios");
-          startTransition(async () => {
-            const result = await toggleUsuarioEstadoAction(String(row.id), !row.estado);
-            setToastMessage({
-              title: result.status === "ok" ? "Éxito" : "Error",
-              description: result.message || "",
-              variant: result.status === "ok" ? "exito" : "error",
-            });
-            refreshData();
-          });
-        },
+        condition: (row) => row.estado,
+        action: (row) => setModal({ type: "cambiar-estado", usuario: row }),
       },
       {
         label: "Eliminar",
         icon: "eliminar",
         className: "text-error",
         disabled: !canEdit,
-        action: (row) => setDeleteUser(row),
+        action: (row) => setModal({ type: "eliminar", usuario: row }),
       },
     ],
   };
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Toast Simulada (Podria reemplazarse por el sistema real) */}
-      {toastMessage && (
-        <div className={`p-4 rounded-md mb-4 text-sm font-medium flex items-center justify-between ${
-          toastMessage.variant === "error" ? "bg-error-light/20 text-error" : "bg-success-light/20 text-success"
-        }`}>
-          <div>
-            <strong>{toastMessage.title}: </strong>
-            {toastMessage.description}
-          </div>
-          <button onClick={() => setToastMessage(null)} className="ml-4 hover:opacity-70"><IconifyIcon variant="cancelar" /></button>
-        </div>
-      )}
-
       {/* Toolbar */}
       <div className="flex flex-col-reverse md:flex-col gap-4">
         {/* Buscador y Filtros (Grid / Row) */}
@@ -227,35 +208,26 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
               }}
             />
           </div>
-          
+
           <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
-            <div className="w-full md:w-48 flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Estado</label>
-              <Select value={filtros.estado} onValueChange={(val) => handleFilterChange("estado", val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  {OpcionesEstado.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="w-full md:w-48">
+              <Select
+                label="Estado"
+                name="estado"
+                options={OpcionesEstado}
+                value={filtros.estado}
+                onChange={(val) => handleFilterChange("estado", val)}
+              />
             </div>
 
-            <div className="w-full md:w-48 flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">Rol</label>
-              <Select value={filtros.rol} onValueChange={(val) => handleFilterChange("rol", val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {rolesOpciones.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="w-full md:w-48">
+              <Select
+                label="Rol"
+                name="rol"
+                options={[{ label: "Todos", value: "todos" }, ...rolesOpciones]}
+                value={filtros.rol}
+                onChange={(val) => handleFilterChange("rol", val)}
+              />
             </div>
           </div>
         </div>
@@ -264,13 +236,13 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
         <div className="flex flex-col md:flex-row gap-4 mt-2 items-start md:items-center">
           <div className="flex flex-col md:flex-row w-full gap-2 shrink-0">
             <BotonAgregar content="Agregar" onClick={() => setIsAddOpen(true)} disabled={!canEdit} />
-            <BotonPermisosMasivos 
-              content="Gestionar Permisos" 
-              onClick={handleManagePermissions} 
+            <BotonPermisosMasivos
+              content="Gestionar Permisos"
+              onClick={handleManagePermissions}
               disabled={!canEdit || selectedUsers.length === 0}
             />
           </div>
-          
+
           {!canEdit && (
             <Alert variant="alerta" title="Modo de Sólo Lectura">
               No dispones de los permisos necesarios para realizar modificaciones o agregar usuarios.
@@ -285,7 +257,7 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
         data={usuariosFiltrados}
         rowIdKey="id"
         actionConfig={actionConfig}
-        isLoading={isPending || isLoadingQuery}
+        isLoading={isLoadingQuery}
         bordered={true}
         checkboxConfig={{
           onSelectionChange: setSelectedUsers
@@ -299,39 +271,39 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
       />
 
       <VentanaEditarUsuario
-        open={!!editUser}
-        onClose={() => setEditUser(null)}
-        usuario={editUser}
+        open={modal?.type === "editar"}
+        onClose={closeModal}
+        usuario={modal?.type === "editar" ? modal.usuario : null}
       />
 
       <VentanaEliminarUsuario
-        open={!!deleteUser}
-        onClose={() => setDeleteUser(null)}
-        usuario={deleteUser}
-        onSuccess={refreshData}
-        handleMessage={setToastMessage}
+        open={modal?.type === "eliminar"}
+        onClose={closeModal}
+        usuario={modal?.type === "eliminar" ? modal.usuario : null}
       />
 
       <VentanaInfoUsuario
-        open={!!infoUser}
-        onClose={() => setInfoUser(null)}
-        usuario={infoUser}
+        open={modal?.type === "info"}
+        onClose={closeModal}
+        usuario={modal?.type === "info" ? modal.usuario : null}
       />
 
       <VentanaPermisosUsuario
-        open={!!permissionsUser}
-        onClose={() => setPermissionsUser(null)}
-        usuario={permissionsUser}
-        onSuccess={refreshData}
-        handleMessage={setToastMessage}
+        open={modal?.type === "permisos"}
+        onClose={closeModal}
+        usuario={modal?.type === "permisos" ? modal.usuario : null}
+      />
+
+      <VentanaCambiarEstadoUsuario
+        open={modal?.type === "cambiar-estado"}
+        onClose={closeModal}
+        usuario={modal?.type === "cambiar-estado" ? modal.usuario : null}
       />
 
       <VentanaPermisosMasivos
         open={permissionsMasivosUsers.length > 0}
         onClose={() => setPermissionsMasivosUsers([])}
         usuarios={permissionsMasivosUsers}
-        onSuccess={refreshData}
-        handleMessage={setToastMessage}
       />
     </div>
   );

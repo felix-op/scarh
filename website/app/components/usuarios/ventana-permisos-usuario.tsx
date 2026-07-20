@@ -1,28 +1,27 @@
 "use client";
 
-import { useState, useEffect, useMemo, useActionState, useRef } from "react";
-import { VentanaFormulario } from "@/components/ui/modals";
+import { useState, useEffect, useMemo } from "react";
+import { VentanaFormulario } from "../ui/modals";
 import type { UsuarioResponse } from "@models";
 import { opcionesRoles } from "@utils";
-import { Chip } from "@/components/ui/chip";
+import { usePutUsuarioRoles } from "@hooks";
+import { useMensajes } from "@services";
+import { Chip } from "../ui/chip";
 import { EntidadPermisos } from "./entidad-permisos";
-import { guardarPermisosIndividualAction } from "@/services/actions/actions.usuarios";
 
 export interface VentanaPermisosUsuarioProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
   usuario?: UsuarioResponse | null;
-  handleMessage: (msg: { title: string; description: string; variant: "exito" | "error" }) => void;
 }
 
 export function VentanaPermisosUsuario({
   open,
   onClose,
-  onSuccess,
   usuario,
-  handleMessage,
 }: VentanaPermisosUsuarioProps) {
+  const mensajes = useMensajes();
+  const { mutate: guardarRoles, isPending } = usePutUsuarioRoles();
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
 
   // Solo reiniciamos los roles cuando se abre la ventana
@@ -30,7 +29,7 @@ export function VentanaPermisosUsuario({
     if (open) {
       setSelectedRoles(usuario?.roles || []);
     }
-  }, [open]);
+  }, [usuario, open]);
 
   const toggleRole = (roleValue: string) => {
     setSelectedRoles((prev) =>
@@ -57,42 +56,26 @@ export function VentanaPermisosUsuario({
     return map;
   }, []);
 
-  // Integración con Server Action vía useActionState
-  const [state, formAction, isPending] = useActionState(
-    (prevState: any, formData: FormData) => 
-      guardarPermisosIndividualAction(prevState, formData, usuario ? String(usuario.id) : "", selectedRoles),
-    { status: "none", timestamp: 0 }
-  );
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!usuario) return;
 
-  const handledTimestamp = useRef<number | undefined>(0);
-
-  useEffect(() => {
-    if (state.timestamp && state.timestamp !== handledTimestamp.current) {
-      handledTimestamp.current = state.timestamp;
-      
-      if (state.status === "ok") {
-        onSuccess();
-        handleMessage({
-          title: "Permisos Actualizados",
-          description: state.message || "Los permisos se han guardado exitosamente.",
-          variant: "exito",
-        });
+    guardarRoles({ id: String(usuario.id), roles: selectedRoles }, {
+      onSuccess: () => {
+        mensajes.success("Permisos Actualizados", "Los permisos se han guardado exitosamente.");
         onClose();
-      } else if (state.status === "error") {
-        handleMessage({
-          title: "Error",
-          description: state.message || "No se pudieron actualizar los permisos",
-          variant: "error",
-        });
+      },
+      onError: (error: Error) => {
+        mensajes.error("Error", error.message || "No se pudieron actualizar los permisos");
       }
-    }
-  }, [state, handleMessage, onSuccess, onClose]);
+    });
+  };
 
   return (
     <VentanaFormulario
       open={open}
       handleClose={onClose}
-      action={formAction}
+      onSubmit={onSubmit}
       title={usuario ? `Permisos de ${usuario.nombre_usuario}` : "Permisos"}
       icon="candado"
       isLoading={isPending}
@@ -100,13 +83,13 @@ export function VentanaPermisosUsuario({
     >
       {usuario && (
         <div className="flex flex-col relative">
-          
+
           {/* Header Sticky - Resumen de Cambios */}
           <div className="sticky top-0 z-10 bg-background-paper pb-4 pt-2 mb-6 border-b border-border flex flex-col gap-3">
             <p className="text-sm text-foreground-secondary mb-1">
               Modifique los permisos. Guarde para aplicar los cambios en el servidor.
             </p>
-            
+
             {/* Agregados */}
             {addedRoles.length > 0 && (
               <div className="flex flex-wrap gap-2 items-center">
@@ -142,8 +125,8 @@ export function VentanaPermisosUsuario({
             </div>
 
             <div className="flex justify-end mt-1">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="text-sm font-medium text-error hover:underline transition-colors"
                 onClick={() => setSelectedRoles([])}
                 disabled={isPending || selectedRoles.length === 0}

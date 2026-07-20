@@ -1,11 +1,8 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { FormProvider, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { VentanaFormulario } from "@/components/ui/modals";
-import { TextFieldRHF } from "@/components/formularios";
+import { VentanaFormularioRHF } from "../ui/modals";
+import { TextFieldRHF } from "../formularios";
 import { usePostUsuario } from "@hooks";
 import { useMensajes } from "@services";
 import { usuarioPostSchema } from "@utils";
@@ -29,28 +26,7 @@ export function VentanaAgregarUsuario({
   onClose,
 }: VentanaAgregarUsuarioProps) {
   const mensajes = useMensajes();
-  const { mutate: crearUsuario, isPending: isLoading } = usePostUsuario();
-
-  const methods = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      first_name: "",
-      last_name: "",
-      nombre_usuario: "",
-      legajo: "",
-      email: "",
-      contraseña: "",
-      passwordConfirm: "",
-      estado: true,
-    },
-    mode: "onSubmit",
-  });
-
-  useEffect(() => {
-    if (open) {
-      methods.reset();
-    }
-  }, [open, methods]);
+  const { mutate: crearUsuario, isPending } = usePostUsuario();
 
   const onSubmit = (data: FormValues) => {
     crearUsuario({
@@ -66,73 +42,81 @@ export function VentanaAgregarUsuario({
         mensajes.success("Creado Correctamente", `El usuario ${data.nombre_usuario} se creó correctamente.`);
         onClose();
       },
-      onError: (error: any) => {
-        mensajes.error("Error al crear", error?.message || "No se pudo crear el usuario");
+      onError: (error: Error) => {
+        mensajes.error("Error al crear", error.message || "No se pudo crear el usuario");
       }
     });
   };
 
   return (
-    <FormProvider {...methods}>
-      <VentanaFormulario
-        open={open}
-        handleClose={onClose}
-        onSubmit={methods.handleSubmit(onSubmit)}
-        title="Agregar Usuario"
-        icon="agregar"
-        isLoading={isLoading}
-        className="md:max-w-md w-full"
-      >
-        <div className="flex flex-col gap-4 py-2">
-          <TextFieldRHF
-            name="first_name"
-            label="Nombre"
-            placeholder="Ingrese el o los nombres del usuario"
-            required
-          />
-          <TextFieldRHF
-            name="last_name"
-            label="Apellido"
-            placeholder="Ingrese el o los apellidos del usuario"
-            required
-          />
-          <TextFieldRHF
-            name="nombre_usuario"
-            label="Nombre de usuario"
-            placeholder="Ingrese el nombre de usuario"
-            required
-          />
-          <TextFieldRHF
-            name="legajo"
-            label="Legajo"
-            type="number"
-            placeholder="Ingrese el legajo"
-            required
-          />
-          <TextFieldRHF
-            name="email"
-            label="Correo Electrónico"
-            type="email"
-            placeholder="Ingrese el correo electrónico"
-            required
-          />
-          <TextFieldRHF
-            name="contraseña"
-            label="Contraseña"
-            type="password"
-            placeholder="Ingrese una contraseña segura"
-            required
-          />
-          <TextFieldRHF
-            name="passwordConfirm"
-            label="Confirmar Contraseña"
-            type="password"
-            placeholder="Confirme la contraseña"
-            required
-          />
-        </div>
-      </VentanaFormulario>
-    </FormProvider>
+    <VentanaFormularioRHF<FormValues>
+      open={open}
+      handleClose={onClose}
+      zodSchema={formSchema}
+      initialValues={{
+        first_name: "",
+        last_name: "",
+        nombre_usuario: "",
+        legajo: "",
+        email: "",
+        contraseña: "",
+        passwordConfirm: "",
+        estado: true,
+      }}
+      onSubmit={onSubmit}
+      title="Agregar Usuario"
+      icon="agregar"
+      isLoading={isPending}
+    >
+      <div className="flex flex-col gap-4 py-2">
+        <TextFieldRHF
+          name="first_name"
+          label="Nombre"
+          placeholder="Ingrese el o los nombres del usuario"
+          required
+        />
+        <TextFieldRHF
+          name="last_name"
+          label="Apellido"
+          placeholder="Ingrese el o los apellidos del usuario"
+          required
+        />
+        <TextFieldRHF
+          name="nombre_usuario"
+          label="Nombre de usuario"
+          placeholder="Ingrese el nombre de usuario"
+          required
+        />
+        <TextFieldRHF
+          name="legajo"
+          label="Legajo"
+          type="number"
+          placeholder="Ingrese el legajo"
+          required
+        />
+        <TextFieldRHF
+          name="email"
+          label="Correo Electrónico"
+          type="email"
+          placeholder="Ingrese el correo electrónico"
+          required
+        />
+        <TextFieldRHF
+          name="contraseña"
+          label="Contraseña"
+          type="password"
+          placeholder="Ingrese una contraseña segura"
+          required
+        />
+        <TextFieldRHF
+          name="passwordConfirm"
+          label="Confirmar Contraseña"
+          type="password"
+          placeholder="Confirme la contraseña"
+          required
+        />
+      </div>
+    </VentanaFormularioRHF>
   );
 }
 

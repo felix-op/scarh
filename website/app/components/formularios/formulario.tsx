@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import {
   FormProvider,
   UseFormProps,
@@ -63,14 +63,18 @@ export function Formulario<T extends FieldValues = FieldValues>({
   const { handleSubmit, setError, formState } = methods;
 
   // Mapear errores del servidor a formulario
-  if (errorResponse) {
-    mapServerErrorsToForm<T>(errorResponse, setError);
-  }
+  useEffect(() => {
+    if (errorResponse) {
+      mapServerErrorsToForm<T>(errorResponse, setError);
+    }
+  }, [errorResponse, setError]);
 
   // Llamar onDirty cuando el formulario se marque como sucio
-  if (formState.isDirty && onDirty) {
-    onDirty();
-  }
+  useEffect(() => {
+    if (formState.isDirty && onDirty) {
+      onDirty();
+    }
+  }, [formState.isDirty, onDirty]);
 
   const handleFormSubmit = handleSubmit(onSubmit);
 
