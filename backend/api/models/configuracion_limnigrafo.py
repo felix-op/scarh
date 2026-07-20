@@ -7,6 +7,7 @@ class ConfiguracionLimnigrafo(models.Model):
     tiempo_advertencia = models.PositiveBigIntegerField(blank=True, null=True)
     tiempo_peligro = models.PositiveBigIntegerField(blank=True, null=True)
     bateria_min = models.FloatField(blank=True, null=True)
+    bateria_max = models.FloatField(blank=True, null=True)
     altura_minima_agua = models.FloatField(blank=True, null=True)
     altura_maxima_agua = models.FloatField(blank=True, null=True)
     temperatura_minima = models.FloatField(default=0)
