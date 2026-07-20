@@ -34,7 +34,11 @@ const textFieldSchema = z
     path: ["confirmar"],
   });
 
-type TextFieldForm = z.infer<typeof textFieldSchema>;
+// `edad` usa `positiveIntValidator` (z.union([z.number(), z.string()]).pipe(z.coerce.number()...)):
+// el tipo de entrada (lo que tipea el usuario) difiere del tipo de salida (ya coercionado a number),
+// por eso se necesitan ambos tipos para tipar correctamente `useForm` y el `SubmitHandler`.
+type TextFieldFormInput = z.input<typeof textFieldSchema>;
+type TextFieldForm = z.output<typeof textFieldSchema>;
 
 // Ejemplo 2: Select
 const selectSchema = z.object({
@@ -99,7 +103,7 @@ export default function DocumentacionFormulariosPage() {
   const [dateSuccess, setDateSuccess] = useState(false);
   const [segmentedSuccess, setSegmentedSuccess] = useState(false);
 
-  const textFieldMethods = useForm<TextFieldForm>({
+  const textFieldMethods = useForm<TextFieldFormInput, unknown, TextFieldForm>({
     resolver: zodResolver(textFieldSchema),
     defaultValues: {
       email: "",

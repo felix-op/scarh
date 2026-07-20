@@ -1,8 +1,16 @@
 import Link from "next/link";
-import { Card, IconifyIcon } from "@components";
+import { Card, IconifyIcon, IconVariants } from "@components";
+
+type TSeccion = {
+  title: string
+  desc: string
+  href: string
+  icon: IconVariants
+  components: string[]
+}
 
 export default function DocumentacionPage() {
-  const sections = [
+  const sections: TSeccion[] = [
     {
       title: "Botones",
       desc: "Variantes de botones del sistema: primarios, éxito, error, advertencia, iconos y menús contextuales.",
@@ -85,7 +93,7 @@ export default function DocumentacionPage() {
             <Card className="flex flex-col gap-4 p-5 h-full transition-all duration-200 hover:border-primary-main hover:shadow-md cursor-pointer">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center p-3 rounded-full bg-primary-light text-primary-main transition-colors group-hover:bg-primary-main group-hover:text-white">
-                  <IconifyIcon variant={section.icon as any} />
+                  <IconifyIcon variant={section.icon} />
                 </div>
                 <h2 className="text-xl font-bold text-foreground transition-colors group-hover:text-primary-main">
                   {section.title}

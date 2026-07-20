@@ -84,17 +84,20 @@ export default function DocumentacionNotificacionesPage() {
             Personaliza el título, contenido y tiempo de duración para probar el componente en vivo.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <TextField 
+            <TextField
+              name="titulo"
               label="Título" 
               value={titulo} 
               onChange={(e) => setTitulo(e.target.value)} 
             />
             <TextField 
+              name="contenido"
               label="Contenido" 
               value={contenido} 
               onChange={(e) => setContenido(e.target.value)} 
             />
-            <TextField 
+            <TextField
+              name="tiempo"
               label="Tiempo (ms o 'false')" 
               value={tiempo} 
               onChange={(e) => setTiempo(e.target.value)} 
