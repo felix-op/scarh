@@ -6,7 +6,6 @@ import {
   getServerAlertas,
   getServerEstadistica,
   getServerHistorial,
-  getServerHola,
   getServerLimnigrafos,
   getServerMediciones,
   getServerUbicaciones,
@@ -56,14 +55,6 @@ export default function DocumentacionEndpointsPage() {
           <h2 className="text-xl font-bold text-foreground mb-1">Historial</h2>
           <p className="text-foreground-secondary text-sm mb-4">GET /historial/</p>
           <RenderServerResponse title="getServerHistorial()" action={getServerHistorial} swaggerUrl={swaggerUrl} />
-        </div>
-      </Card>
-
-      <Card className="flex flex-col gap-6 p-6">
-        <div>
-          <h2 className="text-xl font-bold text-foreground mb-1">Hola</h2>
-          <p className="text-foreground-secondary text-sm mb-4">GET /hola/</p>
-          <RenderServerResponse title="getServerHola()" action={getServerHola} swaggerUrl={swaggerUrl} />
         </div>
       </Card>
 
