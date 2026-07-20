@@ -1,0 +1,30 @@
+# ---- deps ----
+FROM node:22-alpine AS deps
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY website/pnpm-lock.yaml website/pnpm-workspace.yaml website/package.json ./
+RUN pnpm install --frozen-lockfile
+ 
+# ---- builder ----
+FROM node:22-alpine AS builder
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY --from=deps /app/node_modules ./node_modules
+COPY website .
+ 
+ARG NEXT_PUBLIC_AUTH_REFRESH_INTERVAL
+ENV NEXT_PUBLIC_AUTH_REFRESH_INTERVAL=$NEXT_PUBLIC_AUTH_REFRESH_INTERVAL
+ 
+RUN pnpm build
+ 
+# ---- runner ----
+FROM node:22-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ 
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+ 
+EXPOSE 3000
+CMD ["node", "server.js"]

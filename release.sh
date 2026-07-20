@@ -1,8 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="felixop/scarh"
-TYPE="${1:-}"
+TARGET="${1:-}"
+TYPE="${2:-}"
+
+if [[ -n "$TARGET" && "$TARGET" != "backend" && "$TARGET" != "frontend" ]]; then
+    echo "Target invalido: $TARGET (debe ser 'backend' o 'frontend')" >&2
+    exit 1
+fi
+
+if [[ -z "$TARGET" ]]; then
+    read -rp "Que queres publicar (backend/frontend): " TARGET
+    if [[ "$TARGET" != "backend" && "$TARGET" != "frontend" ]]; then
+        echo "Target invalido: $TARGET (debe ser 'backend' o 'frontend')" >&2
+        exit 1
+    fi
+fi
+
+if [[ "$TARGET" == "backend" ]]; then
+    IMAGE="felixop/scarh"
+    KEY="BACKEND"
+    DOCKERFILE="Dockerfile.api.production"
+else
+    IMAGE="felixop/scarh-frontend"
+    KEY="FRONTEND"
+    DOCKERFILE="Dockerfile.web.production"
+fi
 
 if [[ -n "$TYPE" && "$TYPE" != "minor" && "$TYPE" != "major" ]]; then
     echo "Tipo invalido: $TYPE (debe ser 'minor' o 'major')" >&2
@@ -17,12 +40,17 @@ if [[ -z "$TYPE" ]]; then
     fi
 fi
 
-# Leer última versión desde un archivo VERSION
+# Normalizar el archivo VERSION a saltos de línea Unix (evita \r si se edito en Windows)
 if [[ -f "VERSION" ]]; then
-    LAST=$(cat VERSION)
-else
-    LAST="0.0"
+    sed -i 's/\r$//' VERSION
 fi
+
+# Leer última versión de $KEY desde VERSION (archivo compartido entre backend y frontend)
+LAST=""
+if [[ -f "VERSION" ]]; then
+    LAST=$(grep "^$KEY=" VERSION | cut -d'=' -f2 || true)
+fi
+LAST="${LAST:-0.0}"
 
 MAJOR="${LAST%%.*}"
 MINOR="${LAST##*.}"
@@ -36,14 +64,19 @@ fi
 
 VERSION="$MAJOR.$MINOR"
 
-echo "Nueva versión: $VERSION"
+echo "Nueva versión de $TARGET: $VERSION"
 
-# Guardar nueva versión
-echo -n "$VERSION" > VERSION
+# Guardar nueva versión solo en la línea de $KEY, sin tocar la otra
+touch VERSION
+if grep -q "^$KEY=" VERSION; then
+    sed -i "s/^$KEY=.*/$KEY=$VERSION/" VERSION
+else
+    echo "$KEY=$VERSION" >> VERSION
+fi
 
 # Construir imagen
 docker build \
-    -f Dockerfile.production \
+    -f "$DOCKERFILE" \
     -t "$IMAGE:$VERSION" \
     -t "$IMAGE:latest" .
 
