@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { AuthError } from "next-auth";
 import { signIn } from "@auth";
+import { LoginPayload } from "@models";
 
 const loginSchema = z.object({
   username: z.string().min(1, "El nombre de usuario es requerido"),
@@ -12,8 +13,9 @@ const loginSchema = z.object({
 export type ActionState = {
   success: boolean;
   errors?: Record<string, string[]>;
-  values?: Record<string, any>;
+  values?: LoginPayload;
   message?: string;
+  code?: string | number;
 };
 
 export async function loginAction(
@@ -57,6 +59,7 @@ export async function loginAction(
       switch (error.type) {
         case "CredentialsSignin":
           return {
+            code: 401,
             success: false,
             errors: {
               username: ["Credenciales incorrectas"],
@@ -66,6 +69,7 @@ export async function loginAction(
           };
         default:
           return {
+            code: 500,
             success: false,
             message: "Ocurrió un error inesperado en el servidor.",
             values: rawValues,

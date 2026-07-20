@@ -58,6 +58,13 @@ export default function DocumentacionPage() {
       href: "/dashboard/admin/documentacion/endpoints",
       icon: "dashboard",
       components: ["RenderServerResponse"]
+    },
+    {
+      title: "Notificaciones (Toasts)",
+      desc: "Sistema global de notificaciones emergentes para alertas, errores, información y éxito, con auto-cierre y animaciones.",
+      href: "/dashboard/admin/documentacion/notificaciones",
+      icon: "alerta",
+      components: ["useMensajes", "MensajesProvider"]
     }
   ];
 

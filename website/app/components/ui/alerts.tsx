@@ -1,10 +1,7 @@
 import { ReactNode } from "react";
 import { IconifyIcon, IconVariants } from "./iconify-icon";
 
-const variantConfig: Record<
-  string,
-  { bg: string; border: string; color: string; icon: IconVariants }
-> = {
+const variantConfig = {
   exito: {
     bg: "bg-success-light/10",
     border: "border-success",
@@ -35,7 +32,7 @@ const variantConfig: Record<
     color: "text-foreground",
     icon: "documento",
   },
-};
+} satisfies Record<string, { bg: string; border: string; color: string; icon: IconVariants }>;
 
 export type AlertVariant = keyof typeof variantConfig;
 

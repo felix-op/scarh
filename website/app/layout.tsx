@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
-import { ThemeProvider, QueryProvider } from "@services";
+import { ThemeProvider, QueryProvider, MensajesProvider } from "@services";
 import "@styles/globals.css";
 
 const outfit = Outfit({
@@ -25,9 +25,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <QueryProvider>
-          <ThemeProvider>
-            {children}
-          </ThemeProvider>
+          <MensajesProvider>
+            <ThemeProvider>
+              {children}
+            </ThemeProvider>
+          </MensajesProvider>
         </QueryProvider>
       </body>
     </html>

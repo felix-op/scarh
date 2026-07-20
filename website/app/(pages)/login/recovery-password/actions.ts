@@ -10,6 +10,7 @@ export type ActionState = {
   values?: Record<string, any>;
   message?: string;
   accessToken?: string;
+  code?: string | number;
 };
 
 const emailSchema = z.object({
@@ -58,6 +59,7 @@ export async function solicitarCodigoAction(
       return {
         success: false,
         message: err.descripcionUsuario,
+        code: err.codigo,
         values,
       };
     }
@@ -98,6 +100,7 @@ export async function verificarCodigoAction(
       return {
         success: false,
         message: err.descripcionUsuario,
+        code: err.codigo,
         values,
       };
     }

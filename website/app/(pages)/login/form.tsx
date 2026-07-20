@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { BotonLogin, IconifyIcon, TextField } from "@components";
+import { BotonLogin, IconifyIcon, TextField, Alert, PasswordField } from "@components";
 import { loginAction, ActionState } from "./actions";
 
 const initialState: ActionState = {
@@ -18,15 +18,12 @@ export function LoginForm() {
     <form action={formAction} className="flex flex-col gap-4 w-full">
       {/* Mensajes generales del servidor */}
       {state.message && (
-        <div
-          className={`p-3 rounded-shape-sm text-sm font-medium ${
-            state.success
-              ? "bg-success-light text-success-dark border border-success"
-              : "bg-error-light text-error-dark border border-error"
-          }`}
+        <Alert
+          variant={state.success ? "exito" : "error"}
+          title={state.success ? "Éxito" : state.code != null ? `Error ${state.code}` : "Error"}
         >
           {state.message}
-        </div>
+        </Alert>
       )}
 
       {/* Nombre de Usuario */}
@@ -41,14 +38,12 @@ export function LoginForm() {
       />
 
       {/* Contraseña */}
-      <TextField
+      <PasswordField
         label="Contraseña:"
         name="password"
-        type="password"
         defaultValue={state.values?.password || ""}
         errors={state.errors?.password}
         disabled={isPending}
-        leftIcon={<IconifyIcon variant="perfilPassword" className="text-xl text-primary" />}
         required
       />
 

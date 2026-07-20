@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import Link from "next/link";
-import { TextField, Boton } from "@components";
+import { TextField, Boton, Alert } from "@components";
 import { solicitarCodigoAction, ActionState } from "./actions";
 
 interface PasoSolicitarProps {
@@ -40,15 +40,12 @@ export function PasoSolicitar({ onNext }: PasoSolicitarProps) {
 
       <form action={formAction} className="flex flex-col gap-4">
         {state.message && (
-          <div
-            className={`p-3 rounded-shape-sm text-sm font-medium ${
-              state.success
-                ? "bg-success-light text-success-dark border border-success"
-                : "bg-error-light text-error-dark border border-error"
-            }`}
+          <Alert
+            variant={state.success ? "exito" : "error"}
+            title={state.success ? "Éxito" : state.code != null ? `Error ${state.code}` : "Error"}
           >
             {state.message}
-          </div>
+          </Alert>
         )}
 
         <TextField

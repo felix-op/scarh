@@ -41,22 +41,6 @@ export default async function UsuariosPage() {
         Se actualizo el usuario con éxito
       </Alert>
 
-      {/** Alerta para el toast */}
-      <div className="flex flex-col rounded-shape-md bg-card shadow-lg dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]">
-        <div
-          className={`
-            flex items-start gap-3 p-3
-          `}
-        >
-          <IconifyIcon variant="check" className={`text-2xl shrink-0 text-success`} />
-          <div className="flex flex-col gap-1 w-full pt-0.5">
-            <strong className={`text-success text-sm leading-none`}>{"Proceso completado"}</strong>
-              <p className="text-foreground text-sm m-0 leading-tight">{"Se actualizo el usuario con éxito"}</p>
-          </div>
-        </div>
-        <div className="progress bg-success min-w-full min-h-1 rounded-shape-md"></div>
-      </div>
-
       <Alert variant="error" title="Error 409">
         No se pudo eliminar el usuario, tiene historial asociado
       </Alert>

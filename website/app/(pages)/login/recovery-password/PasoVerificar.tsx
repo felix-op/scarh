@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { TextField, Boton } from "@components";
+import { TextField, Boton, Alert } from "@components";
 import { verificarCodigoAction, solicitarCodigoAction, ActionState } from "./actions";
 
 interface PasoVerificarProps {
@@ -57,9 +57,12 @@ export function PasoVerificar({ email, onNext, onBack }: PasoVerificarProps) {
 
       <form action={formAction} className="flex flex-col gap-4">
         {state.message && (
-          <div className="p-3 rounded-shape-sm text-sm font-medium bg-error-light text-error-dark border border-error">
+          <Alert
+            variant={state.success ? "exito" : "error"}
+            title={state.success ? "Éxito" : state.code != null ? `Error ${state.code}` : "Error"}
+          >
             {state.message}
-          </div>
+          </Alert>
         )}
 
         {/* Campo oculto para pasar el email a la Server Action */}
