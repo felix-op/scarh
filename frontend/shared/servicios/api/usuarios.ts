@@ -1,4 +1,4 @@
-import { UsuarioPatchRequest, UsuarioPostRequest, UsuarioPutRequest, UsuarioResponse, UsuarioRolesPutRequest } from "types/usuarios";
+import { UsuarioPatchRequest, UsuarioPostRequest, UsuarioPutRequest, UsuarioResponse, UsuarioRolesBulkRequest, UsuarioRolesBulkResponse, UsuarioRolesPutRequest } from "types/usuarios";
 import { MutationConfig, Paginado, ParamsBase, UseGetConfig } from "./types";
 import { useGet, useDelete, usePatch, usePost, usePut } from "./queryHooks";
 
@@ -105,6 +105,26 @@ export function usePutUsuarioRoles({ params, configuracion }: UsePutUsuarioRoles
 
 	return usePut({
 		url: `${NEXT_PROXY_URL}/usuarios/{id}/roles`,
+		configuracion: configuracion ?? defaultConfig,
+		params: params ?? defaultParams,
+	});
+}
+
+type UsePostUsuarioRolesBulkOptions = {
+	params?: ParamsBase,
+	configuracion?: MutationConfig<
+		UsuarioRolesBulkRequest,
+		UsuarioRolesBulkResponse,
+		ParamsBase
+	>
+};
+
+export function usePostUsuarioRolesBulk({ params, configuracion }: UsePostUsuarioRolesBulkOptions) {
+	const defaultParams = {};
+	const defaultConfig = {};
+
+	return usePost<UsuarioRolesBulkRequest, UsuarioRolesBulkResponse, ParamsBase>({
+		url: `${NEXT_PROXY_URL}/usuarios/roles/bulk/`,
 		configuracion: configuracion ?? defaultConfig,
 		params: params ?? defaultParams,
 	});

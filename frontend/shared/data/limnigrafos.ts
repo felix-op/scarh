@@ -20,6 +20,7 @@ export type LimnigrafoDetalleData = LimnigrafoRowData & {
 	presion: string;
 	ultimoMantenimiento: string;
 	descripcion: string;
+	radioCoberturaMetros?: number | null;
 	datosExtra: { label: string; value: string }[];
 	coordenadas?: LimnigrafoCoordenadas;
 };
@@ -194,16 +195,16 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 		ubicacion: "Valle Verde - Tanque Alto",
 		bateria: "Bateria 44%",
 		tiempoUltimoDato: "Hace 50 minutos",
-		estado: { variante: "prueba" },
+		estado: { variante: "advertencia" },
 		temperatura: "20°",
 		altura: "55 mts",
 		presion: "1.0 bar",
 		ultimoMantenimiento: "29/04/2024",
 		descripcion:
-      "En modo prueba tras actualización de firmware en la estación de tanque alto.",
+      "En seguimiento operativo tras actualización de firmware en la estación de tanque alto.",
 		datosExtra: [
-			{ label: "Dato 1", value: "Firmware beta" },
-			{ label: "Dato 2", value: "Monitoreo QA" },
+			{ label: "Dato 1", value: "Firmware actualizado" },
+			{ label: "Dato 2", value: "Monitoreo activo" },
 			{ label: "Dato 3", value: "Visita 48h" },
 		],
 		coordenadas: { lat: -54.795, lng: -68.2945 },
@@ -273,7 +274,7 @@ export const LIMNIGRAFOS: LimnigrafoDetalleData[] = [
 		ubicacion: "Estuario Sur - Borde Oeste",
 		bateria: "Mantenimiento",
 		tiempoUltimoDato: "Sin datos recientes",
-		estado: { variante: "prueba" },
+		estado: { variante: "fuera" },
 		temperatura: "25°",
 		altura: "45 mts",
 		presion: "0.8 bar",

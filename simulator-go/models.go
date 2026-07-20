@@ -14,7 +14,7 @@
 //     - timestamp: Fecha y hora de la medición (RFC3339)
 //     - altura: Nivel del agua en metros (obligatorio)
 //     - temperatura: Temperatura en °C (opcional, puede ser nil)
-//     - presion: Presión atmosférica en hPa (opcional, puede ser nil)
+//     - presion: Presión en hPa (opcional, puede ser nil)
 //     - nivel_de_bateria: Nivel de batería en % (opcional, puede ser nil)
 //
 //   LimnigrafoState: Estado interno del limnígrafo
@@ -39,5 +39,6 @@ type Medicion struct {
 	Presion        *float64  `json:"presion,omitempty"`
 	Temperatura    *float64  `json:"temperatura,omitempty"`
 	NivelDeBateria *float64  `json:"nivel_de_bateria,omitempty"`
+	IdempotencyKey string    `json:"idempotency_key,omitempty"`
 	LimnigrafoID   int       `json:"limnigrafo"`
 }

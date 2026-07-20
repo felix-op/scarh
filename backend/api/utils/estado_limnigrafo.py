@@ -48,37 +48,24 @@ def calcular_estado_limnigrafo(limnigrafo, referencia=None):
     Determina el estado operativo del limnígrafo.
 
     Reglas:
-    - fuera_de_servicio: tiempo sin conexión mayor a (tiempo_peligro * 3)
-    - peligro: batería crítica o tiempo sin conexión mayor a tiempo_peligro
-    - advertencia: batería baja o tiempo sin conexión mayor a tiempo_advertencia
+    - fuera_de_rango: tiempo sin conexión mayor a tiempo_peligro
+    - peligro: última altura medida mayor o igual a altura_maxima_agua
+    - advertencia: batería en mínimo o menor, o tiempo sin conexión mayor a tiempo_advertencia
     - normal: caso contrario
     """
     referencia = referencia or timezone.now()
 
-    bateria_critica = False
-    bateria_baja = False
-
     config = getattr(limnigrafo, "configuracion", None)
     bateria_actual = limnigrafo.bateria_actual
-    bateria_max = config.bateria_max if config else None
     bateria_min = config.bateria_min if config else None
-
-    if (
+    altura_maxima_agua = config.altura_maxima_agua if config else None
+    bateria_en_advertencia = (
         bateria_actual is not None
-        and isinstance(bateria_max, (int, float))
         and isinstance(bateria_min, (int, float))
-        and bateria_max > 0
-    ):
-        porcentaje_bateria = (bateria_actual / bateria_max) * 100
-        porcentaje_min = (bateria_min / bateria_max) * 100
+        and bateria_actual <= bateria_min
+    )
 
-        if porcentaje_bateria <= porcentaje_min:
-            bateria_critica = True
-        elif porcentaje_bateria <= porcentaje_min + 10:
-            bateria_baja = True
-
-    tiempo_fuera_servicio_excedido = False
-    tiempo_peligro_excedido = False
+    tiempo_fuera_de_rango_excedido = False
     tiempo_advertencia_excedido = False
 
     if limnigrafo.ultima_conexion:
@@ -89,19 +76,23 @@ def calcular_estado_limnigrafo(limnigrafo, referencia=None):
 
         advertencia_delta = _to_timedelta(config.tiempo_advertencia) if config else None
         peligro_delta = _to_timedelta(config.tiempo_peligro) if config else None
-        fuera_servicio_delta = peligro_delta * 3 if peligro_delta is not None else None
 
-        if fuera_servicio_delta is not None and tiempo_transcurrido > fuera_servicio_delta:
-            tiempo_fuera_servicio_excedido = True
-        elif peligro_delta is not None and tiempo_transcurrido > peligro_delta:
-            tiempo_peligro_excedido = True
+        if peligro_delta is not None and tiempo_transcurrido > peligro_delta:
+            tiempo_fuera_de_rango_excedido = True
         elif advertencia_delta is not None and tiempo_transcurrido > advertencia_delta:
             tiempo_advertencia_excedido = True
 
-    if tiempo_fuera_servicio_excedido:
-        return "fuera_de_servicio"
-    if bateria_critica or tiempo_peligro_excedido:
+    ultima_medicion = limnigrafo.mediciones.order_by("-fecha_hora").first()
+    altura_en_peligro = (
+        ultima_medicion is not None
+        and isinstance(altura_maxima_agua, (int, float))
+        and ultima_medicion.altura_agua >= altura_maxima_agua
+    )
+
+    if tiempo_fuera_de_rango_excedido:
+        return "fuera_de_rango"
+    if altura_en_peligro:
         return "peligro"
-    if bateria_baja or tiempo_advertencia_excedido:
+    if bateria_en_advertencia or tiempo_advertencia_excedido:
         return "advertencia"
     return "normal"

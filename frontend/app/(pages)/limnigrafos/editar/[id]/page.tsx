@@ -111,7 +111,15 @@ export default function PaginaEditarLimnigrafo() {
 			descripcion: limnigrafo.descripcion || "",
 			ultimo_mantenimiento: limnigrafo.ultimo_mantenimiento || "",
 			bateria_min: configuracion?.bateria_min || 0,
-			bateria_max: configuracion?.bateria_max || 0,
+			altura_minima_agua: configuracion?.altura_minima_agua || 0,
+			altura_maxima_agua: configuracion?.altura_maxima_agua || 0,
+			temperatura_minima: configuracion?.temperatura_minima || 0,
+			temperatura_maxima: configuracion?.temperatura_maxima || 100,
+			presion_minima: configuracion?.presion_minima || 0,
+			presion_maxima: configuracion?.presion_maxima || 0,
+			radio_cobertura_metros: limnigrafo.radio_cobertura_metros != null
+				? String(limnigrafo.radio_cobertura_metros)
+				: null,
 			tiempo_advertencia_horas,
 			tiempo_advertencia_minutos,
 			tiempo_advertencia_segundos,
@@ -146,6 +154,9 @@ export default function PaginaEditarLimnigrafo() {
 						unit: data.memoria_unit,
 						value: Number(data.memoria_value),
 					}),
+					radio_cobertura_metros: data.radio_cobertura_metros
+						? Number(data.radio_cobertura_metros)
+						: null,
 					tipo_comunicacion: data.tipo_comunicacion,
 					ultimo_mantenimiento: data.ultimo_mantenimiento || null,
 				},
@@ -154,7 +165,12 @@ export default function PaginaEditarLimnigrafo() {
 			await editarConfiguracionLimnigrafo({
 				data: {
 					bateria_min: data.bateria_min,
-					bateria_max: data.bateria_max,
+					altura_minima_agua: data.altura_minima_agua,
+					altura_maxima_agua: data.altura_maxima_agua,
+					temperatura_minima: data.temperatura_minima,
+					temperatura_maxima: data.temperatura_maxima,
+					presion_minima: data.presion_minima,
+					presion_maxima: data.presion_maxima,
 					tiempo_advertencia,
 					tiempo_peligro,
 				},

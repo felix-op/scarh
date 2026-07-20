@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
-import { Map, MapTileLayer, MapZoomControl, MapMarker, MapTooltip } from "@componentes/components/ui/map";
+import { Fragment, useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import { Map, MapTileLayer, MapZoomControl, MapMarker, MapTooltip, MapCircle } from "@componentes/components/ui/map";
 import { useMapEvents } from "react-leaflet";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@componentes/components/ui/button";
@@ -29,8 +30,8 @@ const DEFAULT_CENTER: [number, number] = [-54.79930469196583, -68.30601485928138
 
 const estadoColor: Record<string, string> = {
 	activo: "#82d987",
-	prueba: "#0EA5E9",
 	advertencia: "#facc15",
+	peligro: "#ef4444",
 	fuera: "#d65757",
 };
 
@@ -38,8 +39,15 @@ function getEstadoColor(variant?: string) {
 	return estadoColor[variant ?? "activo"] ?? "#82d987";
 }
 
+type MapClickEvent = {
+	latlng: {
+		lat: number;
+		lng: number;
+	};
+};
+
 // Componente para capturar clicks en el mapa y cambiar el cursor
-function MapClickHandler({ onClick, active }: { onClick: (e: any) => void, active: boolean }) {
+function MapClickHandler({ onClick, active }: { onClick: (e: MapClickEvent) => void, active: boolean }) {
 	const map = useMapEvents({
 		click: (e) => {
 			if (active) onClick(e);
@@ -72,12 +80,16 @@ function ChangeMapView({ center }: { center: [number, number] }) {
 	return null;
 }
 
-const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
+const MapView: React.FC<MapViewProps> = ({ resizeToken: _resizeToken = 0 }) => {
+	const searchParams = useSearchParams();
+	const limnigrafoParam = searchParams.get("limnigrafo");
+	const modoParam = searchParams.get("modo");
 	const [viewMode, setViewMode] = useState<"limpio" | "lista">("lista");
 	const [mapStyle, setMapStyle] = useState<"claro" | "satelite">("claro");
 	const [isFullscreen, setIsFullscreen] = useState(false);
 	const [placementMode, setPlacementMode] = useState<LimnigrafoDetalleData | null>(null);
 	const [tempMarker, setTempMarker] = useState<{ lat: number, lng: number } | null>(null);
+	const initialSelectionAppliedRef = useRef(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const queryClient = useQueryClient();
 
@@ -147,6 +159,35 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 	}, [markers, cameraCenter]);
 
 	useEffect(() => {
+		if (initialSelectionAppliedRef.current || !limnigrafoParam || limnigrafos.length === 0) {
+			return;
+		}
+
+		const limnigrafoSeleccionado = limnigrafos.find(
+			(limnigrafo) => String(limnigrafo.id) === limnigrafoParam,
+		);
+
+		if (!limnigrafoSeleccionado) {
+			return;
+		}
+
+		initialSelectionAppliedRef.current = true;
+		setSelectedLimnigrafo(limnigrafoSeleccionado);
+
+		if (limnigrafoSeleccionado.coordenadas) {
+			setCameraCenter([
+				limnigrafoSeleccionado.coordenadas.lat,
+				limnigrafoSeleccionado.coordenadas.lng,
+			]);
+		}
+
+		if (modoParam === "ubicacion") {
+			setPlacementMode(limnigrafoSeleccionado);
+			setViewMode("limpio");
+		}
+	}, [limnigrafoParam, limnigrafos, modoParam]);
+
+	useEffect(() => {
 		if (!selectedLimnigrafo) {
 			return;
 		}
@@ -197,7 +238,7 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 		}
 	}, []);
 
-	const handleMapClickForPlacement = useCallback((e: any) => {
+	const handleMapClickForPlacement = useCallback((e: MapClickEvent) => {
 		if (!placementMode) return;
 
 		const { lat, lng } = e.latlng;
@@ -234,9 +275,10 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 				queryClient.invalidateQueries({ queryKey: ["useGetLimnigrafos"] });
 				setPlacementMode(null);
 				setTempMarker(null);
-			} catch (err: any) {
+			} catch (err: unknown) {
 				console.error("Error guardando ubicación:", err);
-				alert(`No se pudo guardar la ubicación: ${err.message}`);
+				const message = err instanceof Error ? err.message : "Error desconocido";
+				alert(`No se pudo guardar la ubicación: ${message}`);
 				setTempMarker(null);
 			}
 		};
@@ -279,22 +321,40 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken = 0 }) => {
 					{markers.map((limnigrafo) => {
 						const color = getEstadoColor(limnigrafo.estado.variante);
 						return (
-							<MapMarker
-								key={limnigrafo.id}
-								position={[limnigrafo.coordenadas.lat, limnigrafo.coordenadas.lng]}
-								iconAnchor={[12, 12]}
-								eventHandlers={{
-									click: () => setSelectedLimnigrafo(limnigrafo)
-								}}
-								icon={
-									<div 
-										className={`w-6 h-6 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-110 transition-transform ${selectedLimnigrafo?.id === limnigrafo.id ? 'ring-4 ring-principal' : ''}`}
-										style={{ backgroundColor: color }}
+							<Fragment key={limnigrafo.id}>
+								{limnigrafo.radioCoberturaMetros && limnigrafo.radioCoberturaMetros > 0 ? (
+									<MapCircle
+										center={[limnigrafo.coordenadas.lat, limnigrafo.coordenadas.lng]}
+										radius={limnigrafo.radioCoberturaMetros}
+										pathOptions={{
+											color,
+											weight: selectedLimnigrafo?.id === limnigrafo.id ? 3 : 2,
+											opacity: 0.55,
+											fillColor: color,
+											fillOpacity: selectedLimnigrafo?.id === limnigrafo.id ? 0.22 : 0.14,
+										}}
 									/>
-								}
-							>
-								<MapTooltip>{limnigrafo.nombre} - Click para ver detalles</MapTooltip>
-							</MapMarker>
+								) : null}
+								<MapMarker
+									key={limnigrafo.id}
+									position={[limnigrafo.coordenadas.lat, limnigrafo.coordenadas.lng]}
+									iconAnchor={[12, 12]}
+									eventHandlers={{
+										click: () => setSelectedLimnigrafo(limnigrafo)
+									}}
+									icon={
+										<div 
+											className={`w-6 h-6 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-110 transition-transform ${selectedLimnigrafo?.id === limnigrafo.id ? 'ring-4 ring-principal' : ''}`}
+											style={{ backgroundColor: color }}
+										/>
+									}
+								>
+									<MapTooltip>
+										{limnigrafo.nombre}
+										{limnigrafo.radioCoberturaMetros ? ` - Cobertura ${limnigrafo.radioCoberturaMetros} m` : ""}
+									</MapTooltip>
+								</MapMarker>
+							</Fragment>
 						);
 					})}
 				</Map>

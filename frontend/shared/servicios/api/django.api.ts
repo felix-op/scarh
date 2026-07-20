@@ -16,11 +16,73 @@ export type MedicionResponse = {
 	id: number,
 	fecha_hora: string, // ISO 8601: "2025-12-04T18:14:03.142454Z"
 	altura_agua: number | null, // Nivel del agua en metros
-	presion: number | null, // Presión atmosférica en hPa
+	presion: number | null, // Presión en hPa
 	temperatura: number | null, // Temperatura en grados Celsius
 	nivel_de_bateria: number | null, // Nivel de batería en porcentaje (0-100)
+	idempotency_key?: string | null,
 	fuente: "automatico" | "manual" | "import_csv" | "import_json", // Origen de la medición
 	limnigrafo: number, // ID del limnígrafo que envió la medición
+};
+
+export type ImportRowStatus =
+	| "valid"
+	| "error"
+	| "duplicate_file"
+	| "duplicate_database"
+	| "warning";
+
+export type ImportRowIssue = {
+	field: string,
+	code: string,
+	message: string,
+};
+
+export type ImportMeasurementRow = {
+	rowNumber: number,
+	limnigrafoId: number | null,
+	fechaHora: string,
+	alturaAgua: number | null,
+	presion: number | null,
+	temperatura: number | null,
+	nivelBateria: number | null,
+};
+
+export type ImportPreviewRow = ImportMeasurementRow & {
+	status: ImportRowStatus,
+	issues: ImportRowIssue[],
+};
+
+export type MedicionImportRequest = {
+	file_name: string,
+	fuente: "import_csv" | "import_json",
+	fallback_limnigrafo_id?: number | null,
+	rows: Array<{
+		row_number: number,
+		limnigrafo_id?: number | null,
+		fecha_hora: string,
+		altura_agua: number | null,
+		presion: number | null,
+		temperatura: number | null,
+		nivel_de_bateria: number | null,
+	}>,
+};
+
+export type MedicionImportValidationResponse = {
+	file_name: string,
+	fuente: "import_csv" | "import_json",
+	is_valid: boolean,
+	summary: {
+		total_rows: number,
+		valid_rows: number,
+		error_rows: number,
+	},
+	rows: ImportPreviewRow[],
+};
+
+export type MedicionBulkImportResponse = {
+	message: string,
+	imported_rows: number,
+	rows: ImportPreviewRow[],
 };
 
 // Respuesta paginada del backend (50 mediciones por página)
@@ -39,6 +101,7 @@ type UseGetMedicionesParams = {
 		fuente?: "manual" | "automatico" | "import_csv" | "import_json", // Filtrar por origen
 		fecha_desde?: string, // Fecha/hora de inicio ISO 8601
 		fecha_hasta?: string, // Fecha/hora de fin ISO 8601
+		search?: string, // Búsqueda textual general
 		limit?: string, // Cantidad de resultados por página
 		page?: string, // Número de página
 	}
@@ -70,6 +133,7 @@ export type MedicionPostRequest = {
 	presion?: number | null,
 	temperatura?: number | null,
 	nivel_de_bateria?: number | null,
+	idempotency_key?: string,
 	fuente?: "manual" | "automatico" | "import_csv" | "import_json",
 };
 
@@ -88,6 +152,40 @@ export function usePostMedicion({ params, configuracion }: UsePostMedicionOption
 	return usePost<MedicionPostRequest, MedicionResponse, ParamsBase>({
 		url: `${NEXT_PROXY_URL}/medicion/`,
 		configuracion: configuracion ?? defaultConfig,
+		params: params ?? {},
+	});
+}
+
+type UsePostMedicionImportOptions = {
+	params?: ParamsBase,
+	configuracion?: MutationConfig<
+		MedicionImportRequest,
+		MedicionImportValidationResponse,
+		ParamsBase
+	>
+};
+
+export function usePostValidarImportacionMediciones({ params, configuracion }: UsePostMedicionImportOptions = {}) {
+	return usePost<MedicionImportRequest, MedicionImportValidationResponse, ParamsBase>({
+		url: `${NEXT_PROXY_URL}/medicion/validate-import/`,
+		configuracion: configuracion ?? {},
+		params: params ?? {},
+	});
+}
+
+type UsePostBulkImportOptions = {
+	params?: ParamsBase,
+	configuracion?: MutationConfig<
+		MedicionImportRequest,
+		MedicionBulkImportResponse,
+		ParamsBase
+	>
+};
+
+export function usePostImportarMedicionesLote({ params, configuracion }: UsePostBulkImportOptions = {}) {
+	return usePost<MedicionImportRequest, MedicionBulkImportResponse, ParamsBase>({
+		url: `${NEXT_PROXY_URL}/medicion/bulk-import/`,
+		configuracion: configuracion ?? {},
 		params: params ?? {},
 	});
 }

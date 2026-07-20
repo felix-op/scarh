@@ -12,11 +12,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
 from ..utils.audit import (
-    registrar_accion_auditoria,
+    registrar_accion_auditoria_en_commit,
     construir_cambios_instancia,
     construir_descripcion_modificacion,
+    sanitizar_auditoria,
 )
-from django.contrib.auth.hashers import make_password
+
+
 class UsuarioPagination(PageNumberPagination):
     page_size = 10               
     page_size_query_param = 'limit' 
@@ -34,7 +36,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         usuario = serializer.save()
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="created",
             entidad="Usuario",
@@ -46,28 +48,38 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
+        usuario_original = serializer.instance
         cambios = construir_cambios_instancia(
-            serializer.instance,
+            usuario_original,
             serializer.validated_data,
             campos_excluidos={"password"},
         )
         usuario = serializer.save()
 
-        descripcion = construir_descripcion_modificacion(
-            f"Modificó el usuario '{usuario.username}'.",
-            cambios,
-        )
+        if len(cambios) == 1 and cambios[0]["field"] == "is_active":
+            descripcion = (
+                f"Activó el usuario '{usuario.username}'."
+                if cambios[0]["new"]
+                else f"Desactivó el usuario '{usuario.username}'."
+            )
+        else:
+            descripcion = construir_descripcion_modificacion(
+                f"Modificó el usuario '{usuario.username}'.",
+                cambios,
+            )
 
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="modified",
             entidad="Usuario",
             entidad_id=usuario.id,
             descripcion=descripcion,
-            metadata={
-                "target_username": usuario.username,
-                "changes": cambios,
-            },
+            metadata=sanitizar_auditoria(
+                {
+                    "target_username": usuario.username,
+                    "changes": cambios,
+                },
+            ),
         )
 
     def perform_destroy(self, instance):
@@ -81,7 +93,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         username = instance.username
         instance.delete()
 
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="deleted",
             entidad="Usuario",
@@ -102,6 +114,17 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             user.set_password(serializer.validated_data['password_nueva'])
             user.save()
+            registrar_accion_auditoria_en_commit(
+                request=request,
+                tipo_accion="modified",
+                entidad="Usuario",
+                entidad_id=user.id,
+                descripcion=f"Cambió la contraseña del usuario '{user.username}'.",
+                metadata={
+                    "target_username": user.username,
+                    "contrasena_cambiada": True,
+                },
+            )
             return Response({"message": "Contraseña actualizada correctamente."}, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -157,7 +180,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         roles_nuevos = sorted(set(usuario.roles.values_list('nombre', flat=True)))
         
         # Registrar en auditoría
-        registrar_accion_auditoria(
+        registrar_accion_auditoria_en_commit(
             request=self.request,
             tipo_accion="modified",
             entidad="Usuario",
@@ -174,6 +197,108 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             {
                 "message": "Roles actualizados correctamente.",
                 "roles": roles_nuevos
+            },
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=['post'], url_path='roles/bulk')
+    def asignar_roles_bulk(self, request):
+        """Endpoint POST /usuarios/roles/bulk/ para modificar roles de varios usuarios."""
+        user_ids = request.data.get('user_ids')
+        roles_nombres = request.data.get('roles')
+        mode = request.data.get('mode')
+
+        if not isinstance(user_ids, list) or not user_ids:
+            return Response(
+                {"error": "El campo 'user_ids' debe ser una lista con al menos un usuario."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not isinstance(roles_nombres, list):
+            return Response(
+                {"error": "El campo 'roles' debe ser una lista de strings."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if mode not in {'add', 'remove', 'replace'}:
+            return Response(
+                {"error": "El campo 'mode' debe ser uno de: add, remove, replace."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if len(set(user_ids)) != len(user_ids):
+            return Response(
+                {"error": "El campo 'user_ids' no debe contener IDs repetidos."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        roles_set = set(roles_nombres)
+        roles_invalidos = roles_set - PREDEFINED_ROLE_NAMES
+        if roles_invalidos:
+            return Response(
+                {"error": f"Roles inválidos: {sorted(roles_invalidos)}. Solo se permiten roles predefinidos."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        usuarios = list(Usuario.objects.filter(id__in=user_ids).order_by('id'))
+        if len(usuarios) != len(user_ids):
+            usuarios_encontrados = {usuario.id for usuario in usuarios}
+            usuarios_faltantes = sorted(set(user_ids) - usuarios_encontrados)
+            return Response(
+                {"error": f"Usuarios no encontrados: {usuarios_faltantes}."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        roles_objetos = list(Rol.objects.filter(nombre__in=roles_set))
+        if len(roles_objetos) != len(roles_set):
+            roles_encontrados = {rol.nombre for rol in roles_objetos}
+            roles_faltantes = sorted(roles_set - roles_encontrados)
+            return Response(
+                {"error": f"Roles no encontrados en la base de datos: {roles_faltantes}. Ejecutá: python manage.py loaddata roles.json"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        usuarios_actualizados = []
+
+        for usuario in usuarios:
+            roles_anteriores = set(usuario.roles.values_list('nombre', flat=True))
+
+            if mode == 'replace':
+                roles_resultantes = roles_set
+            elif mode == 'add':
+                roles_resultantes = roles_anteriores | roles_set
+            else:
+                roles_resultantes = roles_anteriores - roles_set
+
+            usuario.roles.set(Rol.objects.filter(nombre__in=roles_resultantes))
+
+            roles_nuevos = sorted(set(usuario.roles.values_list('nombre', flat=True)))
+            usuarios_actualizados.append({
+                "id": usuario.id,
+                "username": usuario.username,
+                "roles_anteriores": sorted(roles_anteriores),
+                "roles_nuevos": roles_nuevos,
+            })
+
+            registrar_accion_auditoria_en_commit(
+                request=self.request,
+                tipo_accion="modified",
+                entidad="Usuario",
+                entidad_id=usuario.id,
+                descripcion=f"Modificó los roles del usuario '{usuario.username}' en lote.",
+                metadata={
+                    "target_username": usuario.username,
+                    "roles_anteriores": sorted(roles_anteriores),
+                    "roles_nuevos": roles_nuevos,
+                    "bulk_mode": mode,
+                },
+            )
+
+        return Response(
+            {
+                "message": "Roles actualizados correctamente.",
+                "mode": mode,
+                "updated_users": usuarios_actualizados,
             },
             status=status.HTTP_200_OK
         )

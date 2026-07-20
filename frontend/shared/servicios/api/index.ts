@@ -2,6 +2,7 @@ export {
 	useGetUsuarios,
 	useGetUsuario,
 	usePostUsuario,
+	usePostUsuarioRolesBulk,
 	usePutUsuario,
 	usePachtUsuario,
 	useDeleteUsuario

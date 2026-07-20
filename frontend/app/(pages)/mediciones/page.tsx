@@ -1,13 +1,18 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, Suspense, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import {
+	ImportPreviewRow,
 	MedicionPaginatedResponse,
+	MedicionImportRequest,
 	MedicionPostRequest,
 	MedicionResponse,
 	useGetMediciones,
+	usePostImportarMedicionesLote,
 	usePostMedicion,
+	usePostValidarImportacionMediciones,
 } from "@servicios/api/django.api";
 import ModalCargaManualMedicion, {
 	ManualFormState,
@@ -16,6 +21,8 @@ import ModalImportacionMediciones from "@componentes/mediciones/ModalImportacion
 import SeccionHistorialMediciones from "./secciones/SeccionHistorialMediciones";
 import { HistorialFilters, MedicionRow } from "./secciones/types";
 import {
+	applyFallbackLimnigrafo,
+	buildImportRequestRows,
 	buildCsvContent,
 	downloadTextFile,
 	formatDate,
@@ -23,7 +30,6 @@ import {
 	formatTime,
 	parseImportRowsByFilename,
 	parseNumeric,
-	ParsedMedicionImportRow,
 	toDatetimeLocalInputValue,
 } from "./utils";
 import { LimnigrafoResponse } from "types/limnigrafos";
@@ -33,6 +39,7 @@ import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
 const DEFAULT_PAGE_SIZE = 25;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 75, 100] as const;
 const EXPORT_PAGE_SIZE = 1000;
+const MEDICIONES_REFETCH_INTERVAL_MS = 15000;
 
 const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
 	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#1D4ED8] dark:bg-[#0B2A43] dark:text-[#93C5FD] dark:hover:bg-[#12385B]";
@@ -58,7 +65,7 @@ function getDefaultDateRange() {
 
 	return {
 		desde: toDatetimeLocalInputValue(from),
-		hasta: toDatetimeLocalInputValue(now),
+		hasta: "",
 	};
 }
 
@@ -136,9 +143,20 @@ function mapMedicionToRow(medicion: MedicionResponse, limnigrafoName: string): M
 	};
 }
 
-export default function MedicionesPage() {
-	const [historialFilters, setHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
-	const [appliedHistorialFilters, setAppliedHistorialFilters] = useState<HistorialFilters>(getDefaultHistorialFilters);
+function MedicionesContent() {
+	const searchParams = useSearchParams();
+	const limnigrafoIdParam = searchParams.get("limnigrafo") ?? searchParams.get("id");
+	const limnigrafoInicial = limnigrafoIdParam && /^\d+$/.test(limnigrafoIdParam)
+		? [limnigrafoIdParam]
+		: [];
+	const [historialFilters, setHistorialFilters] = useState<HistorialFilters>(() => ({
+		...getDefaultHistorialFilters(),
+		limnigrafo: limnigrafoInicial,
+	}));
+	const [appliedHistorialFilters, setAppliedHistorialFilters] = useState<HistorialFilters>(() => ({
+		...getDefaultHistorialFilters(),
+		limnigrafo: limnigrafoInicial,
+	}));
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [mensaje, setMensaje] = useState<string | null>(null);
@@ -147,11 +165,13 @@ export default function MedicionesPage() {
 	const [manualModalError, setManualModalError] = useState<string | null>(null);
 	const [importModalMessage, setImportModalMessage] = useState<string | null>(null);
 	const [importModalError, setImportModalError] = useState<string | null>(null);
+	const [isValidatingImport, setIsValidatingImport] = useState(false);
+	const [isImportValidated, setIsImportValidated] = useState(false);
 	const [isExporting, setIsExporting] = useState(false);
 	const [isImporting, setIsImporting] = useState(false);
 	const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 	const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-	const [importRows, setImportRows] = useState<ParsedMedicionImportRow[]>([]);
+	const [importRowsSource, setImportRowsSource] = useState<ImportPreviewRow[]>([]);
 	const [importFileName, setImportFileName] = useState("");
 	const [importFuente, setImportFuente] = useState<"import_csv" | "import_json" | null>(null);
 	const [importFallbackLimnigrafo, setImportFallbackLimnigrafo] = useState("");
@@ -218,6 +238,11 @@ export default function MedicionesPage() {
 			params.fecha_hasta = hastaIso;
 		}
 
+		const search = appliedHistorialFilters.busqueda.trim();
+		if (search) {
+			params.search = search;
+		}
+
 		return params;
 	}, [appliedHistorialFilters, currentPage, pageSize]);
 
@@ -233,43 +258,37 @@ export default function MedicionesPage() {
 		},
 		config: {
 			placeholderData: (previous) => previous,
+			refetchInterval: MEDICIONES_REFETCH_INTERVAL_MS,
+			refetchIntervalInBackground: true,
 		},
 	});
 
 	const postMedicion = usePostMedicion();
+	const validarImportacion = usePostValidarImportacionMediciones();
+	const importarLote = usePostImportarMedicionesLote();
 
-	const visibleMediciones = useMemo(() => {
-		const source = medicionesData?.results ?? [];
-		const search = appliedHistorialFilters.busqueda.trim().toLowerCase();
-		if (!search) {
-			return source;
-		}
+	const fallbackLimnigrafoId = useMemo(() => {
+		const parsed = Number.parseInt(
+			importFallbackLimnigrafo || appliedHistorialFilters.limnigrafo[0] || manualForm.limnigrafo,
+			10,
+		);
+		return Number.isNaN(parsed) ? null : parsed;
+	}, [appliedHistorialFilters.limnigrafo, importFallbackLimnigrafo, manualForm.limnigrafo]);
 
-		return source.filter((medicion) => {
-			const limnigrafoName = (limnigrafoNameById.get(medicion.limnigrafo) ?? "").toLowerCase();
-			const target = [
-				String(medicion.id),
-				limnigrafoName,
-				medicion.fuente,
-				medicion.fecha_hora,
-				String(medicion.altura_agua ?? ""),
-				String(medicion.presion ?? ""),
-				String(medicion.temperatura ?? ""),
-			].join(" ").toLowerCase();
-
-			return target.includes(search);
-		});
-	}, [appliedHistorialFilters.busqueda, limnigrafoNameById, medicionesData]);
+	const importRows = useMemo(
+		() => applyFallbackLimnigrafo(importRowsSource, fallbackLimnigrafoId),
+		[importRowsSource, fallbackLimnigrafoId],
+	);
 
 	const tableRows = useMemo(
 		() =>
-			visibleMediciones.map((medicion) =>
+			(medicionesData?.results ?? []).map((medicion) =>
 				mapMedicionToRow(
 					medicion,
 					limnigrafoNameById.get(medicion.limnigrafo) ?? `ID ${medicion.limnigrafo}`,
 				),
 			),
-		[limnigrafoNameById, visibleMediciones],
+		[limnigrafoNameById, medicionesData],
 	);
 
 	const serverCount = medicionesData?.count ?? 0;
@@ -323,6 +342,13 @@ export default function MedicionesPage() {
 		if (!open) {
 			setImportModalError(null);
 			setImportModalMessage(null);
+			setIsImportValidated(false);
+			setIsValidatingImport(false);
+			setIsImporting(false);
+			setImportRowsSource([]);
+			setImportFileName("");
+			setImportFuente(null);
+			setImportFallbackLimnigrafo("");
 		}
 	}
 
@@ -406,9 +432,28 @@ export default function MedicionesPage() {
 	async function handleImportFileChange(event: ChangeEvent<HTMLInputElement>) {
 		setImportModalError(null);
 		setImportModalMessage(null);
+		setIsImportValidated(false);
 
 		const file = event.target.files?.[0];
 		if (!file) {
+			return;
+		}
+
+		if (!file.name.toLowerCase().endsWith(".csv") && !file.name.toLowerCase().endsWith(".json")) {
+			setImportRowsSource([]);
+			setImportFileName("");
+			setImportFuente(null);
+			setImportModalError("El archivo debe ser CSV o JSON.");
+			event.target.value = "";
+			return;
+		}
+
+		if (file.size > (5 * 1024 * 1024)) {
+			setImportRowsSource([]);
+			setImportFileName("");
+			setImportFuente(null);
+			setImportModalError("El archivo supera el tamaño máximo permitido de 5 MB.");
+			event.target.value = "";
 			return;
 		}
 
@@ -416,19 +461,19 @@ export default function MedicionesPage() {
 			const text = await file.text();
 			const rows = parseImportRowsByFilename(text, file.name);
 			if (rows.length === 0) {
-				setImportRows([]);
+				setImportRowsSource([]);
 				setImportFileName("");
 				setImportFuente(null);
 				setImportModalError("No se encontraron filas válidas en el archivo.");
 				return;
 			}
 
-			setImportRows(rows);
+			setImportRowsSource(rows);
 			setImportFileName(file.name);
 			setImportFuente(inferImportFuenteByFileName(file.name));
-			setImportModalMessage(`Archivo cargado: ${rows.length} filas listas para importar.`);
+			setImportModalMessage(`Archivo cargado: ${rows.length} filas listas para validar.`);
 		} catch (error) {
-			setImportRows([]);
+			setImportRowsSource([]);
 			setImportFileName("");
 			setImportFuente(null);
 			setImportModalError(error instanceof Error ? error.message : "No se pudo procesar el archivo seleccionado.");
@@ -437,87 +482,88 @@ export default function MedicionesPage() {
 		}
 	}
 
-	async function handleImportSubmit() {
+	function buildImportPayload(): MedicionImportRequest | null {
+		if (!importFuente || !importFileName) {
+			return null;
+		}
+
+		return {
+			file_name: importFileName,
+			fuente: importFuente,
+			fallback_limnigrafo_id: fallbackLimnigrafoId,
+			rows: buildImportRequestRows(importRows),
+		};
+	}
+
+	async function handleValidateImport() {
 		if (importRows.length === 0) {
 			setImportModalError("Cargá un archivo con mediciones antes de importar.");
 			return;
 		}
+		if (importRows.some((row) => row.status !== "valid")) {
+			setImportModalError(null);
+			return;
+		}
 
-		const fallbackLimnigrafoId = Number.parseInt(
-			importFallbackLimnigrafo
-				|| appliedHistorialFilters.limnigrafo[0]
-				|| manualForm.limnigrafo,
-			10,
-		);
+		const payload = buildImportPayload();
+		if (!payload) {
+			setImportModalError("No se pudo preparar el lote de importación.");
+			return;
+		}
+
+		setIsValidatingImport(true);
+		setImportModalError(null);
+		setImportModalMessage(null);
+
+		try {
+			const response = await validarImportacion.mutateAsync({ data: payload });
+			setImportRowsSource(response.rows);
+			setIsImportValidated(response.is_valid);
+			if (response.is_valid) {
+				setImportModalMessage(`Validación completada: ${response.summary.valid_rows} filas listas para importar.`);
+			} else {
+				setImportModalError("La validación detectó filas con errores o duplicados. Revisá el detalle antes de continuar.");
+			}
+		} catch (error) {
+			setIsImportValidated(false);
+			setImportModalError(error instanceof Error ? error.message : "No se pudo validar la importación.");
+		} finally {
+			setIsValidatingImport(false);
+		}
+	}
+
+	async function handleImportSubmit() {
+		if (!isImportValidated) {
+			await handleValidateImport();
+			return;
+		}
+
+		const payload = buildImportPayload();
+		if (!payload) {
+			setImportModalError("No se pudo preparar el lote de importación.");
+			return;
+		}
+
 		setIsImporting(true);
 		setImportModalError(null);
 		setImportModalMessage(null);
 
-		let successCount = 0;
-		const importErrors: string[] = [];
-		const importedByLimnigrafo = new Map<number, number>();
-
-		for (let index = 0; index < importRows.length; index += 1) {
-			const row = importRows[index];
-			const limnigrafoIdFromRow = row.limnigrafo;
-			const limnigrafoId = limnigrafoIdFromRow ?? fallbackLimnigrafoId;
-
-			if (!limnigrafoId || Number.isNaN(limnigrafoId)) {
-				importErrors.push(`Fila ${index + 1}: falta limnígrafo válido.`);
-				continue;
-			}
-
-			const payload: MedicionPostRequest = {
-				limnigrafo: limnigrafoId,
-				fecha_hora: row.fecha_hora,
-				altura_agua: row.altura_agua,
-				presion: row.presion,
-				temperatura: row.temperatura,
-				nivel_de_bateria: row.nivel_de_bateria,
-				fuente: importFuente ?? undefined,
-			};
-
-			try {
-				await postMedicion.mutateAsync({ data: payload });
-				successCount += 1;
-				importedByLimnigrafo.set(
-					limnigrafoId,
-					(importedByLimnigrafo.get(limnigrafoId) ?? 0) + 1,
-				);
-			} catch (error) {
-				const message = error instanceof Error ? error.message : "Error desconocido";
-				importErrors.push(`Fila ${index + 1}: ${message}`);
-			}
-		}
-
-		setIsImporting(false);
-		await refetchMediciones();
-
-		if (successCount > 0) {
-			const distribution = [...importedByLimnigrafo.entries()]
-				.sort(([leftId], [rightId]) => leftId - rightId)
-				.map(([limnigrafoId, count]) => {
-					const limnigrafoLabel = limnigrafoNameById.get(limnigrafoId) ?? `ID ${limnigrafoId}`;
-					return `${limnigrafoLabel}: ${count}`;
-				})
-				.join(", ");
-
-			const importSummary =
-				`Importación finalizada. Filas guardadas: ${successCount}.`
-				+ (distribution ? ` Distribución por limnígrafo: ${distribution}.` : "");
+		try {
+			const response = await importarLote.mutateAsync({ data: payload });
+			await refetchMediciones();
+			const importSummary = `Importación finalizada. Filas guardadas: ${response.imported_rows}.`;
 			setImportModalMessage(importSummary);
 			setMensaje(importSummary);
-		}
-
-		if (importErrors.length > 0) {
-			setImportModalError(importErrors.slice(0, 4).join(" "));
-		}
-
-		if (successCount > 0 && importErrors.length === 0) {
-			setImportRows([]);
+			setImportRowsSource([]);
 			setImportFileName("");
 			setImportFuente(null);
+			setIsImportValidated(false);
 			handleImportModalOpenChange(false);
+		} catch (error) {
+			setImportModalError(error instanceof Error ? error.message : "No se pudo completar la importación.");
+			setIsImportValidated(false);
+		} finally {
+			setIsImporting(false);
 		}
 	}
 
@@ -604,17 +650,37 @@ export default function MedicionesPage() {
 						onOpenChange={handleImportModalOpenChange}
 						limnigrafos={limnigrafos}
 						importFallbackLimnigrafo={importFallbackLimnigrafo}
-						onImportFallbackChange={setImportFallbackLimnigrafo}
+						onImportFallbackChange={(value) => {
+							setImportFallbackLimnigrafo(value);
+							setIsImportValidated(false);
+						}}
 						importFileName={importFileName}
 						importRows={importRows}
+						isImportValidated={isImportValidated}
+						isValidating={isValidatingImport}
 						isImporting={isImporting}
 						actionError={importModalError}
 						actionMessage={importModalMessage}
 						onFileChange={handleImportFileChange}
+						onValidateSubmit={handleValidateImport}
 						onImportSubmit={handleImportSubmit}
 					/>
 				</div>
 			</main>
 		</PaginaBase>
+	);
+}
+
+export default function MedicionesPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="flex min-h-screen items-center justify-center text-xl text-[#4B4B4B] dark:text-[#94A3B8]">
+					Cargando mediciones...
+				</div>
+			}
+		>
+			<MedicionesContent />
+		</Suspense>
 	);
 }

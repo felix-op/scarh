@@ -6,6 +6,7 @@ class Accion(models.Model):
         ("modified", "Modificación"),
         ("deleted", "Eliminación"),
         ("manual_data_load", "Carga manual de datos"),
+        ("import_data_load", "Importación de datos"),
     ]
 
     ESTADO_CHOICES = [

@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from api.models import Limnigrafo, ConfiguracionLimnigrafo
+from api.models.medicion import Medicion
 from datetime import time, timedelta
 from rest_framework_api_key.models import APIKey
 
@@ -18,7 +19,6 @@ class LimnigrafoTests(APITestCase):
             'descripcion': 'Limnigrafo de prueba',
             'memoria': 1024,
             'tipo_comunicacion': ['internet-https-4G'],
-            'bateria_max': 14.5,
             'bateria_min': 11.0,
             'tiempo_advertencia': '01:00:00',
             'tiempo_peligro': '02:00:00',
@@ -29,13 +29,14 @@ class LimnigrafoTests(APITestCase):
             descripcion='Limnigrafo existente',
             memoria=2048,
             tipo_de_comunicacion=['fisico-usb'],
+            radio_cobertura_metros=350,
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=self.limnigrafo,
-            bateria_max=12.0,
             bateria_min=10.0,
             tiempo_advertencia=1800,  # 30 minutos (1800 segundos)
-            tiempo_peligro=3600       # 1 hora (3600 segundos)
+            tiempo_peligro=3600,      # 1 hora (3600 segundos)
+            altura_maxima_agua=3.0,
         )
         self.list_url = reverse('limnigrafos-list')
         self.detail_url = reverse('limnigrafos-detail', args=[self.limnigrafo.id])
@@ -61,9 +62,50 @@ class LimnigrafoTests(APITestCase):
         response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['codigo'], self.limnigrafo.codigo)
+        self.assertEqual(response.data['radio_cobertura_metros'], 350)
 
     def test_list_refreshes_estado_by_time_threshold(self):
+        self.limnigrafo.ultima_conexion = timezone.now() - timedelta(minutes=45)
+        self.limnigrafo.estado = 'normal'
+        self.limnigrafo.save(update_fields=['ultima_conexion', 'estado'])
+
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.estado, 'advertencia')
+
+    def test_list_sets_fuera_de_rango_when_time_exceeds_peligro_threshold(self):
         self.limnigrafo.ultima_conexion = timezone.now() - timedelta(hours=2)
+        self.limnigrafo.estado = 'normal'
+        self.limnigrafo.save(update_fields=['ultima_conexion', 'estado'])
+
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.estado, 'fuera_de_rango')
+
+    def test_list_recovers_estado_from_fuera_de_rango_when_sensor_recovers(self):
+        self.limnigrafo.ultima_conexion = timezone.now()
+        self.limnigrafo.bateria_actual = 12.0
+        self.limnigrafo.estado = 'fuera_de_rango'
+        self.limnigrafo.save(update_fields=['ultima_conexion', 'bateria_actual', 'estado'])
+
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.estado, 'normal')
+
+    def test_list_sets_peligro_when_water_height_reaches_maximum(self):
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=3.2,
+            fecha_hora=timezone.now(),
+            fuente='automatico',
+        )
+        self.limnigrafo.ultima_conexion = timezone.now()
         self.limnigrafo.estado = 'normal'
         self.limnigrafo.save(update_fields=['ultima_conexion', 'estado'])
 
@@ -73,35 +115,16 @@ class LimnigrafoTests(APITestCase):
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado, 'peligro')
 
-    def test_list_sets_fuera_de_servicio_when_time_exceeds_triple_peligro(self):
-        self.limnigrafo.ultima_conexion = timezone.now() - timedelta(hours=4)
-        self.limnigrafo.estado = 'normal'
-        self.limnigrafo.save(update_fields=['ultima_conexion', 'estado'])
-
-        response = self.client.get(self.list_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.limnigrafo.refresh_from_db()
-        self.assertEqual(self.limnigrafo.estado, 'fuera_de_servicio')
-
-    def test_list_recovers_estado_from_fuera_de_servicio_when_sensor_recovers(self):
-        self.limnigrafo.ultima_conexion = timezone.now()
-        self.limnigrafo.bateria_actual = 12.0
-        self.limnigrafo.estado = 'fuera_de_servicio'
-        self.limnigrafo.save(update_fields=['ultima_conexion', 'bateria_actual', 'estado'])
-
-        response = self.client.get(self.list_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.limnigrafo.refresh_from_db()
-        self.assertEqual(self.limnigrafo.estado, 'normal')
-
     def test_update_limnigrafo(self):
-        update_data = {'descripcion': 'Descripcion actualizada'}
+        update_data = {
+            'descripcion': 'Descripcion actualizada',
+            'radio_cobertura_metros': 900,
+        }
         response = self.client.patch(self.detail_url, update_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.descripcion, 'Descripcion actualizada')
+        self.assertEqual(self.limnigrafo.radio_cobertura_metros, 900)
 
     def test_filter_limnigrafos_by_ultima_conexion_desde(self):
         reciente = timezone.now() - timedelta(hours=1)
@@ -119,7 +142,6 @@ class LimnigrafoTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=limnigrafo_antiguo,
-            bateria_max=12.0,
             bateria_min=10.0,
             tiempo_advertencia=1800,
             tiempo_peligro=3600
@@ -149,7 +171,6 @@ class LimnigrafoTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=limnigrafo_antiguo,
-            bateria_max=12.0,
             bateria_min=10.0,
             tiempo_advertencia=1800,
             tiempo_peligro=3600
@@ -197,22 +218,19 @@ class LimnigrafoTests(APITestCase):
         url = reverse('limnigrafos-configuracion', args=[self.limnigrafo.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['bateria_max'], 12.0)
         self.assertEqual(response.data['bateria_min'], 10.0)
 
     def test_update_configuracion_action(self):
         url = reverse('limnigrafos-configuracion', args=[self.limnigrafo.id])
         update_data = {
-            'bateria_max': 13.5,
             'bateria_min': 10.5,
             'tiempo_advertencia': 900
         }
         response = self.client.patch(url, update_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['bateria_max'], 13.5)
         self.assertEqual(response.data['bateria_min'], 10.5)
         self.assertEqual(response.data['tiempo_advertencia'], 900)
         
         # Verify it persisted in DB
         self.limnigrafo.configuracion.refresh_from_db()
-        self.assertEqual(self.limnigrafo.configuracion.bateria_max, 13.5)
+        self.assertEqual(self.limnigrafo.configuracion.bateria_min, 10.5)

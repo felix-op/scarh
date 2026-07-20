@@ -17,7 +17,7 @@ type RequestHandlerOptions = {
 	context: { params: { path: string[] | undefined } };
 };
 
-export async function RequestHandler({
+async function requestHandler({
 	method,
 	context,
 	request,
@@ -47,8 +47,22 @@ export async function RequestHandler({
 			return new NextResponse(null, { status: status });
 		}
 
-		const data = await response.json().catch(() => ({}));
-		return NextResponse.json(data, { status: status });
+		const responseContentType = response.headers.get("content-type") ?? "";
+		if (responseContentType.includes("application/json")) {
+			const data = await response.json().catch(() => ({}));
+			return NextResponse.json(data, { status: status });
+		}
+
+		const headers = new Headers();
+		const contentType = response.headers.get("content-type");
+		const contentDisposition = response.headers.get("content-disposition");
+		const contentLength = response.headers.get("content-length");
+
+		if (contentType) headers.set("content-type", contentType);
+		if (contentDisposition) headers.set("content-disposition", contentDisposition);
+		if (contentLength) headers.set("content-length", contentLength);
+
+		return new NextResponse(await response.arrayBuffer(), { status, headers });
 	} catch (error) {
 		console.error("Error en la llamada a Django:", error);
 		return NextResponse.json(ERRORS.SERVER_ERROR, { status: 500 });
@@ -58,15 +72,15 @@ export async function RequestHandler({
 type handlerFn = (
 	request: Request,
 	context: { params: { path: string[] | undefined } },
-) => Promise<NextResponse<unknown>>;
+) => Promise<Response>;
 
 export const GET: handlerFn = async (request, context) =>
-	RequestHandler({ method: "GET", request, context });
+	requestHandler({ method: "GET", request, context });
 export const POST: handlerFn = async (request, context) =>
-	RequestHandler({ method: "POST", request, context });
+	requestHandler({ method: "POST", request, context });
 export const PUT: handlerFn = async (request, context) =>
-	RequestHandler({ method: "PUT", request, context });
+	requestHandler({ method: "PUT", request, context });
 export const PATCH: handlerFn = async (request, context) =>
-	RequestHandler({ method: "PATCH", request, context });
+	requestHandler({ method: "PATCH", request, context });
 export const DELETE: handlerFn = async (request, context) =>
-	RequestHandler({ method: "DELETE", request, context });
+	requestHandler({ method: "DELETE", request, context });

@@ -5,6 +5,7 @@ export type TCrearLimnigrafo = {
 	memoria_value: string | null;
 	memoria_unit: MemoryUnit;
 	tipo_de_comunicacion: string[];
+	radio_cobertura_metros: string | null;
 };
 
 export type TFormEditarLimnigrafo = {
@@ -12,7 +13,13 @@ export type TFormEditarLimnigrafo = {
   descripcion: string;
   ultimo_mantenimiento: string;
   bateria_min: number;
-  bateria_max: number;
+  altura_minima_agua: number;
+  altura_maxima_agua: number;
+  temperatura_minima: number;
+  temperatura_maxima: number;
+  presion_minima: number;
+  presion_maxima: number;
+  radio_cobertura_metros: string | null;
   tiempo_advertencia_segundos?: string | null;
   tiempo_advertencia_minutos?: string | null;
   tiempo_advertencia_horas?: string | null;

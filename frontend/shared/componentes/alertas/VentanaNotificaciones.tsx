@@ -142,9 +142,11 @@ export default function VentanaNotificaciones({
 									)));
 									void onMarcarTodasLeidas?.();
 								}}
-								className="ml-auto rounded-xl border border-neutral-200 px-3 py-2 text-xs font-semibold text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+								className="ml-auto inline-flex size-10 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-white"
+								title="Marcar todo como leído"
+								aria-label="Marcar todo como leído"
 							>
-								Marcar todas como leídas
+								<CheckCheck className="size-4" />
 							</button>
 						) : null}
 					</div>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="SCARH Tests" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>Ruta de prueba</name>
+    <cmt>Comentario de prueba del archivo GPX</cmt>
+    <desc>Descripción de prueba del archivo GPX</desc>
+    <trkseg>
+      <trkpt lat="-54.8000" lon="-68.3000"><ele>10</ele></trkpt>
+      <trkpt lat="-54.8010" lon="-68.3010"><ele>12</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

@@ -22,7 +22,6 @@ class EstadisticaTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=self.limnigrafo,
-            bateria_max=12.0,
             bateria_min=10.0,
             tiempo_advertencia=3600,
             tiempo_peligro=7200
@@ -36,7 +35,6 @@ class EstadisticaTests(APITestCase):
         )
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=self.limnigrafo2,
-            bateria_max=12.0,
             bateria_min=10.0,
             tiempo_advertencia=3600,
             tiempo_peligro=7200
@@ -73,6 +71,7 @@ class EstadisticaTests(APITestCase):
         result = response.data[0]
         self.assertEqual(result['minimo'], 2.0)
         self.assertEqual(result['maximo'], 10.0)
+        self.assertEqual(result['mediana'], 6.0)
         self.assertEqual(result['moda'], 2.0)
         self.assertAlmostEqual(result['desvio_estandar'], 3.16227766, places=4)
         
@@ -89,6 +88,7 @@ class EstadisticaTests(APITestCase):
         result = response.data[0]
         self.assertEqual(result['minimo'], 1.0) 
         self.assertEqual(result['maximo'], 5.0)
+        self.assertEqual(result['mediana'], 3.0)
         self.assertEqual(result['moda'], 1.0)
 
     def test_global_statistics(self):
@@ -106,6 +106,7 @@ class EstadisticaTests(APITestCase):
         global_stat = next(r for r in response.data if r['id'] is None)
         self.assertEqual(global_stat['minimo'], 1.0)
         self.assertEqual(global_stat['maximo'], 20.0)
+        self.assertEqual(global_stat['mediana'], 4.0)
         self.assertEqual(global_stat['moda'], 1.0)
 
     def test_mode_statistics(self):

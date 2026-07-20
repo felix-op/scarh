@@ -2,7 +2,6 @@
 
 export type VarianteEstadoLimnigrafo =
   | "activo"
-  | "prueba"
   | "fuera"
   | "peligro"
   | "advertencia";
@@ -16,13 +15,8 @@ export const ESTILOS_ESTADO_LIMNIGRAFO: Record<
 		indicadorColor: "#1ED760",
 		bordeColor: "#0F780F69",
 	},
-	prueba: {
-		etiqueta: "Prueba",
-		indicadorColor: "#FFEB0C",
-		bordeColor: "#ABB800",
-	},
 	fuera: {
-		etiqueta: "Fuera",
+		etiqueta: "Fuera de rango",
 		indicadorColor: "#64748B",
 		bordeColor: "#334155",
 	},

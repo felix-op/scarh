@@ -29,6 +29,15 @@ export type PaginationConfig = {
     changeLength: (length: number) => void,
 };
 
+export type SelectionConfig<T> = {
+    selectedRows: Array<string | number>;
+    onToggleRow: (row: T) => void;
+    onToggleAll: (rows: T[]) => void;
+    isRowSelected?: (row: T) => boolean;
+    headerLabel?: ReactNode;
+    ariaLabel?: (row: T) => string;
+};
+
 export type DataTableStyles<T> = {
     rootClassName?: string;
     cardClassName?: string;

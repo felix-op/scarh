@@ -18,6 +18,222 @@ type FormularioEditarLimnigrafoProps = {
 	isLoading?: boolean;
 };
 
+export function CamposFormularioEditarLimnigrafo({
+	handleCancelar,
+	isLoading = false,
+	mostrarAcciones = true,
+	variante = "panel",
+}: {
+	handleCancelar?: () => void;
+	isLoading?: boolean;
+	mostrarAcciones?: boolean;
+	variante?: "panel" | "modal";
+}) {
+	const esModal = variante === "modal";
+	const wrapperClassName = esModal
+		? "flex w-full flex-col gap-8"
+		: "flex w-full max-w-screen-2xl flex-col gap-6 rounded-[32px] bg-background-muted p-6 shadow-[0px_4px_18px_rgba(0,0,0,0.18)]";
+	const cardClassName = esModal
+		? "flex flex-col gap-6 rounded-[28px] border border-border/80 bg-background-muted/50 px-8 py-8 shadow-[0px_10px_30px_rgba(0,0,0,0.12)]"
+		: "flex flex-col gap-4";
+	const sectionTitleClassName = esModal
+		? "text-[1.75rem] font-semibold tracking-[-0.02em] text-foreground"
+		: "";
+	const sectionSubtitleClassName = esModal
+		? "text-sm leading-6 text-muted-foreground"
+		: "hidden";
+	const dividerClassName = esModal ? "bg-border/70" : "";
+	const titleBlockClassName = esModal ? "flex flex-col gap-1" : "";
+
+	return (
+		<div className={wrapperClassName}>
+			{esModal ? (
+				<div className="rounded-3xl border border-border/70 bg-background/60 px-6 py-5">
+					<p className="text-sm leading-6 text-muted-foreground">
+						Actualizá la configuración operativa, los umbrales de alerta y los datos
+						generales del dispositivo desde un solo lugar.
+					</p>
+					<p className="mt-3 text-sm leading-6 text-muted-foreground">
+						El estado del limnígrafo no se edita manualmente. "Fuera de rango" se
+						calcula según la última conexión y el tiempo configurado en este formulario.
+					</p>
+				</div>
+			) : null}
+
+			<div className="flex flex-col gap-6 xl:flex-row">
+				<div className={`${cardClassName} flex-1`}>
+					<div className={titleBlockClassName}>
+						<h2 className={sectionTitleClassName || undefined}>Datos del limnígrafo</h2>
+						<p className={sectionSubtitleClassName}>
+							Identificación, descripción y tiempos base de mantenimiento.
+						</p>
+					</div>
+					<Separador direction="horizontal" className={dividerClassName} />
+					<CampoInput
+						name="codigo"
+						label="Identificador:"
+						placeholder="Ingrese un identificador para el limnígrafo"
+						required
+					/>
+					<CampoInput
+						name="descripcion"
+						label="Descripción:"
+						placeholder="Información adicional para el limnígrafo"
+					/>
+					<div className="pt-3">
+						<h3 className="text-xl font-semibold text-foreground">Mantenimiento</h3>
+					</div>
+					<Separador direction="horizontal" className={dividerClassName} />
+					<CampoFecha
+						name="ultimo_mantenimiento"
+						label="Último mantenimiento:"
+					/>
+					<Label text="Tiempo máximo antes de Advertencias:" />
+					<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+						<CampoInput
+							name="tiempo_advertencia_horas"
+							placeholder="Horas"
+							label="Horas:"
+							type="number"
+						/>
+						<CampoInput
+							name="tiempo_advertencia_minutos"
+							placeholder="Minutos"
+							label="Minutos:"
+							type="number"
+						/>
+						<CampoInput
+							name="tiempo_advertencia_segundos"
+							placeholder="Segundos"
+							label="Segundos:"
+							type="number"
+						/>
+					</div>
+					<Label text="Tiempo máximo antes de Fuera de rango:" />
+					<p className="text-sm leading-6 text-muted-foreground">
+						Si no llegan mediciones dentro de este plazo, el sistema marcará el
+						limnígrafo como fuera de rango automáticamente.
+					</p>
+					<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+						<CampoInput
+							name="tiempo_peligro_horas"
+							placeholder="Horas"
+							label="Horas:"
+							type="number"
+						/>
+						<CampoInput
+							name="tiempo_peligro_minutos"
+							placeholder="Minutos"
+							label="Minutos:"
+							type="number"
+						/>
+						<CampoInput
+							name="tiempo_peligro_segundos"
+							placeholder="Segundos"
+							label="Segundos:"
+							type="number"
+						/>
+					</div>
+				</div>
+
+				{esModal ? null : <Separador direction="vertical" />}
+
+				<div className={`${cardClassName} flex-1`}>
+					<div className={titleBlockClassName}>
+						<h2 className={sectionTitleClassName || undefined}>Especificaciones técnicas</h2>
+						<p className={sectionSubtitleClassName}>
+							Parámetros de operación, cobertura y límites configurables.
+						</p>
+					</div>
+					<Separador direction="horizontal" className={dividerClassName} />
+					<div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_112px] sm:items-end">
+						<div className="grow">
+							<CampoInput
+								type="integer"
+								name="memoria_value"
+								label="Memoria del dispositivo:"
+							/>
+						</div>
+						<div className="w-20">
+							<CampoSelector
+								name="memoria_unit"
+								label="Unidad:"
+								options={opcionesMemoria}
+							/>
+						</div>
+					</div>
+					<CampoInput
+						type="number"
+						name="bateria_min"
+						label="Cantidad mínima de batería:"
+					/>
+					<CampoInput
+						type="integer"
+						name="radio_cobertura_metros"
+						label="Radio de cobertura estimada (m):"
+						placeholder="Ej. 500"
+					/>
+					<CampoInput
+						type="number"
+						name="altura_maxima_agua"
+						label="Máxima altura del nivel del agua:"
+					/>
+					<CampoInput
+						type="number"
+						name="altura_minima_agua"
+						label="Mínima altura del nivel del agua:"
+					/>
+					<CampoInput
+						type="number"
+						name="temperatura_minima"
+						label="Temperatura mínima:"
+					/>
+					<CampoInput
+						type="number"
+						name="temperatura_maxima"
+						label="Temperatura máxima:"
+					/>
+					<CampoInput
+						type="number"
+						name="presion_minima"
+						label="Presión mínima:"
+					/>
+					<CampoInput
+						type="number"
+						name="presion_maxima"
+						label="Presión máxima:"
+					/>
+					<CampoMultiCheckbox
+						name="tipo_comunicacion"
+						options={opcionesTipoComunicacion}
+						className="md:grid-cols-2"
+						label="Tipo de comunicación"
+					/>
+				</div>
+			</div>
+
+			{mostrarAcciones ? (
+				<>
+					<br />
+					<hr />
+					<br />
+					<div className="flex w-full justify-between">
+						<BotonVariante
+							variant="cancelar"
+							onClick={handleCancelar}
+						/>
+						<BotonVariante
+							variant="guardar"
+							type="submit"
+							loading={isLoading}
+						/>
+					</div>
+				</>
+			) : null}
+		</div>
+	);
+}
+
 export default function FormularioEditarLimnigrafo({
 	valoresIniciales,
 	onSubmit,
@@ -32,122 +248,10 @@ export default function FormularioEditarLimnigrafo({
 			onDirty={onDirty}
 		>
 			<SeccionInfo>
-				<div className="flex flex-col lg:flex-row gap-4">
-					<div className="flex flex-col gap-4 flex-1">
-						<h2>Datos del limnígrafo</h2>
-						<Separador direction="horizontal" />
-						<CampoInput
-							name="codigo"
-							label="Identificador:"
-							placeholder="Ingrese un identificador para el limnígrafo"
-							required
-						/>
-						<CampoInput
-							name="descripcion"
-							label="Descripción:"
-							placeholder="Información adicional para el limnígrafo"
-						/>
-						<h2>Mantenimiento</h2>
-						<hr />
-						<CampoFecha
-							name="ultimo_mantenimiento"
-							label="Último mantenimiento:"
-						/>
-						<Label text="Tiempo máximo antes de Advertencias:"  />
-						<div className="flex gap-2">
-							<CampoInput
-								name="tiempo_advertencia_horas"
-								placeholder="Horas"
-								label="Horas:"
-								type="number"
-							/>
-							<CampoInput
-								name="tiempo_advertencia_minutos"
-								placeholder="Minutos"
-								label="Minutos:"
-								type="number"
-							/>
-							<CampoInput
-								name="tiempo_advertencia_segundos"
-								placeholder="Segundos"
-								label="Segundos:"
-								type="number"
-							/>
-						</div>
-						<Label text="Tiempo máximo antes de Peligro:"  />
-						<div className="flex gap-2">
-							<CampoInput
-								name="tiempo_peligro_horas"
-								placeholder="Horas"
-								label="Horas:"
-								type="number"
-							/>
-							<CampoInput
-								name="tiempo_peligro_minutos"
-								placeholder="Minutos"
-								label="Minutos:"
-								type="number"
-							/>
-							<CampoInput
-								name="tiempo_peligro_segundos"
-								placeholder="Segundos"
-								label="Segundos:"
-								type="number"
-							/>
-						</div>
-					</div>
-					<Separador direction="vertical" />
-					<div className="flex flex-col gap-4 flex-1">
-						<h2>Especificaciones técnicas</h2>
-						<hr />
-						<div className="flex items-start gap-2 w-full">
-							<div className="grow">
-								<CampoInput
-									type="integer"
-									name="memoria_value"
-									label="Memoria del dispositivo:"
-								/>
-							</div>
-							<div className="w-20">
-								<CampoSelector
-									name="memoria_unit"
-									label="Unidad:"
-									options={opcionesMemoria}
-								/>
-							</div>
-						</div>
-						<CampoInput
-							type="number"
-							name="bateria_min"
-							label="Cantidad mínima de batería:"
-						/>
-						<CampoInput
-							type="number"
-							name="bateria_max"
-							label="Cantidad máxima de batería:"
-						/>
-						<CampoMultiCheckbox
-							name="tipo_comunicacion"
-							options={opcionesTipoComunicacion}
-							className="md:grid-cols-2"
-							label="Tipo de comunicación"
-						/>
-					</div>
-				</div>
-				<br />
-				<hr />
-				<br />
-				<div className="flex w-full justify-between">
-					<BotonVariante
-						variant="cancelar"
-						onClick={handleCancelar}
-					/>
-					<BotonVariante
-						variant="guardar"
-						type="submit"
-						loading={isLoading}
-					/>
-				</div>
+				<CamposFormularioEditarLimnigrafo
+					handleCancelar={handleCancelar}
+					isLoading={isLoading}
+				/>
 			</SeccionInfo>
 		</Formulario>
 	);

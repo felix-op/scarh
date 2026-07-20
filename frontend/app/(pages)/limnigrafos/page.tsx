@@ -168,7 +168,7 @@ export default function Home() {
 	];
 
 	const handleVerMas = (row: LimnigrafoResponse) => {
-		router.push(`/limnigrafos/${row.id}`);
+		router.push(`/limnigrafos/detalleLimnigrafo?id=${encodeURIComponent(String(row.id))}`);
 	}
 
 	const handleEdit = (row: LimnigrafoResponse) => {

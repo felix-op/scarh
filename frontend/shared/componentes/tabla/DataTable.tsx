@@ -1,7 +1,7 @@
 "use client";
 
 import BotonVariante from "@componentes/botones/BotonVariante";
-import { ActionConfig, ColumnConfig, DataTableStyles, PaginationConfig } from "./types";
+import { ActionConfig, ColumnConfig, DataTableStyles, PaginationConfig, SelectionConfig } from "./types";
 import Selector from "@componentes/campos/Selector";
 import BotonAnterior from "@componentes/botones/BotonAnterior";
 import BotonSiguiente from "@componentes/botones/BotonSiguiente";
@@ -28,6 +28,7 @@ type DataTableProps<T> = {
 	emptyStateContent?: ReactNode;
 	styles?: DataTableStyles<T>;
 	topBar?: ReactNode,
+	selectionConfig?: SelectionConfig<T>;
 }
 
 export default function DataTable<T>({
@@ -48,6 +49,7 @@ export default function DataTable<T>({
 	loadingRows = 5,
 	emptyStateContent,
 	styles,
+	selectionConfig,
 }: DataTableProps<T>) {
 	const handleAction = (row: T) => {
 		if (!actionConfig || !(actionConfig.typeAction === "funcion") || !(actionConfig?.actionFn)) return;
@@ -93,6 +95,12 @@ export default function DataTable<T>({
 
 	const xScrollClass = styles?.scrollX === "hidden" ? "overflow-x-hidden" : "overflow-x-auto";
 	const yScrollClass = styles?.scrollY === "auto" ? "overflow-y-auto" : "overflow-y-hidden";
+	const allRowsSelected = data.length > 0 && data.every((row) => {
+		if (selectionConfig?.isRowSelected) {
+			return selectionConfig.isRowSelected(row);
+		}
+		return selectionConfig?.selectedRows.includes(row[rowIdKey] as string | number);
+	});
 
 	return (
 		<div className={`pb-4 ${styles?.rootClassName ?? ""}`.trim()}>
@@ -112,6 +120,19 @@ export default function DataTable<T>({
 					<table className={`w-full border-collapse ${styles?.tableClassName ?? ""}`.trim()} style={{ minWidth }}>
 						<thead className={`sticky top-0 z-10 text-left bg-table-header border dark:border-white/5 ${styles?.theadClassName ?? ""}`.trim()}>
 							<tr className={styles?.headerRowClassName}>
+								{selectionConfig && (
+									<th className={`py-4 px-4 text-foreground-title w-12 ${styles?.headerCellClassName ?? ""}`.trim()}>
+										<div className="flex items-center justify-center">
+											<input
+												type="checkbox"
+												checked={allRowsSelected}
+												aria-label={typeof selectionConfig.headerLabel === "string" ? selectionConfig.headerLabel : "Seleccionar todas las filas"}
+												onChange={() => selectionConfig.onToggleAll(data)}
+												className="h-4 w-4 cursor-pointer accent-principal"
+											/>
+										</div>
+									</th>
+								)}
 								{columns.map((column) => {
 									if (typeof column.header === "string") {
 										return <th key={column.id} className={`py-4 px-4 text-foreground-title ${styles?.headerCellClassName ?? ""}`.trim()}>{column.header}</th>
@@ -127,6 +148,11 @@ export default function DataTable<T>({
 							{isLoading
 								? Array.from({ length: loadingRows }).map((_, rowIndex) => (
 									<tr key={`skeleton-row-${rowIndex}`} className="animate-pulse">
+										{selectionConfig && (
+											<td className={`p-4 ${styles?.cellClassName ?? ""}`.trim()}>
+												<div className="h-2 w-4 bg-foreground-title" />
+											</td>
+										)}
 										{columns.map((column) => (
 											<td key={column.id} className={`p-4 ${styles?.cellClassName ?? ""}`.trim()}>
 												<div className="h-2 w-full bg-foreground-title" />
@@ -136,7 +162,7 @@ export default function DataTable<T>({
 								))
 								: (data.length === 0) ? (
 									<tr>
-										<td colSpan={columns.length + (actionConfig?.typeAction === "fila" ? 1 : 0)} className={`p-4 ${styles?.emptyCellClassName ?? ""}`.trim()}>
+										<td colSpan={columns.length + (actionConfig ? 1 : 0) + (selectionConfig ? 1 : 0)} className={`p-4 ${styles?.emptyCellClassName ?? ""}`.trim()}>
 											<div className="flex w-full items-center justify-center gap-2">
 												{emptyStateContent ?? (
 													<>
@@ -158,6 +184,21 @@ export default function DataTable<T>({
 										animation={enableRowAnimation}
 										className={styles?.rowClassName}
 									>
+										{selectionConfig && (
+											<td className={`p-4 ${styles?.cellClassName ?? ""}`.trim()}>
+												<div className="flex items-center justify-center">
+													<input
+														type="checkbox"
+														checked={selectionConfig.isRowSelected
+															? selectionConfig.isRowSelected(row)
+															: selectionConfig.selectedRows.includes(row[rowIdKey] as string | number)}
+														aria-label={selectionConfig.ariaLabel?.(row) ?? "Seleccionar fila"}
+														onChange={() => selectionConfig.onToggleRow(row)}
+														className="h-4 w-4 cursor-pointer accent-principal"
+													/>
+												</div>
+											</td>
+										)}
 										{columns.map((column) => {
 											const key = column?.accessorKey || (column.id as keyof T);
 											const value = key ? row[key] : null;

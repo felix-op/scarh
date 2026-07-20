@@ -7,7 +7,12 @@ export const defaultFormEditarLimnigrafo: TFormEditarLimnigrafo = {
 	descripcion: "",
 	ultimo_mantenimiento: "",
 	bateria_min: 0,
-	bateria_max: 0,
+	altura_minima_agua: 0,
+	altura_maxima_agua: 0,
+	temperatura_minima: 0,
+	temperatura_maxima: 100,
+	presion_minima: 0,
+	presion_maxima: 0,
 	tiempo_advertencia_horas: null,
 	tiempo_advertencia_minutos: null,
 	tiempo_advertencia_segundos: null,
@@ -17,6 +22,7 @@ export const defaultFormEditarLimnigrafo: TFormEditarLimnigrafo = {
 	memoria_value: null,
 	memoria_unit: "MB",
 	tipo_comunicacion: [],
+	radio_cobertura_metros: null,
 };
 
 export const defaultMessage: VentanaAceptarOptions = {
@@ -40,7 +46,7 @@ export const opcionesEstado = [
 	{ label: "Normal", value: "normal" },
 	{ label: "Advertencia", value: "advertencia" },
 	{ label: "Peligro", value: "peligro" },
-	{ label: "Fuera", value: "fuera" },
+	{ label: "Fuera de rango", value: "fuera_de_rango" },
 ];
 
 export const opcionesMemoria = [

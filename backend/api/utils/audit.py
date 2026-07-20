@@ -8,6 +8,20 @@ from django.db.models import Model
 
 from ..models import Accion
 
+SENSITIVE_KEYS = {
+    "password",
+    "contraseña",
+    "token",
+    "token_hash",
+    "api_key",
+    "api_keys",
+    "secret_key",
+    "refresh",
+    "refresh_token",
+    "access",
+    "access_token",
+}
+
 
 def registrar_accion_auditoria(
     *,
@@ -36,6 +50,28 @@ def registrar_accion_auditoria(
         metadata=metadata or {},
         usuario=actor,
     )
+
+
+def registrar_accion_auditoria_en_commit(**kwargs: Any) -> None:
+    registrar_accion_auditoria(**kwargs)
+
+
+def sanitizar_auditoria(valor: Any) -> Any:
+    if isinstance(valor, dict):
+        sanitizado: dict[str, Any] = {}
+        for clave, item in valor.items():
+            if str(clave).lower() in SENSITIVE_KEYS:
+                continue
+            sanitizado[str(clave)] = sanitizar_auditoria(item)
+        return sanitizado
+
+    if isinstance(valor, list):
+        return [sanitizar_auditoria(item) for item in valor]
+
+    if isinstance(valor, tuple):
+        return [sanitizar_auditoria(item) for item in valor]
+
+    return valor
 
 
 def normalizar_valor_auditoria(valor: Any) -> Any:
@@ -126,3 +162,9 @@ def construir_descripcion_modificacion(
         )
 
     return f"{prefijo} {'; '.join(detalles)}."
+
+
+def obtener_nombre_ubicacion(ubicacion: Any) -> str:
+    if ubicacion is None:
+        return "Sin ubicación"
+    return getattr(ubicacion, "nombre", None) or f"Ubicación {getattr(ubicacion, 'pk', '')}".strip()

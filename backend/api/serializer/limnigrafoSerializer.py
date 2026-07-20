@@ -15,6 +15,7 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
     ultima_conexion = serializers.DateTimeField(read_only=True)
     ultima_medicion = serializers.SerializerMethodField()
     configuracion = ConfiguracionLimnigrafoSerializer(read_only=True, allow_null=True)
+    radio_cobertura_metros = serializers.IntegerField(required=False, allow_null=True, min_value=0)
     ubicacion_id = serializers.PrimaryKeyRelatedField(
         queryset=Ubicacion.objects.all(),
         source='ubicacion',
@@ -50,6 +51,7 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
             'tipo_comunicacion',
             'bateria',
             'memoria',
+            'radio_cobertura_metros',
             'ultima_conexion',
             'estado',
             'ubicacion',

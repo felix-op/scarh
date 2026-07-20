@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import DataTable from "@componentes/tabla/DataTable";
@@ -8,6 +8,7 @@ import { ActionConfig, ColumnConfig } from "@componentes/tabla/types";
 import VentanaAgregrarUsuario from "./componentes/VentanaAgregarUsuario";
 import VentanaEditarUsuario from "./componentes/VentanaEditarUsuario";
 import VentanaEliminarUsuario from "./componentes/VentanaEliminarUsuario";
+import VentanaPermisosMasivos from "./componentes/VentanaPermisosMasivos";
 import { UsuarioResponse } from "types/usuarios";
 import { useGetUsuarios } from "@servicios/api";
 import { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
@@ -21,8 +22,9 @@ import { useNotificar } from "@hooks/useNotificar";
 import { useTieneRol } from "@hooks/useTieneRol";
 import Alerta from "@componentes/alertas/Alerta";
 import Icon from "@componentes/icons/Icon";
+import BotonVariante from "@componentes/botones/BotonVariante";
 
-const queriesToInvalidate = ["useGetUsuarios"];
+const queriesToInvalidate = ["useGetUsuarios", "useGetUsuario"];
 
 export default function UsersAdminPage() {
 	const [page, setPage] = useState(1);
@@ -31,6 +33,7 @@ export default function UsersAdminPage() {
 	const [search, setSearch] = useState("");
 	const [estado, setEstado] = useState("");
 	const [usuarioEditar, setUsuarioEditar] = useState<UsuarioResponse | null>(null);
+	const [selectedUsers, setSelectedUsers] = useState<UsuarioResponse[]>([]);
 	const esAdministrador = useTieneRol("administracion");
 	const esEditor = useTieneRol("usuarios-editar");
 
@@ -74,6 +77,10 @@ export default function UsersAdminPage() {
 		setUsuarioEditar(null);
 	};
 
+	const [isBulkPermissionsOpen, setIsBulkPermissionsOpen] = useState(false);
+	const handleOpenBulkPermissions = () => setIsBulkPermissionsOpen(true);
+	const handleCloseBulkPermissions = () => setIsBulkPermissionsOpen(false);
+
 	const handleOpenInfo = (message: VentanaAceptarOptions) => {
 		notificar({
 			titulo: message.title,
@@ -90,6 +97,39 @@ export default function UsersAdminPage() {
 	const handleViewUser = (usuario: UsuarioResponse) => {
 		router.push(`/usuarios/${usuario.id}`);
 	};
+
+	const usuariosPaginaActual = usuarios?.results || [];
+	const selectedUserIds = useMemo(
+		() => selectedUsers.map((usuario) => usuario.id),
+		[selectedUsers],
+	);
+
+	const limpiarSeleccion = useCallback(() => {
+		setSelectedUsers([]);
+	}, []);
+
+	const toggleUsuarioSeleccionado = useCallback((usuario: UsuarioResponse) => {
+		setSelectedUsers((prev) => (
+			prev.some((selected) => selected.id === usuario.id)
+				? prev.filter((selected) => selected.id !== usuario.id)
+				: [...prev, usuario]
+		));
+	}, []);
+
+	const toggleTodosUsuariosPagina = useCallback((usuariosVisibles: UsuarioResponse[]) => {
+		const idsVisibles = usuariosVisibles.map((usuario) => usuario.id);
+
+		setSelectedUsers((prev) => {
+			const prevIds = prev.map((usuario) => usuario.id);
+			const todosSeleccionados = idsVisibles.every((id) => prevIds.includes(id));
+			if (todosSeleccionados) {
+				return prev.filter((usuario) => !idsVisibles.includes(usuario.id));
+			}
+
+			const nuevosUsuarios = usuariosVisibles.filter((usuario) => !prevIds.includes(usuario.id));
+			return [...prev, ...nuevosUsuarios];
+		});
+	}, []);
 
 	// Configuración de la tabla
 	const columns: ColumnConfig<UsuarioResponse>[] = [
@@ -171,6 +211,35 @@ export default function UsersAdminPage() {
 		setSearch(value);
 	}, [setPage, setSearch]);
 
+	const topBar = (esAdministrador || esEditor) ? (
+		<div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+			<div className="flex flex-wrap gap-2">
+				<BotonVariante variant="agregar" onClick={handleOpenAdd} />
+				<BotonVariante variant="filtro" onClick={() => {
+					setIsOpenFiltros((prev) => !prev);
+				}} />
+				<BotonVariante
+					onClick={handleOpenBulkPermissions}
+					disabled={selectedUserIds.length === 0}
+				>
+					<span className="icon-[mdi--shield-account] text-2xl" />
+					<span>{`Permisos masivos (${selectedUserIds.length})`}</span>
+				</BotonVariante>
+				{selectedUserIds.length > 0 && (
+					<BotonVariante onClick={limpiarSeleccion}>
+						<span className="icon-[mdi--broom] text-2xl" />
+						<span>Limpiar selección</span>
+					</BotonVariante>
+				)}
+			</div>
+			<div className="text-sm text-foreground-secondary">
+				{selectedUserIds.length > 0
+					? `${selectedUserIds.length} usuario(s) seleccionado(s)`
+					: "Seleccioná usuarios para aplicar permisos en lote"}
+			</div>
+		</div>
+	) : undefined;
+
 	return (
 		<PaginaBase>
 			<div className="flex flex-col gap-4">
@@ -210,17 +279,24 @@ export default function UsersAdminPage() {
 				</FiltrosContenedor>
 
 				<DataTable
-					data={usuarios?.results || []}
+					data={usuariosPaginaActual}
 					columns={columns}
 					rowIdKey="id"
 					minWidth={320}
 					onAdd={(esAdministrador || esEditor) ? handleOpenAdd : undefined}
-					onFilter={() => {
+					onFilter={!topBar ? () => {
 						setIsOpenFiltros((prev) => !prev)
-					}}
+					} : undefined}
 					actionConfig={actionConfig}
 					isLoading={isLoading || isRefetching}
 					paginationConfig={paginationConfig}
+					topBar={topBar}
+					selectionConfig={(esAdministrador || esEditor) ? {
+						selectedRows: selectedUserIds,
+						onToggleRow: toggleUsuarioSeleccionado,
+						onToggleAll: toggleTodosUsuariosPagina,
+						ariaLabel: (usuario) => `Seleccionar usuario ${usuario.nombre_usuario}`,
+					} : undefined}
 				/>
 			</div>
 			<VentanaAgregrarUsuario
@@ -244,6 +320,13 @@ export default function UsersAdminPage() {
 				queriesToInvalidate={queriesToInvalidate}
 				onSuccess={handleCancelDelete}
 				usuario={usuarioEditar}
+			/>
+			<VentanaPermisosMasivos
+				open={isBulkPermissionsOpen}
+				onClose={handleCloseBulkPermissions}
+				usuariosSeleccionados={selectedUsers}
+				queriesToInvalidate={queriesToInvalidate}
+				onSuccess={limpiarSeleccion}
 			/>
 		</PaginaBase>
 	);

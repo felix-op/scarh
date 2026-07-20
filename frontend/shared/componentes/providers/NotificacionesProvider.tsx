@@ -268,7 +268,11 @@ export default function NotificacionesProvider({ children }: NotificacionesProvi
 					: "Alerta del sistema",
 				mensaje: alerta.descripcion,
 				variante: "alerta",
-				desaparecerEnMS: 6000,
+				desaparecerEnMS: (
+					alerta.tipo === "advertencia_limnigrafo" || alerta.tipo === "peligro_limnigrafo"
+						? 12000
+						: 6000
+				),
 			});
 		});
 	}, [alertas, formatearFecha, mostrarToast, upsertHistorial]);

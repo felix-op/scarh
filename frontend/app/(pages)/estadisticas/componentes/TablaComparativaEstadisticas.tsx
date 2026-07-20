@@ -15,6 +15,7 @@ type ComparativaTableRow = {
 	limnigrafo: string;
 	minimo: string;
 	maximo: string;
+	mediana: string;
 	moda: string;
 	desvioEstandar: string;
 	percentil90: string;
@@ -131,6 +132,7 @@ export default function TablaComparativaEstadisticas({
 				limnigrafo: item.id === null ? "Global" : (limnigrafoNameById.get(item.id) ?? `ID ${item.id}`),
 				minimo: formatNumber(item.minimo, 2),
 				maximo: formatNumber(item.maximo, 2),
+				mediana: formatNumber(item.mediana, 2),
 				moda: formatNullableNumber(item.moda, 2),
 				desvioEstandar: formatNumber(item.desvio_estandar, 2),
 				percentil90: formatNumber(item.percentil_90, 2),
@@ -154,6 +156,11 @@ export default function TablaComparativaEstadisticas({
 				id: "maximo",
 				header: "Máximo",
 				accessorKey: "maximo",
+			},
+			{
+				id: "mediana",
+				header: "Mediana",
+				accessorKey: "mediana",
 			},
 			{
 				id: "moda",
@@ -204,7 +211,7 @@ export default function TablaComparativaEstadisticas({
 				rowIdKey="rowId"
 				showTopBar={false}
 				enableRowAnimation={false}
-				minWidth={760}
+				minWidth={860}
 				emptyStateContent={<span className="text-[#6B7280] dark:text-[#94A3B8]">Sin datos comparativos calculados.</span>}
 				styles={{
 					rootClassName: "pb-0",

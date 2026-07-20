@@ -1,6 +1,7 @@
 "use client";
 
 import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
+import BotonVariante from "@componentes/botones/BotonVariante";
 import { type Dispatch, type SetStateAction } from "react";
 import {
 	type EstadisticaAtributo,
@@ -15,6 +16,8 @@ type FiltrosTablaComparativaProps = {
 	setFilters: Dispatch<SetStateAction<TablaComparativaFilters>>;
 	onApply: () => void;
 	onReset: () => void;
+	onExport: () => void;
+	exportDisabled: boolean;
 };
 
 export default function FiltrosTablaComparativa({
@@ -23,6 +26,8 @@ export default function FiltrosTablaComparativa({
 	setFilters,
 	onApply,
 	onReset,
+	onExport,
+	exportDisabled,
 }: FiltrosTablaComparativaProps) {
 	const optionsWithAll: MultiSelectOption[] = [
 		{ value: ALL_LIMNIGRAFOS_VALUE, label: "Todos" },
@@ -53,7 +58,7 @@ export default function FiltrosTablaComparativa({
 	}
 
 	return (
-		<section className="rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
+		<section className="sticky top-4 z-30 rounded-[24px] bg-white p-6 shadow-[0px_10px_20px_rgba(0,0,0,0.12)] dark:bg-[#1B1F25] dark:shadow-[0px_12px_24px_rgba(0,0,0,0.45)]">
 			<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 				<label className="flex flex-col gap-2 text-[14px] font-semibold text-[#475569] dark:text-[#CBD5E1]">
 					Variable
@@ -66,7 +71,7 @@ export default function FiltrosTablaComparativa({
 						className="rounded-xl border border-[#D3D4D5] bg-white p-3 text-[14px] text-[#334155] outline-none focus:border-[#0982C8] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
 					>
 						<option value="altura_agua">Nivel del agua</option>
-						<option value="presion">Presión atmosférica</option>
+						<option value="presion">Presión sférica</option>
 						<option value="temperatura">Temperatura</option>
 					</select>
 				</label>
@@ -107,22 +112,36 @@ export default function FiltrosTablaComparativa({
 				</div>
 			</div>
 
-			<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+			<div className="mt-4 flex flex-wrap items-center justify-end gap-3">
 				<div className="flex flex-wrap items-center gap-3">
-					<button
+					<BotonVariante
 						type="button"
-						onClick={onApply}
-						className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)] hover:bg-[#0873B2]"
+						onClick={onExport}
+						disabled={exportDisabled}
+						variant="filtro"
+						className="text-[14px]"
 					>
-						Aplicar filtros
-					</button>
-					<button
+						<span className="text-2xl icon-[material-symbols--download]" />
+						Exportar CSV
+					</BotonVariante>
+					<BotonVariante
 						type="button"
 						onClick={onReset}
-						className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] shadow-[0px_4px_10px_rgba(15,23,42,0.08)] hover:bg-[#F8FAFC]"
+						variant="cerrar"
+						className="text-[14px]"
 					>
+						<span className="text-2xl icon-[mdi--restore]" />
 						Restablecer
-					</button>
+					</BotonVariante>
+					<BotonVariante
+						type="button"
+						onClick={onApply}
+						variant="guardar"
+						className="text-[14px]"
+					>
+						<span className="text-2xl icon-[mage--filter]" />
+						Aplicar filtros
+					</BotonVariante>
 				</div>
 			</div>
 		</section>

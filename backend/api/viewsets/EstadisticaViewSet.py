@@ -79,6 +79,7 @@ class EstadisticaViewSet(viewsets.GenericViewSet):
             return {
                 "maximo": 0.0,
                 "minimo": 0.0,
+                "mediana": 0.0,
                 "moda": None,
                 "desvio_estandar": 0.0,
                 "percentil_90": 0.0
@@ -105,10 +106,12 @@ class EstadisticaViewSet(viewsets.GenericViewSet):
             percentil_90 = d0 + d1
 
         moda = self._calcular_moda(values)
+        mediana = statistics.median(values)
 
         return {
             "maximo": max_val,
             "minimo": min_val,
+            "mediana": mediana,
             "moda": moda,
             "desvio_estandar": std_dev,
             "percentil_90": percentil_90

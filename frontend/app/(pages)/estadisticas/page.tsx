@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
 import EstadisticaCard from "@componentes/EstadisticaCard";
 import { type MultiSelectOption } from "@componentes/components/ui/multi-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@componentes/components/ui/tabs";
+import { useNotificar } from "@hooks/useNotificar";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
+import { type EstadisticaOutputItem } from "@servicios/api/django.api";
 import { Paginado } from "@servicios/api/types";
 import { LimnigrafoResponse } from "types/limnigrafos";
 import FiltrosGraficosEstadisticas from "./componentes/FiltrosGraficosEstadisticas";
@@ -17,10 +20,17 @@ import TarjetaTasaCambioNivel from "./componentes/TarjetaTasaCambioNivel";
 import useEstadisticasMediciones from "./hooks/useEstadisticasMediciones";
 import useRateAnalysis from "./hooks/useRateAnalysis";
 import {
+	buildTimestampedFileName,
+	downloadCsvRows,
+	formatDateForFileName,
+	sanitizeFileNamePart,
+} from "./lib/exportaciones-estadisticas";
+import {
 	type EstadisticasFilters,
 	type EstadisticasTab,
 	type TablaComparativaFilters,
 	ATRIBUTO_METADATA,
+	REALTIME_WINDOW_LABELS,
 	computeSummary,
 	formatDateTime,
 	formatMetricValue,
@@ -31,14 +41,41 @@ import {
 	toIsoString,
 } from "./lib/estadisticas-domain";
 
-export default function EstadisticasPage() {
+function EstadisticasContent() {
+	const notificar = useNotificar();
+	const searchParams = useSearchParams();
+	const limnigrafoIdParam = searchParams.get("limnigrafo");
+	const limnigrafoInicial = limnigrafoIdParam && /^\d+$/.test(limnigrafoIdParam)
+		? [limnigrafoIdParam]
+		: [];
+	const noDataNotificationRequestIdRef = useRef(0);
+	const noDataNotificationShownIdRef = useRef<number | null>(null);
+	const noDataNotificationSawLoadingRef = useRef(false);
 	const [activeTab, setActiveTab] = useState<EstadisticasTab>("graficos");
-	const [filters, setFilters] = useState<EstadisticasFilters>(getDefaultFilters);
-	const [appliedFilters, setAppliedFilters] = useState<EstadisticasFilters>(getDefaultFilters);
+	const [filters, setFilters] = useState<EstadisticasFilters>(() => ({
+		...getDefaultFilters(),
+		limnigrafos: limnigrafoInicial,
+	}));
+	const [appliedFilters, setAppliedFilters] = useState<EstadisticasFilters>(() => ({
+		...getDefaultFilters(),
+		limnigrafos: limnigrafoInicial,
+	}));
 	const [filterError, setFilterError] = useState<string | null>(null);
-	const [tablaFilters, setTablaFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
-	const [tablaAppliedFilters, setTablaAppliedFilters] = useState<TablaComparativaFilters>(getDefaultTablaComparativaFilters);
+	const [noDataNotificationRequest, setNoDataNotificationRequest] = useState<{
+		id: number;
+		filtersKey: string;
+		requiresLoading: boolean;
+	} | null>(null);
+	const [tablaFilters, setTablaFilters] = useState<TablaComparativaFilters>(() => ({
+		...getDefaultTablaComparativaFilters(),
+		limnigrafos: limnigrafoInicial,
+	}));
+	const [tablaAppliedFilters, setTablaAppliedFilters] = useState<TablaComparativaFilters>(() => ({
+		...getDefaultTablaComparativaFilters(),
+		limnigrafos: limnigrafoInicial,
+	}));
 	const [tablaFilterError, setTablaFilterError] = useState<string | null>(null);
+	const [isExportingTabla, setIsExportingTabla] = useState(false);
 
 	const { data: limnigrafosData, error: limnigrafosError } = useGetLimnigrafos({
 		params: {
@@ -51,6 +88,7 @@ export default function EstadisticasPage() {
 			refetchInterval: 300000,
 		},
 	});
+
 	const {
 		isLoadingData,
 		fetchError,
@@ -213,6 +251,46 @@ export default function EstadisticasPage() {
 	const noDataInRange = !isLoadingData && currentRows.length === 0;
 	const shouldShowRateChart = appliedFilters.atributo === "altura_agua";
 
+	useEffect(() => {
+		if (isLoadingData && noDataNotificationRequest) {
+			noDataNotificationSawLoadingRef.current = true;
+		}
+	}, [isLoadingData, noDataNotificationRequest]);
+
+	useEffect(() => {
+		if (!noDataNotificationRequest) {
+			return;
+		}
+
+		const appliedFiltersKey = JSON.stringify(appliedFilters);
+		if (appliedFiltersKey !== noDataNotificationRequest.filtersKey) {
+			return;
+		}
+
+		if (fetchError || filterError) {
+			return;
+		}
+
+		if (isLoadingData || (noDataNotificationRequest.requiresLoading && !noDataNotificationSawLoadingRef.current)) {
+			return;
+		}
+
+		if (!noDataInRange) {
+			return;
+		}
+
+		if (noDataNotificationShownIdRef.current === noDataNotificationRequest.id) {
+			return;
+		}
+
+		noDataNotificationShownIdRef.current = noDataNotificationRequest.id;
+		notificar({
+			titulo: "Sin mediciones para mostrar",
+			mensaje: "No se encontraron mediciones en el período y filtros seleccionados.",
+			variante: "alerta",
+		});
+	}, [appliedFilters, fetchError, filterError, isLoadingData, noDataInRange, noDataNotificationRequest, notificar]);
+
 	function handleApplyFilters() {
 		setFilterError(null);
 
@@ -231,6 +309,14 @@ export default function EstadisticasPage() {
 			}
 		}
 
+		const filtersKey = JSON.stringify(filters);
+		noDataNotificationRequestIdRef.current += 1;
+		noDataNotificationSawLoadingRef.current = false;
+		setNoDataNotificationRequest({
+			id: noDataNotificationRequestIdRef.current,
+			filtersKey,
+			requiresLoading: filtersKey !== JSON.stringify(appliedFilters),
+		});
 		setAppliedFilters(filters);
 	}
 
@@ -264,6 +350,148 @@ export default function EstadisticasPage() {
 		setTablaFilters(reset);
 		setTablaAppliedFilters(reset);
 		setTablaFilterError(null);
+	}
+
+	async function handleExportTablaCsv() {
+		setTablaFilterError(null);
+		const desdeIso = toIsoString(tablaAppliedFilters.desde);
+		const hastaIso = toIsoString(tablaAppliedFilters.hasta);
+
+		if (!desdeIso || !hastaIso) {
+			setTablaFilterError("Completá un rango de fechas válido para exportar.");
+			return;
+		}
+
+		if (new Date(desdeIso).getTime() >= new Date(hastaIso).getTime()) {
+			setTablaFilterError("La fecha desde debe ser anterior a la fecha hasta.");
+			return;
+		}
+
+		const selectedIds = tablaAppliedFilters.limnigrafos
+			.map((item) => Number.parseInt(item, 10))
+			.filter((item) => !Number.isNaN(item));
+		const limnigrafosIds = selectedIds.length > 0
+			? selectedIds
+			: limnigrafos.map((limnigrafo) => limnigrafo.id);
+
+		if (limnigrafosIds.length === 0) {
+			setTablaFilterError("No hay limnígrafos disponibles para exportar.");
+			return;
+		}
+
+		setIsExportingTabla(true);
+		try {
+			const query = new URLSearchParams({
+				limnigrafos: limnigrafosIds.join(","),
+				atributo: tablaAppliedFilters.atributo,
+				fecha_inicio: desdeIso,
+				fecha_fin: hastaIso,
+			});
+			const response = await fetch(`/api/proxy/estadistica/?${query.toString()}`, {
+				method: "GET",
+				cache: "no-store",
+			});
+
+			if (!response.ok) {
+				const errorBody = await response.json().catch(() => ({}));
+				const errorText =
+					typeof errorBody === "string"
+						? errorBody
+						: errorBody?.detail ?? errorBody?.error ?? "No se pudo exportar la tabla comparativa.";
+				throw new Error(errorText);
+			}
+
+			const estadisticas = (await response.json()) as EstadisticaOutputItem[];
+			if (estadisticas.length === 0) {
+				setTablaFilterError("No hay datos comparativos para exportar con los filtros aplicados.");
+				return;
+			}
+
+			const rangoArchivo = `${formatDateForFileName(desdeIso)}_a_${formatDateForFileName(hastaIso)}`;
+			const tableHeaders = [
+				"limnigrafo_id",
+				"limnigrafo",
+				"minimo",
+				"maximo",
+				"mediana",
+				"moda",
+				"desvio_estandar",
+				"percentil_90",
+			];
+			const tableRows = estadisticas.map((item) => [
+				item.id ?? "",
+				item.id === null ? "Global" : (limnigrafoLabels[item.id] ?? `ID ${item.id}`),
+				item.minimo,
+				item.maximo,
+				item.mediana,
+				item.moda,
+				item.desvio_estandar,
+				item.percentil_90,
+			]);
+			const rows = [
+				["Variable", ATRIBUTO_METADATA[tablaAppliedFilters.atributo].label],
+				["Unidad", ATRIBUTO_METADATA[tablaAppliedFilters.atributo].unit],
+				[],
+				tableHeaders,
+				...tableRows,
+			];
+
+			downloadCsvRows(buildTimestampedFileName(`estadisticas_tabla_comparativa_${rangoArchivo}`), rows);
+		} catch (error) {
+			setTablaFilterError(error instanceof Error ? error.message : "No se pudo exportar la tabla comparativa.");
+		} finally {
+			setIsExportingTabla(false);
+		}
+	}
+
+	function handleExportGraficosCsv() {
+		const rangoArchivo = appliedFilters.modo === "realtime"
+			? sanitizeFileNamePart(REALTIME_WINDOW_LABELS[appliedFilters.ventana])
+			: activeRange
+				? `${formatDateForFileName(activeRange.currentFrom)}_a_${formatDateForFileName(activeRange.currentTo)}`
+				: "rango_personalizado";
+		const variableArchivo = sanitizeFileNamePart(ATRIBUTO_METADATA[appliedFilters.atributo].label);
+		const rangoLabel = appliedFilters.modo === "realtime"
+			? REALTIME_WINDOW_LABELS[appliedFilters.ventana]
+			: activeRange
+				? `${formatDateTime(activeRange.currentFrom)} - ${formatDateTime(activeRange.currentTo)}`
+				: "Rango personalizado";
+		const tableHeaders = [
+			"seccion",
+			"metrica",
+			"valor",
+			"detalle",
+		];
+		const tableRows = [
+			["Estadísticas descriptivas", "Registros analizados", currentSummary.registros, "Muestras válidas de la variable en el período actual"],
+			["Estadísticas descriptivas", "Promedio", currentSummary.promedio, formatVariation(averageVariation)],
+			["Estadísticas descriptivas", "Mínimo", currentSummary.minimo, "Valor mínimo observado en el período actual"],
+			["Estadísticas descriptivas", "Máximo", currentSummary.maximo, "Valor máximo observado en el período actual"],
+			["Estadísticas descriptivas", "Desvío estándar", currentSummary.desvio, "Nivel de variabilidad de la serie"],
+			["Estadísticas descriptivas", "Percentil 90", currentSummary.p90, "90% de los datos están por debajo de este valor"],
+			["Calidad operativa", "Total de mediciones", fuenteStats.total, "registros"],
+			["Calidad operativa", "Automático", fuenteStats.automatico, `${fuenteStats.automaticoPct.toFixed(2)} %`],
+			["Calidad operativa", "Manual", fuenteStats.manual, `${fuenteStats.manualPct.toFixed(2)} %`],
+			["Calidad operativa", "Importación CSV", fuenteStats.importCsv, `${fuenteStats.importCsvPct.toFixed(2)} %`],
+			["Calidad operativa", "Importación JSON", fuenteStats.importJson, `${fuenteStats.importJsonPct.toFixed(2)} %`],
+			...(shouldShowRateChart ? [
+				["Tasa de cambio del nivel", "Intervalos calculados", rawRatePoints.length, "intervalos"],
+				["Tasa de cambio del nivel", "Intervalos descartados", discardedRatePoints, "Picos descartados por filtro robusto"],
+				["Tasa de cambio del nivel", "Tasa promedio", rateSummary.promedio, "m/h"],
+				["Tasa de cambio del nivel", "Máxima subida", rateSummary.maxSubida, "m/h"],
+				["Tasa de cambio del nivel", "Máxima bajada", rateSummary.maxBajada, "m/h"],
+			] : []),
+		];
+		const rows = [
+			["Variable", ATRIBUTO_METADATA[appliedFilters.atributo].label],
+			["Unidad", ATRIBUTO_METADATA[appliedFilters.atributo].unit],
+			["Rango", rangoLabel],
+			[],
+			tableHeaders,
+			...tableRows,
+		];
+
+		downloadCsvRows(buildTimestampedFileName(`estadisticas_graficos_${variableArchivo}_${rangoArchivo}`), rows);
 	}
 
 	return (
@@ -308,6 +536,8 @@ export default function EstadisticasPage() {
 								setFilters={setFilters}
 								onApply={handleApplyFilters}
 								onReset={handleResetFilters}
+								onExport={handleExportGraficosCsv}
+								exportDisabled={currentRows.length === 0}
 							/>
 
 							{filterError ? (
@@ -323,12 +553,6 @@ export default function EstadisticasPage() {
 							{limnigrafosError ? (
 								<p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[#3A1818] dark:text-[#FECACA]">
 									No se pudieron cargar los limnígrafos para filtros.
-								</p>
-							) : null}
-
-							{noDataInRange ? (
-								<p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-[14px] text-[#475569] dark:border-[#334155] dark:bg-[#0F172A] dark:text-[#CBD5E1]">
-									No se encontraron mediciones en el período y filtros seleccionados.
 								</p>
 							) : null}
 
@@ -425,6 +649,8 @@ export default function EstadisticasPage() {
 								setFilters={setTablaFilters}
 								onApply={handleApplyTablaFilters}
 								onReset={handleResetTablaFilters}
+								onExport={handleExportTablaCsv}
+								exportDisabled={isExportingTabla}
 							/>
 
 							{tablaFilterError ? (
@@ -450,5 +676,19 @@ export default function EstadisticasPage() {
 				</div>
 			</main>
 		</PaginaBase>
+	);
+}
+
+export default function EstadisticasPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="flex min-h-screen items-center justify-center text-xl text-[#4B4B4B] dark:text-[#94A3B8]">
+					Cargando estadísticas...
+				</div>
+			}
+		>
+			<EstadisticasContent />
+		</Suspense>
 	);
 }

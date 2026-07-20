@@ -10,6 +10,8 @@ from django.utils import timezone
 from datetime import timedelta
 import random
 
+from .utils.audit import registrar_accion_auditoria_en_commit
+
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -177,5 +179,16 @@ class NuevaPasswordRecoveryView(APIView):
         user = request.user
         user.set_password(password_nueva)
         user.save()
+        registrar_accion_auditoria_en_commit(
+            usuario=user,
+            tipo_accion="modified",
+            entidad="Usuario",
+            entidad_id=user.id,
+            descripcion=f"Restableció la contraseña del usuario '{user.username}'.",
+            metadata={
+                "target_username": user.username,
+                "contrasena_restablecida": True,
+            },
+        )
         
         return Response({"mensaje": "Contraseña actualizada exitosamente."})
