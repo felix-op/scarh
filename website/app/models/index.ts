@@ -4,6 +4,7 @@ export * from "./models.alertas";
 export * from "./models.estadistica";
 export * from "./models.historial";
 export * from "./models.limnigrafos";
+export * from "./models.rutas-acceso";
 export * from "./models.mediciones";
 export * from "./models.ubicacion";
 export * from "./auth";
