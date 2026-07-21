@@ -29,6 +29,7 @@
 
 .button-animated:active {
   transform: scale(0.95);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Efecto de Brillo (Shine) */
@@ -79,11 +80,14 @@
 .button-primary {
   background-color: var(--color-primary-light);
   color: var(--color-primary-main);
-  border-color: var(--color-primary-main);
+  border-color: var(--color-border);
 }
 .button-primary:hover:not(.button-disabled) {
   background-color: var(--color-primary-dark);
-  border-color: var(--color-primary-main);
+  border-color: var(--color-default-main);
+}
+.button-primary:active:not(.button-disabled) {
+  background-color: var(--color-primary-light);
 }
 
 .button-success {
@@ -93,7 +97,10 @@
 }
 .button-success:hover:not(.button-disabled) {
   background-color: var(--color-success-dark);
-  border-color: var(--color-success-main);
+  border-color: var(--color-default-main);
+}
+.button-success:active:not(.button-disabled) {
+  background-color: var(--color-success-light);
 }
 
 .button-error {
@@ -103,17 +110,23 @@
 }
 .button-error:hover:not(.button-disabled) {
   background-color: var(--color-error-dark);
-  border-color: var(--color-error-main);
+  border-color: var(--color-default-main);
+}
+.button-error:active:not(.button-disabled) {
+  background-color: var(--color-error-light);
 }
 
 .button-warn {
   background-color: var(--color-warn-light);
   color: var(--color-warn-main);
-  border-color: var(--color-warn-main);
+  border-color: var(--color-default-main);
 }
 .button-warn:hover:not(.button-disabled) {
   background-color: var(--color-warn-dark);
-  border-color: var(--color-warn-main);
+  border-color: var(--color-default-main);
+}
+.button-warn:active:not(.button-disabled) {
+  background-color: var(--color-warn-light);
 }
 
 .button-default {
@@ -124,6 +137,9 @@
 .button-default:hover:not(.button-disabled) {
   background-color: var(--color-default-main);
   border-color: var(--color-default-main);
+}
+.button-default:active:not(.button-disabled) {
+  background-color: var(--color-default-light);
 }
 
 .button-default-icon {
