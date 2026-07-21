@@ -5,4 +5,8 @@ export * from "./datefield-rhf";
 export * from "./radiofield-rhf";
 export * from "./segmented-control-rhf";
 export * from "./switch-rhf";
+export * from "./memory-field-rhf";
+export * from "./multi-checkbox-rhf";
+export * from "./time-hms-field-rhf";
+export * from "./file-field-rhf";
 export * from "./formulario";
