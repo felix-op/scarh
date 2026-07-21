@@ -20,17 +20,45 @@ Este documento detalla las tareas de implementación de las interfaces y la gest
 - [x] **Restricciones**: Asegurar que esta sección sea de solo lectura (sin creación, edición ni eliminación).
 
 ## 3. Limnígrafos (Dispositivos)
-- [ ] Listado completo de limnígrafos registrados.
-- [ ] **Acciones por fila**: 
-  - [ ] Editar (redirecciona a una página aparte para la edición).
-  - [ ] Eliminar.
-- [ ] **Botones/Acciones adicionales por limnígrafo**:
-  - [ ] Ir a importar datos.
-  - [ ] Exportar datos.
-  - [ ] Ver ubicación.
-  - [ ] **"Cambiar Token"**: Generar y mostrar un token de acceso para el envío de mediciones (para ingresar luego en el dispositivo físico).
-- [ ] **Visualización de datos**: Implementar *Drawer* (panel lateral) para mostrar información detallada del limnígrafo sin sobrecargar la vista principal.
-- [ ] **Exportación global**: Añadir menú de exportación (CSV, Excel, PDF) separado de las acciones individuales de fila.
+
+### Capa de datos
+- [x] Corregir drift de modelos (`radio_cobertura_metros`, `ultima_medicion`, `configuracion`; fix `ConfiguracionLimnigrafoResponse`).
+- [x] Modelo + servicio SSR de `rutas-acceso` (+ barrels).
+- [x] Schemas Zod de limnígrafo / configuración.
+- [x] Constantes (estado, tipo de comunicación, memoria, buckets de tiempo).
+- [x] Helpers en `utils/strings.ts`, `utils/dates.ts`, `utils/ux.ts`.
+
+### API + hooks
+- [x] Adaptar `createHandler` para multipart (elegir content-type como `RequestSSR`).
+- [x] Route handlers `/api/limnigrafos` (+`[id]`, +`configuracion`).
+- [x] Route handlers `/api/rutas-acceso` (+`[id]`, +`descargar`).
+- [x] Hooks TanStack `querys.limnigrafos.ts` y `querys.rutas-acceso.ts` (+barrel).
+
+### Componentes genéricos
+- [x] `MemoryField` RHF (select de unidad estilo botón dentro del textfield).
+- [x] `MultiCheckbox` RHF.
+- [x] Campo de tiempo h/m/s RHF.
+- [x] `FileField` RHF (.gpx/.kml).
+- [x] `InfoTooltip` (wrapper de `shadcn/tooltip`).
+
+### Vista de listado
+- [x] Listado completo (SSR → `initialData`, no paginado).
+- [x] Filtros locales: búsqueda (código/ubicación), estado, tiempo desde el último dato.
+- [x] Botón Agregar (modal `VentanaFormularioRHF`).
+- [x] Acciones por fila: ver información, importar datos, ver mediciones, ver en el mapa, estadísticas, editar, eliminar.
+
+### Detalle y edición
+- [x] Página `/datos/[id]`: grupos (datos, mantenimiento, especificaciones técnicas) + tooltips de tiempos.
+- [x] Acciones del detalle (redirecciones + editar + eliminar, sin "ver más").
+- [x] Rutas de acceso: `RutaAccesoCard` + cargar (multipart) / descargar / editar / eliminar.
+- [x] Página `/editar/[id]` (PUT limnígrafo + PATCH configuración).
+- [x] Página `/importar/[id]` (stub).
+
+### Pendientes a futuro
+- [ ] Previsualización en mapa (Leaflet) de las rutas de acceso.
+- [ ] **"Cambiar Token"** (`generate_key`): generar y mostrar un token de acceso para el envío de mediciones — endpoint existe, falta UI.
+- [ ] Importación real de datos.
+- [ ] **Exportación global** (CSV, Excel, PDF) separada de las acciones de fila.
 
 ## 4. Mediciones
 - [ ] Visualización del histórico de mediciones en crudo.

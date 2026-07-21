@@ -60,6 +60,7 @@ const iconVariants = {
   tuerca: "icon-[dashicons--admin-generic]",
   accesoDenegado: "icon-[mdi--account-lock-outline]",
   candado: "icon-[solar--lock-outline]",
+  restablecer: "icon-[mdi--refresh]",
   importar: "icon-[material-symbols--download]",
   exportar: "icon-[material-symbols--upload]",
   descargar: "icon-[material-symbols--download]",
