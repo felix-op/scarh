@@ -28,18 +28,25 @@ export function createHandler<TQuery = any, TBody = any, TRoute = any, TReturn =
         routeParams = await context.params;
       }
 
-      // 3. Extraer Body
+      // 3. Extraer Body — elige el content-type igual que RequestSSR:
+      //    multipart/form-data se reenvía tal cual (archivos); el resto se parsea como JSON.
       let body: any = undefined;
       if (["POST", "PUT", "PATCH"].includes(req.method)) {
-        try {
-          body = await req.json();
-        } catch {
-          body = {};
-        }
+        const contentType = req.headers.get("content-type") || "";
 
-        // Validar si hay schema
-        if (schema) {
-          body = schema.parse(body);
+        if (contentType.includes("multipart/form-data")) {
+          body = await req.formData();
+        } else {
+          try {
+            body = await req.json();
+          } catch {
+            body = {};
+          }
+
+          // Validar si hay schema (sólo aplica a payloads JSON)
+          if (schema) {
+            body = schema.parse(body);
+          }
         }
       }
 
@@ -58,13 +65,13 @@ export function createHandler<TQuery = any, TBody = any, TRoute = any, TReturn =
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         return NextResponse.json(
-          { error: error.errors.map(e => e.message).join(", ") }, 
+          { error: error.errors.map(e => e.message).join(", ") },
           { status: 400 }
         );
       }
       if (error instanceof ApiError) {
         return NextResponse.json(
-          { error: error.descripcionUsuario }, 
+          { error: error.descripcionUsuario },
           { status: Number(error.codigo) || 500 }
         );
       }

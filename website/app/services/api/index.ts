@@ -34,6 +34,14 @@ export {
 } from "./next-server/limnigrafos";
 
 export {
+  getServerRutasAcceso,
+  postServerRutaAcceso,
+  patchServerRutaAcceso,
+  deleteServerRutaAcceso,
+  getServerRutaAccesoDescargar
+} from "./next-server/rutas-acceso";
+
+export {
   getServerMediciones,
   postServerMedicion,
   getServerMedicion
