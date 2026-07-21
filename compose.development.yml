@@ -1,10 +1,20 @@
 services:
-  # Servicio de la Aplicación Django
+  # Permite levantar el servicio backend de forma local
+  # Si se quiere utilizar la base de datos de desarrollo hay que levantarlo aparte (compose.db.development.yml)
+  # La base de datos de producción sólo debe modificarse en 
+
+  ## Para no cargar todo el tiempo la base de datos estos comandos se comentan
+  ## Agregarlo manualmente y no olvidar quitarlos una vez que se ejecutaron
+  ## Se agregarlo en command después de migrate
+  # command: >
+  # python manage.py loaddata roles.json;
+  # python manage.py createsuperuser_from_env;
   web:
     image: felixop/scarh:latest
     container_name: scarh_api
     command: >
-      sh -c "python manage.py migrate &&
+      sh -c "python manage.py makemigrations api &&
+       python manage.py migrate &&
        python manage.py createsuperuser_from_env &&
        python manage.py runserver 0.0.0.0:8000"
     ports:
@@ -28,3 +38,9 @@ services:
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
       - ACCESS_TOKEN_LIFETIME_MINUTES=${ACCESS_TOKEN_LIFETIME_MINUTES}
       - REFRESH_TOKEN_LIFETIME_DAYS=${REFRESH_TOKEN_LIFETIME_DAYS}
+    networks:
+      - red_proyectos
+
+networks:
+  red_proyectos:
+    external: true
