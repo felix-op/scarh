@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { THEME_COOKIE } from "./constantes-theme";
 
 export type ThemeMode = "light" | "dark";
 export type TextScale = "small" | "medium" | "large" | "xlarge";
@@ -16,9 +17,14 @@ interface ThemeContextState {
 
 const ThemeContext = createContext<ThemeContextState | undefined>(undefined);
 
-const THEME_KEY = "theme-preference";
 const FONT_SIZE_KEY = "font-size-preference";
 const ANIMATIONS_KEY = "animations-preference";
+const THEME_COOKIE_MAX_AGE_DAYS = 365;
+
+function setThemeCookie(value: ThemeMode) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${THEME_COOKIE}=${value}; path=/; max-age=${THEME_COOKIE_MAX_AGE_DAYS * 24 * 60 * 60}; SameSite=Lax`;
+}
 
 const fontSizeMap: Record<TextScale, string> = {
   small: "14px",
@@ -49,7 +55,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       document.documentElement.classList.remove("dark");
     }
 
-    localStorage.setItem(THEME_KEY, nextTheme);
+    setThemeCookie(nextTheme);
     window.dispatchEvent(new Event("theme-change"));
   };
 
@@ -85,6 +91,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   // Inicializar preferencias al montar el componente en el cliente
+  // (el tema ya llega correcto desde el servidor vía cookie, ver RootLayout)
   useEffect(() => {
     // 1. Inicializar animaciones
     const savedAnimations = localStorage.getItem(ANIMATIONS_KEY);
