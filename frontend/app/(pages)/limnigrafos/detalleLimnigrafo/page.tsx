@@ -497,8 +497,8 @@ function DetalleLimnigrafoContent() {
 				titulo="Editar limnigrafo"
 				descripcion=""
 				valoresIniciales={valoresIniciales}
-				classNameVentana="md:min-w-[64rem] xl:min-w-[88rem]"
-				classNameContenido="px-8 py-7 xl:px-10 xl:py-8"
+				classNameVentana="md:min-w-[56rem] xl:min-w-[72rem]"
+				classNameContenido="px-5 py-5 xl:px-6 xl:py-6"
 				isLoading={isSavingEdit}
 			>
 				<CamposFormularioEditarLimnigrafo

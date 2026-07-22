@@ -56,25 +56,26 @@ export function BotonEstadoLimnigrafo({ estado }: BotonEstadoProps) {
 			className="
         mx-auto
         flex
-        w-[170px]
+        w-fit
+        min-w-[128px]
         items-center
         justify-center
-        rounded-[36px]
+        rounded-full
         bg-[#F0F0F0]/90 dark:border dark:border-[#334155] dark:bg-[#1A2433]/95
-        px-5
-        py-1.5
+        px-3
+        py-1
         opacity-70 dark:opacity-100
         shadow-[0px_4px_4px_rgba(0,0,0,0.25)]
       "
 		>
-			<div className="flex items-center gap-2.5">
-				<span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0px_0px_4px_rgba(0,0,0,0.5)] dark:bg-[#1E293B]">
+			<div className="flex items-center gap-2">
+				<span className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-[0px_0px_4px_rgba(0,0,0,0.5)] dark:bg-[#1E293B]">
 					<span
-						className="block h-[24px] w-[24px] rounded-full border"
+						className="block h-4 w-4 rounded-full border"
 						style={{ backgroundColor: color, borderColor: bordeColor }}
 					/>
 				</span>
-				<span className="text-[20px] font-semibold text-black drop-shadow dark:text-[#E2E8F0]">
+				<span className="text-[14px] font-semibold text-black drop-shadow dark:text-[#E2E8F0]">
 					{etiqueta}
 				</span>
 			</div>
