@@ -4,25 +4,22 @@ import { useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { TablaConAccionesPaginada } from "../ui/tabla/tabla-con-acciones-paginada";
-import { ActionConfig, TableColumn } from "../ui/tabla/tabla.types";
-import { Select } from "../ui/select";
-import { DateField } from "../ui/datefield";
-import { Chip, ChipVariant } from "../ui/chip";
-import { MenuExportar } from "../menu-exportar";
+import {
+  TablaConAccionesPaginada,
+  ActionConfig,
+  TableColumn,
+  Chip,
+  ChipVariant,
+  VentanaInfoUsuario,
+} from "@components";
 import { RequestClient, useMensajes } from "@services";
-import { opcionesTipoAccion, opcionesEntidad } from "@utils";
+import { opcionesTipoAccion } from "@utils";
 import type { HistorialResponse, PaginatedHistorialResponse, UsuarioResponse, PaginatedResponse } from "@models";
-import { VentanaInfoUsuario } from "../usuarios/ventana-info-usuario";
+import { FiltrosHistorial, type HistorialFiltrosState } from "./filtros-historial";
 
 type HistorialRow = Omit<HistorialResponse, "metadata">;
 
-export interface FiltrosHistorial {
-  tipo: string;
-  entidad: string;
-  usuario: string;
-  desde: string;
-  hasta: string;
+export interface FiltrosHistorialPagina extends HistorialFiltrosState {
   page: number;
   limit: number;
 }
@@ -30,7 +27,7 @@ export interface FiltrosHistorial {
 export interface TablaHistorialProps {
   data: PaginatedHistorialResponse;
   usuariosOpciones: { label: string; value: string }[];
-  filtros: FiltrosHistorial;
+  filtros: FiltrosHistorialPagina;
 }
 
 const estadoConfig: Record<string, { label: string; variant: ChipVariant }> = {
@@ -59,12 +56,13 @@ export function TablaHistorial({ data, usuariosOpciones, filtros }: TablaHistori
     });
   };
 
-  const actualizarFiltros = (cambios: Partial<FiltrosHistorial>) => {
+  const actualizarFiltros = (cambios: Partial<FiltrosHistorialPagina>) => {
     const next = { ...filtros, ...cambios, page: "page" in cambios ? (cambios.page as number) : 1 };
     const params = new URLSearchParams();
-    if (next.tipo !== "todos") params.set("type", next.tipo);
-    if (next.entidad !== "todos") params.set("model", next.entidad);
+    if (next.tipo !== "todas" && next.tipo !== "todos") params.set("type", next.tipo);
+    if (next.entidad !== "todas" && next.entidad !== "todos") params.set("model", next.entidad);
     if (next.usuario !== "todos") params.set("usuario", next.usuario);
+    if (next.ventana && next.ventana !== "semana") params.set("ventana", next.ventana);
     if (next.desde) params.set("desde", next.desde);
     if (next.hasta) params.set("hasta", next.hasta);
     if (next.page > 1) params.set("page", String(next.page));
@@ -160,63 +158,15 @@ export function TablaHistorial({ data, usuariosOpciones, filtros }: TablaHistori
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row gap-4 items-end justify-between w-full">
-        <div className="flex flex-col md:flex-row gap-4 w-full md:flex-1">
-          <div className="w-full md:w-48">
-            <Select
-              label="Acción"
-              name="tipo"
-              options={[{ label: "Todas", value: "todas" }, ...opcionesTipoAccion]}
-              value={filtros.tipo}
-              onChange={(val) => actualizarFiltros({ tipo: val })}
-            />
-          </div>
-
-          <div className="w-full md:w-48">
-            <Select
-              label="Entidad"
-              name="entidad"
-              options={[{ label: "Todas", value: "todas" }, ...opcionesEntidad]}
-              value={filtros.entidad}
-              onChange={(val) => actualizarFiltros({ entidad: val })}
-            />
-          </div>
-
-          <div className="w-full md:w-48">
-            <Select
-              label="Usuario"
-              name="usuario"
-              options={[{ label: "Todos", value: "todos" }, ...usuariosOpciones]}
-              value={filtros.usuario}
-              onChange={(val) => actualizarFiltros({ usuario: val })}
-            />
-          </div>
-
-          <div className="w-full md:w-40">
-            <DateField
-              label="Desde"
-              name="desde"
-              value={new Date(`${filtros.desde}T00:00:00`)}
-              onChange={(date) => date && actualizarFiltros({ desde: format(date, "yyyy-MM-dd") })}
-            />
-          </div>
-
-          <div className="w-full md:w-40">
-            <DateField
-              label="Hasta"
-              name="hasta"
-              value={new Date(`${filtros.hasta}T00:00:00`)}
-              onChange={(date) => date && actualizarFiltros({ hasta: format(date, "yyyy-MM-dd") })}
-            />
-          </div>
-        </div>
-
-        <MenuExportar
-          handleExportCSV={() => mensajes.info("Exportando...", "Exportando historial a CSV.")}
-          handleExportExcel={() => mensajes.info("Exportando...", "Exportando historial a Excel.")}
-          handleExportPDF={() => mensajes.info("Exportando...", "Exportando historial a PDF.")}
-        />
-      </div>
+      <FiltrosHistorial
+        filtros={filtros}
+        usuariosOpciones={usuariosOpciones}
+        isPending={isPending}
+        onChange={actualizarFiltros}
+        onExportCSV={() => mensajes.info("Exportando...", "Exportando historial a CSV.")}
+        onExportExcel={() => mensajes.info("Exportando...", "Exportando historial a Excel.")}
+        onExportPDF={() => mensajes.info("Exportando...", "Exportando historial a PDF.")}
+      />
 
       <TablaConAccionesPaginada
         columns={columns}

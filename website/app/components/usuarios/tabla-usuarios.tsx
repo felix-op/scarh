@@ -1,23 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { TablaConAcciones } from "../ui/tabla/tabla-con-acciones";
-import { ActionConfig, TableColumn } from "../ui/tabla/tabla.types";
-import { BotonAgregar, BotonPermisosMasivos } from "../ui/botones";
-import { TextField } from "../ui/textfield";
-import { Select } from "../ui/select";
-import { IconifyIcon } from "../ui/iconify-icon";
-import { Chip } from "../ui/chip";
+import {
+  TablaConAcciones,
+  ActionConfig,
+  TableColumn,
+  BotonAgregar,
+  BotonPermisosMasivos,
+  TextField,
+  Select,
+  IconifyIcon,
+  Chip,
+  Alert,
+  Card,
+  VentanaAgregarUsuario,
+  VentanaEditarUsuario,
+  VentanaEliminarUsuario,
+  VentanaInfoUsuario,
+  VentanaPermisosUsuario,
+  VentanaPermisosMasivos,
+  VentanaCambiarEstadoUsuario,
+} from "@components";
 import { useGetUsuarios } from "@hooks";
 import type { UsuarioResponse, PaginatedResponse } from "@models";
-import VentanaAgregarUsuario from "./ventana-agregar-usuario";
-import VentanaEditarUsuario from "./ventana-editar-usuario";
-import VentanaEliminarUsuario from "./ventana-eliminar-usuario";
-import VentanaInfoUsuario from "./ventana-info-usuario";
-import VentanaPermisosUsuario from "./ventana-permisos-usuario";
-import VentanaPermisosMasivos from "./ventana-permisos-masivos";
-import VentanaCambiarEstadoUsuario from "./ventana-cambiar-estado-usuario";
-import Alert from "../ui/alerts";
 
 const OpcionesEstado = [
   { label: "Todos", value: "todos" },
@@ -103,6 +108,29 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
     }
   };
 
+  const estaActivo = (campo: "search" | "estado" | "rol") => {
+    if (campo === "search") return Boolean(filtros.search);
+    if (campo === "estado") return filtros.estado !== "todos";
+    if (campo === "rol") return filtros.rol !== "todos";
+    return false;
+  };
+
+  const valorMostrado = (campo: "search" | "estado" | "rol") => {
+    if (campo === "search") return filtros.search;
+    if (campo === "estado") return filtros.estado === "true" ? "Activo" : "Inactivo";
+    if (campo === "rol") return rolesOpciones.find((r) => r.value === filtros.rol)?.label || filtros.rol;
+    return "";
+  };
+
+  const labelFiltro: Record<"search" | "estado" | "rol", string> = {
+    search: "Búsqueda",
+    estado: "Estado",
+    rol: "Rol",
+  };
+
+  const camposFiltro: ("search" | "estado" | "rol")[] = ["search", "estado", "rol"];
+  const filtrosActivos = camposFiltro.filter(estaActivo);
+
   const columns: TableColumn<UsuarioResponse>[] = [
     {
       id: "estado",
@@ -137,7 +165,7 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
   ];
 
   const actionConfig: ActionConfig<UsuarioResponse> = {
-    menu: true, // mostramos menú de opciones
+    menu: true,
     options: [
       {
         label: "Detalles",
@@ -190,51 +218,64 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Toolbar */}
-      <div className="flex flex-col-reverse md:flex-col gap-4">
-        {/* Buscador y Filtros (Grid / Row) */}
-        <div className="flex flex-col md:flex-row gap-4 items-end justify-between w-full">
-          <div className="w-full md:flex-1">
-            <TextField
-              name="search"
-              label="Buscar Usuario"
-              placeholder="Por nombre, apellido, email o usuario"
-              defaultValue={filtros.search}
-              leftIcon={<IconifyIcon variant="search" />}
-              onChange={(e) => {
-                const val = e.target.value;
-                const timeout = setTimeout(() => handleSearch(val), 500);
-                return () => clearTimeout(timeout);
-              }}
-            />
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
-            <div className="w-full md:w-48">
-              <Select
-                label="Estado"
-                name="estado"
-                options={OpcionesEstado}
-                value={filtros.estado}
-                onChange={(val) => handleFilterChange("estado", val)}
+      {/* Toolbar en Card p-2 */}
+      <Card className="p-2">
+        <div className="flex flex-col gap-4">
+          {/* Fila 1: Buscador y Filtros */}
+          <div className="flex flex-col md:flex-row gap-4 items-end justify-between w-full">
+            <div className="w-full md:flex-1">
+              <TextField
+                name="search"
+                label="Buscar Usuario"
+                placeholder="Por nombre, apellido, email o usuario"
+                defaultValue={filtros.search}
+                leftIcon={<IconifyIcon variant="search" />}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const timeout = setTimeout(() => handleSearch(val), 500);
+                  return () => clearTimeout(timeout);
+                }}
               />
             </div>
 
-            <div className="w-full md:w-48">
-              <Select
-                label="Rol"
-                name="rol"
-                options={[{ label: "Todos", value: "todos" }, ...rolesOpciones]}
-                value={filtros.rol}
-                onChange={(val) => handleFilterChange("rol", val)}
-              />
+            <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
+              <div className="w-full md:w-48">
+                <Select
+                  label="Estado"
+                  name="estado"
+                  options={OpcionesEstado}
+                  value={filtros.estado}
+                  onChange={(val) => handleFilterChange("estado", val)}
+                />
+              </div>
+
+              <div className="w-full md:w-48">
+                <Select
+                  label="Rol"
+                  name="rol"
+                  options={[{ label: "Todos", value: "todos" }, ...rolesOpciones]}
+                  value={filtros.rol}
+                  onChange={(val) => handleFilterChange("rol", val)}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Acciones de gestión (Flex) */}
-        <div className="flex flex-col md:flex-row gap-4 mt-2 items-start md:items-center">
-          <div className="flex flex-col md:flex-row w-full gap-2 shrink-0">
+          {/* Fila 2: Chips de filtros activos */}
+          <div className="flex flex-wrap items-center gap-2 w-full">
+            {filtrosActivos.length === 0 ? (
+              <span className="text-sm text-foreground-disabled">Sin filtros activos</span>
+            ) : (
+              filtrosActivos.map((campo) => (
+                <Chip key={campo} variant="info" size="sm">
+                  {labelFiltro[campo]}: {valorMostrado(campo)}
+                </Chip>
+              ))
+            )}
+          </div>
+
+          {/* Fila 3: Botones de acción alineados a la derecha */}
+          <div className="flex flex-wrap items-center justify-end gap-3 w-full">
             <BotonAgregar content="Agregar" onClick={() => setIsAddOpen(true)} disabled={!canEdit} />
             <BotonPermisosMasivos
               content="Gestionar Permisos"
@@ -249,7 +290,7 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
             </Alert>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Tabla */}
       <TablaConAcciones
@@ -260,15 +301,12 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
         isLoading={isLoadingQuery}
         bordered={true}
         checkboxConfig={{
-          onSelectionChange: setSelectedUsers
+          onSelectionChange: setSelectedUsers,
         }}
       />
 
       {/* Modales */}
-      <VentanaAgregarUsuario
-        open={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
-      />
+      <VentanaAgregarUsuario open={isAddOpen} onClose={() => setIsAddOpen(false)} />
 
       <VentanaEditarUsuario
         open={modal?.type === "editar"}
@@ -308,3 +346,5 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
     </div>
   );
 }
+
+export default TablaUsuarios;

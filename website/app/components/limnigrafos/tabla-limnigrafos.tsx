@@ -2,16 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TablaConAcciones } from "../ui/tabla/tabla-con-acciones";
-import { ActionConfig, TableColumn } from "../ui/tabla/tabla.types";
-import { BotonAgregar } from "../ui/botones";
-import { TextField } from "../ui/textfield";
-import { Select } from "../ui/select";
-import { IconifyIcon } from "../ui/iconify-icon";
-import Alert from "../ui/alerts";
-import { ChipEstadoLimnigrafo } from "./chip-estado-limnigrafo";
-import { VentanaAgregarLimnigrafo } from "./ventana-agregar-limnigrafo";
-import { VentanaEliminarLimnigrafo } from "./ventana-eliminar-limnigrafo";
+import {
+  TablaConAcciones,
+  ActionConfig,
+  TableColumn,
+  BotonAgregar,
+  TextField,
+  Select,
+  IconifyIcon,
+  Alert,
+  Chip,
+  Card,
+  ChipEstadoLimnigrafo,
+  VentanaAgregarLimnigrafo,
+  VentanaEliminarLimnigrafo,
+} from "@components";
 import { useGetLimnigrafos } from "@hooks";
 import {
   opcionesEstado,
@@ -69,6 +74,29 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
       coincideTiempoUltimoDato(l.ultima_conexion, filtros.tiempo as TiempoUltimoDatoBucket)
     );
   }
+
+  const estaActivo = (campo: "search" | "estado" | "tiempo") => {
+    if (campo === "search") return Boolean(filtros.search);
+    if (campo === "estado") return filtros.estado !== "todos";
+    if (campo === "tiempo") return filtros.tiempo !== "todos";
+    return false;
+  };
+
+  const valorMostrado = (campo: "search" | "estado" | "tiempo") => {
+    if (campo === "search") return filtros.search;
+    if (campo === "estado") return opcionesEstado.find((o) => o.value === filtros.estado)?.label || filtros.estado;
+    if (campo === "tiempo") return opcionesTiempoUltimoDato.find((o) => o.value === filtros.tiempo)?.label || filtros.tiempo;
+    return "";
+  };
+
+  const labelFiltro: Record<"search" | "estado" | "tiempo", string> = {
+    search: "Búsqueda",
+    estado: "Estado",
+    tiempo: "Tiempo últ. dato",
+  };
+
+  const camposFiltro: ("search" | "estado" | "tiempo")[] = ["search", "estado", "tiempo"];
+  const filtrosActivos = camposFiltro.filter(estaActivo);
 
   const columns: TableColumn<LimnigrafoResponse>[] = [
     {
@@ -150,26 +178,27 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Toolbar */}
-      <div className="flex flex-col-reverse md:flex-col gap-4">
-        <div className="flex flex-col md:flex-row gap-4 items-end justify-between w-full">
-          <div className="w-full md:flex-1">
-            <TextField
-              name="search"
-              label="Buscar limnígrafo"
-              placeholder="Por código o ubicación"
-              defaultValue={filtros.search}
-              leftIcon={<IconifyIcon variant="search" />}
-              onChange={(e) => {
-                const val = e.target.value;
-                const timeout = setTimeout(() => handleSearch(val), 500);
-                return () => clearTimeout(timeout);
-              }}
-            />
-          </div>
+      {/* Toolbar en Card con padding 2 */}
+      <Card className="p-2">
+        <div className="flex flex-col gap-4">
+          {/* Fila 1: Buscador y Filtros (Grid responsivo: buscador en fila propia en medianas (md:col-span-2), alineados juntos en grandes (lg:grid-cols-3)) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+            <div className="w-full md:col-span-2 lg:col-span-1">
+              <TextField
+                name="search"
+                label="Buscar limnígrafo"
+                placeholder="Por código o ubicación"
+                defaultValue={filtros.search}
+                leftIcon={<IconifyIcon variant="search" />}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const timeout = setTimeout(() => handleSearch(val), 500);
+                  return () => clearTimeout(timeout);
+                }}
+              />
+            </div>
 
-          <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
-            <div className="w-full md:w-48">
+            <div className="w-full">
               <Select
                 label="Estado"
                 name="estado"
@@ -178,7 +207,8 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
                 onChange={(val) => handleFilterChange("estado", val)}
               />
             </div>
-            <div className="w-full md:w-56">
+
+            <div className="w-full">
               <Select
                 label="Tiempo desde el último dato"
                 name="tiempo"
@@ -188,17 +218,32 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
               />
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-col md:flex-row gap-4 mt-2 items-start md:items-center">
-          <BotonAgregar content="Agregar" onClick={() => setIsAddOpen(true)} disabled={!puedeEditar} />
+          {/* Fila 2: Chips de filtros activos */}
+          <div className="flex flex-wrap items-center gap-2 w-full">
+            {filtrosActivos.length === 0 ? (
+              <span className="text-sm text-foreground-disabled">Sin filtros activos</span>
+            ) : (
+              filtrosActivos.map((campo) => (
+                <Chip key={campo} variant="info" size="sm">
+                  {labelFiltro[campo]}: {valorMostrado(campo)}
+                </Chip>
+              ))
+            )}
+          </div>
+
+          {/* Fila 3: Botón Agregar alineado a la derecha */}
+          <div className="flex flex-wrap items-center justify-end gap-3 w-full">
+            <BotonAgregar content="Agregar" onClick={() => setIsAddOpen(true)} disabled={!puedeEditar} />
+          </div>
+
           {!puedeEditar && (
             <Alert variant="alerta" title="Modo de sólo lectura">
               No dispones de los permisos necesarios para agregar o modificar limnígrafos.
             </Alert>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Tabla */}
       <TablaConAcciones

@@ -1,7 +1,38 @@
+import { format, subHours, subDays } from "date-fns";
+
 /**
- * Helpers de fecha y tiempo: descomposición de segundos en h/m/s, formateo es-AR y
- * el filtro por "tiempo desde el último dato".
+ * Retorna las fechas string (yyyy-MM-dd) correspondientes a una ventana de tiempo prestablecida.
  */
+export function obtenerFechasVentana(ventana: string): { desde: string; hasta: string } | null {
+  const now = new Date();
+  const hoyStr = format(now, "yyyy-MM-dd");
+
+  switch (ventana) {
+    case "hora":
+      return {
+        desde: format(subHours(now, 1), "yyyy-MM-dd"),
+        hasta: hoyStr,
+      };
+    case "dia":
+      return {
+        desde: format(subDays(now, 1), "yyyy-MM-dd"),
+        hasta: hoyStr,
+      };
+    case "semana":
+      return {
+        desde: format(subDays(now, 7), "yyyy-MM-dd"),
+        hasta: hoyStr,
+      };
+    case "mas_semana":
+      return {
+        desde: "",
+        hasta: format(subDays(now, 7), "yyyy-MM-dd"),
+      };
+    case "personalizado":
+    default:
+      return null;
+  }
+}
 
 export type TiempoDescompuesto = {
   horas?: string | null;

@@ -13,7 +13,7 @@ export function PasswordField(props: PasswordFieldProps) {
     <TextField
       {...props}
       type={showPassword ? "text" : "password"}
-      leftIcon={<IconifyIcon variant="perfilPassword" className="text-xl text-foreground-disabled" />}
+      leftIcon={<IconifyIcon variant="perfilPassword" className="text-xl text-primary" />}
       rightAction={{
         icon: (
           <IconifyIcon

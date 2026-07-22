@@ -4,11 +4,9 @@ import { useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { TablaConAccionesPaginada } from "../ui/tabla/tabla-con-acciones-paginada";
-import { ActionConfig, TableColumn } from "../ui/tabla/tabla.types";
-import { Chip, ChipVariant } from "../ui/chip";
+import { TablaConAccionesPaginada, ActionConfig, TableColumn, Chip, ChipVariant } from "@components";
 import { useMensajes } from "@services";
-import { opcionesFuenteMedicion } from "@utils";
+import { opcionesFuenteMedicion, obtenerFechasVentana } from "@utils";
 import type { MedicionResponse, PaginatedMedicionResponse, LimnigrafoResponse } from "@models";
 import { FiltrosMediciones, type MedicionesFiltrosState } from "./filtros-mediciones";
 
@@ -42,6 +40,7 @@ function extraerFiltros(filtros: FiltrosMedicionesPagina): MedicionesFiltrosStat
   return {
     limnigrafo: filtros.limnigrafo,
     fuente: filtros.fuente,
+    ventana: filtros.ventana,
     desde: filtros.desde,
     hasta: filtros.hasta,
     busqueda: filtros.busqueda,
@@ -74,6 +73,7 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
     const params = new URLSearchParams();
     if (next.limnigrafo !== "todos") params.set("limnigrafo", next.limnigrafo);
     if (next.fuente !== "todas") params.set("fuente", next.fuente);
+    if (next.ventana && next.ventana !== "semana") params.set("ventana", next.ventana);
     if (next.desde) params.set("desde", next.desde);
     if (next.hasta) params.set("hasta", next.hasta);
     if (next.busqueda) params.set("busqueda", next.busqueda);
@@ -87,7 +87,15 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
   };
 
   const handleRestablecerFiltros = () => {
-    const reset: MedicionesFiltrosState = { limnigrafo: "todos", fuente: "todas", desde: "", hasta: "", busqueda: "" };
+    const fechas = obtenerFechasVentana("semana") || { desde: "", hasta: "" };
+    const reset: MedicionesFiltrosState = {
+      limnigrafo: "todos",
+      fuente: "todas",
+      ventana: "semana",
+      desde: fechas.desde,
+      hasta: fechas.hasta,
+      busqueda: "",
+    };
     setFiltrosPendientes(reset);
     navegar(construirParams({ ...reset, page: 1, limit: 50 }));
   };

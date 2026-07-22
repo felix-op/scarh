@@ -1,6 +1,7 @@
 import { format, subDays } from "date-fns";
 import { getServerHistorial, getServerUsuarios } from "@services";
-import { TablaHistorial, type FiltrosHistorial } from "@components";
+import { TablaHistorial, type FiltrosHistorialPagina } from "@components";
+import { obtenerFechasVentana } from "@utils";
 
 export interface HistorialPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -9,12 +10,19 @@ export interface HistorialPageProps {
 export default async function HistorialPage({ searchParams }: HistorialPageProps) {
   const params = await searchParams;
 
-  const filtros: FiltrosHistorial = {
+  const ventana = params.ventana || "semana";
+  const fechasVentana = obtenerFechasVentana(ventana) || {
+    desde: format(subDays(new Date(), 7), "yyyy-MM-dd"),
+    hasta: format(new Date(), "yyyy-MM-dd"),
+  };
+
+  const filtros: FiltrosHistorialPagina = {
     tipo: params.type || "todas",
     entidad: params.model || "todas",
     usuario: params.usuario || "todos",
-    desde: params.desde || format(subDays(new Date(), 1), "yyyy-MM-dd"),
-    hasta: params.hasta || format(new Date(), "yyyy-MM-dd"),
+    ventana,
+    desde: params.desde !== undefined ? params.desde : fechasVentana.desde,
+    hasta: params.hasta !== undefined ? params.hasta : fechasVentana.hasta,
     page: Number(params.page) || 1,
     limit: Number(params.limit) || 50,
   };
@@ -25,8 +33,8 @@ export default async function HistorialPage({ searchParams }: HistorialPageProps
         type: filtros.tipo !== "todas" ? filtros.tipo : undefined,
         model: filtros.entidad !== "todas" ? filtros.entidad : undefined,
         usuario: filtros.usuario !== "todos" ? filtros.usuario : undefined,
-        desde: filtros.desde,
-        hasta: filtros.hasta,
+        desde: filtros.desde || undefined,
+        hasta: filtros.hasta || undefined,
         page: filtros.page,
         limit: filtros.limit,
       },

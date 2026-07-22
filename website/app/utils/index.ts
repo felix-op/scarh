@@ -1,3 +1,4 @@
+export * from "./constantes";
 export * from "./shadcn";
 export * from "./urlConParametros";
 export * from "./api";
@@ -12,3 +13,4 @@ export * from "./constantes-limnigrafos";
 export * from "./strings";
 export * from "./dates";
 export * from "./ux";
+

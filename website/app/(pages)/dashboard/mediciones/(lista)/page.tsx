@@ -1,6 +1,7 @@
 import { format, subDays } from "date-fns";
 import { getServerMediciones, getServerLimnigrafos } from "@services";
 import { TablaMediciones, type FiltrosMedicionesPagina } from "@components";
+import { obtenerFechasVentana } from "@utils";
 
 export interface MedicionesPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -9,11 +10,18 @@ export interface MedicionesPageProps {
 export default async function MedicionesPage({ searchParams }: MedicionesPageProps) {
   const params = await searchParams;
 
+  const ventana = params.ventana || "semana";
+  const fechasVentana = obtenerFechasVentana(ventana) || {
+    desde: format(subDays(new Date(), 7), "yyyy-MM-dd"),
+    hasta: format(new Date(), "yyyy-MM-dd"),
+  };
+
   const filtros: FiltrosMedicionesPagina = {
     limnigrafo: params.limnigrafo || "todos",
     fuente: params.fuente || "todas",
-    desde: params.desde || format(subDays(new Date(), 7), "yyyy-MM-dd"),
-    hasta: params.hasta || format(new Date(), "yyyy-MM-dd"),
+    ventana,
+    desde: params.desde !== undefined ? params.desde : fechasVentana.desde,
+    hasta: params.hasta !== undefined ? params.hasta : fechasVentana.hasta,
     busqueda: params.busqueda || "",
     page: Number(params.page) || 1,
     limit: Number(params.limit) || 50,
