@@ -226,11 +226,28 @@ class LimnigrafoTests(APITestCase):
             'bateria_min': 10.5,
             'tiempo_advertencia': 900
         }
-        response = self.client.patch(url, update_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.post(url, update_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['bateria_min'], 10.5)
         self.assertEqual(response.data['tiempo_advertencia'], 900)
+        self.assertTrue(response.data['activo'])
+        self.assertIsNotNone(response.data['fecha_inicio'])
+        self.assertIsNone(response.data['fecha_fin'])
         
-        # Verify it persisted in DB
-        self.limnigrafo.configuracion.refresh_from_db()
-        self.assertEqual(self.limnigrafo.configuracion.bateria_min, 10.5)
+        # Verify the new active configuration is retrieved
+        config_activa = self.limnigrafo.configuracion
+        self.assertEqual(config_activa.bateria_min, 10.5)
+        self.assertTrue(config_activa.activo)
+
+    def test_get_historial_configuracion_action(self):
+        url = reverse('limnigrafos-configuracion', args=[self.limnigrafo.id])
+        update_data = {
+            'bateria_min': 10.5,
+            'tiempo_advertencia': 900
+        }
+        self.client.post(url, update_data, format='json')
+        
+        history_url = reverse('limnigrafos-historial-configuracion', args=[self.limnigrafo.id])
+        response = self.client.get(history_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)

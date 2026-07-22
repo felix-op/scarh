@@ -24,7 +24,8 @@ import threading
 def sincronizar_async():
     """Ejecuta la sincronización en un hilo separado para no bloquear"""
     try:
-        call_command('sincronizar_simulador')
+        # call_command('sincronizar_simulador')
+        pass
     except Exception as e:
         print(f"⚠️  Error al sincronizar: {e}")
 

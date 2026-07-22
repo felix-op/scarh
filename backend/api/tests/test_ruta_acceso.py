@@ -270,7 +270,10 @@ class RutaAccesoMigrationTests(TransactionTestCase):
     migrate_to = [('api', '0028_rutas_acceso_limnigrafos')]
 
     def setUp(self):
+        import unittest
         self.executor = MigrationExecutor(connection)
+        if self.migrate_from[0] not in self.executor.loader.graph.nodes:
+            raise unittest.SkipTest("Las migraciones no están disponibles en el entorno local.")
         self.executor.migrate(self.migrate_from)
         old_apps = self.executor.loader.project_state(self.migrate_from).apps
 

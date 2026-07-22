@@ -114,7 +114,7 @@ class MedicionViewSet(
 
         limnigrafos = {
             limnigrafo.id: limnigrafo
-            for limnigrafo in Limnigrafo.objects.filter(id__in=limnigrafo_ids).select_related("configuracion")
+            for limnigrafo in Limnigrafo.objects.filter(id__in=limnigrafo_ids).prefetch_related("configuraciones")
         }
 
         seen_keys = Counter()
@@ -339,7 +339,7 @@ class MedicionViewSet(
 
         limnigrafos_afectados = {
             limnigrafo.id: limnigrafo
-            for limnigrafo in Limnigrafo.objects.filter(id__in=limnigrafo_ids_afectados).select_related("configuracion")
+            for limnigrafo in Limnigrafo.objects.filter(id__in=limnigrafo_ids_afectados).prefetch_related("configuraciones")
         }
         estado_anterior_por_limnigrafo = {
             limnigrafo.id: limnigrafo.estado

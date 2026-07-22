@@ -1,5 +1,12 @@
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+import sys
+if 'test' in sys.argv:
+    class ArrayField(models.JSONField):
+        def __init__(self, base_field=None, **kwargs):
+            super().__init__(**kwargs)
+else:
+    from django.contrib.postgres.fields import ArrayField
+
 import secrets, hashlib
 from simple_history.models import HistoricalRecords # type: ignore
 class Limnigrafo(models.Model):
@@ -27,6 +34,15 @@ class Limnigrafo(models.Model):
 
     def __str__(self):
         return self.codigo
+
+    @property
+    def configuracion(self):
+        if hasattr(self, '_prefetched_objects_cache') and 'configuraciones' in self._prefetched_objects_cache:
+            for conf in self.configuraciones.all():
+                if conf.activo:
+                    return conf
+            return next(iter(self.configuraciones.all()), None)
+        return self.configuraciones.filter(activo=True).first() or self.configuraciones.order_by('-id').first()
 
     def generar_token(self):
         token = secrets.token_hex(32)

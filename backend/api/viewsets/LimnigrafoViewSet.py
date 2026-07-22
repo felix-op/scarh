@@ -191,34 +191,57 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
             "warning": "GUARDE ESTA CLAVE. No se puede recuperar después de este momento."
         }, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['get', 'put', 'patch'], url_path='configuracion', serializer_class=ConfiguracionLimnigrafoSerializer)
+    @action(detail=True, methods=['get', 'post'], url_path='configuracion', serializer_class=ConfiguracionLimnigrafoSerializer)
     def configuracion(self, request, pk=None):
         limnigrafo = self.get_object()
-        configuracion = getattr(limnigrafo, 'configuracion', None)
-        if not configuracion:
-            from ..models import ConfiguracionLimnigrafo
-            configuracion = ConfiguracionLimnigrafo.objects.create(limnigrafo=limnigrafo)
         
         if request.method == 'GET':
+            from ..models import ConfiguracionLimnigrafo
+            configuracion = limnigrafo.configuracion
+            if not configuracion:
+                return Response(None)
             serializer = self.get_serializer(configuracion)
             return Response(serializer.data)
             
-        elif request.method in ['PUT', 'PATCH']:
-            partial = (request.method == 'PATCH')
-            serializer = self.get_serializer(configuracion, data=request.data, partial=partial)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        elif request.method == 'POST':
+            from django.utils import timezone
+            from django.db import transaction
+            from ..models import ConfiguracionLimnigrafo
             
-            registrar_accion_auditoria_en_commit(
-                request=request,
-                tipo_accion="modified",
-                entidad="Configuración Limnígrafo",
-                entidad_id=configuracion.id,
-                descripcion=f"Modificó la configuración del limnígrafo '{limnigrafo.codigo}'.",
-                metadata={
-                    "codigo": limnigrafo.codigo,
-                    "limnigrafo_id": limnigrafo.id,
-                    "changes": serializer.validated_data,
-                },
-            )
-            return Response(serializer.data)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            with transaction.atomic():
+                ahora = timezone.now()
+                ConfiguracionLimnigrafo.objects.filter(
+                    limnigrafo=limnigrafo,
+                    activo=True
+                ).update(activo=False, fecha_fin=ahora)
+                
+                nueva_configuracion = serializer.save(
+                    limnigrafo=limnigrafo,
+                    activo=True,
+                    fecha_inicio=ahora,
+                    fecha_fin=None
+                )
+                
+                registrar_accion_auditoria_en_commit(
+                    request=request,
+                    tipo_accion="modified",
+                    entidad="Configuración Limnígrafo",
+                    entidad_id=nueva_configuracion.id,
+                    descripcion=f"Creó una nueva configuración activa para el limnígrafo '{limnigrafo.codigo}'.",
+                    metadata={
+                        "codigo": limnigrafo.codigo,
+                        "limnigrafo_id": limnigrafo.id,
+                        "changes": serializer.validated_data,
+                    },
+                )
+            return Response(self.get_serializer(nueva_configuracion).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'], url_path='configuracion/historial', serializer_class=ConfiguracionLimnigrafoSerializer)
+    def historial_configuracion(self, request, pk=None):
+        limnigrafo = self.get_object()
+        configuraciones = limnigrafo.configuraciones.all().order_by('-fecha_inicio')
+        serializer = self.get_serializer(configuraciones, many=True)
+        return Response(serializer.data)

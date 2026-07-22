@@ -3,6 +3,7 @@ from ..models import Limnigrafo, Ubicacion, ConfiguracionLimnigrafo
 from .ubicacionSerializer import UbicacionSerializer
 from .configuracion_limnigrafoSerializer import ConfiguracionLimnigrafoSerializer
 
+
     
 class LimnigrafoSerializer(serializers.ModelSerializer):
     tipo_comunicacion = serializers.ListField(

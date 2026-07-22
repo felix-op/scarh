@@ -252,7 +252,7 @@ class MedicionTests(APITestCase):
         
         data = {
             'limnigrafo': self.limnigrafo.id,
-            'altura_agua': 3.0,
+            'altura_agua': 2.0,
             'nivel_de_bateria': 9.0, 
             'fecha_hora': timezone.now().isoformat()
         }

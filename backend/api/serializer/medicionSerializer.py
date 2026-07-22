@@ -157,13 +157,25 @@ class MedicionSerializer(serializers.ModelSerializer):
                 query = query.exclude(pk=self.instance.pk)
             if query.exists():
                 raise serializers.ValidationError({
-                    "fecha_hora": "Ya existe una medición para este limnígrafo en la fecha y hora especificadas."
+                    "fecha_hora": "Ya existe una medición para este limnígrafo en la fecha y hora especificadas.",
+                    "non_field_errors": ["Ya existe una medición para este limnígrafo en esa fecha y hora."]
                 })
 
-        return super().validate(attrs)
+        # 4. Validar clave de idempotencia
+        idempotency_key = attrs.get('idempotency_key')
+        if limnigrafo and idempotency_key:
+            query = Medicion.objects.filter(limnigrafo=limnigrafo, idempotency_key=idempotency_key)
+            if self.instance:
+                query = query.exclude(pk=self.instance.pk)
+            if query.exists():
+                raise serializers.ValidationError({
+                    "idempotency_key": "Ya se procesó una medición con esta clave de idempotencia para este limnígrafo."
+                })
 
-    def validate(self, attrs):
-        return validar_datos_medicion(attrs)
+        # 5. Validar otros datos usando validar_datos_medicion (sin chequear duplicados)
+        attrs = validar_datos_medicion(attrs, check_duplicates=False)
+
+        return super().validate(attrs)
 
     def create(self, validated_data):
         user = self.context['request'].user if self.context.get('request') else None
