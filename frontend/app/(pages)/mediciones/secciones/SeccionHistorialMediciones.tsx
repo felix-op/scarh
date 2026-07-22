@@ -275,31 +275,39 @@ export default function SeccionHistorialMediciones({
 					</div>
 				</div>
 
-				<div className="mt-4 flex flex-wrap gap-3">
+				<div className="mt-4 flex flex-wrap items-center justify-end gap-3">
 					<BotonVariante
 						variant="guardar"
 						onClick={onApplyFilters}
+						className="text-[14px]"
 					>
+						<span className="text-2xl icon-[mage--filter]" />
 						<span>Aplicar filtros</span>
 					</BotonVariante>
 					<BotonVariante
-						variant="default"
+						variant="cerrar"
 						onClick={onClearFilters}
+						className="text-[14px]"
 					>
-						<span>Limpiar</span>
+						<span className="text-2xl icon-[mdi--restore]" />
+						<span>Restablecer</span>
 					</BotonVariante>
 					<BotonVariante
-						variant="default"
+						variant="filtro"
 						onClick={() => onExport("csv")}
 						disabled={isExporting}
+						className="text-[14px]"
 					>
+						<span className="text-2xl icon-[material-symbols--download]" />
 						<span>Exportar CSV</span>
 					</BotonVariante>
 					<BotonVariante
-						variant="default"
+						variant="filtro"
 						onClick={() => onExport("json")}
 						disabled={isExporting}
+						className="text-[14px]"
 					>
+						<span className="text-2xl icon-[material-symbols--download]" />
 						<span>Exportar JSON</span>
 					</BotonVariante>
 				</div>

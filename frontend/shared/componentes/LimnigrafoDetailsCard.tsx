@@ -1,5 +1,6 @@
 "use client";
 
+import { ReactNode } from "react";
 import {
 	BotonEstadoLimnigrafo,
 	type EstadoLimnigrafo,
@@ -27,6 +28,8 @@ type LimnigrafoDetailsCardProps = {
   status: EstadoLimnigrafo;
   statusLabel?: string;
   onEditDescription?: () => void;
+  headerStart?: ReactNode;
+  headerEnd?: ReactNode;
 };
 
 function InfoItemView({ item }: { item: InfoItem }) {
@@ -127,6 +130,8 @@ export default function LimnigrafoDetailsCard({
 	status,
 	statusLabel = "Estado",
 	onEditDescription,
+	headerStart,
+	headerEnd,
 }: LimnigrafoDetailsCardProps) {
 	return (
 		<section
@@ -145,8 +150,14 @@ export default function LimnigrafoDetailsCard({
         font-outfit
       "
 		>
-			<header className="border-b border-[#D8D8D8] pb-6 text-center dark:border-[#334155]">
+			<header className="grid grid-cols-1 items-center gap-4 border-b border-[#D8D8D8] pb-6 text-center dark:border-[#334155] md:grid-cols-[1fr_auto_1fr]">
+				<div className="flex justify-center md:justify-start">
+					{headerStart}
+				</div>
 				<h2 className="text-[36px] font-bold">{title}</h2>
+				<div className="flex justify-center md:justify-end">
+					{headerEnd}
+				</div>
 			</header>
 
 			<div className="space-y-16 border-b border-[#D8D8D8] py-10 dark:border-[#334155]">

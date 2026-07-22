@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
+import BotonVariante from "@componentes/botones/BotonVariante";
 import {
 	ImportPreviewRow,
 	MedicionPaginatedResponse,
@@ -40,12 +41,6 @@ const DEFAULT_PAGE_SIZE = 25;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 75, 100] as const;
 const EXPORT_PAGE_SIZE = 1000;
 const MEDICIONES_REFETCH_INTERVAL_MS = 15000;
-
-const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#1D4ED8] dark:bg-[#0B2A43] dark:text-[#93C5FD] dark:hover:bg-[#12385B]";
-
-const HEADER_ACTION_SECONDARY_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#9D174D] dark:bg-[#3F1222] dark:text-[#FDA4AF] dark:hover:bg-[#4D162B]";
 
 function inferImportFuenteByFileName(fileName: string): "import_csv" | "import_json" | null {
 	const lowerName = fileName.toLowerCase();
@@ -580,22 +575,24 @@ function MedicionesContent() {
 						</div>
 
 						<div className="flex flex-wrap items-center gap-3 lg:justify-end">
-							<button
+							<BotonVariante
 								type="button"
 								onClick={() => handleManualModalOpenChange(true)}
-								className={HEADER_ACTION_PRIMARY_BUTTON_CLASS}
+								variant="guardar"
+								className="text-[14px]"
 							>
-								<span className="icon-[mdi--pencil] text-base" aria-hidden="true" />
+								<span className="text-2xl icon-[mdi--pencil]" aria-hidden="true" />
 								<span>Carga manual</span>
-							</button>
-							<button
+							</BotonVariante>
+							<BotonVariante
 								type="button"
 								onClick={() => handleImportModalOpenChange(true)}
-								className={HEADER_ACTION_SECONDARY_BUTTON_CLASS}
+								variant="agregar"
+								className="text-[14px]"
 							>
-								<span className="icon-[mdi--upload] text-base" aria-hidden="true" />
+								<span className="text-2xl icon-[mdi--upload]" aria-hidden="true" />
 								<span>Importación</span>
-							</button>
+							</BotonVariante>
 						</div>
 					</header>
 

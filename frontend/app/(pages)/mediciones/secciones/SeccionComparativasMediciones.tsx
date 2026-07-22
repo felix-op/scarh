@@ -5,6 +5,7 @@ import {
 	EstadisticaOutputItem,
 	LimnigrafoResponse,
 } from "@servicios/api/django.api";
+import BotonVariante from "@componentes/botones/BotonVariante";
 import { ComparativasFilters } from "./types";
 
 function formatNumber(value: number, decimals = 2): string {
@@ -69,14 +70,17 @@ export default function SeccionComparativasMediciones({
 					<div>
 						<p className="text-[15px] font-semibold uppercase tracking-[0.08em] text-[#0982C8]">Comparativas</p>
 					</div>
-					<button
+					<BotonVariante
 						type="button"
 						onClick={onCalcular}
 						disabled={isCalculando}
-						className="rounded-xl border border-[#0EA5E9] bg-[#E0F2FE] px-5 py-3 text-[14px] font-semibold text-[#0369A1] disabled:opacity-50 dark:border-[#2563EB] dark:bg-[#0B2A43] dark:text-[#93C5FD]"
+						loading={isCalculando}
+						variant="guardar"
+						className="text-[14px]"
 					>
-						{isCalculando ? "Calculando..." : "Calcular estadísticas"}
-					</button>
+						<span className={`text-2xl ${isCalculando ? "icon-[line-md--loading-twotone-loop]" : "icon-[material-symbols--calculate]"}`} />
+						<span>{isCalculando ? "Calculando..." : "Calcular estadísticas"}</span>
+					</BotonVariante>
 				</div>
 
 				<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 dark:border-[#334155] dark:bg-[#111923]">
@@ -115,21 +119,25 @@ export default function SeccionComparativasMediciones({
 						</label>
 					</div>
 
-					<div className="mt-4 flex flex-wrap gap-3">
-						<button
+					<div className="mt-4 flex flex-wrap items-center justify-end gap-3">
+						<BotonVariante
 							type="button"
 							onClick={onApplyFilters}
-							className="rounded-xl bg-[#0982C8] px-5 py-3 text-[14px] font-semibold text-white shadow-[0px_4px_10px_rgba(9,130,200,0.35)] dark:bg-[#0369A1] dark:shadow-[0px_4px_12px_rgba(2,132,199,0.4)]"
+							variant="guardar"
+							className="text-[14px]"
 						>
-							Aplicar filtros de comparativas
-						</button>
-						<button
+							<span className="text-2xl icon-[mage--filter]" />
+							<span>Aplicar filtros</span>
+						</BotonVariante>
+						<BotonVariante
 							type="button"
 							onClick={onClearFilters}
-							className="rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-[14px] font-semibold text-[#334155] dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]"
+							variant="cerrar"
+							className="text-[14px]"
 						>
-							Limpiar
-						</button>
+							<span className="text-2xl icon-[mdi--restore]" />
+							<span>Restablecer</span>
+						</BotonVariante>
 					</div>
 				</div>
 
@@ -149,31 +157,37 @@ export default function SeccionComparativasMediciones({
 							/>
 						</div>
 
-						<div className="flex flex-wrap gap-2">
-							<button
+						<div className="flex flex-wrap justify-end gap-2">
+							<BotonVariante
 								type="button"
 								onClick={onSelectAll}
 								disabled={limnigrafosTotales === 0}
-								className="rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-2 text-[13px] font-semibold text-[#1D4ED8] disabled:opacity-50 dark:border-[#1D4ED8] dark:bg-[#102A43] dark:text-[#93C5FD]"
+								variant="agregar"
+								className="text-[13px]"
 							>
-								Seleccionar todos
-							</button>
-							<button
+								<span className="text-xl icon-[mdi--select-all]" />
+								<span>Seleccionar todos</span>
+							</BotonVariante>
+							<BotonVariante
 								type="button"
 								onClick={onSelectVisible}
 								disabled={filteredLimnigrafos.length === 0}
-								className="rounded-lg border border-[#BAE6FD] bg-[#ECFEFF] px-3 py-2 text-[13px] font-semibold text-[#0369A1] disabled:opacity-50 dark:border-[#0891B2] dark:bg-[#083344] dark:text-[#67E8F9]"
+								variant="agregar"
+								className="text-[13px]"
 							>
-								Seleccionar visibles
-							</button>
-							<button
+								<span className="text-xl icon-[mdi--selection-search]" />
+								<span>Seleccionar visibles</span>
+							</BotonVariante>
+							<BotonVariante
 								type="button"
 								onClick={onClearSelection}
 								disabled={compareIds.length === 0}
-								className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] disabled:opacity-50 dark:border-[#475569] dark:bg-[#0F172A] dark:text-[#CBD5E1]"
+								variant="cerrar"
+								className="text-[13px]"
 							>
-								Limpiar selección
-							</button>
+								<span className="text-xl icon-[mdi--selection-remove]" />
+								<span>Limpiar selección</span>
+							</BotonVariante>
 						</div>
 					</div>
 
