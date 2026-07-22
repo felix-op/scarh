@@ -1,7 +1,7 @@
 "use client";
 
 import BotonVariante from "@componentes/botones/BotonVariante";
-import ChipEstadoLimnigrafo from "@componentes/chips/ChipEstadoLimnigrafo";
+import { ESTILOS_ESTADO_LIMNIGRAFO } from "@componentes/chips/ChipEstadoLimnigrafo";
 import DataTable from "@componentes/tabla/DataTable";
 import { ColumnConfig } from "@componentes/tabla/types";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
@@ -34,13 +34,35 @@ function formatBateria(bateria?: number | null): string {
 	return `${Math.trunc(bateria)} %`;
 }
 
+function ChipEstadoDashboard({ estado }: { estado: LimnigrafoResponse["estado"] }) {
+	const variante =
+		estado === "fuera_de_rango" || estado === "fuera_de_servicio"
+			? "fuera"
+			: estado === "normal"
+				? "normal"
+				: estado;
+	const config = ESTILOS_ESTADO_LIMNIGRAFO[variante] ?? ESTILOS_ESTADO_LIMNIGRAFO.normal;
+
+	return (
+		<span className={`inline-flex w-fit items-center gap-2 rounded-full border px-2.5 py-1 text-sm font-semibold ${config.lightClassName} ${config.darkClassName}`}>
+			<span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white shadow-[0px_0px_0px_1px_rgba(148,163,184,0.18)] dark:bg-[#223149]">
+				<span
+					className="block h-3.5 w-3.5 rounded-full border"
+					style={{ backgroundColor: config.backgroundColor, borderColor: config.borderColor }}
+				/>
+			</span>
+			{config.etiqueta}
+		</span>
+	);
+}
+
 const tableColumns: ColumnConfig<LimnigrafoResponse>[] = [
 	{
 		id: "estado",
 		header: "Estado",
 		cell: (row) => (
 			<div className="p-4">
-				<ChipEstadoLimnigrafo estado={row.estado} />
+				<ChipEstadoDashboard estado={row.estado} />
 			</div>
 		),
 	},
@@ -102,6 +124,7 @@ export default function VisualizacionLimnigrafos() {
 			)}
 			styles={{
 				scrollerClassName: "max-h-100",
+				tableClassName: "table-auto",
 				scrollY: "auto",
 			}}
 		/>
