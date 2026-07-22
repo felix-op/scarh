@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { VentanaFormularioRHF } from "../ui/modals";
-import { TextFieldRHF, FileFieldRHF } from "../formularios";
+import { TextFieldRHF, TextAreaRHF, FileFieldRHF } from "../formularios";
+import { SugerenciaObservacionRuta } from "./sugerencia-observacion-ruta";
 import { usePostRutaAcceso, usePatchRutaAcceso } from "@hooks";
 import { useMensajes } from "@services";
 import type { RutaAccesoResponse } from "@models";
@@ -86,7 +87,7 @@ export function VentanaCargarRuta({ open, onClose, limnigrafoId, ruta }: Ventana
           type="number"
           placeholder="Ej. 45"
         />
-        <TextFieldRHF name="observaciones" label="Observaciones" placeholder="Notas sobre la ruta" />
+        <TextAreaRHF name="observaciones" label="Observaciones" placeholder="Notas sobre la ruta" rows={4} />
         <FileFieldRHF
           name="archivo"
           label="Archivo de traza"
@@ -99,6 +100,7 @@ export function VentanaCargarRuta({ open, onClose, limnigrafoId, ruta }: Ventana
               : "Archivo GPX o KML (máx. 5 MB)."
           }
         />
+        <SugerenciaObservacionRuta archivoFieldName="archivo" observacionFieldName="observaciones" />
       </div>
     </VentanaFormularioRHF>
   );

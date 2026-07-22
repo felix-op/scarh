@@ -40,13 +40,15 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
 
   return (
     <div className="flex flex-col gap-6">
-      <BotonVolver content="Volver" onClick={() => router.push("/dashboard/limnigrafos")} />
+      <div className="self-start">
+        <BotonVolver content="Volver" onClick={() => router.push("/dashboard/limnigrafos")} />
+      </div>
 
-      {/* Encabezado + acciones */}
+      {/* Encabezado + editar/eliminar */}
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground-title">{limnigrafo.codigo}</h1>
+            <h1 className="text-2xl font-bold text-foreground-title">Limnígrafo {limnigrafo.codigo}</h1>
             <ChipEstadoLimnigrafo estado={limnigrafo.estado} size="md" />
           </div>
           {limnigrafo.ubicacion?.nombre && (
@@ -54,30 +56,27 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 md:justify-end">
-          <BotonImportar content="Importar datos" onClick={() => router.push(`/dashboard/limnigrafos/importar/${id}`)} />
-          <BotonMediciones content="Ver mediciones" onClick={() => router.push(`/dashboard/mediciones?limnigrafo=${id}`)} />
-          <Boton variant="default" icon="mapa" content="Ver en el mapa" onClick={() => router.push(`/dashboard/mapa?limnigrafo=${id}`)} />
-          <BotonEstadisticas content="Estadísticas" onClick={() => router.push(`/dashboard/estadisticas?limnigrafo=${id}`)} />
-          {puedeEditar && (
-            <>
-              <BotonEditar content="Editar" onClick={() => router.push(`/dashboard/limnigrafos/editar/${id}`)} />
-              <BotonEliminar content="Eliminar" onClick={() => setEliminarOpen(true)} />
-            </>
-          )}
-        </div>
+        {puedeEditar && (
+          <div className="flex flex-wrap gap-2 md:justify-end">
+            <BotonEditar content="Editar" onClick={() => router.push(`/dashboard/limnigrafos/editar/${id}`)} />
+            <BotonEliminar content="Eliminar" onClick={() => setEliminarOpen(true)} />
+          </div>
+        )}
+      </div>
+
+      {/* Acciones */}
+      <div className="flex flex-wrap gap-2">
+        <BotonImportar content="Importar datos" onClick={() => router.push(`/dashboard/limnigrafos/importar/${id}`)} />
+        <BotonMediciones content="Ver mediciones" onClick={() => router.push(`/dashboard/mediciones?limnigrafo=${id}`)} />
+        <Boton variant="default" icon="mapa" content="Ver en el mapa" onClick={() => router.push(`/dashboard/mapa?limnigrafo=${id}`)} />
+        <BotonEstadisticas content="Estadísticas" onClick={() => router.push(`/dashboard/estadisticas?limnigrafo=${id}`)} />
       </div>
 
       {/* Grupos de datos */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="flex flex-col gap-4 p-5">
-          <h2 className="text-base font-semibold text-foreground-title">Datos del limnígrafo</h2>
-          <DatoItem label="Identificador" value={limnigrafo.codigo} />
-          <DatoItem label="Descripción" value={limnigrafo.descripcion || "-"} />
-        </Card>
-
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="flex flex-col gap-4 p-5">
           <h2 className="text-base font-semibold text-foreground-title">Mantenimiento</h2>
+          <DatoItem label="Descripción" value={limnigrafo.descripcion || "-"} />
           <DatoItem label="Último mantenimiento" value={formatFecha(limnigrafo.ultimo_mantenimiento)} />
           <DatoItem
             label="Tiempo antes de advertencia"

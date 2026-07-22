@@ -304,22 +304,20 @@ export function BotonAgregar({
 }
 
 // 3. Botón exclusivo de icono (sin borde ni fondo de forma normal)
-export interface BotonIconoProps {
+export interface BotonIconoProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon: IconVariants;
   loading?: boolean;
-  disabled?: boolean;
-  onClick?: () => void;
-  type?: "button" | "submit" | "reset";
-  className?: string;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export function BotonIcono({
   icon,
   loading = false,
   disabled = false,
-  onClick,
   type = "button",
-  className = ""
+  className = "",
+  ref,
+  ...props
 }: BotonIconoProps) {
   const animations = true;
 
@@ -333,7 +331,7 @@ export function BotonIcono({
     .join(" ");
 
   return (
-    <button className={classes} disabled={disabled} onClick={onClick} type={type}>
+    <button ref={ref} className={classes} disabled={disabled} type={type} {...props}>
       {loading ? (
         <IconifyIcon variant="loading" />
       ) : (

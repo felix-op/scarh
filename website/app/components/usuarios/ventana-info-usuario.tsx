@@ -8,12 +8,32 @@ export interface VentanaInfoUsuarioProps {
   open: boolean;
   onClose: () => void;
   usuario?: UsuarioResponse | null;
+  loading?: boolean;
+}
+
+const camposUsuario = [
+  "Nombre Completo",
+  "Nombre de Usuario",
+  "Legajo",
+  "Email",
+  "Estado",
+  "Roles Técnicos Asignados",
+];
+
+function PlaceholderCampo({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col gap-1 border-b border-border pb-4 last:border-0 last:pb-0">
+      <span className="text-sm text-foreground-secondary font-medium">{label}</span>
+      <div className="h-4 w-40 rounded-shape-sm bg-default-dark animate-pulse" />
+    </div>
+  );
 }
 
 export function VentanaInfoUsuario({
   open,
   onClose,
   usuario,
+  loading = false,
 }: VentanaInfoUsuarioProps) {
   return (
     <VentanaInfo
@@ -23,7 +43,15 @@ export function VentanaInfoUsuario({
       icon="documento"
       className="md:max-w-md w-full"
     >
-      {usuario && (
+      {loading && (
+        <div className="flex flex-col gap-6">
+          {camposUsuario.map((label) => (
+            <PlaceholderCampo key={label} label={label} />
+          ))}
+        </div>
+      )}
+
+      {!loading && usuario && (
         <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1 border-b border-border pb-4">
           <span className="text-sm text-foreground-secondary font-medium">Nombre Completo</span>

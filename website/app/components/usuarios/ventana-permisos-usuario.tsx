@@ -79,7 +79,6 @@ export function VentanaPermisosUsuario({
       title={usuario ? `Permisos de ${usuario.nombre_usuario}` : "Permisos"}
       icon="candado"
       isLoading={isPending}
-      className="md:max-w-2xl w-full"
     >
       {usuario && (
         <div className="flex flex-col relative">

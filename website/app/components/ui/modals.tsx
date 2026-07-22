@@ -279,7 +279,7 @@ export function VentanaFormulario({
         <SheetContent
           side="right"
           hideCloseButton={true}
-          className={`border-border bg-background-paper p-0 shadow-card h-full ${className}`.trim()}
+          className={`border-border bg-background-paper p-0 shadow-card h-full w-[90%] sm:w-md lg:w-lg xl:w-xl ${className}`.trim()}
         >
           <form
             action={action}

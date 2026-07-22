@@ -1,4 +1,5 @@
 export * from "./textfield-rhf";
+export * from "./textarea-rhf";
 export * from "./select-rhf";
 export * from "./checkbox-rhf";
 export * from "./datefield-rhf";

@@ -84,7 +84,6 @@ export function VentanaPermisosMasivos({
       title="Gestión Masiva de Permisos"
       icon="candado"
       isLoading={isPending}
-      className="md:max-w-2xl w-full"
     >
       {usuarios.length > 0 && (
         <div className="flex flex-col relative">

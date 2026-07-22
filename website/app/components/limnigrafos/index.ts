@@ -6,4 +6,5 @@ export * from "./ruta-acceso-card";
 export * from "./rutas-acceso-limnigrafo";
 export * from "./ventana-agregar-limnigrafo";
 export * from "./ventana-cargar-ruta";
+export * from "./sugerencia-observacion-ruta";
 export * from "./ventana-eliminar-limnigrafo";

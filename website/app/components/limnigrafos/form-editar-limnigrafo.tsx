@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { Formulario } from "../formularios/formulario";
+import { Card } from "../ui/cards";
 import { TextFieldRHF, MemoryFieldRHF, MultiCheckboxRHF, TimeHMSFieldRHF, DateFieldRHF } from "../formularios";
 import { BotonGuardar, BotonCancelar } from "../ui/botones";
 import { InfoTooltip } from "../ui/info-tooltip";
@@ -114,32 +115,39 @@ export function FormEditarLimnigrafo({ limnigrafo }: FormEditarLimnigrafoProps) 
       isLoading={isSaving}
       className="flex flex-col gap-6"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Datos del limnígrafo + Mantenimiento */}
-        <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold text-foreground-title">Datos del limnígrafo</h2>
-          <TextFieldRHF name="codigo" label="Identificador del limnígrafo" required />
-          <TextFieldRHF name="descripcion" label="Descripción" placeholder="Descripción del limnígrafo" />
+      <Card className="p-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Datos del limnígrafo */}
+          <div className="flex flex-col gap-4">
+            <h2 className="text-lg font-semibold text-foreground-title">Datos del limnígrafo</h2>
+            <TextFieldRHF name="codigo" label="Identificador del limnígrafo" required />
+            <TextFieldRHF name="descripcion" label="Descripción" placeholder="Descripción del limnígrafo" />
+          </div>
 
-          <h3 className="text-base font-semibold text-foreground-title mt-2">Mantenimiento</h3>
-          <DateFieldRHF name="ultimo_mantenimiento" label="Último mantenimiento" />
-          <TimeHMSFieldRHF
-            name="tiempo_advertencia"
-            label="Tiempo máximo antes de Advertencia"
-            tooltip={
-              <InfoTooltip content="Tiempo sin recibir datos tras el cual el limnígrafo pasa a estado de Advertencia." />
-            }
-          />
-          <TimeHMSFieldRHF
-            name="tiempo_peligro"
-            label="Tiempo máximo antes de Fuera de rango"
-            tooltip={
-              <InfoTooltip content="Tiempo sin recibir datos tras el cual el limnígrafo pasa a estado Fuera de rango." />
-            }
-          />
+          {/* Mantenimiento */}
+          <div className="flex flex-col gap-4">
+            <h2 className="text-lg font-semibold text-foreground-title">Mantenimiento</h2>
+            <DateFieldRHF name="ultimo_mantenimiento" label="Último mantenimiento" />
+            <TimeHMSFieldRHF
+              name="tiempo_advertencia"
+              label="Tiempo máximo antes de Advertencia"
+              tooltip={
+                <InfoTooltip content="Tiempo sin recibir datos tras el cual el limnígrafo pasa a estado de Advertencia." />
+              }
+            />
+            <TimeHMSFieldRHF
+              name="tiempo_peligro"
+              label="Tiempo máximo antes de Fuera de rango"
+              tooltip={
+                <InfoTooltip content="Tiempo sin recibir datos tras el cual el limnígrafo pasa a estado Fuera de rango." />
+              }
+            />
+          </div>
         </div>
+      </Card>
 
-        {/* Especificaciones técnicas */}
+      {/* Especificaciones técnicas */}
+      <Card className="p-5">
         <div className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold text-foreground-title">Especificaciones técnicas</h2>
           <MemoryFieldRHF name="memoria" label="Memoria del dispositivo" />
@@ -162,7 +170,7 @@ export function FormEditarLimnigrafo({ limnigrafo }: FormEditarLimnigrafoProps) 
             className="md:grid-cols-2"
           />
         </div>
-      </div>
+      </Card>
 
       <div className="flex justify-end gap-4">
         <BotonCancelar content="Cancelar" onClick={() => router.back()} disabled={isSaving} />

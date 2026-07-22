@@ -4,6 +4,7 @@ export * from "./cards";
 export * from "./boton-theme-toggle";
 export * from "./modals";
 export * from "./textfield";
+export * from "./textarea";
 export * from "./select";
 export * from "./checkbox";
 export * from "./switch";
