@@ -26,6 +26,14 @@ function formatUltimaMedicion(medicion?: UltimaMedicionResponse | null): string 
 	})}`;
 }
 
+function formatBateria(bateria?: number | null): string {
+	if (bateria === null || bateria === undefined) {
+		return "Sin registros";
+	}
+
+	return `${Math.trunc(bateria)} %`;
+}
+
 const tableColumns: ColumnConfig<LimnigrafoResponse>[] = [
 	{
 		id: "estado",
@@ -55,7 +63,7 @@ const tableColumns: ColumnConfig<LimnigrafoResponse>[] = [
 		id: "bateria",
 		header: "Batería",
 		accessorKey: "bateria",
-		cell: (row) => <p className="p-4">{(row.bateria) || "Sin registros"}</p>,
+		cell: (row) => <p className="p-4">{formatBateria(row.bateria)}</p>,
 	},
 ];
 
