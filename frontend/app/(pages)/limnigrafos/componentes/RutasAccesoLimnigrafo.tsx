@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Download, Eye, EyeOff, FileUp, Plus } from "lucide-react";
+import { Download, Eye, EyeOff, FileUp, MapPin, Plus } from "lucide-react";
 import { useMap } from "react-leaflet";
 
 import Boton from "@componentes/Boton";
@@ -148,6 +148,29 @@ function AjustarVistaRuta({
 	return null;
 }
 
+function CentrarInicioRuta({
+	inicio,
+	focusToken,
+}: {
+	inicio: [number, number] | null;
+	focusToken: number;
+}) {
+	const map = useMap();
+
+	useEffect(() => {
+		if (!inicio || focusToken === 0) {
+			return;
+		}
+
+		map.setView(inicio, 16, {
+			animate: true,
+			duration: 0.8,
+		});
+	}, [focusToken, inicio, map]);
+
+	return null;
+}
+
 function RutaAccesoMapa({
 	ruta,
 	ubicacion,
@@ -159,9 +182,10 @@ function RutaAccesoMapa({
 	const ubicacionNormalizada = normalizarUbicacion(ubicacion);
 	const { inicio, fin, ultimo, esIdaVuelta } = obtenerExtremosRuta(ruta, lineas);
 	const centro: [number, number] = ubicacionNormalizada ?? lineas[0]?.[0] ?? [-54.79930469196583, -68.30601485928138];
+	const [focusInicioToken, setFocusInicioToken] = useState(0);
 
 	return (
-		<div className="h-[360px] overflow-hidden rounded-md border border-foreground/10">
+		<div className="relative h-[360px] overflow-hidden rounded-md border border-foreground/10">
 			<Map center={centro} zoom={14} className="h-full min-h-[360px] w-full rounded-md">
 				<MapTileLayer
 					url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
@@ -169,6 +193,7 @@ function RutaAccesoMapa({
 				/>
 				<MapZoomControl position="bottom-4 left-4" />
 				<AjustarVistaRuta lineas={lineas} ubicacion={ubicacionNormalizada} />
+				<CentrarInicioRuta inicio={inicio} focusToken={focusInicioToken} />
 				{lineas.map((linea, index) => (
 					<Fragment key={`${ruta.id}-${index}`}>
 						<MapPolyline
@@ -228,6 +253,19 @@ function RutaAccesoMapa({
 					</MapMarker>
 				)}
 			</Map>
+			{inicio && (
+				<Button
+					type="button"
+					variant="secondary"
+					size="icon-sm"
+					className="absolute bottom-[102px] left-4 z-[1000] border"
+					aria-label="Centrar mapa en el inicio de la ruta"
+					title="Centrar en inicio"
+					onClick={() => setFocusInicioToken((actual) => actual + 1)}
+				>
+					<MapPin className="h-4 w-4" />
+				</Button>
+			)}
 		</div>
 	);
 }
