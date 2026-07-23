@@ -18,7 +18,7 @@ Toda adición de código debe ubicarse estrictamente en la carpeta que le corres
 * **`hooks`**: React Hooks personalizados que proveen lógica de estado reutilizable no acoplada a una sola vista.
 * **`models`**: Definiciones de interfaces, tipos de datos TypeScript y enums del sistema.
 * **`screens`**: Componentes visuales complejos, vistas completas o flujos de negocio particulares que se inyectan en las rutas (`page.tsx`). Permiten desacoplar las páginas de la lógica de negocio pesada.
-* **`services`**: Lógica de integración de datos, llamadas a API (`apiClient.ts`) y Providers de Contexto de React (`provider.nombre.ts`).
+* **`services`**: Lógica de integración de datos, llamadas a API (`apiClient.ts`), configuraciones de TanStack Query/Axios y Providers de Contexto de React (`provider.nombre.ts`).
 * **`styles`**: Hojas de estilo modulares de CSS e integración de Tailwind v4.
 * **`utils`**: Funciones puras de ayuda (helpers) y utilidades de propósito general (formateadores de fecha, parseadores, etc.).
 

@@ -23,5 +23,5 @@ A continuación se listan las tareas clave de la migración con su estado actual
 ## Consideraciones Generales
 
 1. **Server Components por Defecto**: Todos los componentes y páginas nuevos en la carpeta `website` deben crearse como Server Components por defecto. Solo se debe utilizar la directiva `"use client"` cuando sea estrictamente necesario para interactuar con APIs del cliente (eventos, hooks de estado local o efectos).
-2. **Eliminación Gradual de Dependencias**: A lo largo de la migración se debe depurar `package.json` para dar de baja librerías que queden obsoletas bajo este nuevo enfoque (ej. Axios, TanStack Query/React Query, etc.).
+2. **Uso Híbrido de SSR y Cliente**: A lo largo de la migración se debe priorizar Server-Side Rendering (SSR) para la obtención inicial de datos y un Time To Interactive (TTI) rápido. Sin embargo, para comportamiento reactivo complejo (como envíos de formularios, encadenamiento de requests, invalidación de caché local o mensajes toast), se permite y fomenta el uso de TanStack Query y Axios. Quedan obsoleto forzar fetch para interacciones netamente de cliente.
 3. **Preservación de Lógica**: La migración es estructural y de arquitectura. Se debe conservar la lógica de negocio y las funcionalidades existentes en el frontend original.

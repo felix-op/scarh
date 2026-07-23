@@ -56,3 +56,6 @@ Los componentes dentro de `website/app/components` deben organizarse en las sigu
 * **Componente de Tarjetas**: Se implementó `cards.tsx` exponiendo `Paper`, `Card` (con prop `animated`), y `CardStatus` (con props `status` y `direction`).
 * **Componentes de Botones**: Se implementó `botones.tsx` exponiendo el botón genérico `Boton`, `BotonIcono`, y todos los botones concretos semánticos requeridos (`BotonGuardar`, `BotonEliminar`, `BotonEditar`, `BotonCancelar` -outlined por defecto-, `BotonConfirmar`, `BotonLogin`, `BotonPassword`, `BotonFiltro`, `BotonVolver` y `BotonVerMas`). Se configuró un interruptor local `const animations = true` para activar/desactivar transiciones y brillo.
 * **Actualización de Barrels**: Se crearon/actualizaron los archivos de barril `ui/index.ts` y el general `components/index.ts`.
+* **Componentes de Modales**: Se descubrió e integró `modals.tsx`, exponiendo `Ventana`, `VentanaConfirmar` (con variante `eliminar`), `VentanaInfo`, `VentanaFormulario`, y `VentanaFormularioRHF`. 
+* **Componente de Estado (Chip)**: Se descubrió e integró `chip.tsx` exponiendo `Chip` para renderizar badges de estado.
+* **Componente de Menú**: Se descubrió e integró `menu.tsx` exponiendo `Menu`, que reemplaza estructuralmente al antiguo `MenuAcciones` de `frontend/shared/componentes/menu/MenuAcciones.tsx`.
