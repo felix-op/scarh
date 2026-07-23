@@ -6,24 +6,24 @@ type BotonAnteriorProps = {
 };
 
 export default function BotonAnterior({
-    onClick,
-    disabled = false,
+	onClick,
+	disabled = false,
 }: BotonAnteriorProps) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            disabled={disabled}
-            className={`
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			disabled={disabled}
+			className={`
                 flex items-center justify-center
                 border-2 rounded-sm p-1
                 ${disabled ?
-                    "cursor-not-allowed opacity-50" :
-                    "cursor-pointer hover:border-foreground hover:bg-hover active:scale-90 active:border-principal active:bg-transparent"
-                }
+			"cursor-not-allowed opacity-50" :
+			"cursor-pointer hover:border-foreground hover:bg-hover active:scale-90 active:border-principal active:bg-transparent"
+		}
             `}
-        >
-            <span className="text-2xl icon-[ooui--arrow-next-rtl]" />
-        </button>
-    );
+		>
+			<span className="text-2xl icon-[ooui--arrow-next-rtl]" />
+		</button>
+	);
 }

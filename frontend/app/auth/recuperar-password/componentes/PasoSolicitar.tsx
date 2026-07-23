@@ -32,10 +32,10 @@ export default function PasoSolicitar({ onNext }: PasoSolicitarProps) {
 
 		try {
 			const res = await solicitarRecuperacion(data.email);
-            // It could be that the backend replies successfully, which allows us to proceed.
-            // If we want the user to see the success message first, we can either wait or proceed directly. 
-            // In the UI, advancing directly to the next page where they enter the code makes the most sense.
-            // But requirement says: "Mostrar mensaje devuelto por el backend. Luego de enviar correctamente, avanza al siguiente paso."
+			// It could be that the backend replies successfully, which allows us to proceed.
+			// If we want the user to see the success message first, we can either wait or proceed directly. 
+			// In the UI, advancing directly to the next page where they enter the code makes the most sense.
+			// But requirement says: "Mostrar mensaje devuelto por el backend. Luego de enviar correctamente, avanza al siguiente paso."
 			const msg = res?.detail || "Se ha enviado un correo con las instrucciones.";
 			setExito(msg);
 			
