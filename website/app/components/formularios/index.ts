@@ -11,3 +11,4 @@ export * from "./multi-checkbox-rhf";
 export * from "./time-hms-field-rhf";
 export * from "./file-field-rhf";
 export * from "./formulario";
+export * from "./form-acciones";

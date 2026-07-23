@@ -29,7 +29,7 @@ export {
   deleteServerLimnigrafo,
   getServerLimnigrafoConfiguracion,
   putServerLimnigrafoConfiguracion,
-  patchServerLimnigrafoConfiguracion,
+  postServerLimnigrafoConfiguracion,
   postServerLimnigrafoGenerateKey
 } from "./next-server/limnigrafos";
 

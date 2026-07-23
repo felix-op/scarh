@@ -22,6 +22,7 @@ export * from "./alerts";
 export * from "./chip";
 export * from "./password";
 export * from "./mensaje-flotante";
+export * from "./seccion-agrupar-informacion";
 export * from "./filters-placeholder";
 export * from "./table-placeholder";
 export * from "./info-tooltip";

@@ -1,5 +1,5 @@
-import { createHandler, getServerLimnigrafoConfiguracion, patchServerLimnigrafoConfiguracion } from "@services";
-import { configuracionPatchSchema } from "@utils";
+import { createHandler, getServerLimnigrafoConfiguracion, postServerLimnigrafoConfiguracion } from "@services";
+import { configuracionPostSchema } from "@utils";
 
 export const GET = createHandler({ action: getServerLimnigrafoConfiguracion });
-export const PATCH = createHandler({ action: patchServerLimnigrafoConfiguracion, schema: configuracionPatchSchema });
+export const POST = createHandler({ action: postServerLimnigrafoConfiguracion, schema: configuracionPostSchema });

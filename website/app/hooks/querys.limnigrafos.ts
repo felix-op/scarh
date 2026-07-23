@@ -4,7 +4,7 @@ import type {
   LimnigrafoResponse,
   PaginatedLimnigrafoResponse,
   ConfiguracionLimnigrafoResponse,
-  ConfiguracionLimnigrafoPayload,
+  LimnigrafoEditarPayload,
 } from "@models";
 
 export type LimnigrafoCreateInput = {
@@ -55,12 +55,12 @@ export function usePostLimnigrafo() {
   });
 }
 
-export function usePutLimnigrafo() {
+export function useEditarLimnigrafo() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: LimnigrafoUpdateInput }) =>
-      RequestClient<LimnigrafoResponse>(`limnigrafos/${id}`, undefined, {
+    mutationFn: ({ id, data }: { id: string; data: LimnigrafoEditarPayload }) =>
+      RequestClient<ConfiguracionLimnigrafoResponse>(`limnigrafos/${id}/editar`, undefined, {
         method: "PUT",
         data,
       }),
@@ -77,21 +77,6 @@ export function useDeleteLimnigrafo() {
     mutationFn: (id: string) =>
       RequestClient<void>(`limnigrafos/${id}`, undefined, {
         method: "DELETE",
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["limnigrafos"] });
-    },
-  });
-}
-
-export function usePatchConfiguracionLimnigrafo() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<ConfiguracionLimnigrafoPayload> }) =>
-      RequestClient<ConfiguracionLimnigrafoResponse>(`limnigrafos/${id}/configuracion`, undefined, {
-        method: "PATCH",
-        data,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["limnigrafos"] });

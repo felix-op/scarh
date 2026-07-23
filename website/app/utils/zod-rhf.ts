@@ -117,3 +117,15 @@ export async function validateWithZod<T>(
  * Tipo helper para obtener el tipo inferido de un esquema Zod
  */
 export type ZodInfer<T extends z.ZodSchema> = z.infer<T>;
+
+/**
+ * Convierte un string de formulario a número. Retorna null si está vacío o es inválido.
+ * Útil para campos numéricos que el backend espera como number | null.
+ */
+export const toNum = (s?: string): number | null => (s && s.trim() !== "" ? Number(s) : null);
+
+/**
+ * Convierte un número del backend (number | null | undefined) a string para campos de formulario.
+ * Útil para hidratar formularios.
+ */
+export const toStr = (n: number | null | undefined): string => (n != null ? String(n) : "");

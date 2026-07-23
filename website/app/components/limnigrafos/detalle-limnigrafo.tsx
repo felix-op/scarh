@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "../ui/cards";
 import { Boton, BotonVolver, BotonImportar, BotonMediciones, BotonEstadisticas, BotonEditar, BotonEliminar } from "../ui/botones";
 import { InfoTooltip } from "../ui/info-tooltip";
-import { ChipEstadoLimnigrafo } from "./chip-estado-limnigrafo";
+import { ChipEstadoConexion, ChipEstadoMedicion } from "./chip-estado-limnigrafo";
 import { RutasAccesoLimnigrafo } from "./rutas-acceso-limnigrafo";
 import { VentanaEliminarLimnigrafo } from "./ventana-eliminar-limnigrafo";
 import { memoriaLegible, hmsLegibles, formatFecha, valuesToLabels, opcionesTipoComunicacion } from "@utils";
@@ -49,7 +49,10 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-foreground-title">Limnígrafo {limnigrafo.codigo}</h1>
-            <ChipEstadoLimnigrafo estado={limnigrafo.estado} size="md" />
+            <div className="flex gap-2">
+              <ChipEstadoConexion estado={limnigrafo.estado_conexion} tipoComunicacion={limnigrafo.tipo_comunicacion} size="md" />
+              <ChipEstadoMedicion estado={limnigrafo.estado_medicion} size="md" />
+            </div>
           </div>
           {limnigrafo.ubicacion?.nombre && (
             <span className="text-sm text-foreground-secondary">{limnigrafo.ubicacion.nombre}</span>

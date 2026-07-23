@@ -1,6 +1,6 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
-import type { LimnigrafoResponse, LimnigrafoPayload, PaginatedLimnigrafoResponse, ParamsPaginated, ConfiguracionLimnigrafoResponse, ConfiguracionLimnigrafoPayload } from "@models";
+import type { LimnigrafoResponse, LimnigrafoPostPayload, LimnigrafosPutPayload, PaginatedLimnigrafoResponse, ParamsPaginated, ConfiguracionLimnigrafoResponse, ConfiguracionLimnigrafoPayload } from "@models";
 
 export async function getServerLimnigrafos(params?: ParamsPaginated): Promise<PaginatedLimnigrafoResponse> {
   return RequestSSR<PaginatedLimnigrafoResponse, ParamsPaginated>({
@@ -12,11 +12,11 @@ export async function getServerLimnigrafos(params?: ParamsPaginated): Promise<Pa
 }
 
 type PostServerLimnigrafoOptions = {
-  data: LimnigrafoPayload;
+  data: LimnigrafoPostPayload;
 };
 
 export async function postServerLimnigrafo({ data }: PostServerLimnigrafoOptions): Promise<LimnigrafoResponse> {
-  return RequestSSR<LimnigrafoResponse, Record<string, never>, LimnigrafoPayload>({ url: "limnigrafos/", method: "POST", body: data });
+  return RequestSSR<LimnigrafoResponse, Record<string, never>, LimnigrafoPostPayload>({ url: "limnigrafos/", method: "POST", body: data });
 }
 
 type GetServerLimnigrafoOptions = {
@@ -38,11 +38,11 @@ type PutServerLimnigrafoOptions = {
   params: {
     id: string;
   };
-  data: LimnigrafoPayload;
+  data: LimnigrafosPutPayload;
 };
 
 export async function putServerLimnigrafo({ params, data }: PutServerLimnigrafoOptions): Promise<LimnigrafoResponse> {
-  return RequestSSR<LimnigrafoResponse, PutServerLimnigrafoOptions["params"], LimnigrafoPayload>({
+  return RequestSSR<LimnigrafoResponse, PutServerLimnigrafoOptions["params"], LimnigrafosPutPayload>({
     url: "limnigrafos/{id}/",
     method: "PUT",
     params,
@@ -54,11 +54,11 @@ type PatchServerLimnigrafoOptions = {
   params: {
     id: string;
   };
-  data: Partial<LimnigrafoPayload>;
+  data: Partial<LimnigrafosPutPayload>;
 };
 
 export async function patchServerLimnigrafo({ params, data }: PatchServerLimnigrafoOptions): Promise<LimnigrafoResponse> {
-  return RequestSSR<LimnigrafoResponse, PatchServerLimnigrafoOptions["params"], Partial<LimnigrafoPayload>>({
+  return RequestSSR<LimnigrafoResponse, PatchServerLimnigrafoOptions["params"], Partial<LimnigrafosPutPayload>>({
     url: "limnigrafos/{id}/",
     method: "PATCH",
     params,
@@ -111,17 +111,17 @@ export async function putServerLimnigrafoConfiguracion({ params, data }: PutServ
   });
 }
 
-type PatchServerLimnigrafoConfiguracionOptions = {
+type PostServerLimnigrafoConfiguracionOptions = {
   params: {
     id: string;
   };
-  data: Partial<ConfiguracionLimnigrafoPayload>;
+  data: ConfiguracionLimnigrafoPayload;
 };
 
-export async function patchServerLimnigrafoConfiguracion({ params, data }: PatchServerLimnigrafoConfiguracionOptions): Promise<ConfiguracionLimnigrafoResponse> {
-  return RequestSSR<ConfiguracionLimnigrafoResponse, PatchServerLimnigrafoConfiguracionOptions["params"], Partial<ConfiguracionLimnigrafoPayload>>({
+export async function postServerLimnigrafoConfiguracion({ params, data }: PostServerLimnigrafoConfiguracionOptions): Promise<ConfiguracionLimnigrafoResponse> {
+  return RequestSSR<ConfiguracionLimnigrafoResponse, PostServerLimnigrafoConfiguracionOptions["params"], ConfiguracionLimnigrafoPayload>({
     url: "limnigrafos/{id}/configuracion/",
-    method: "PATCH",
+    method: "POST",
     params,
     body: data,
   });

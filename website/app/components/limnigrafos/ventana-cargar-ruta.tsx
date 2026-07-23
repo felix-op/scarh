@@ -94,6 +94,7 @@ export function VentanaCargarRuta({ open, onClose, limnigrafoId, ruta }: Ventana
           accept=".gpx,.kml"
           maxSizeMB={5}
           required={!esEdicion}
+          existingFileName={ruta?.archivo_nombre || undefined}
           helperText={
             esEdicion
               ? "Opcional: subí un nuevo archivo GPX/KML sólo si querés reemplazar la traza."

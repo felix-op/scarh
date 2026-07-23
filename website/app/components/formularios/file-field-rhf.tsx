@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Controller, useFormContext, RegisterOptions } from "react-hook-form";
 import { IconifyIcon } from "../ui/iconify-icon";
 
@@ -14,6 +14,7 @@ export interface FileFieldRHFProps {
   disabled?: boolean;
   rules?: RegisterOptions;
   helperText?: string;
+  existingFileName?: string;
 }
 
 /**
@@ -29,13 +30,18 @@ export function FileFieldRHF({
   disabled = false,
   rules,
   helperText,
+  existingFileName,
 }: FileFieldRHFProps) {
   const { control, formState } = useFormContext();
   const error = formState.errors[name];
   const errorMessages = error ? [String(error.message)] : [];
   const isDisabled = disabled || formState.isSubmitting;
   const [localError, setLocalError] = useState<string>("");
-  const [fileName, setFileName] = useState<string>("");
+  const [fileName, setFileName] = useState<string>(existingFileName || "");
+
+  useEffect(() => {
+    setFileName(existingFileName || "");
+  }, [existingFileName]);
 
   const extensionesValidas = accept
     .split(",")

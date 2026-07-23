@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
-import { z, ZodSchema } from "zod";
-import { ApiError } from "@models";
+import { ZodSchema } from "zod";
+import { handleApiError, parseJsonBody } from "@utils";
 
 type HandlerContext = {
   params?: Promise<Record<string, string>>;
@@ -37,16 +37,7 @@ export function createHandler<TQuery = any, TBody = any, TRoute = any, TReturn =
         if (contentType.includes("multipart/form-data")) {
           body = await req.formData();
         } else {
-          try {
-            body = await req.json();
-          } catch {
-            body = {};
-          }
-
-          // Validar si hay schema (sólo aplica a payloads JSON)
-          if (schema) {
-            body = schema.parse(body);
-          }
+          body = await parseJsonBody(req, schema);
         }
       }
 
@@ -63,19 +54,7 @@ export function createHandler<TQuery = any, TBody = any, TRoute = any, TReturn =
 
       return NextResponse.json(data);
     } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: error.errors.map(e => e.message).join(", ") },
-          { status: 400 }
-        );
-      }
-      if (error instanceof ApiError) {
-        return NextResponse.json(
-          { error: error.descripcionUsuario },
-          { status: Number(error.codigo) || 500 }
-        );
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleApiError(error);
     }
   };
 }

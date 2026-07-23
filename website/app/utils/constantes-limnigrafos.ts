@@ -47,3 +47,21 @@ export const ESTADO_LIMNIGRAFO: Record<string, { label: string; variant: EstadoL
   peligro: { label: "Peligro", variant: "error" },
   fuera_de_rango: { label: "Fuera de rango", variant: "none" },
 };
+
+/** Valores de tipo_comunicacion que habilitan el sistema de alertas. */
+export const TIPOS_COMUNICACION_ALERTAS = new Set([
+  "internet-https-2G",
+  "internet-https-3G",
+  "internet-https-4G",
+  "internet-https-5G",
+  "mensajes-sms",
+  "correos-smtp",
+]);
+
+/** Comprueba si el array de tipos de comunicación pasados incluye alguno que permita alertas. */
+export function tieneCoberturaAlertas(tipoComunicacion: string[] | null | undefined): boolean {
+  return (
+    Array.isArray(tipoComunicacion) &&
+    tipoComunicacion.some((v) => TIPOS_COMUNICACION_ALERTAS.has(v))
+  );
+}
