@@ -3,9 +3,10 @@
 import {
 	EstadisticaAtributo,
 	EstadisticaOutputItem,
-	LimnigrafoResponse,
 } from "@servicios/api/django.api";
 import BotonVariante from "@componentes/botones/BotonVariante";
+import FiltrosAcciones from "@componentes/filtros/FiltrosAcciones";
+import { LimnigrafoResponse } from "types/limnigrafos";
 import { ComparativasFilters } from "./types";
 
 function formatNumber(value: number, decimals = 2): string {
@@ -119,26 +120,25 @@ export default function SeccionComparativasMediciones({
 						</label>
 					</div>
 
-					<div className="mt-4 flex flex-wrap items-center justify-end gap-3">
-						<BotonVariante
-							type="button"
-							onClick={onApplyFilters}
-							variant="guardar"
-							className="text-[14px]"
-						>
-							<span className="text-2xl icon-[mage--filter]" />
-							<span>Aplicar filtros</span>
-						</BotonVariante>
-						<BotonVariante
-							type="button"
-							onClick={onClearFilters}
-							variant="cerrar"
-							className="text-[14px]"
-						>
-							<span className="text-2xl icon-[mdi--restore]" />
-							<span>Restablecer</span>
-						</BotonVariante>
-					</div>
+					<FiltrosAcciones
+						className="mt-4"
+						acciones={[
+							{
+								key: "restablecer",
+								label: "Restablecer",
+								icon: "icon-[mdi--restore]",
+								variant: "cerrar",
+								onClick: onClearFilters,
+							},
+							{
+								key: "aplicar",
+								label: "Aplicar filtros",
+								icon: "icon-[mage--filter]",
+								variant: "guardar",
+								onClick: onApplyFilters,
+							},
+						]}
+					/>
 				</div>
 
 				<div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 dark:border-[#334155] dark:bg-[#111923]">

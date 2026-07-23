@@ -17,7 +17,7 @@ import VentanaAgregrarLimnigrafo from "./componentes/VentanaAgregarLimnigrafo";
 import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 import { defaultMessage, opcionesEstado } from "./constantes";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
-import { ESTILOS_ESTADO_LIMNIGRAFO } from "@componentes/chips/ChipEstadoLimnigrafo";
+import { ChipEstadoLimnigrafoCompacto } from "@componentes/chips/ChipEstadoLimnigrafo";
 import FiltroFecha from "@componentes/filtros/FiltroFecha";
 import BotonIconoIr from "@componentes/botones/BotonIconoIr";
 import { useTieneRol } from "@hooks/useTieneRol";
@@ -77,28 +77,6 @@ function formatBateria(value?: number | null): string {
 	return `${Math.trunc(value)} %`;
 }
 
-function ChipEstadoTabla({ estado }: { estado: LimnigrafoResponse["estado"] }) {
-	const variante =
-		estado === "fuera_de_rango" || estado === "fuera_de_servicio"
-			? "fuera"
-			: estado === "normal"
-				? "normal"
-				: estado;
-	const config = ESTILOS_ESTADO_LIMNIGRAFO[variante] ?? ESTILOS_ESTADO_LIMNIGRAFO.normal;
-
-	return (
-		<span className={`inline-flex w-fit items-center gap-2 rounded-full border px-2.5 py-1 text-sm font-semibold ${config.lightClassName} ${config.darkClassName}`}>
-			<span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white shadow-[0px_0px_0px_1px_rgba(148,163,184,0.18)] dark:bg-[#223149]">
-				<span
-					className="block h-3.5 w-3.5 rounded-full border"
-					style={{ backgroundColor: config.backgroundColor, borderColor: config.borderColor }}
-				/>
-			</span>
-			{config.etiqueta}
-		</span>
-	);
-}
-
 export default function Home() {
 	const router = useRouter();
 	const esAdministrador = useTieneRol("administracion");
@@ -153,7 +131,7 @@ export default function Home() {
 		{
 			id: "estado",
 			header: "Estado",
-			cell: (row) => <div className="p-4"><ChipEstadoTabla estado={row.estado} /></div>,
+			cell: (row) => <div className="p-4"><ChipEstadoLimnigrafoCompacto estado={row.estado} /></div>,
 		},
 		{
 			id: "codigo",

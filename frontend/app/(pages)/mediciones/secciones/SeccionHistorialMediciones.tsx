@@ -1,9 +1,9 @@
 "use client";
 
 import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
-import BotonVariante from "@componentes/botones/BotonVariante";
 import TextField from "@componentes/campos/TextField";
 import Selector from "@componentes/campos/Selector";
+import FiltrosAcciones from "@componentes/filtros/FiltrosAcciones";
 import FiltrosContenedor from "@componentes/filtros/FiltrosContenedor";
 import Label from "@componentes/formularios/Label";
 import DataTable from "@componentes/tabla/DataTable";
@@ -275,42 +275,41 @@ export default function SeccionHistorialMediciones({
 					</div>
 				</div>
 
-				<div className="mt-4 flex flex-wrap items-center justify-end gap-3">
-					<BotonVariante
-						variant="guardar"
-						onClick={onApplyFilters}
-						className="text-[14px]"
-					>
-						<span className="text-2xl icon-[mage--filter]" />
-						<span>Aplicar filtros</span>
-					</BotonVariante>
-					<BotonVariante
-						variant="cerrar"
-						onClick={onClearFilters}
-						className="text-[14px]"
-					>
-						<span className="text-2xl icon-[mdi--restore]" />
-						<span>Restablecer</span>
-					</BotonVariante>
-					<BotonVariante
-						variant="filtro"
-						onClick={() => onExport("csv")}
-						disabled={isExporting}
-						className="text-[14px]"
-					>
-						<span className="text-2xl icon-[material-symbols--download]" />
-						<span>Exportar CSV</span>
-					</BotonVariante>
-					<BotonVariante
-						variant="filtro"
-						onClick={() => onExport("json")}
-						disabled={isExporting}
-						className="text-[14px]"
-					>
-						<span className="text-2xl icon-[material-symbols--download]" />
-						<span>Exportar JSON</span>
-					</BotonVariante>
-				</div>
+				<FiltrosAcciones
+					className="mt-4"
+					acciones={[
+						{
+							key: "exportar-csv",
+							label: "Exportar CSV",
+							icon: "icon-[material-symbols--download]",
+							variant: "filtro",
+							onClick: () => onExport("csv"),
+							disabled: isExporting,
+						},
+						{
+							key: "exportar-json",
+							label: "Exportar JSON",
+							icon: "icon-[material-symbols--download]",
+							variant: "filtro",
+							onClick: () => onExport("json"),
+							disabled: isExporting,
+						},
+						{
+							key: "restablecer",
+							label: "Restablecer",
+							icon: "icon-[mdi--restore]",
+							variant: "cerrar",
+							onClick: onClearFilters,
+						},
+						{
+							key: "aplicar",
+							label: "Aplicar filtros",
+							icon: "icon-[mage--filter]",
+							variant: "guardar",
+							onClick: onApplyFilters,
+						},
+					]}
+				/>
 			</FiltrosContenedor>
 
 			{actionError ? (
