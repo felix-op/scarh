@@ -1,25 +1,15 @@
 services:
   # Servicio de la Aplicación Django
-  root_empty:
-    image: nginx:alpine
-    command: >
-      sh -c 'printf "server { listen 80; location / { return 404; } }" > /etc/nginx/conf.d/default.conf
-      && nginx -g "daemon off;"'
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.root.rule=Host(`scarh.online`) && Path(`/`)
-      - traefik.http.routers.root.entrypoints=websecure
-      - traefik.http.routers.root.tls.certresolver=letsencrypt
-      - traefik.http.services.root.loadbalancer.server.port=80
-      - traefik.docker.network=red_prueba
-    networks:
-      - red_prueba
   web:
     image: felixop/scarh:latest
     container_name: scarh_api
     command: >
-      sh -c "python manage.py migrate &&
+      sh -c "python manage.py collectstatic --noinput &&
+       python manage.py migrate &&
        python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
     labels:
       - traefik.enable=true
       - traefik.http.routers.scarh.rule=Host(`api.scarh.online`)
@@ -39,6 +29,10 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
+      - CORS_ALLOW_ALL_ORIGINS=${CORS_ALLOW_ALL_ORIGINS}
       - SECRET_KEY=${SECRET_KEY}
       - ADMIN_FIRST_NAME=${ADMIN_FIRST_NAME}
       - ADMIN_LAST_NAME=${ADMIN_LAST_NAME}
@@ -50,6 +44,28 @@ services:
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
       - ACCESS_TOKEN_LIFETIME_MINUTES=${ACCESS_TOKEN_LIFETIME_MINUTES}
       - REFRESH_TOKEN_LIFETIME_DAYS=${REFRESH_TOKEN_LIFETIME_DAYS}
+
+  # Nuevo servicio para archivos estáticos y media
+  nginx_files:
+    image: nginx:alpine
+    container_name: scarh_nginx_files
+    volumes:
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+    configs:
+      - source: nginx_default_conf
+        target: /etc/nginx/conf.d/default.conf
+    labels:
+      - traefik.enable=true
+      # Regla para interceptar solo static y media en el mismo dominio
+      - traefik.http.routers.scarh_files.rule=Host(`api.scarh.online`) && (PathPrefix(`/static/`) || PathPrefix(`/media/`))
+      - traefik.http.routers.scarh_files.entrypoints=websecure
+      - traefik.http.routers.scarh_files.tls.certresolver=letsencrypt
+      - traefik.http.services.scarh_files.loadbalancer.server.port=80
+      - traefik.docker.network=red_prueba
+    networks:
+      - red_prueba
+  
   next_app:
     image: felixop/scarh-frontend:latest
     container_name: scarh_web
@@ -72,3 +88,24 @@ services:
 networks:
   red_prueba:
     external: true
+volumes:
+  static_volume:
+  media_volume:
+
+configs:
+  nginx_default_conf:
+    content: |
+      server {
+          listen 80;
+          server_name _;
+
+          location /static/ {
+              alias /app/staticfiles/;
+          }
+
+          location /media/ {
+              alias /app/media/;
+              add_header 'Access-Control-Allow-Origin' '*';
+              add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
+          }
+      }
