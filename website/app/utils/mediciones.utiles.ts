@@ -129,7 +129,7 @@ export function parseImportRowsByFilename(content: string, fileName: string): Me
     const dataRows = rawRows.slice(headerIndex + 1);
 
     rawObjects = dataRows.map((row, index) => {
-      const obj: Record<string, string> = {};
+      const obj: Record<string, any> = {};
       headers.forEach((h, i) => {
         obj[h] = row[i] ? row[i].trim() : "";
       });
