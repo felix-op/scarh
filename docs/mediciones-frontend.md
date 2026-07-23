@@ -37,19 +37,16 @@ Se abandonará el modelo engorroso de tener un botón para "Validar" y otro para
 ## 6. Archivos y Estructura a Crear
 
 ### En `components/mediciones/`
-1. `ventana-editar-medicion.tsx`: Modal para modificar una medición que falló en la validación local o del servidor.
-2. `ventana-eliminar-medicion.tsx`: Modal de confirmación para descartar una fila del lote importado antes de guardar.
-3. `ventana-confirmar-guardado.tsx`: Diálogo para confirmar el proceso (especialmente para aprobar ignorar los duplicados en BD si los hay).
-4. `configuraciones-tabla.ts` (o `.tsx`): Definiciones de columnas de TanStack Table, desglosado en:
-   - Formato Viejo (solo Fecha, Hora, Altura)
-   - Formato Nuevo Sin Limnígrafo ID
-   - Formato Nuevo Con Limnígrafo ID
-5. `tabla-mediciones-importacion.tsx`: Componente base de la tabla, con soporte de edición in-line/modal y selección de configuraciones.
-6. `chip-estado-importacion.tsx`: Chips de UI (`valid`, `error`, `duplicate_file`, `duplicate_database`, etc.).
-7. `acciones-importacion.tsx`: Botonera de acciones por cada fila (Editar, Eliminar) dentro de la tabla.
+- [ ] 1. `ventana-editar-medicion.tsx`: Modal para modificar una medición que falló en la validación local o del servidor. (Pendiente)
+- [x] 2. `ventana-eliminar-medicion.tsx`: Mapeado exitosamente y delegado al uso del componente unificado `VentanaConfirmar` (variante `eliminar`) de `app/components/ui/modals.tsx`.
+- [ ] 3. `ventana-confirmar-guardado.tsx`: Diálogo para confirmar el proceso (especialmente para aprobar ignorar los duplicados en BD si los hay). (Pendiente)
+- [ ] 4. `configuraciones-tabla.tsx`: Definiciones de columnas de TanStack Table, desglosado en formatos viejo y nuevo. (Pendiente)
+- [ ] 5. `tabla-mediciones-importacion.tsx`: Componente base de la tabla, con soporte de edición in-line/modal y selección de configuraciones. (Pendiente)
+- [x] 6. `chip-estado-importacion.tsx`: Mapeado exitosamente y envuelto sobre el componente nativo `Chip` de `app/components/ui/chip.tsx`.
+- [x] 7. `acciones-importacion.tsx`: Mapeado exitosamente para utilizar el `Menu` estándar de `app/components/ui/menu.tsx` en lugar de una botonera estática.
+- [x] 8. `selector-archivo-importacion.tsx`: Área drag & drop finalizada con validaciones.
+- [x] 9. `selector-limnigrafo-importacion.tsx`: Select de limnígrafo finalizado conectado a react-query.
 
 ### En `utils/`
-1. **`utils/mediciones.utiles.ts`**: Funciones puras para procesar la importación:
-   - Lógica para leer `.csv` o `.json` usando PapaParse.
-   - Limpieza del formato viejo (ignorar cabeceras, unir Fecha/Hora, parsear números sucios como `"63.20\n"`).
-2. **`utils/mediciones.schemas.ts`**: Esquemas de Zod para tipar y validar las filas (ej. `importacionViejaSchema`, `importacionNuevaSchema`). Validará fechas ISO o `dd/mm/yyyy` y tipos de dato numéricos válidos.
+- [x] 1. **`utils/mediciones.utiles.ts`**: Funciones puras para procesar la importación. (Realizado: Parser manual customizado sin dependencias externas).
+- [x] 2. **`utils/mediciones.schemas.ts`**: Esquemas de Zod para tipar y validar las filas. (Realizado).
