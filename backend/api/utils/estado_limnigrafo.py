@@ -50,26 +50,19 @@ def calcular_estado_limnigrafo(limnigrafo, referencia=None):
     Reglas:
     - fuera_de_rango: tiempo sin conexión mayor a tiempo_peligro
     - peligro: última altura medida mayor o igual a altura_maxima_agua
-    - advertencia: batería en mínimo o menor, o tiempo sin conexión mayor a tiempo_advertencia
+    - advertencia: tiempo sin conexión mayor a tiempo_advertencia
     - normal: caso contrario
     """
     referencia = referencia or timezone.now()
 
     config = getattr(limnigrafo, "configuracion", None)
-    bateria_actual = limnigrafo.bateria_actual
-    bateria_min = config.bateria_min if config else None
     altura_maxima_agua = config.altura_maxima_agua if config else None
-    bateria_en_advertencia = (
-        bateria_actual is not None
-        and isinstance(bateria_min, (int, float))
-        and bateria_actual <= bateria_min
-    )
 
     tiempo_fuera_de_rango_excedido = False
     tiempo_advertencia_excedido = False
 
-    if limnigrafo.ultima_conexion:
-        tiempo_transcurrido = referencia - limnigrafo.ultima_conexion
+    if limnigrafo.ultima_medicion:
+        tiempo_transcurrido = referencia - limnigrafo.ultima_medicion.fecha_hora
 
         if tiempo_transcurrido < timedelta(0):
             tiempo_transcurrido = timedelta(0)
@@ -82,7 +75,7 @@ def calcular_estado_limnigrafo(limnigrafo, referencia=None):
         elif advertencia_delta is not None and tiempo_transcurrido > advertencia_delta:
             tiempo_advertencia_excedido = True
 
-    ultima_medicion = limnigrafo.mediciones.order_by("-fecha_hora").first()
+    ultima_medicion = limnigrafo.ultima_medicion
     altura_en_peligro = (
         ultima_medicion is not None
         and isinstance(altura_maxima_agua, (int, float))
@@ -90,9 +83,24 @@ def calcular_estado_limnigrafo(limnigrafo, referencia=None):
     )
 
     if tiempo_fuera_de_rango_excedido:
-        return "fuera_de_rango"
+        return "sin_conexion"
     if altura_en_peligro:
         return "peligro"
-    if bateria_en_advertencia or tiempo_advertencia_excedido:
+    if tiempo_advertencia_excedido:
         return "advertencia"
     return "normal"
+
+def calcular_estado_medicion_limnigrafo(limnigrafo):
+    """
+    Determina si la última medición física está dentro o fuera de los rangos configurados.
+    """
+    medicion = limnigrafo.ultima_medicion
+    if not medicion:
+        return "normal"
+    config = getattr(limnigrafo, "configuracion", None)
+    if not config:
+        return "normal"
+        
+    from api.utils.alertas import _campos_fuera_de_rango
+    campos = _campos_fuera_de_rango(medicion, config)
+    return "fuera_de_rango" if campos else "normal"

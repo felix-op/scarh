@@ -27,8 +27,8 @@ class UsuarioFilter(django_filters.FilterSet):
 class LimnigrafoFilter(django_filters.FilterSet):
     search = django_filters.CharFilter(method='filter_search', label='Búsqueda general (código, descripción)')
     estado = django_filters.CharFilter(field_name='estado', lookup_expr='iexact')
-    ultima_conexion_desde = django_filters.DateTimeFilter(field_name='ultima_conexion', lookup_expr='gte')
-    ultima_conexion_hasta = django_filters.DateTimeFilter(field_name='ultima_conexion', lookup_expr='lte')
+    ultima_conexion_desde = django_filters.DateTimeFilter(field_name='ultima_medicion__fecha_hora', lookup_expr='gte')
+    ultima_conexion_hasta = django_filters.DateTimeFilter(field_name='ultima_medicion__fecha_hora', lookup_expr='lte')
 
     class Meta:
         model = Limnigrafo

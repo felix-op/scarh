@@ -65,9 +65,15 @@ class LimnigrafoTests(APITestCase):
         self.assertEqual(response.data['radio_cobertura_metros'], 350)
 
     def test_list_refreshes_estado_by_time_threshold(self):
-        self.limnigrafo.ultima_conexion = timezone.now() - timedelta(minutes=45)
+        medicion = Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=2.0,
+            fecha_hora=timezone.now() - timedelta(minutes=45),
+            fuente='automatico',
+        )
+        self.limnigrafo.ultima_medicion = medicion
         self.limnigrafo.estado = 'normal'
-        self.limnigrafo.save(update_fields=['ultima_conexion', 'estado'])
+        self.limnigrafo.save(update_fields=['ultima_medicion', 'estado'])
 
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -75,22 +81,34 @@ class LimnigrafoTests(APITestCase):
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado, 'advertencia')
 
-    def test_list_sets_fuera_de_rango_when_time_exceeds_peligro_threshold(self):
-        self.limnigrafo.ultima_conexion = timezone.now() - timedelta(hours=2)
+    def test_list_sets_sin_conexion_when_time_exceeds_peligro_threshold(self):
+        medicion = Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=2.0,
+            fecha_hora=timezone.now() - timedelta(hours=2),
+            fuente='automatico',
+        )
+        self.limnigrafo.ultima_medicion = medicion
         self.limnigrafo.estado = 'normal'
-        self.limnigrafo.save(update_fields=['ultima_conexion', 'estado'])
+        self.limnigrafo.save(update_fields=['ultima_medicion', 'estado'])
 
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.limnigrafo.refresh_from_db()
-        self.assertEqual(self.limnigrafo.estado, 'fuera_de_rango')
+        self.assertEqual(self.limnigrafo.estado, 'sin_conexion')
 
-    def test_list_recovers_estado_from_fuera_de_rango_when_sensor_recovers(self):
-        self.limnigrafo.ultima_conexion = timezone.now()
+    def test_list_recovers_estado_from_sin_conexion_when_sensor_recovers(self):
+        medicion = Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=2.0,
+            fecha_hora=timezone.now(),
+            fuente='automatico',
+        )
+        self.limnigrafo.ultima_medicion = medicion
         self.limnigrafo.bateria_actual = 12.0
-        self.limnigrafo.estado = 'fuera_de_rango'
-        self.limnigrafo.save(update_fields=['ultima_conexion', 'bateria_actual', 'estado'])
+        self.limnigrafo.estado = 'sin_conexion'
+        self.limnigrafo.save(update_fields=['ultima_medicion', 'bateria_actual', 'estado'])
 
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -99,15 +117,15 @@ class LimnigrafoTests(APITestCase):
         self.assertEqual(self.limnigrafo.estado, 'normal')
 
     def test_list_sets_peligro_when_water_height_reaches_maximum(self):
-        Medicion.objects.create(
+        medicion = Medicion.objects.create(
             limnigrafo=self.limnigrafo,
             altura_agua=3.2,
             fecha_hora=timezone.now(),
             fuente='automatico',
         )
-        self.limnigrafo.ultima_conexion = timezone.now()
+        self.limnigrafo.ultima_medicion = medicion
         self.limnigrafo.estado = 'normal'
-        self.limnigrafo.save(update_fields=['ultima_conexion', 'estado'])
+        self.limnigrafo.save(update_fields=['ultima_medicion', 'estado'])
 
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -130,16 +148,29 @@ class LimnigrafoTests(APITestCase):
         reciente = timezone.now() - timedelta(hours=1)
         antigua = timezone.now() - timedelta(days=4)
 
-        self.limnigrafo.ultima_conexion = reciente
-        self.limnigrafo.save(update_fields=['ultima_conexion'])
+        medicion_reciente = Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=2.0,
+            fecha_hora=reciente,
+            fuente='automatico',
+        )
+        self.limnigrafo.ultima_medicion = medicion_reciente
+        self.limnigrafo.save(update_fields=['ultima_medicion'])
 
         limnigrafo_antiguo = Limnigrafo.objects.create(
             codigo='LMG-OLD',
             descripcion='Limnigrafo antiguo',
             memoria=1024,
             tipo_de_comunicacion=['fisico-usb'],
-            ultima_conexion=antigua,
         )
+        medicion_antigua = Medicion.objects.create(
+            limnigrafo=limnigrafo_antiguo,
+            altura_agua=2.0,
+            fecha_hora=antigua,
+            fuente='automatico',
+        )
+        limnigrafo_antiguo.ultima_medicion = medicion_antigua
+        limnigrafo_antiguo.save(update_fields=['ultima_medicion'])
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=limnigrafo_antiguo,
             bateria_min=10.0,
@@ -159,16 +190,29 @@ class LimnigrafoTests(APITestCase):
         reciente = timezone.now() - timedelta(hours=1)
         antigua = timezone.now() - timedelta(days=4)
 
-        self.limnigrafo.ultima_conexion = reciente
-        self.limnigrafo.save(update_fields=['ultima_conexion'])
+        medicion_reciente = Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=2.0,
+            fecha_hora=reciente,
+            fuente='automatico',
+        )
+        self.limnigrafo.ultima_medicion = medicion_reciente
+        self.limnigrafo.save(update_fields=['ultima_medicion'])
 
         limnigrafo_antiguo = Limnigrafo.objects.create(
             codigo='LMG-OLDER',
             descripcion='Limnigrafo mas antiguo',
             memoria=1024,
             tipo_de_comunicacion=['fisico-usb'],
-            ultima_conexion=antigua,
         )
+        medicion_antigua = Medicion.objects.create(
+            limnigrafo=limnigrafo_antiguo,
+            altura_agua=2.0,
+            fecha_hora=antigua,
+            fuente='automatico',
+        )
+        limnigrafo_antiguo.ultima_medicion = medicion_antigua
+        limnigrafo_antiguo.save(update_fields=['ultima_medicion'])
         ConfiguracionLimnigrafo.objects.create(
             limnigrafo=limnigrafo_antiguo,
             bateria_min=10.0,
@@ -251,3 +295,25 @@ class LimnigrafoTests(APITestCase):
         response = self.client.get(history_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
+
+    def test_verificar_conexiones_command_updates_state(self):
+        from django.core.management import call_command
+        from api.models import Alerta
+        
+        # Simular desconexión creando una última medición en el pasado
+        medicion = Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=2.0,
+            fecha_hora=timezone.now() - timedelta(minutes=45),
+            fuente='automatico',
+        )
+        self.limnigrafo.ultima_medicion = medicion
+        self.limnigrafo.estado = 'normal'
+        self.limnigrafo.save(update_fields=['ultima_medicion', 'estado'])
+        
+        # Ejecutar comando
+        call_command('verificar_conexiones')
+        
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.estado, 'advertencia')
+        self.assertTrue(Alerta.objects.filter(tipo='advertencia_limnigrafo', limnigrafo=self.limnigrafo).exists())

@@ -12,7 +12,7 @@ from ..serializer import MedicionImportPayloadSerializer, MedicionSerializer
 from ..permissions import MedicionesPermissionWithAPIKey
 from ..filters import MedicionFilter
 from ..utils.audit import registrar_accion_auditoria_en_commit
-from ..utils.alertas import generar_alerta_cambio_estado, generar_alerta_medicion_fuera_de_rango, generar_alertas_medicion
+from ..utils.alertas import generar_alerta_medicion_fuera_de_rango
 from ..utils.estado_limnigrafo import calcular_estado_limnigrafo
 from ..serializer.medicionSerializer import normalizar_fecha_importacion, validar_datos_medicion
 
@@ -51,15 +51,18 @@ class MedicionViewSet(
         if medicion_instance.nivel_de_bateria is not None:
             limnigrafo.bateria_actual = medicion_instance.nivel_de_bateria
         
-        # Siempre actualizar última conexión con la marca temporal de la medición
-        limnigrafo.ultima_conexion = medicion_instance.fecha_hora
+        # Siempre actualizar última medición
+        limnigrafo.ultima_medicion = medicion_instance
         
         # Calcular estado operativo actual
         nuevo_estado = calcular_estado_limnigrafo(limnigrafo)
         limnigrafo.estado = nuevo_estado
         
-        limnigrafo.save(update_fields=['bateria_actual', 'ultima_conexion', 'estado'])
-        generar_alertas_medicion(medicion_instance, estado_anterior, nuevo_estado)
+        from ..utils.estado_limnigrafo import calcular_estado_medicion_limnigrafo
+        limnigrafo.estado_medicion = calcular_estado_medicion_limnigrafo(limnigrafo)
+        
+        limnigrafo.save(update_fields=['bateria_actual', 'ultima_medicion', 'estado', 'estado_medicion'])
+        generar_alerta_medicion_fuera_de_rango(medicion_instance)
 
         if medicion_instance.fuente == "manual":
             registrar_accion_auditoria_en_commit(
@@ -365,16 +368,12 @@ class MedicionViewSet(
 
                 if ultima_con_bateria is not None:
                     limnigrafo.bateria_actual = ultima_con_bateria.nivel_de_bateria
-                limnigrafo.ultima_conexion = ultima_medicion.fecha_hora
+                limnigrafo.ultima_medicion = ultima_medicion
                 nuevo_estado = calcular_estado_limnigrafo(limnigrafo)
                 limnigrafo.estado = nuevo_estado
-                limnigrafo.save(update_fields=['bateria_actual', 'ultima_conexion', 'estado'])
-                generar_alerta_cambio_estado(
-                    limnigrafo=limnigrafo,
-                    estado_anterior=estado_anterior_por_limnigrafo[limnigrafo_id],
-                    nuevo_estado=nuevo_estado,
-                    medicion=ultima_medicion,
-                )
+                from ..utils.estado_limnigrafo import calcular_estado_medicion_limnigrafo
+                limnigrafo.estado_medicion = calcular_estado_medicion_limnigrafo(limnigrafo)
+                limnigrafo.save(update_fields=['bateria_actual', 'ultima_medicion', 'estado', 'estado_medicion'])
 
             distribucion = [
                 {
@@ -406,6 +405,80 @@ class MedicionViewSet(
                 "rows": rows,
             },
             status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=False, methods=["post"], url_path="bulk")
+    def bulk_create(self, request):
+        data = request.data
+        if isinstance(data, dict) and "mediciones" in data:
+            data = data["mediciones"]
+            
+        if not isinstance(data, list):
+            return Response(
+                {"detail": "El payload debe ser una lista de mediciones o un objeto con la clave 'mediciones'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        serializer = MedicionSerializer(data=data, many=True, context={'request': request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        with transaction.atomic():
+            mediciones = serializer.save()
+            
+            # Agrupar las mediciones por limnígrafo para actualizar el estado final correctamente
+            mediciones_por_limnigrafo = {}
+            estado_anterior_por_limnigrafo = {}
+            for m in mediciones:
+                lim_id = m.limnigrafo.id
+                if lim_id not in mediciones_por_limnigrafo:
+                    mediciones_por_limnigrafo[lim_id] = []
+                    estado_anterior_por_limnigrafo[lim_id] = m.limnigrafo.estado
+                mediciones_por_limnigrafo[lim_id].append(m)
+                
+            for lim_id, meds in mediciones_por_limnigrafo.items():
+                limnigrafo = meds[0].limnigrafo
+                meds_ordenadas = sorted(meds, key=lambda item: item.fecha_hora)
+                ultima_medicion = meds_ordenadas[-1]
+                
+                # Actualizar la batería si alguna de las mediciones del lote trajo nivel de batería
+                ultima_con_bateria = next(
+                    (m for m in reversed(meds_ordenadas) if m.nivel_de_bateria is not None),
+                    None
+                )
+                if ultima_con_bateria is not None:
+                    limnigrafo.bateria_actual = ultima_con_bateria.nivel_de_bateria
+                    
+                limnigrafo.ultima_medicion = ultima_medicion
+                nuevo_estado = calcular_estado_limnigrafo(limnigrafo)
+                limnigrafo.estado = nuevo_estado
+                from ..utils.estado_limnigrafo import calcular_estado_medicion_limnigrafo
+                limnigrafo.estado_medicion = calcular_estado_medicion_limnigrafo(limnigrafo)
+                limnigrafo.save(update_fields=['bateria_actual', 'ultima_medicion', 'estado', 'estado_medicion'])
+                
+                # Generar alertas de fuera de rango para las mediciones individuales
+                for m in meds:
+                    generar_alerta_medicion_fuera_de_rango(m)
+                    
+            # Registrar en auditoría si se cargaron de forma manual
+            manual_meds = [m for m in mediciones if m.fuente == "manual"]
+            if manual_meds:
+                codigos = ", ".join(set(m.limnigrafo.codigo for m in manual_meds))
+                registrar_accion_auditoria_en_commit(
+                    request=self.request,
+                    tipo_accion="manual_data_load",
+                    entidad="Medición",
+                    entidad_id=manual_meds[0].id,
+                    descripcion=f"Cargó manualmente un lote de {len(manual_meds)} mediciones para los limnígrafos: {codigos}.",
+                    metadata={
+                        "cantidad": len(manual_meds),
+                        "codigos_limnigrafos": list(set(m.limnigrafo.codigo for m in manual_meds)),
+                    },
+                )
+                
+        return Response(
+            {"detail": f"Se procesaron y crearon {len(mediciones)} mediciones con éxito."},
+            status=status.HTTP_201_CREATED
         )
 
     @action(detail=False, methods=["post"], url_path="import-summary")

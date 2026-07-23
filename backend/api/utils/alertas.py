@@ -73,17 +73,6 @@ def generar_alerta_medicion_fuera_de_rango(medicion):
     )
 
 
-def generar_alertas_medicion(medicion, estado_anterior, nuevo_estado):
-    limnigrafo = medicion.limnigrafo
-    generar_alerta_medicion_fuera_de_rango(medicion)
-
-    generar_alerta_cambio_estado(
-        limnigrafo=limnigrafo,
-        estado_anterior=estado_anterior,
-        nuevo_estado=nuevo_estado,
-        medicion=medicion,
-    )
-
 
 def generar_alerta_cambio_estado(*, limnigrafo, estado_anterior, nuevo_estado, medicion=None):
     if nuevo_estado == estado_anterior:
@@ -95,9 +84,9 @@ def generar_alerta_cambio_estado(*, limnigrafo, estado_anterior, nuevo_estado, m
             f"dentro del tiempo esperado o alcanzó la batería mínima."
         )
         tipo = "advertencia_limnigrafo"
-    elif nuevo_estado == "fuera_de_rango":
-        descripcion = f"Limnígrafo {limnigrafo.codigo} - Fuera de rango por falta de envío de datos."
-        tipo = "fuera_de_rango_limnigrafo"
+    elif nuevo_estado == "sin_conexion":
+        descripcion = f"Limnígrafo {limnigrafo.codigo} - Sin conexión por falta de envío de datos."
+        tipo = "sin_conexion_limnigrafo"
     elif nuevo_estado == "peligro":
         descripcion = (
             f"Limnígrafo {limnigrafo.codigo} en peligro: la altura del nivel del agua "

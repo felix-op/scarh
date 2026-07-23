@@ -12,7 +12,7 @@ class Alerta(models.Model):
         ('fuera_rango_medicion', 'Por fuera de rango de medición'),
         ('advertencia_limnigrafo', 'Por advertencia de limnígrafo'),
         ('peligro_limnigrafo', 'Por peligro de limnígrafo'),
-        ('fuera_de_rango_limnigrafo', 'Por fuera de rango del limnígrafo'),
+        ('sin_conexion_limnigrafo', 'Por falta de conexión del limnígrafo'),
     ]
 
     estado = models.CharField(max_length=20, choices=ESTADOS_CHOICES, default='nuevo')
@@ -36,7 +36,7 @@ class Alerta(models.Model):
                 'fuera_rango_medicion': 'Valor de medición fuera del rango establecido.',
                 'advertencia_limnigrafo': 'El limnígrafo alcanzó el tiempo de advertencia o batería mínima.',
                 'peligro_limnigrafo': 'El limnígrafo alcanzó la altura máxima del nivel del agua.',
-                'fuera_de_rango_limnigrafo': 'El limnígrafo dejó de enviar datos y quedó fuera de rango.',
+                'sin_conexion_limnigrafo': 'El limnígrafo dejó de enviar datos y quedó sin conexión.',
             }
             self.descripcion = descripciones.get(self.tipo, 'no hay alerta')
         super().save(*args, **kwargs)

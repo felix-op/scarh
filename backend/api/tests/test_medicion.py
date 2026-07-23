@@ -263,27 +263,28 @@ class MedicionTests(APITestCase):
         
         self.assertEqual(self.limnigrafo.bateria_actual, 9.0)
         
-        self.assertIsNotNone(self.limnigrafo.ultima_conexion)
+        self.assertIsNotNone(self.limnigrafo.ultima_medicion)
         
-        self.assertEqual(self.limnigrafo.estado, 'advertencia')
-        self.assertTrue(Alerta.objects.filter(tipo='advertencia_limnigrafo', limnigrafo=self.limnigrafo).exists())
+        self.assertEqual(self.limnigrafo.estado, 'normal')
+        self.assertEqual(self.limnigrafo.estado_medicion, 'fuera_de_rango')
+        self.assertTrue(Alerta.objects.filter(tipo='fuera_rango_medicion', limnigrafo=self.limnigrafo).exists())
         self.assertTrue(UsuarioNotificacion.objects.filter(usuario=self.user).exists())
 
     def test_create_medicion_sets_peligro_when_water_height_reaches_maximum(self):
         self.client.force_authenticate(user=self.user)
-
+ 
         data = {
             'limnigrafo': self.limnigrafo.id,
-            'altura_agua': 3.0,
+            'altura_agua': 3.2, # Supera el límite de 3.0 para disparar fuera de rango
             'nivel_de_bateria': 11.5,
             'fecha_hora': timezone.now().isoformat()
         }
         response = self.client.post(self.list_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
+ 
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado, 'peligro')
-        self.assertTrue(Alerta.objects.filter(tipo='peligro_limnigrafo', limnigrafo=self.limnigrafo).exists())
+        self.assertTrue(Alerta.objects.filter(tipo='fuera_rango_medicion', limnigrafo=self.limnigrafo).exists())
 
     def test_create_medicion_creates_out_of_range_alert(self):
         self.client.force_authenticate(user=self.user)
@@ -305,7 +306,7 @@ class MedicionTests(APITestCase):
         self.assertIn('presion', alerta.descripcion)
         self.assertTrue(UsuarioNotificacion.objects.filter(alerta=alerta, usuario=self.user).exists())
 
-    def test_create_medicion_sets_fuera_de_rango_when_time_exceeds_peligro_threshold(self):
+    def test_create_medicion_sets_sin_conexion_when_time_exceeds_peligro_threshold(self):
         self.client.force_authenticate(user=self.user)
 
         data = {
@@ -318,7 +319,7 @@ class MedicionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.limnigrafo.refresh_from_db()
-        self.assertEqual(self.limnigrafo.estado, 'fuera_de_rango')
+        self.assertEqual(self.limnigrafo.estado, 'sin_conexion')
 
     def test_retrieve_medicion(self):
         self.client.force_authenticate(user=self.user)
@@ -619,7 +620,7 @@ class MedicionTests(APITestCase):
 
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.bateria_actual, 10.2)
-        self.assertEqual(self.limnigrafo.ultima_conexion, parse_datetime("2024-01-01T11:00:00Z"))
+        self.assertEqual(self.limnigrafo.ultima_medicion.fecha_hora, parse_datetime("2024-01-01T11:00:00Z"))
 
     def test_bulk_import_rejects_invalid_batch_without_saving(self):
         self.client.force_authenticate(user=self.user)
@@ -655,3 +656,57 @@ class MedicionTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Medicion.objects.count(), 0)
+
+    def test_bulk_create_mediciones_success(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('medicion-list') + 'bulk/'
+        
+        data = [
+            {
+                "limnigrafo": self.limnigrafo.id,
+                "fecha_hora": "2024-01-01T12:00:00Z",
+                "altura_agua": 1.5,
+                "nivel_de_bateria": 12.0,
+                "fuente": "manual"
+            },
+            {
+                "limnigrafo": self.limnigrafo.id,
+                "fecha_hora": "2024-01-01T13:00:00Z",
+                "altura_agua": 1.8,
+                "nivel_de_bateria": 11.8,
+                "fuente": "manual"
+            }
+        ]
+        
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Medicion.objects.count(), 2)
+        
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.bateria_actual, 11.8)
+        self.assertEqual(self.limnigrafo.ultima_medicion.fecha_hora, parse_datetime("2024-01-01T13:00:00Z"))
+
+    def test_bulk_create_mediciones_sets_estado_medicion_fuera_de_rango(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('medicion-list') + 'bulk/'
+        
+        # Configurar límite máximo de altura de agua a 3.0
+        config = self.limnigrafo.configuracion
+        config.altura_maxima_agua = 3.0
+        config.save()
+        
+        data = [
+            {
+                "limnigrafo": self.limnigrafo.id,
+                "fecha_hora": "2024-01-01T12:00:00Z",
+                "altura_agua": 3.5, # Fuera de rango!
+                "nivel_de_bateria": 12.0,
+                "fuente": "manual"
+            }
+        ]
+        
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.estado_medicion, 'fuera_de_rango')

@@ -13,7 +13,9 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
     bateria = serializers.FloatField(source='bateria_actual', read_only=True)
     ubicacion = UbicacionSerializer(read_only=True)
     estado = serializers.CharField(read_only=True)
-    ultima_conexion = serializers.DateTimeField(read_only=True)
+    ultima_conexion = serializers.SerializerMethodField()
+    estado_conexion = serializers.CharField(read_only=True)
+    estado_medicion = serializers.CharField(read_only=True)
     ultima_medicion = serializers.SerializerMethodField()
     configuracion = ConfiguracionLimnigrafoSerializer(read_only=True, allow_null=True)
     radio_cobertura_metros = serializers.IntegerField(required=False, allow_null=True, min_value=0)
@@ -25,9 +27,14 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
         allow_null=True
     )
     
+    def get_ultima_conexion(self, obj):
+        if obj.ultima_medicion:
+            return obj.ultima_medicion.fecha_hora
+        return None
+
     def get_ultima_medicion(self, obj):
         """Retorna la última medición del limnígrafo con altura, temperatura y presión"""
-        ultima = obj.mediciones.order_by('-fecha_hora').first()
+        ultima = obj.ultima_medicion
         if ultima:
             return {
                 'id': ultima.id,
@@ -54,6 +61,8 @@ class LimnigrafoSerializer(serializers.ModelSerializer):
             'memoria',
             'radio_cobertura_metros',
             'ultima_conexion',
+            'estado_conexion',
+            'estado_medicion',
             'estado',
             'ubicacion',
             'ubicacion_id',
