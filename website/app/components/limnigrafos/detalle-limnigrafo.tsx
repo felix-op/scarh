@@ -2,14 +2,16 @@
 
 import { ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card } from "../ui/cards";
-import { Boton, BotonVolver, BotonImportar, BotonMediciones, BotonEstadisticas, BotonEditar, BotonEliminar } from "../ui/botones";
+import { SeccionAgruparInformacion } from "../ui/seccion-agrupar-informacion";
+import { Alert } from "../ui/alerts";
 import { InfoTooltip } from "../ui/info-tooltip";
-import { ChipEstadoConexion, ChipEstadoMedicion } from "./chip-estado-limnigrafo";
+import { Boton, BotonVolver, BotonImportar, BotonMediciones, BotonEstadisticas, BotonEditar, BotonEliminar } from "../ui/botones";
+import { EstadoConexionLimnigrafo } from "./estado-conexion-limnigrafo";
+import { UltimaMedicionLimnigrafo } from "./ultima-medicion-limnigrafo";
 import { RutasAccesoLimnigrafo } from "./rutas-acceso-limnigrafo";
 import { VentanaEliminarLimnigrafo } from "./ventana-eliminar-limnigrafo";
 import { VentanaSolicitarToken } from "./ventana-solicitar-token";
-import { memoriaLegible, hmsLegibles, formatFecha, valuesToLabels, opcionesTipoComunicacion } from "@utils";
+import { memoriaLegible, hmsLegibles, formatFecha, valuesToLabels, opcionesTipoComunicacion, tieneCoberturaAlertas } from "@utils";
 import type { LimnigrafoResponse } from "@models";
 
 function DatoItem({ label, value, tooltip }: { label: string; value: ReactNode; tooltip?: ReactNode }) {
@@ -50,10 +52,6 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold text-foreground-title">Limnígrafo {limnigrafo.codigo}</h1>
-          <div className="flex flex-wrap gap-2">
-            <ChipEstadoConexion estado={limnigrafo.estado_conexion} tipoComunicacion={limnigrafo.tipo_comunicacion} size="md" />
-            <ChipEstadoMedicion estado={limnigrafo.estado_medicion} size="md" />
-          </div>
           {limnigrafo.ubicacion?.nombre && (
             <span className="text-sm text-foreground-secondary">{limnigrafo.ubicacion.nombre}</span>
           )}
@@ -76,45 +74,63 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
         <BotonEstadisticas content="Estadísticas" onClick={() => router.push(`/dashboard/estadisticas?limnigrafo=${id}`)} />
       </div>
 
-      {/* Grupos de datos */}
+      {/* Grupos de datos: misma división que la página de editar (Datos del limnígrafo / Configuración de alertas) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="flex flex-col gap-4 p-5">
-          <h2 className="text-base font-semibold text-foreground-title">Mantenimiento</h2>
-          <DatoItem label="Descripción" value={limnigrafo.descripcion || "-"} />
-          <DatoItem label="Último mantenimiento" value={formatFecha(limnigrafo.ultimo_mantenimiento)} />
-          <DatoItem
-            label="Tiempo antes de advertencia"
-            value={hmsLegibles(cfg?.tiempo_advertencia)}
-            tooltip={<InfoTooltip content="Tiempo sin recibir datos tras el cual el limnígrafo pasa a estado de Advertencia." />}
-          />
-          <DatoItem
-            label="Tiempo antes de fuera de rango"
-            value={hmsLegibles(cfg?.tiempo_peligro)}
-            tooltip={<InfoTooltip content="Tiempo sin recibir datos tras el cual el limnígrafo pasa a estado Fuera de rango." />}
-          />
-        </Card>
+        <div className="flex flex-col gap-6">
+          <SeccionAgruparInformacion title="Datos del limnígrafo">
+            <DatoItem label="Descripción" value={limnigrafo.descripcion || "-"} />
+            <DatoItem label="Último mantenimiento" value={formatFecha(limnigrafo.ultimo_mantenimiento)} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <DatoItem label="Memoria" value={memoriaLegible(limnigrafo.memoria)} />
+              <DatoItem
+                label="Radio de cobertura estimada"
+                value={limnigrafo.radio_cobertura_metros != null ? `${limnigrafo.radio_cobertura_metros} m` : "N/D"}
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <DatoItem label="Batería mínima" value={conUnidad(cfg?.bateria_min, " V")} />
+              <DatoItem label="Batería máxima" value={conUnidad(cfg?.bateria_max, " V")} />
+            </div>
+            <div className="pt-2 border-t border-border">
+              <EstadoConexionLimnigrafo limnigrafo={limnigrafo} />
+            </div>
+          </SeccionAgruparInformacion>
 
-        <Card className="flex flex-col gap-4 p-5">
-          <h2 className="text-base font-semibold text-foreground-title">Especificaciones técnicas</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <DatoItem label="Memoria" value={memoriaLegible(limnigrafo.memoria)} />
-            <DatoItem label="Batería mínima" value={conUnidad(cfg?.bateria_min, " V")} />
+          <UltimaMedicionLimnigrafo limnigrafo={limnigrafo} />
+        </div>
+
+        <SeccionAgruparInformacion title="Configuración de alertas">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <DatoItem
-              label="Radio de cobertura"
-              value={limnigrafo.radio_cobertura_metros != null ? `${limnigrafo.radio_cobertura_metros} m` : "N/D"}
+              label="Tiempo máximo antes de Advertencia"
+              value={hmsLegibles(cfg?.tiempo_advertencia)}
+              tooltip={<InfoTooltip content="Tiempo sin recibir datos tras el cual el limnígrafo pasa a estado de Advertencia." />}
             />
-            <DatoItem label="Altura máx. del agua" value={conUnidad(cfg?.altura_maxima_agua, " m")} />
-            <DatoItem label="Altura mín. del agua" value={conUnidad(cfg?.altura_minima_agua, " m")} />
-            <DatoItem label="Temperatura máx." value={conUnidad(cfg?.temperatura_maxima, " °")} />
-            <DatoItem label="Temperatura mín." value={conUnidad(cfg?.temperatura_minima, " °")} />
-            <DatoItem label="Presión máx." value={conUnidad(cfg?.presion_maxima, "")} />
-            <DatoItem label="Presión mín." value={conUnidad(cfg?.presion_minima, "")} />
+            <DatoItem
+              label="Tiempo máximo antes de Peligro"
+              value={hmsLegibles(cfg?.tiempo_peligro)}
+              tooltip={<InfoTooltip content="Tiempo sin recibir datos tras el cual el limnígrafo pasa a estado de Peligro." />}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <DatoItem label="Altura mínima del agua" value={conUnidad(cfg?.altura_minima_agua, " m")} />
+            <DatoItem label="Altura máxima del agua" value={conUnidad(cfg?.altura_maxima_agua, " m")} />
+            <DatoItem label="Temperatura mínima" value={conUnidad(cfg?.temperatura_minima, " °")} />
+            <DatoItem label="Temperatura máxima" value={conUnidad(cfg?.temperatura_maxima, " °")} />
+            <DatoItem label="Presión mínima" value={conUnidad(cfg?.presion_minima, "")} />
+            <DatoItem label="Presión máxima" value={conUnidad(cfg?.presion_maxima, "")} />
           </div>
           <DatoItem
             label="Tipo de comunicación"
             value={valuesToLabels(limnigrafo.tipo_comunicacion, opcionesTipoComunicacion)}
           />
-        </Card>
+          {!tieneCoberturaAlertas(limnigrafo.tipo_comunicacion) && (
+            <Alert variant="alerta" title="Sin cobertura para alertas">
+              Este limnígrafo no es tenido en cuenta para el sistema de alertas porque ninguno de los tipos de
+              comunicación seleccionados es compatible (2G, 3G, 4G, 5G, SMS o SMTP).
+            </Alert>
+          )}
+        </SeccionAgruparInformacion>
       </div>
 
       {/* Rutas de acceso */}

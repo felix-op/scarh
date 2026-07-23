@@ -93,7 +93,7 @@
 .button-success {
   background-color: var(--color-success-light);
   color: var(--color-success-main);
-  border-color: var(--color-success-main);
+  border-color: var(--color-border);
 }
 .button-success:hover:not(.button-disabled) {
   background-color: var(--color-success-dark);
@@ -106,7 +106,7 @@
 .button-error {
   background-color: var(--color-error-light);
   color: var(--color-error-main);
-  border-color: var(--color-error-main);
+  border-color: var(--color-border);
 }
 .button-error:hover:not(.button-disabled) {
   background-color: var(--color-error-dark);
@@ -119,7 +119,7 @@
 .button-warn {
   background-color: var(--color-warn-light);
   color: var(--color-warn-main);
-  border-color: var(--color-default-main);
+  border-color: var(--color-border);
 }
 .button-warn:hover:not(.button-disabled) {
   background-color: var(--color-warn-dark);
@@ -132,7 +132,7 @@
 .button-default {
   background-color: var(--color-default-light);
   color: var(--color-default-contrastText);
-  border-color: var(--color-default-light);
+  border-color: var(--color-border);
 }
 .button-default:hover:not(.button-disabled) {
   background-color: var(--color-default-main);

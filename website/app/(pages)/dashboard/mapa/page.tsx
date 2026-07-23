@@ -1,11 +1,12 @@
-import { auth } from "@auth";
+import { getServerLimnigrafos } from "@services";
+import { MapaDynamic } from "@components";
 
 export default async function MapaPage() {
-  const session = await auth();
+  const initialData = await getServerLimnigrafos({ queryParams: { limit: 1000, page: 1 } });
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
-      <h1>Bienvenido a mapa, {session?.user?.first_name || session?.user?.username}</h1>
+    <div className="h-[calc(100vh-2rem)] w-full">
+      <MapaDynamic initialData={initialData} />
     </div>
   );
 }

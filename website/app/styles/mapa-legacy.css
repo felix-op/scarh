@@ -1,0 +1,35 @@
+/* Overrides de Leaflet para que el mapa (migración legacy) respete el tema del sitio. */
+
+.leaflet-container {
+  @apply !bg-background-paper !font-[inherit];
+}
+.leaflet-container a {
+  @apply !text-inherit;
+}
+.leaflet-div-icon {
+  @apply !bg-transparent !border-none;
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content,
+.leaflet-popup-content p {
+  @apply ![all:unset];
+}
+.leaflet-popup {
+  @apply !animate-none;
+}
+.leaflet-popup-close-button {
+  @apply bg-transparent rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden;
+}
+.leaflet-tooltip {
+  @apply !bg-foreground !text-background !animate-none !rounded-md !border-none !p-0 !px-3 !py-1.5 !shadow-none;
+}
+.leaflet-popup-tip-container,
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+  @apply hidden;
+}
+.leaflet-control-attribution {
+  @apply !bg-background-muted rounded-md !px-1 !py-0.5 text-[10px] !leading-none !text-inherit;
+}

@@ -9,6 +9,7 @@ import { SeccionAgruparInformacion } from "../ui";
 import { TextFieldRHF, MemoryFieldRHF, MultiCheckboxRHF, TimeHMSFieldRHF, DateFieldRHF, FormAcciones } from "../formularios";
 import { InfoTooltip } from "../ui/info-tooltip";
 import { Alert } from "../ui/alerts";
+import { BotonVolver } from "../ui/botones";
 import { useEditarLimnigrafo } from "@hooks";
 import { useMensajes } from "@services";
 import { opcionesTipoComunicacion, tieneCoberturaAlertas, toNum, toStr } from "@utils";
@@ -137,13 +138,18 @@ export function FormEditarLimnigrafo({ limnigrafo }: FormEditarLimnigrafoProps) 
   };
 
   return (
-    <Formulario<FormValues>
-      zodSchema={formSchema}
-      initialValues={initialValues}
-      onSubmit={onSubmit}
-      isLoading={isSaving}
-      className="flex flex-col gap-6"
-    >
+    <>
+      <div className="self-start">
+        <BotonVolver content="Volver" onClick={() => router.push(`/dashboard/limnigrafos/datos/${id}`)} />
+      </div>
+
+      <Formulario<FormValues>
+        zodSchema={formSchema}
+        initialValues={initialValues}
+        onSubmit={onSubmit}
+        isLoading={isSaving}
+        className="flex flex-col gap-6"
+      >
       {/* ── Card 1: Datos del limnígrafo ─────────────────────── */}
       <SeccionAgruparInformacion title="Datos del limnígrafo">
         <TextFieldRHF name="codigo" label="Identificador del limnígrafo" required />
@@ -195,7 +201,8 @@ export function FormEditarLimnigrafo({ limnigrafo }: FormEditarLimnigrafoProps) 
         </div>
       </SeccionAgruparInformacion>
 
-      <FormAcciones isSaving={isSaving} onCancel={() => router.back()} />
-    </Formulario>
+        <FormAcciones isSaving={isSaving} onCancel={() => router.back()} />
+      </Formulario>
+    </>
   );
 }

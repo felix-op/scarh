@@ -12,6 +12,7 @@
 @import "./cards.css";
 @import "./text.css";
 @import "./drawer.css";
+@import "./mapa-legacy.css";
 
 /* Estilos de capa base y body */
 body {

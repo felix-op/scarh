@@ -61,14 +61,14 @@ Este documento detalla las tareas de implementación de las interfaces y la gest
 - [ ] **Exportación global** (CSV, Excel, PDF) separada de las acciones de fila.
 
 ## 4. Mediciones
-- [ ] Visualización del histórico de mediciones en crudo.
-- [ ] Mostrar campos de medición: Siempre `altura` y `fecha_hora`. Opcionalmente `temperatura`, `batería`, etc.
-- [ ] **Interacción del Frontend**: Asegurar que el frontend **NUNCA** cree mediciones individuales ni interactúe con los endpoints de recepción en tiempo real (seguro o inseguro). La única entrada es la importación masiva.
+- [x] Visualización del histórico de mediciones en crudo (listado SSR paginado, responsive).
+- [x] Mostrar campos de medición: Siempre `altura` y `fecha_hora`. Opcionalmente `temperatura`, `batería`, etc.
+- [x] **Interacción del Frontend**: Asegurar que el frontend **NUNCA** cree mediciones individuales ni interactúe con los endpoints de recepción en tiempo real (seguro o inseguro). La única entrada es la importación masiva. *(El listado es de sólo lectura.)*
 - [ ] **Endpoints Backend para Recepción (Desarrollo/Ajuste en Backend para los dispositivos)**:
   - [ ] **Endpoint Inseguro (Legacy / Pruebas)**: Recibir solo `fecha_hora` y `altura`, asignando automáticamente a un "dispositivo de prueba".
   - [ ] **Endpoint Seguro (Nuevo)**: Recibir mediciones mediante token de acceso asociado al limnígrafo.
-- [ ] **Acciones por fila**: Añadir botón "Ver limnígrafo".
-- [ ] **Filtros**: Implementar filtrado por fecha y por dispositivo.
+- [x] **Acciones por fila**: Añadir botón "Ver limnígrafo".
+- [x] **Filtros**: Implementar filtrado por fecha y por dispositivo. *(Incluye también fuente, ventana de tiempo y búsqueda.)*
 - [ ] **Exportación**: Habilitar exportación a nivel global de la tabla.
 - [ ] **Importación de datos**: 
   - [ ] Modalidad 1: Importación enviando ID del limnígrafo asociado (nueva estructura).

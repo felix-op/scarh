@@ -66,7 +66,7 @@ export function Select({
       <SelectTrigger ref={ref} id={name} className={triggerClasses}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="border-border bg-background-paper text-foreground shadow-card rounded-shape-sm">
+      <SelectContent className="z-[1100] border-border bg-background-paper text-foreground shadow-card rounded-shape-sm">
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value} className="focus:bg-input-hover focus:text-foreground">
             {option.label}

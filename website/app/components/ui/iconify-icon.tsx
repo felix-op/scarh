@@ -69,6 +69,9 @@ const iconVariants = {
   info: "icon-[material-symbols--info-outline]",
   upload: "icon-[material-symbols--upload-file-outline]",
   copiar: "icon-[material-symbols--content-copy-outline]",
+  pantallaCompleta: "icon-[material-symbols--fullscreen]",
+  salirPantallaCompleta: "icon-[material-symbols--fullscreen-exit]",
+  capas: "icon-[material-symbols--layers-outline]",
 };
 
 export type IconVariants = keyof typeof iconVariants;

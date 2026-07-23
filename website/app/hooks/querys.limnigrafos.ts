@@ -71,6 +71,22 @@ export function useEditarLimnigrafo() {
   });
 }
 
+/** PATCH parcial (a diferencia de useEditarLimnigrafo, que reemplaza limnígrafo + configuración enteros). */
+export function usePatchLimnigrafo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<{ ubicacion_id: number | null }> }) =>
+      RequestClient<LimnigrafoResponse>(`limnigrafos/${id}`, undefined, {
+        method: "PATCH",
+        data,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["limnigrafos"] });
+    },
+  });
+}
+
 export function useDeleteLimnigrafo() {
   const queryClient = useQueryClient();
 
