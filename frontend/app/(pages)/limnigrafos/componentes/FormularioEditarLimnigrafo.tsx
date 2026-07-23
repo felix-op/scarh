@@ -175,32 +175,32 @@ export function CamposFormularioEditarLimnigrafo({
 						<CampoInput
 							type="number"
 							name="altura_maxima_agua"
-							label="Máxima altura del nivel del agua:"
+							label="Máxima altura del nivel del agua (m):"
 						/>
 						<CampoInput
 							type="number"
 							name="altura_minima_agua"
-							label="Mínima altura del nivel del agua:"
+							label="Mínima altura del nivel del agua (m):"
 						/>
 						<CampoInput
-							type="number"
+							type="signedNumber"
 							name="temperatura_minima"
-							label="Temperatura mínima:"
+							label="Temperatura mínima (°C):"
 						/>
 						<CampoInput
-							type="number"
+							type="signedNumber"
 							name="temperatura_maxima"
-							label="Temperatura máxima:"
+							label="Temperatura máxima (°C):"
 						/>
 						<CampoInput
 							type="number"
 							name="presion_minima"
-							label="Presión mínima:"
+							label="Presión mínima (kPa):"
 						/>
 						<CampoInput
 							type="number"
 							name="presion_maxima"
-							label="Presión máxima:"
+							label="Presión máxima (kPa):"
 						/>
 					</div>
 					<CampoMultiCheckbox

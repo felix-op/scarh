@@ -64,20 +64,20 @@ export default function ProfileMenu({ isCollapsed }: HeaderProps) {
 
 	return (
 		<>
-			<Menubar className="h-12 bg-sidebar border-none overflow-hidden p-0 shadow-none">
+			<Menubar className="h-12 overflow-visible border-none bg-sidebar p-0 shadow-none">
 				<MenubarMenu>
-					<div className="flex justify-between w-full">
+					<div className="flex w-full items-center justify-between overflow-visible">
 						<ProfileImage
 							username={userName}
 							iniciales={iniciales}
 						/>
 						<MenubarTrigger
-							className={`w-5 cursor-pointer rounded-sm p-0 py-2 ${isCollapsed ? "" : "hover:bg-sidebar-link-hover"}`}
+							className={`h-10 w-8 cursor-pointer rounded-sm p-0 ${isCollapsed ? "" : "hover:bg-sidebar-link-hover"}`}
 						>
-							<span className="relative inline-flex">
+							<span className="relative inline-flex h-8 w-7 items-center justify-center overflow-visible">
 								<span className="icon-[qlementine-icons--menu-dots-16] text-2xl" />
 								{noLeidas > 0 ? (
-									<span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-[#2982CB] px-1 text-[10px] font-bold leading-4 text-white">
+									<span className="absolute right-0 top-0 inline-flex h-4 min-w-4 translate-x-1/2 -translate-y-1/3 items-center justify-center rounded-full bg-[#2982CB] px-1 text-[10px] font-bold leading-4 text-white">
 										{noLeidas > 9 ? "9+" : noLeidas}
 									</span>
 								) : null}
