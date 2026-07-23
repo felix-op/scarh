@@ -2,20 +2,34 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  BotonVolver, 
-  BotonImportar, 
+import {
+  BotonVolver,
+  BotonImportar,
   BotonIconoEliminar,
   SelectorArchivoImportacion,
-  SelectorLimnigrafoImportacion
+  SelectorLimnigrafoImportacion,
+  TablaMedicionesImportacion,
+  VentanaEditarMedicion,
+  VentanaEliminarMedicion,
+  VentanaConfirmarGuardado,
+  detectarFormatoImportacion,
 } from "@components";
-import { parseImportRowsByFilename } from "@utils";
+import { useValidarImportacionMediciones, useImportarMediciones } from "@hooks";
+import { useMensajes } from "@services";
+import {
+  parseImportRowsByFilename,
+  revalidarFilas,
+  mapearFilasAPayloadImportacion,
+  fusionarResultadosValidacion,
+} from "@utils";
 import type { MedicionRowType } from "@utils";
+import type { MedicionImportPayload } from "@models";
 
 export default function ImportarDatosPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  
+  const mensajes = useMensajes();
+
   const paramId = Number.parseInt(id, 10);
   const initialLimnigrafo = Number.isInteger(paramId) && paramId > 0 ? paramId : null;
 
@@ -23,6 +37,12 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
   const [file, setFile] = useState<File | null>(null);
   const [parsedRows, setParsedRows] = useState<MedicionRowType[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [editingRow, setEditingRow] = useState<MedicionRowType | null>(null);
+  const [deletingRow, setDeletingRow] = useState<MedicionRowType | null>(null);
+  const [showConfirmDuplicados, setShowConfirmDuplicados] = useState(false);
+
+  const validarImportacion = useValidarImportacionMediciones();
+  const importarMediciones = useImportarMediciones();
 
   // Parsear el archivo localmente
   const handleFileSelect = async (selectedFile: File) => {
@@ -31,7 +51,7 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
     try {
       const content = await selectedFile.text();
       let rows = parseImportRowsByFilename(content, selectedFile.name);
-      
+
       // Si el usuario ya había seleccionado un limnígrafo destino, lo aplicamos
       if (limnigrafoId !== null) {
         rows = rows.map((r) => ({
@@ -65,13 +85,87 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
     setParsedRows([]);
   };
 
-  const handleGuardar = () => {
-    // TODO: Enviar al backend para validación y bulk_create
-    console.log("Guardando...", parsedRows);
+  const buildPayload = (rows: MedicionRowType[]): MedicionImportPayload => ({
+    file_name: file?.name ?? "importacion",
+    fuente: file?.name.toLowerCase().endsWith(".json") ? "import_json" : "import_csv",
+    fallback_limnigrafo_id: limnigrafoId,
+    rows: mapearFilasAPayloadImportacion(rows),
+  });
+
+  const ejecutarImportacion = async (filas: MedicionRowType[]) => {
+    const resultado = await importarMediciones.mutateAsync(buildPayload(filas));
+    mensajes.success("Importación completada", `Se importaron ${resultado.imported_rows} mediciones correctamente.`);
+    handleReset();
+    router.push(`/dashboard/limnigrafos/${limnigrafoId}`);
   };
 
-  const canSave = parsedRows.length > 0 && !isProcessing;
-  const hasErrors = parsedRows.some(r => r.status === "error");
+  const handleGuardar = async () => {
+    try {
+      const validacion = await validarImportacion.mutateAsync(buildPayload(parsedRows));
+      const filasValidadas = fusionarResultadosValidacion(parsedRows, validacion.rows);
+      setParsedRows(filasValidadas);
+
+      const tieneErrores = filasValidadas.some((row) => row.status === "error");
+      if (tieneErrores) {
+        mensajes.error(
+          "Hay registros con errores",
+          "Corregí o eliminá las filas marcadas en rojo antes de poder importar."
+        );
+        return;
+      }
+
+      const filasValidas = filasValidadas.filter((row) => row.status === "valid");
+      const tieneDuplicados = filasValidas.length < filasValidadas.length;
+
+      if (tieneDuplicados) {
+        if (filasValidas.length === 0) {
+          mensajes.error(
+            "Todas las filas están duplicadas",
+            "Ya existen en el archivo o en la base de datos. No hay ningún registro nuevo para cargar."
+          );
+          return;
+        }
+        setShowConfirmDuplicados(true);
+        return;
+      }
+
+      await ejecutarImportacion(filasValidas);
+    } catch (err) {
+      mensajes.error("Error al importar", err instanceof Error ? err.message : "Ocurrió un error inesperado.");
+    }
+  };
+
+  const handleConfirmarIgnorarDuplicados = async () => {
+    setShowConfirmDuplicados(false);
+    try {
+      const filasAImportar = parsedRows.filter((row) => row.status === "valid");
+      await ejecutarImportacion(filasAImportar);
+    } catch (err) {
+      mensajes.error("Error al importar", err instanceof Error ? err.message : "Ocurrió un error inesperado.");
+    }
+  };
+
+  const handleSaveEditedRow = (updatedRow: MedicionRowType) => {
+    setParsedRows((prev) =>
+      revalidarFilas(prev.map((row) => (row.rowNumber === updatedRow.rowNumber ? updatedRow : row)))
+    );
+    setEditingRow(null);
+  };
+
+  const handleConfirmDeleteRow = () => {
+    if (!deletingRow) return;
+    setParsedRows((prev) => revalidarFilas(prev.filter((row) => row.rowNumber !== deletingRow.rowNumber)));
+    setDeletingRow(null);
+  };
+
+  const isMutando = validarImportacion.isPending || importarMediciones.isPending;
+  const canSave = parsedRows.length > 0 && !isProcessing && !isMutando;
+  const hasErrors = parsedRows.some((r) => r.status === "error");
+
+  const duplicateCount = parsedRows.filter(
+    (row) => row.status === "duplicate_file" || row.status === "duplicate_database"
+  ).length;
+  const remainingCount = parsedRows.filter((row) => row.status === "valid").length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -84,29 +178,32 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
         </div>
         <div className="flex items-center gap-3">
           <BotonVolver onClick={() => router.back()} />
-          <BotonImportar 
-            onClick={handleGuardar} 
+          <BotonImportar
+            onClick={handleGuardar}
             disabled={!canSave || hasErrors}
+            loading={isMutando}
             content="Importar datos"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {/* PANEL IZQUIERDO: Controles (1/4 de la pantalla en desktop) */}
-        <div className="flex flex-col gap-6 lg:col-span-1 bg-card border border-border p-5 rounded-lg shadow-sm">
-          <SelectorLimnigrafoImportacion
-            value={limnigrafoId}
-            onChange={handleLimnigrafoChange}
-            disabled={isProcessing}
-          />
-          
-          <div className="pt-2 border-t border-border">
+      <div className="flex flex-col gap-6 items-start">
+        {/* PANEL SUPERIOR: Controles */}
+        <div className="flex flex-col gap-6 w-full bg-card border border-border p-5 rounded-lg shadow-sm lg:flex-row lg:items-start lg:gap-8">
+          <div className="flex-1 min-w-0">
+            <SelectorLimnigrafoImportacion
+              value={limnigrafoId}
+              onChange={handleLimnigrafoChange}
+              disabled={isProcessing}
+            />
+          </div>
+
+          <div className="flex-1 min-w-0 pt-2 border-t border-border lg:pt-0 lg:border-t-0 lg:border-l lg:pl-8">
             <h3 className="text-sm font-medium mb-3">Archivo de datos</h3>
             {!file ? (
-              <SelectorArchivoImportacion 
-                onFileSelect={handleFileSelect} 
-                isProcessing={isProcessing} 
+              <SelectorArchivoImportacion
+                onFileSelect={handleFileSelect}
+                isProcessing={isProcessing}
               />
             ) : (
               <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-md border border-border">
@@ -125,8 +222,8 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* PANEL DERECHO: Tabla y vista previa (3/4 de la pantalla en desktop) */}
-        <div className="flex flex-col lg:col-span-3 bg-card border border-border rounded-lg shadow-sm overflow-hidden min-h-[400px]">
+        {/* PANEL INFERIOR: Tabla y vista previa */}
+        <div className="flex flex-col w-full bg-card border border-border rounded-lg shadow-sm overflow-hidden min-h-[400px]">
           {parsedRows.length === 0 ? (
             <div className="flex flex-col items-center justify-center flex-1 p-8 text-center text-muted-foreground">
               <p>Seleccioná un archivo para previsualizar los datos aquí.</p>
@@ -134,23 +231,47 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
           ) : (
             <div className="p-5">
               <h3 className="text-lg font-semibold mb-4 text-foreground">Previsualización de datos</h3>
-              
+
               {hasErrors && (
                 <div className="mb-4 p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20 flex items-center gap-2">
                   <span className="font-semibold">Atención:</span> Hay registros con errores. Corregilos o eliminalos antes de poder importar.
                 </div>
               )}
 
-              {/* TODO: Montar <TablaMedicionesImportacion /> aquí */}
-              <div className="border border-border border-dashed rounded-md h-[300px] flex items-center justify-center bg-muted/30">
-                <p className="text-sm text-muted-foreground">
-                  [Aquí irá la Tabla Dinámica de {parsedRows.length} filas]
-                </p>
-              </div>
+              <TablaMedicionesImportacion
+                rows={parsedRows}
+                onEditRow={(row) => setEditingRow(row)}
+                onDeleteRow={(row) => setDeletingRow(row)}
+              />
             </div>
           )}
         </div>
       </div>
+
+      <VentanaEditarMedicion
+        key={editingRow?.rowNumber ?? "sin-edicion"}
+        isOpen={editingRow !== null}
+        onClose={() => setEditingRow(null)}
+        onSave={handleSaveEditedRow}
+        row={editingRow}
+        formato={detectarFormatoImportacion(parsedRows)}
+      />
+
+      <VentanaEliminarMedicion
+        isOpen={deletingRow !== null}
+        onClose={() => setDeletingRow(null)}
+        onConfirm={handleConfirmDeleteRow}
+        rowNumber={deletingRow?.rowNumber ?? null}
+      />
+
+      <VentanaConfirmarGuardado
+        isOpen={showConfirmDuplicados}
+        onClose={() => setShowConfirmDuplicados(false)}
+        onConfirm={handleConfirmarIgnorarDuplicados}
+        duplicateCount={duplicateCount}
+        remainingCount={remainingCount}
+        isLoading={importarMediciones.isPending}
+      />
     </div>
   );
 }

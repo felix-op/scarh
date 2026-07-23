@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Select, DateField, Chip, Boton, MenuExportar, Card } from "@components";
+import { Select, DateField, Chip, Boton, Card } from "@components";
 import { opcionesFuenteMedicion, opcionesVentanaTiempo, obtenerFechasVentana } from "@utils";
 
 export interface MedicionesFiltrosState {
@@ -18,12 +18,13 @@ export interface FiltrosMedicionesProps {
   aplicados: MedicionesFiltrosState;
   limnigrafosOpciones: { label: string; value: string }[];
   isPending?: boolean;
+  exportandoCSV?: boolean;
+  exportandoJSON?: boolean;
   onChange: <K extends keyof MedicionesFiltrosState>(campo: K, valor: MedicionesFiltrosState[K]) => void;
   onAplicar: () => void;
   onRestablecer: () => void;
   onExportCSV: () => void;
-  onExportExcel: () => void;
-  onExportPDF: () => void;
+  onExportJSON: () => void;
 }
 
 const labelFiltro: Record<keyof MedicionesFiltrosState, string> = {
@@ -42,12 +43,13 @@ export function FiltrosMediciones({
   aplicados,
   limnigrafosOpciones,
   isPending = false,
+  exportandoCSV = false,
+  exportandoJSON = false,
   onChange,
   onAplicar,
   onRestablecer,
   onExportCSV,
-  onExportExcel,
-  onExportPDF,
+  onExportJSON,
 }: FiltrosMedicionesProps) {
   const handleVentanaChange = (val: string) => {
     onChange("ventana", val);
@@ -161,11 +163,19 @@ export function FiltrosMediciones({
         <div className="flex flex-wrap items-center justify-end gap-3 w-full">
           <Boton content="Restablecer" icon="restablecer" onClick={onRestablecer} disabled={isPending} />
           <Boton content="Aplicar filtros" icon="filtro" variant="primary" onClick={onAplicar} disabled={isPending} />
-          <MenuExportar
-            handleExportCSV={onExportCSV}
-            handleExportExcel={onExportExcel}
-            handleExportPDF={onExportPDF}
+          <Boton
+            content="Exportar CSV"
+            icon="descargar"
+            onClick={onExportCSV}
             disabled={isPending}
+            loading={exportandoCSV}
+          />
+          <Boton
+            content="Exportar JSON"
+            icon="descargar"
+            onClick={onExportJSON}
+            disabled={isPending}
+            loading={exportandoJSON}
           />
         </div>
       </div>

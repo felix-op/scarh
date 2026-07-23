@@ -68,6 +68,7 @@ const iconVariants = {
   database: "icon-[material-symbols--database-outline]",
   info: "icon-[material-symbols--info-outline]",
   upload: "icon-[material-symbols--upload-file-outline]",
+  copiar: "icon-[material-symbols--content-copy-outline]",
 };
 
 export type IconVariants = keyof typeof iconVariants;

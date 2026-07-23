@@ -5,3 +5,7 @@ export * from "./selector-limnigrafo-importacion";
 export * from "./chip-estado-importacion";
 export * from "./acciones-importacion";
 export * from "./ventana-eliminar-medicion";
+export * from "./ventana-editar-medicion";
+export * from "./ventana-confirmar-guardado";
+export * from "./configuraciones-tabla";
+export * from "./tabla-mediciones-importacion";

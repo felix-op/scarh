@@ -1,4 +1,5 @@
 import { MedicionRowType, ImportIssue } from "./mediciones.schemas";
+import type { MedicionImportRowPayload, MedicionImportRowResult } from "@models";
 
 /**
  * Parsea un contenido CSV manejando saltos de línea dentro de comillas
@@ -79,6 +80,13 @@ function parseFechaHora(obj: Record<string, string>): string | null {
   return null;
 }
 
+/** Reconstruye el texto de fecha/hora tal como vino en el archivo, para mostrarlo si no se pudo interpretar. */
+function extraerFechaHoraOriginal(obj: Record<string, string>): string | null {
+  if (obj.fecha_hora) return obj.fecha_hora.trim();
+  if (obj.fecha || obj.hora) return `${obj.fecha?.trim() ?? ""} ${obj.hora?.trim() ?? ""}`.trim();
+  return null;
+}
+
 /** Normaliza la cabecera del CSV */
 function normalizeHeader(val: string): string {
   return val
@@ -139,41 +147,82 @@ export function parseImportRowsByFilename(content: string, fileName: string): Me
     });
   }
 
-  // Transformar los objetos puros a nuestro Schema de mediciones con validaciones
+  // Transformar los objetos puros a nuestro Schema de mediciones (sin validar todavía)
   const parsedRows: MedicionRowType[] = rawObjects.map((obj) => {
-    const issues: ImportIssue[] = [];
-    
     // Extracción de limnígrafo
     let limnigrafoId = parseNumeric(obj.limnigrafo || obj.limnigrafo_id || obj.id_limnigrafo);
-
-    // Fechas y valores numéricos
     const fechaHora = parseFechaHora(obj);
-    const alturaAgua = parseNumeric(obj.altura_agua || obj.altura_escala || obj.altura);
-    const presion = parseNumeric(obj.presion);
-    const temperatura = parseNumeric(obj.temperatura);
-    const nivelBateria = parseNumeric(obj.nivel_de_bateria || obj.bateria);
-
-    if (!fechaHora) {
-      issues.push(createIssue("fecha_hora", "required", "La fecha y hora es obligatoria o tiene formato inválido."));
-    }
-    if (alturaAgua === null) {
-      issues.push(createIssue("altura_agua", "required", "La altura del agua es obligatoria."));
-    }
 
     return {
       rowNumber: obj._rowNumber,
       limnigrafoId: limnigrafoId !== null ? Math.trunc(limnigrafoId) : null,
       fechaHora,
-      alturaAgua,
-      presion,
-      temperatura,
-      nivelBateria,
-      status: issues.length > 0 ? "error" : "valid",
-      issues,
+      fechaHoraOriginal: fechaHora ? null : extraerFechaHoraOriginal(obj),
+      alturaAgua: parseNumeric(obj.altura_agua || obj.altura_escala || obj.altura),
+      presion: parseNumeric(obj.presion),
+      temperatura: parseNumeric(obj.temperatura),
+      nivelBateria: parseNumeric(obj.nivel_de_bateria || obj.bateria),
+      status: "valid",
+      issues: [],
     };
   });
 
-  return markDuplicateRows(parsedRows);
+  return revalidarFilas(parsedRows);
+}
+
+/** Recalcula los issues de campos obligatorios de una fila individual. */
+function validarCamposObligatorios(row: Pick<MedicionRowType, "fechaHora" | "alturaAgua">): ImportIssue[] {
+  const issues: ImportIssue[] = [];
+  if (!row.fechaHora) {
+    issues.push(createIssue("fecha_hora", "required", "La fecha y hora es obligatoria o tiene formato inválido."));
+  }
+  if (row.alturaAgua === null) {
+    issues.push(createIssue("altura_agua", "required", "La altura del agua es obligatoria."));
+  }
+  return issues;
+}
+
+/**
+ * Replica en el frontend las reglas de negocio de `validar_datos_medicion` del
+ * backend, para detectar valores físicamente imposibles antes de enviar el archivo.
+ */
+function validarRangosFisicos(
+  row: Pick<MedicionRowType, "alturaAgua" | "presion" | "temperatura" | "nivelBateria">
+): ImportIssue[] {
+  const issues: ImportIssue[] = [];
+
+  if (row.alturaAgua !== null && row.alturaAgua < 0) {
+    issues.push(createIssue("altura_agua", "invalid", "La altura del agua no puede ser negativa."));
+  }
+  if (row.presion !== null && row.presion <= 0) {
+    issues.push(createIssue("presion", "invalid", "La presión debe ser mayor a cero."));
+  }
+  if (row.temperatura !== null && (row.temperatura < -100 || row.temperatura > 100)) {
+    issues.push(createIssue("temperatura", "invalid", "La temperatura está fuera del rango físico permitido."));
+  }
+  if (row.nivelBateria !== null && row.nivelBateria < 0) {
+    issues.push(createIssue("nivel_de_bateria", "invalid", "El nivel de batería no puede ser negativo."));
+  }
+
+  return issues;
+}
+
+/**
+ * Recalcula issues y status (campos obligatorios + duplicados dentro del archivo)
+ * para un conjunto de filas. Se usa tanto al parsear el archivo como después de
+ * editar una fila manualmente en la UI. No toca el status "duplicate_database",
+ * que sólo lo asigna la respuesta del backend.
+ */
+export function revalidarFilas(rows: MedicionRowType[]): MedicionRowType[] {
+  const revalidadas = rows.map((row) => {
+    const issues = [...validarCamposObligatorios(row), ...validarRangosFisicos(row)];
+    return {
+      ...row,
+      issues,
+      status: issues.length > 0 ? ("error" as const) : ("valid" as const),
+    };
+  });
+  return markDuplicateRows(revalidadas);
 }
 
 /**
@@ -203,5 +252,41 @@ function markDuplicateRows(rows: MedicionRowType[]): MedicionRowType[] {
       }
     }
     return row;
+  });
+}
+
+/** Convierte las filas parseadas localmente al payload (snake_case) que espera el backend. */
+export function mapearFilasAPayloadImportacion(rows: MedicionRowType[]): MedicionImportRowPayload[] {
+  return rows.map((row) => ({
+    row_number: row.rowNumber,
+    limnigrafo_id: row.limnigrafoId,
+    fecha_hora: row.fechaHora ?? "",
+    altura_agua: row.alturaAgua,
+    presion: row.presion,
+    temperatura: row.temperatura,
+    nivel_de_bateria: row.nivelBateria,
+  }));
+}
+
+/**
+ * Fusiona los resultados de validación devueltos por el backend (que conoce
+ * reglas de negocio y duplicados en base de datos) sobre las filas locales,
+ * identificadas por `rowNumber`.
+ */
+export function fusionarResultadosValidacion(
+  rows: MedicionRowType[],
+  resultados: MedicionImportRowResult[]
+): MedicionRowType[] {
+  const resultadoPorFila = new Map(resultados.map((resultado) => [resultado.rowNumber, resultado]));
+
+  return rows.map((row) => {
+    const resultado = resultadoPorFila.get(row.rowNumber);
+    if (!resultado) return row;
+
+    return {
+      ...row,
+      status: resultado.status,
+      issues: resultado.issues,
+    };
   });
 }

@@ -17,6 +17,7 @@ import {
   ChipEstadoMedicion,
   VentanaAgregarLimnigrafo,
   VentanaEliminarLimnigrafo,
+  VentanaSolicitarToken,
 } from "@components";
 import { useGetLimnigrafos } from "@hooks";
 import {
@@ -43,6 +44,7 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [aEliminar, setAEliminar] = useState<LimnigrafoResponse | null>(null);
+  const [aSolicitarToken, setASolicitarToken] = useState<LimnigrafoResponse | null>(null);
 
   const [filtros, setFiltros] = useState({
     search: "",
@@ -166,6 +168,13 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
         action: (row) => router.push(`/dashboard/estadisticas?limnigrafo=${row.id}`),
       },
       {
+        label: "Solicitar token",
+        icon: "llave",
+        className: "text-warn",
+        disabled: !puedeEditar,
+        action: (row) => setASolicitarToken(row),
+      },
+      {
         label: "Editar",
         icon: "editar",
         className: "text-success",
@@ -267,6 +276,11 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
         open={!!aEliminar}
         onClose={() => setAEliminar(null)}
         limnigrafo={aEliminar}
+      />
+      <VentanaSolicitarToken
+        open={!!aSolicitarToken}
+        onClose={() => setASolicitarToken(null)}
+        limnigrafo={aSolicitarToken}
       />
     </div>
   );

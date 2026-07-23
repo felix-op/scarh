@@ -8,6 +8,7 @@ import { InfoTooltip } from "../ui/info-tooltip";
 import { ChipEstadoConexion, ChipEstadoMedicion } from "./chip-estado-limnigrafo";
 import { RutasAccesoLimnigrafo } from "./rutas-acceso-limnigrafo";
 import { VentanaEliminarLimnigrafo } from "./ventana-eliminar-limnigrafo";
+import { VentanaSolicitarToken } from "./ventana-solicitar-token";
 import { memoriaLegible, hmsLegibles, formatFecha, valuesToLabels, opcionesTipoComunicacion } from "@utils";
 import type { LimnigrafoResponse } from "@models";
 
@@ -31,6 +32,7 @@ export interface DetalleLimnigrafoProps {
 export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafoProps) {
   const router = useRouter();
   const [eliminarOpen, setEliminarOpen] = useState(false);
+  const [tokenOpen, setTokenOpen] = useState(false);
 
   const cfg = limnigrafo.configuracion;
   const id = limnigrafo.id;
@@ -47,12 +49,10 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
       {/* Encabezado + editar/eliminar */}
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground-title">Limnígrafo {limnigrafo.codigo}</h1>
-            <div className="flex gap-2">
-              <ChipEstadoConexion estado={limnigrafo.estado_conexion} tipoComunicacion={limnigrafo.tipo_comunicacion} size="md" />
-              <ChipEstadoMedicion estado={limnigrafo.estado_medicion} size="md" />
-            </div>
+          <h1 className="text-2xl font-bold text-foreground-title">Limnígrafo {limnigrafo.codigo}</h1>
+          <div className="flex flex-wrap gap-2">
+            <ChipEstadoConexion estado={limnigrafo.estado_conexion} tipoComunicacion={limnigrafo.tipo_comunicacion} size="md" />
+            <ChipEstadoMedicion estado={limnigrafo.estado_medicion} size="md" />
           </div>
           {limnigrafo.ubicacion?.nombre && (
             <span className="text-sm text-foreground-secondary">{limnigrafo.ubicacion.nombre}</span>
@@ -61,6 +61,7 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
 
         {puedeEditar && (
           <div className="flex flex-wrap gap-2 md:justify-end">
+            <Boton variant="warn" icon="llave" content="Solicitar token" onClick={() => setTokenOpen(true)} />
             <BotonEditar content="Editar" onClick={() => router.push(`/dashboard/limnigrafos/editar/${id}`)} />
             <BotonEliminar content="Eliminar" onClick={() => setEliminarOpen(true)} />
           </div>
@@ -125,6 +126,8 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
         limnigrafo={limnigrafo}
         onDeleted={() => router.push("/dashboard/limnigrafos")}
       />
+
+      <VentanaSolicitarToken open={tokenOpen} onClose={() => setTokenOpen(false)} limnigrafo={limnigrafo} />
     </div>
   );
 }

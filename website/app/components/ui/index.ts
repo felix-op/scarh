@@ -9,6 +9,7 @@ export * from "./select";
 export * from "./checkbox";
 export * from "./switch";
 export * from "./datefield";
+export * from "./date-textfield";
 export * from "./timefield";
 export * from "./stepper";
 export * from "./avatar";

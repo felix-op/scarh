@@ -66,6 +66,20 @@ export type LimnigrafosPutPayload = {
 
 export type PaginatedLimnigrafoResponse = Paginado<LimnigrafoResponse>;
 
+/**
+ * Respuesta de POST /limnigrafos/{id}/generate_key/.
+ * @property {string} secret_key Clave en texto plano, sólo visible en esta respuesta (no se puede recuperar después).
+ * @property {string} warning Advertencia del backend sobre que la clave no se puede volver a mostrar.
+ */
+export type LimnigrafoGenerateKeyResponse = {
+  message: string;
+  limnigrafo_id: number;
+  key_name: string;
+  key_prefix: string;
+  secret_key: string;
+  warning: string;
+};
+
 export type ConfiguracionLimnigrafoResponse = {
   id: number;
   tiempo_advertencia: number | null;

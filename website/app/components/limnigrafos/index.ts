@@ -8,3 +8,5 @@ export * from "./ventana-agregar-limnigrafo";
 export * from "./ventana-cargar-ruta";
 export * from "./sugerencia-observacion-ruta";
 export * from "./ventana-eliminar-limnigrafo";
+export * from "./ventana-solicitar-token";
+export * from "./token-con-clipboard";

@@ -22,8 +22,7 @@ export interface FiltrosHistorialProps {
   onAplicar: () => void;
   onRestablecer: () => void;
   onExportCSV: () => void;
-  onExportExcel: () => void;
-  onExportPDF: () => void;
+  onExportJSON: () => void;
 }
 
 export function FiltrosHistorial({
@@ -35,8 +34,7 @@ export function FiltrosHistorial({
   onAplicar,
   onRestablecer,
   onExportCSV,
-  onExportExcel,
-  onExportPDF,
+  onExportJSON,
 }: FiltrosHistorialProps) {
   const handleVentanaChange = (val: string) => {
     if (val !== "personalizado") {
@@ -166,8 +164,7 @@ export function FiltrosHistorial({
           <Boton content="Aplicar filtros" icon="filtro" variant="primary" onClick={onAplicar} disabled={isPending} />
           <MenuExportar
             handleExportCSV={onExportCSV}
-            handleExportExcel={onExportExcel}
-            handleExportPDF={onExportPDF}
+            handleExportJSON={onExportJSON}
             disabled={isPending}
           />
         </div>

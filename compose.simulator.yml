@@ -4,8 +4,6 @@ services:
       context: ./simulator-go
       dockerfile: Dockerfile
     container_name: scarh_simulator
-    depends_on:
-      - backend
     restart: always
     env_file:
       - .env

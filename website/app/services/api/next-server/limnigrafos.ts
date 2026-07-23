@@ -1,6 +1,6 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
-import type { LimnigrafoResponse, LimnigrafoPostPayload, LimnigrafosPutPayload, PaginatedLimnigrafoResponse, ParamsPaginated, ConfiguracionLimnigrafoResponse, ConfiguracionLimnigrafoPayload } from "@models";
+import type { LimnigrafoResponse, LimnigrafoPostPayload, LimnigrafosPutPayload, PaginatedLimnigrafoResponse, ParamsPaginated, ConfiguracionLimnigrafoResponse, ConfiguracionLimnigrafoPayload, LimnigrafoGenerateKeyResponse } from "@models";
 
 export async function getServerLimnigrafos(params?: ParamsPaginated): Promise<PaginatedLimnigrafoResponse> {
   return RequestSSR<PaginatedLimnigrafoResponse, ParamsPaginated>({
@@ -134,8 +134,8 @@ type PostServerLimnigrafoGenerateKeyOptions = {
   data: Record<string, never>;
 };
 
-export async function postServerLimnigrafoGenerateKey({ params, data }: PostServerLimnigrafoGenerateKeyOptions): Promise<LimnigrafoResponse> {
-  return RequestSSR<LimnigrafoResponse, PostServerLimnigrafoGenerateKeyOptions["params"], Record<string, never>>({
+export async function postServerLimnigrafoGenerateKey({ params, data }: PostServerLimnigrafoGenerateKeyOptions): Promise<LimnigrafoGenerateKeyResponse> {
+  return RequestSSR<LimnigrafoGenerateKeyResponse, PostServerLimnigrafoGenerateKeyOptions["params"], Record<string, never>>({
     url: "limnigrafos/{id}/generate_key/",
     method: "POST",
     params,

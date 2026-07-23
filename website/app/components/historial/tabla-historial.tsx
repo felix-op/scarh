@@ -215,8 +215,7 @@ export function TablaHistorial({ data, usuariosOpciones, filtros }: TablaHistori
         onAplicar={handleAplicarFiltros}
         onRestablecer={handleRestablecerFiltros}
         onExportCSV={() => mensajes.info("Exportando...", "Exportando historial a CSV.")}
-        onExportExcel={() => mensajes.info("Exportando...", "Exportando historial a Excel.")}
-        onExportPDF={() => mensajes.info("Exportando...", "Exportando historial a PDF.")}
+        onExportJSON={() => mensajes.info("Exportando...", "Exportando historial a JSON.")}
       />
 
       <TablaConAccionesPaginada

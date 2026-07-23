@@ -5,6 +5,7 @@ import type {
   PaginatedLimnigrafoResponse,
   ConfiguracionLimnigrafoResponse,
   LimnigrafoEditarPayload,
+  LimnigrafoGenerateKeyResponse,
 } from "@models";
 
 export type LimnigrafoCreateInput = {
@@ -81,5 +82,15 @@ export function useDeleteLimnigrafo() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["limnigrafos"] });
     },
+  });
+}
+
+export function useGenerarClaveLimnigrafo() {
+  return useMutation({
+    mutationFn: (id: string) =>
+      RequestClient<LimnigrafoGenerateKeyResponse>(`limnigrafos/${id}/generate-key`, undefined, {
+        method: "POST",
+        data: {},
+      }),
   });
 }

@@ -12,6 +12,8 @@ export const MedicionRowSchema = z.object({
   rowNumber: z.number(),
   limnigrafoId: z.number().nullable(),
   fechaHora: z.string().nullable(),
+  /** Texto de fecha/hora tal como vino en el archivo, para mostrarlo cuando no se pudo interpretar. */
+  fechaHoraOriginal: z.string().nullable().default(null),
   alturaAgua: z.number().nullable(),
   presion: z.number().nullable(),
   temperatura: z.number().nullable(),

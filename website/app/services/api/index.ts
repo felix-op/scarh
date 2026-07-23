@@ -44,7 +44,9 @@ export {
 export {
   getServerMediciones,
   postServerMedicion,
-  getServerMedicion
+  getServerMedicion,
+  postServerValidateImportMediciones,
+  postServerBulkImportMediciones
 } from "./next-server/mediciones";
 
 export {

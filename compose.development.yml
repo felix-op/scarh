@@ -15,6 +15,7 @@ services:
     command: >
       sh -c "python manage.py makemigrations api &&
        python manage.py migrate &&
+       python manage.py loaddata roles.json &&
        python manage.py createsuperuser_from_env &&
        python manage.py runserver 0.0.0.0:8000"
     ports:

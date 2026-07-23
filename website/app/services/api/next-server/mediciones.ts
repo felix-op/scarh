@@ -1,6 +1,14 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
-import type { MedicionResponse, MedicionPayload, PaginatedMedicionResponse, ParamsPaginated } from "@models";
+import type {
+  MedicionResponse,
+  MedicionPayload,
+  PaginatedMedicionResponse,
+  ParamsPaginated,
+  MedicionImportPayload,
+  MedicionImportValidationResponse,
+  MedicionBulkImportResponse,
+} from "@models";
 
 export async function getServerMediciones(params?: ParamsPaginated): Promise<PaginatedMedicionResponse> {
   return RequestSSR<PaginatedMedicionResponse, ParamsPaginated>({
@@ -31,5 +39,30 @@ export async function getServerMedicion({ params }: GetServerMedicionOptions): P
     method: "GET",
     params,
     tags: [`medicion-${params.id}`],
+  });
+}
+
+type PostServerImportMedicionesOptions = {
+  data: MedicionImportPayload;
+};
+
+export async function postServerValidateImportMediciones({
+  data,
+}: PostServerImportMedicionesOptions): Promise<MedicionImportValidationResponse> {
+  return RequestSSR<MedicionImportValidationResponse, Record<string, never>, MedicionImportPayload>({
+    url: "medicion/validate-import/",
+    method: "POST",
+    body: data,
+  });
+}
+
+export async function postServerBulkImportMediciones({
+  data,
+}: PostServerImportMedicionesOptions): Promise<MedicionBulkImportResponse> {
+  return RequestSSR<MedicionBulkImportResponse, Record<string, never>, MedicionImportPayload>({
+    url: "medicion/bulk-import/",
+    method: "POST",
+    body: data,
+    tags: ["mediciones"],
   });
 }
