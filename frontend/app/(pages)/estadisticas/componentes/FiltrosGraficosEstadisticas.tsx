@@ -177,8 +177,8 @@ export default function FiltrosGraficosEstadisticas({
 						},
 						{
 							key: "restablecer",
-							label: "Restablecer",
-							icon: "icon-[mdi--restore]",
+							label: "Limpiar",
+							icon: "icon-[mdi--broom]",
 							variant: "cerrar",
 							onClick: onReset,
 						},
