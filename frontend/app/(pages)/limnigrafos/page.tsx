@@ -17,7 +17,7 @@ import VentanaAgregrarLimnigrafo from "./componentes/VentanaAgregarLimnigrafo";
 import VentanaAceptar, { VentanaAceptarOptions } from "@componentes/ventanas/VentanaAceptar";
 import { defaultMessage, opcionesEstado } from "./constantes";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
-import ChipEstadoLimnigrafo from "@componentes/chips/ChipEstadoLimnigrafo";
+import { ChipEstadoLimnigrafoCompacto } from "@componentes/chips/ChipEstadoLimnigrafo";
 import FiltroFecha from "@componentes/filtros/FiltroFecha";
 import BotonIconoIr from "@componentes/botones/BotonIconoIr";
 import { useTieneRol } from "@hooks/useTieneRol";
@@ -74,10 +74,7 @@ function formatBateria(value?: number | null): string {
 		return "No disponible";
 	}
 
-	return `${value.toLocaleString("es-AR", {
-		minimumFractionDigits: 1,
-		maximumFractionDigits: 1,
-	})} %`;
+	return `${Math.trunc(value)} %`;
 }
 
 export default function Home() {
@@ -134,7 +131,7 @@ export default function Home() {
 		{
 			id: "estado",
 			header: "Estado",
-			cell: (row) => <div className="px-2"><ChipEstadoLimnigrafo estado={row.estado} /></div>,
+			cell: (row) => <div className="p-4"><ChipEstadoLimnigrafoCompacto estado={row.estado} /></div>,
 		},
 		{
 			id: "codigo",

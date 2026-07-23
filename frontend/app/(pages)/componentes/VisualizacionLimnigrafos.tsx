@@ -1,7 +1,7 @@
 "use client";
 
 import BotonVariante from "@componentes/botones/BotonVariante";
-import ChipEstadoLimnigrafo from "@componentes/chips/ChipEstadoLimnigrafo";
+import { ChipEstadoLimnigrafoCompacto } from "@componentes/chips/ChipEstadoLimnigrafo";
 import DataTable from "@componentes/tabla/DataTable";
 import { ColumnConfig } from "@componentes/tabla/types";
 import { useGetLimnigrafos } from "@servicios/api/limnigrafos";
@@ -26,13 +26,21 @@ function formatUltimaMedicion(medicion?: UltimaMedicionResponse | null): string 
 	})}`;
 }
 
+function formatBateria(bateria?: number | null): string {
+	if (bateria === null || bateria === undefined) {
+		return "Sin registros";
+	}
+
+	return `${Math.trunc(bateria)} %`;
+}
+
 const tableColumns: ColumnConfig<LimnigrafoResponse>[] = [
 	{
 		id: "estado",
 		header: "Estado",
 		cell: (row) => (
 			<div className="p-4">
-				<ChipEstadoLimnigrafo estado={row.estado} />
+				<ChipEstadoLimnigrafoCompacto estado={row.estado} />
 			</div>
 		),
 	},
@@ -55,7 +63,7 @@ const tableColumns: ColumnConfig<LimnigrafoResponse>[] = [
 		id: "bateria",
 		header: "Batería",
 		accessorKey: "bateria",
-		cell: (row) => <p className="p-4">{(row.bateria) || "Sin registros"}</p>,
+		cell: (row) => <p className="p-4">{formatBateria(row.bateria)}</p>,
 	},
 ];
 
@@ -94,6 +102,7 @@ export default function VisualizacionLimnigrafos() {
 			)}
 			styles={{
 				scrollerClassName: "max-h-100",
+				tableClassName: "table-auto",
 				scrollY: "auto",
 			}}
 		/>

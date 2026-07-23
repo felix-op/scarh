@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Download, Eye, EyeOff, FileUp, Plus } from "lucide-react";
+import { Download, Eye, EyeOff, FileUp, MapPin, Plus } from "lucide-react";
 import { useMap } from "react-leaflet";
 
 import Boton from "@componentes/Boton";
@@ -12,7 +12,6 @@ import { Button } from "@componentes/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@componentes/components/ui/dialog";
 import { Input } from "@componentes/components/ui/input";
 import { Map, MapMarker, MapPolyline, MapTileLayer, MapTooltip, MapZoomControl } from "@componentes/components/ui/map";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@componentes/components/ui/select";
 import { Textarea } from "@componentes/components/ui/textarea";
 import SeccionInfoGroup from "@componentes/secciones/SeccionInfoGroup";
 import VentanaConfirmar from "@componentes/ventanas/VentanaConfirmar";
@@ -42,22 +41,13 @@ type UbicacionLimnigrafo = {
 
 type RutaFormState = {
 	nombre: string;
-	tipo_acceso: string;
 	tiempo_estimado_minutos: string;
 	observaciones: string;
 	archivo: File | null;
 };
 
-const tiposAcceso = [
-	{ value: "vehiculo", label: "Vehículo" },
-	{ value: "caminata", label: "Caminata" },
-	{ value: "embarcacion", label: "Embarcación" },
-	{ value: "otro", label: "Otro" },
-];
-
 const estadoInicial: RutaFormState = {
 	nombre: "",
-	tipo_acceso: "vehiculo",
 	tiempo_estimado_minutos: "",
 	observaciones: "",
 	archivo: null,
@@ -158,6 +148,29 @@ function AjustarVistaRuta({
 	return null;
 }
 
+function CentrarInicioRuta({
+	inicio,
+	focusToken,
+}: {
+	inicio: [number, number] | null;
+	focusToken: number;
+}) {
+	const map = useMap();
+
+	useEffect(() => {
+		if (!inicio || focusToken === 0) {
+			return;
+		}
+
+		map.setView(inicio, 16, {
+			animate: true,
+			duration: 0.8,
+		});
+	}, [focusToken, inicio, map]);
+
+	return null;
+}
+
 function RutaAccesoMapa({
 	ruta,
 	ubicacion,
@@ -169,9 +182,10 @@ function RutaAccesoMapa({
 	const ubicacionNormalizada = normalizarUbicacion(ubicacion);
 	const { inicio, fin, ultimo, esIdaVuelta } = obtenerExtremosRuta(ruta, lineas);
 	const centro: [number, number] = ubicacionNormalizada ?? lineas[0]?.[0] ?? [-54.79930469196583, -68.30601485928138];
+	const [focusInicioToken, setFocusInicioToken] = useState(0);
 
 	return (
-		<div className="h-[360px] overflow-hidden rounded-md border border-foreground/10">
+		<div className="relative h-[360px] overflow-hidden rounded-md border border-foreground/10">
 			<Map center={centro} zoom={14} className="h-full min-h-[360px] w-full rounded-md">
 				<MapTileLayer
 					url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
@@ -179,6 +193,7 @@ function RutaAccesoMapa({
 				/>
 				<MapZoomControl position="bottom-4 left-4" />
 				<AjustarVistaRuta lineas={lineas} ubicacion={ubicacionNormalizada} />
+				<CentrarInicioRuta inicio={inicio} focusToken={focusInicioToken} />
 				{lineas.map((linea, index) => (
 					<Fragment key={`${ruta.id}-${index}`}>
 						<MapPolyline
@@ -238,6 +253,19 @@ function RutaAccesoMapa({
 					</MapMarker>
 				)}
 			</Map>
+			{inicio && (
+				<Button
+					type="button"
+					variant="secondary"
+					size="icon-sm"
+					className="absolute bottom-[102px] left-4 z-[1000] border"
+					aria-label="Centrar mapa en el inicio de la ruta"
+					title="Centrar en inicio"
+					onClick={() => setFocusInicioToken((actual) => actual + 1)}
+				>
+					<MapPin className="h-4 w-4" />
+				</Button>
+			)}
 		</div>
 	);
 }
@@ -323,7 +351,6 @@ export default function RutasAccesoLimnigrafo({
 		setRutaEditando(ruta);
 		setForm({
 			nombre: ruta.nombre,
-			tipo_acceso: ruta.tipo_acceso || "vehiculo",
 			tiempo_estimado_minutos: ruta.tiempo_estimado_minutos?.toString() ?? "",
 			observaciones: ruta.observaciones ?? "",
 			archivo: null,
@@ -409,7 +436,6 @@ export default function RutasAccesoLimnigrafo({
 		const data = new FormData();
 		data.append("limnigrafo_id", limnigrafoId);
 		data.append("nombre", form.nombre.trim());
-		data.append("tipo_acceso", form.tipo_acceso);
 		data.append("observaciones", form.observaciones);
 		if (form.tiempo_estimado_minutos) {
 			data.append("tiempo_estimado_minutos", form.tiempo_estimado_minutos);
@@ -425,106 +451,13 @@ export default function RutasAccesoLimnigrafo({
 		}
 	};
 
-	const insertarObservacionesEnTexto = (texto: string, observaciones: string, extension: string | null) => {
-		const parser = new DOMParser();
-		const doc = parser.parseFromString(texto, "application/xml");
-		if (doc.querySelector("parsererror")) return texto;
-
-		const setTextoElemento = (element: Element | null, value: string) => {
-			if (!element) return false;
-			const cdata = doc.createCDATASection(value);
-			while (element.firstChild) {
-				element.removeChild(element.firstChild);
-			}
-			element.appendChild(cdata);
-			return true;
-		};
-
-		const crearElementoConNamespace = (parent: Element, tagName: string) => {
-			return parent.namespaceURI
-				? doc.createElementNS(parent.namespaceURI, tagName)
-				: doc.createElement(tagName);
-		};
-
-		const buscarElementosDirectos = (parent: Element, tagName: string, namespace?: string) =>
-			Array.from(parent.children).filter(
-				(child) => child.localName === tagName && (!namespace || child.namespaceURI === namespace),
-			);
-
-		if (extension === "gpx") {
-			const root = doc.documentElement;
-			const ns = "http://www.topografix.com/GPX/1/1";
-			const metadata = buscarElementosDirectos(root, "metadata").concat(buscarElementosDirectos(root, "metadata", ns))[0] ?? null;
-
-			const buscarObservacionesEnContenedor = (container: Element | null) =>
-				container
-					? buscarElementosDirectos(container, "desc").concat(
-						buscarElementosDirectos(container, "desc", ns),
-						buscarElementosDirectos(container, "cmt"),
-						buscarElementosDirectos(container, "cmt", ns),
-					)
-					: [];
-
-			const descElements = [root, metadata]
-				.filter(Boolean)
-				.flatMap((container) => buscarObservacionesEnContenedor(container));
-
-			const trkElements = Array.from(doc.getElementsByTagName("trk")).concat(Array.from(doc.getElementsByTagNameNS(ns, "trk")));
-			const rteElements = Array.from(doc.getElementsByTagName("rte")).concat(Array.from(doc.getElementsByTagNameNS(ns, "rte")));
-			const lineaElements = [...trkElements, ...rteElements];
-			const lineaDescElements = lineaElements.flatMap((container) => buscarObservacionesEnContenedor(container));
-
-			const targetElements = [...descElements, ...lineaDescElements];
-
-			if (targetElements.length > 0) {
-				targetElements.forEach((element) => setTextoElemento(element, observaciones));
-				return new XMLSerializer().serializeToString(doc);
-			}
-
-			const targetParent = metadata ?? root;
-			const nuevoDesc = crearElementoConNamespace(targetParent, "desc");
-			setTextoElemento(nuevoDesc, observaciones);
-			targetParent.insertBefore(nuevoDesc, targetParent.firstChild);
-			return new XMLSerializer().serializeToString(doc);
-		}
-
-		if (extension === "kml") {
-			const documentElement = doc.getElementsByTagName("Document")[0] ?? doc.documentElement;
-			const ns = "http://www.opengis.net/kml/2.2";
-			const descElements = buscarElementosDirectos(documentElement, "description").concat(
-				buscarElementosDirectos(documentElement, "description", ns),
-			);
-			if (descElements.length > 0) {
-				descElements.forEach((desc) => setTextoElemento(desc, observaciones));
-				return new XMLSerializer().serializeToString(doc);
-			}
-
-			const nuevoDesc = crearElementoConNamespace(documentElement, "description");
-			setTextoElemento(nuevoDesc, observaciones);
-			documentElement.insertBefore(nuevoDesc, documentElement.firstChild);
-			return new XMLSerializer().serializeToString(doc);
-		}
-
-		return texto;
-	};
-
 	const descargarRuta = async (ruta: RutaAccesoResponse) => {
 		if (!ruta.archivo_url) return;
 		try {
 			const response = await fetch(ruta.archivo_url);
 			if (!response.ok) throw new Error("No se pudo descargar el archivo.");
 			const blob = await response.blob();
-			const observaciones = ruta.observaciones?.trim();
-			let archivoBlob = blob;
-
-			if (observaciones) {
-				const texto = await blob.text();
-				const extension = (ruta.archivo_nombre || ruta.formato_origen || "").split('.').pop()?.toLowerCase() ?? null;
-				const contenido = insertarObservacionesEnTexto(texto, observaciones, extension);
-				archivoBlob = new Blob([contenido], { type: blob.type || "application/octet-stream" });
-			}
-
-			const url = window.URL.createObjectURL(archivoBlob);
+			const url = window.URL.createObjectURL(blob);
 			const link = document.createElement("a");
 			link.href = url;
 			link.download = ruta.archivo_nombre || `ruta-${ruta.id}.${ruta.formato_origen}`;
@@ -575,8 +508,7 @@ export default function RutasAccesoLimnigrafo({
 											<span className="rounded-md bg-foreground/10 px-2 py-0.5 text-xs uppercase">{ruta.formato_origen}</span>
 										</div>
 										<p className="mt-1 text-sm text-foreground/70">
-											{tiposAcceso.find((tipo) => tipo.value === ruta.tipo_acceso)?.label ?? ruta.tipo_acceso}
-											{ruta.tiempo_estimado_minutos ? ` · ${ruta.tiempo_estimado_minutos} min` : ""}
+											{ruta.tiempo_estimado_minutos ? `${ruta.tiempo_estimado_minutos} min` : "Sin tiempo estimado"}
 											{ruta.distancia_km != null ? ` · ${ruta.distancia_km} km` : ""}
 										</p>
 										{ruta.observaciones && (
@@ -620,19 +552,6 @@ export default function RutasAccesoLimnigrafo({
 						<label className="grid gap-1 text-sm">
 							<span>Nombre</span>
 							<Input value={form.nombre} onChange={(event) => setForm((actual) => ({ ...actual, nombre: event.target.value }))} />
-						</label>
-						<label className="grid gap-1 text-sm">
-							<span>Tipo de acceso</span>
-							<Select value={form.tipo_acceso} onValueChange={(value) => setForm((actual) => ({ ...actual, tipo_acceso: value }))}>
-								<SelectTrigger>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent>
-									{tiposAcceso.map((tipo) => (
-										<SelectItem key={tipo.value} value={tipo.value}>{tipo.label}</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
 						</label>
 						<label className="grid gap-1 text-sm">
 							<span>Tiempo estimado en minutos</span>

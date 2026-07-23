@@ -1,7 +1,8 @@
+from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from ..models import Limnigrafo, RutaAcceso
-from ..services.rutas_acceso import procesar_archivo_ruta
+from ..services.rutas_acceso import insertar_observaciones_en_archivo_ruta, procesar_archivo_ruta
 
 
 class RutaAccesoSerializer(serializers.ModelSerializer):
@@ -28,7 +29,6 @@ class RutaAccesoSerializer(serializers.ModelSerializer):
             'limnigrafo_id',
             'nombre',
             'formato_origen',
-            'tipo_acceso',
             'tiempo_estimado_minutos',
             'distancia_km',
             'observaciones',
@@ -79,6 +79,7 @@ class RutaAccesoSerializer(serializers.ModelSerializer):
         validated_data['distancia_km'] = procesada.distancia_km
         if not validated_data.get('observaciones') and procesada.observaciones_sugeridas:
             validated_data['observaciones'] = procesada.observaciones_sugeridas
+        self._insertar_observaciones_en_archivo_subido(validated_data, procesada.formato_origen)
         if limnigrafo and getattr(limnigrafo, 'ubicacion_id', None):
             validated_data['ubicacion'] = limnigrafo.ubicacion
         return super().create(validated_data)
@@ -91,4 +92,50 @@ class RutaAccesoSerializer(serializers.ModelSerializer):
             validated_data['distancia_km'] = procesada.distancia_km
             if not validated_data.get('observaciones') and procesada.observaciones_sugeridas:
                 validated_data['observaciones'] = procesada.observaciones_sugeridas
-        return super().update(instance, validated_data)
+            self._insertar_observaciones_en_archivo_subido(validated_data, procesada.formato_origen)
+
+        ruta = super().update(instance, validated_data)
+
+        if procesada is None and 'observaciones' in validated_data:
+            self._sincronizar_archivo_guardado(ruta)
+
+        return ruta
+
+    def _insertar_observaciones_en_archivo_subido(self, validated_data, formato_origen):
+        archivo = validated_data.get('archivo_original')
+        observaciones = (validated_data.get('observaciones') or '').strip()
+        if not archivo or not observaciones:
+            return
+
+        contenido = archivo.read()
+        archivo.seek(0)
+        contenido_actualizado = insertar_observaciones_en_archivo_ruta(
+            contenido,
+            observaciones,
+            formato_origen,
+        )
+        validated_data['archivo_original'] = ContentFile(
+            contenido_actualizado,
+            name=getattr(archivo, 'name', 'ruta_acceso.xml'),
+        )
+
+    def _sincronizar_archivo_guardado(self, ruta):
+        observaciones = (ruta.observaciones or '').strip()
+        if not ruta.archivo_original or not observaciones:
+            return
+
+        nombre = ruta.archivo_original.name
+        storage = ruta.archivo_original.storage
+        with storage.open(nombre, 'rb') as archivo:
+            contenido = archivo.read()
+
+        contenido_actualizado = insertar_observaciones_en_archivo_ruta(
+            contenido,
+            observaciones,
+            ruta.formato_origen,
+        )
+        storage.delete(nombre)
+        nuevo_nombre = storage.save(nombre, ContentFile(contenido_actualizado))
+        if nuevo_nombre != nombre:
+            ruta.archivo_original.name = nuevo_nombre
+            ruta.save(update_fields=['archivo_original'])

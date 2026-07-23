@@ -1,5 +1,6 @@
 "use client";
 
+import { ReactNode } from "react";
 import {
 	BotonEstadoLimnigrafo,
 	type EstadoLimnigrafo,
@@ -27,26 +28,28 @@ type LimnigrafoDetailsCardProps = {
   status: EstadoLimnigrafo;
   statusLabel?: string;
   onEditDescription?: () => void;
+  headerStart?: ReactNode;
+  headerEnd?: ReactNode;
 };
 
 function InfoItemView({ item }: { item: InfoItem }) {
 	return (
-		<div className="flex w-full flex-col items-center gap-2">
-			<p className="text-center text-[20px] font-normal text-[#838383] dark:text-[#94A3B8]">
+		<div className="flex w-full flex-col items-center gap-1.5">
+			<p className="text-center text-[14px] font-medium text-[#838383] dark:text-[#94A3B8]">
 				{item.label}
 			</p>
-			<div className="flex min-h-[32px] items-center justify-center gap-2">
+			<div className="flex min-h-[26px] items-center justify-center gap-2">
 				{item.isEditing && item.onChange ? (
 					<input
 						type="text"
 						value={item.value}
 						onChange={(e) => item.onChange?.(e.target.value)}
 						placeholder={item.placeholder}
-						className="rounded-lg border-2 border-blue-400 bg-blue-50 px-3 py-1 text-center text-[24px] font-semibold text-black focus:border-blue-600 focus:outline-none dark:border-sky-500 dark:bg-[#102A43] dark:text-[#E2E8F0] dark:focus:border-sky-400"
+						className="rounded-lg border-2 border-blue-400 bg-blue-50 px-3 py-1 text-center text-[18px] font-semibold text-black focus:border-blue-600 focus:outline-none dark:border-sky-500 dark:bg-[#102A43] dark:text-[#E2E8F0] dark:focus:border-sky-400"
 						autoFocus
 					/>
 				) : (
-					<p className="text-center text-[24px] font-semibold leading-7 text-black dark:text-[#E2E8F0]">
+					<p className="text-center text-[18px] font-semibold leading-6 text-black dark:text-[#E2E8F0]">
 						{item.value}
 					</p>
 				)}
@@ -75,9 +78,9 @@ function DetailsSection({
 	columns?: string;
 }) {
 	return (
-		<section className="space-y-8">
+		<section className="space-y-5">
 			<SectionTitle>{title}</SectionTitle>
-			<div className={`grid gap-x-10 gap-y-4 ${columns}`}>
+			<div className={`grid gap-x-8 gap-y-3 ${columns}`}>
 				{items.map((item) => (
 					<InfoItemView key={item.label} item={item} />
 				))}
@@ -104,11 +107,11 @@ function StatusItem({
 	statusLabel: string;
 }) {
 	return (
-		<div className="flex w-full flex-col items-center gap-2">
-			<p className="text-center text-[20px] font-normal text-[#838383] dark:text-[#94A3B8]">
+		<div className="flex w-full flex-col items-center gap-1.5">
+			<p className="text-center text-[14px] font-medium text-[#838383] dark:text-[#94A3B8]">
 				{statusLabel}
 			</p>
-			<div className="flex min-h-[32px] items-center justify-center">
+			<div className="flex min-h-[26px] items-center justify-center">
 				<BotonEstadoLimnigrafo estado={status} />
 			</div>
 			<div className="h-px w-full max-w-[360px] bg-[#D8D8D8] dark:bg-[#334155]" />
@@ -127,16 +130,18 @@ export default function LimnigrafoDetailsCard({
 	status,
 	statusLabel = "Estado",
 	onEditDescription,
+	headerStart,
+	headerEnd,
 }: LimnigrafoDetailsCardProps) {
 	return (
 		<section
 			className="
         w-full
-        max-w-[1317px]
-        rounded-[40px]
+        max-w-[1180px]
+        rounded-[28px]
         bg-white
         dark:bg-[#1B1F25]
-        p-6
+        p-5
         text-black
         dark:text-[#E2E8F0]
         shadow-[9px_7px_16px_-1px_rgba(0,0,0,0.18)]
@@ -145,17 +150,23 @@ export default function LimnigrafoDetailsCard({
         font-outfit
       "
 		>
-			<header className="border-b border-[#D8D8D8] pb-6 text-center dark:border-[#334155]">
-				<h2 className="text-[36px] font-bold">{title}</h2>
+			<header className="grid grid-cols-1 items-center gap-3 border-b border-[#D8D8D8] pb-4 text-center dark:border-[#334155] md:grid-cols-[1fr_auto_1fr]">
+				<div className="flex justify-center md:justify-start">
+					{headerStart}
+				</div>
+				<h2 className="text-[28px] font-bold">{title}</h2>
+				<div className="flex justify-center md:justify-end">
+					{headerEnd}
+				</div>
 			</header>
 
-			<div className="space-y-16 border-b border-[#D8D8D8] py-10 dark:border-[#334155]">
+			<div className="space-y-8 border-b border-[#D8D8D8] py-6 dark:border-[#334155]">
 				<DetailsSection title="Identificación" items={identification} />
 				<DetailsSection title="Mediciones" items={measurements} />
 
-				<section className="space-y-8">
+				<section className="space-y-5">
 					<SectionTitle>Configuración</SectionTitle>
-					<div className="grid gap-x-10 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+					<div className="grid gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
 						{extraData.map((item) => (
 							<InfoItemView key={item.label} item={item} />
 						))}
@@ -164,19 +175,19 @@ export default function LimnigrafoDetailsCard({
 				</section>
 			</div>
 
-			<footer className="pt-10 text-center">
+			<footer className="pt-6 text-center">
 				<SectionTitle>Descripción</SectionTitle>
-				<div className="mt-8 flex items-center justify-center gap-2">
+				<div className="mt-4 flex items-center justify-center gap-2">
 					{isEditingDescription && onDescriptionChange ? (
 						<textarea
 							value={description}
 							onChange={(e) => onDescriptionChange(e.target.value)}
-							className="min-h-[100px] w-full max-w-[800px] resize-y rounded-lg border-2 border-blue-400 bg-blue-50 px-4 py-2 text-center text-[24px] font-semibold text-black focus:border-blue-600 focus:outline-none dark:border-sky-500 dark:bg-[#102A43] dark:text-[#E2E8F0] dark:focus:border-sky-400"
+							className="min-h-[80px] w-full max-w-[800px] resize-y rounded-lg border-2 border-blue-400 bg-blue-50 px-4 py-2 text-center text-[18px] font-semibold text-black focus:border-blue-600 focus:outline-none dark:border-sky-500 dark:bg-[#102A43] dark:text-[#E2E8F0] dark:focus:border-sky-400"
 							placeholder="Ingrese una descripción"
 							autoFocus
 						/>
 					) : (
-						<p className="text-[24px] font-semibold text-black dark:text-[#E2E8F0]">
+						<p className="text-[18px] font-semibold text-black dark:text-[#E2E8F0]">
 							{description || "Sin descripción"}
 						</p>
 					)}

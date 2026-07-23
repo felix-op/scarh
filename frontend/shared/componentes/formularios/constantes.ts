@@ -10,5 +10,9 @@ export const DEFAULT_VALIDATIONS = {
 	number: {
 		value: /^[0-9]+(\.[0-9]+)?$/,
 		message: "Número inválido, puede ser decimal"
+	},
+	signedNumber: {
+		value: /^-?[0-9]+(\.[0-9]+)?$/,
+		message: "Número inválido, puede ser decimal negativo"
 	}
 };

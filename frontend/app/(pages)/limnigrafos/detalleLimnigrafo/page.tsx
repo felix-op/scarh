@@ -410,17 +410,7 @@ function DetalleLimnigrafoContent() {
 
 					{detalles ? (
 						<>
-							<div className="relative flex w-full justify-center">
-								{selectedId ? (
-									<Boton
-										onClick={handleDelete}
-										disabled={isDeleting}
-										className="!mx-0 !bg-[#FDECEC] !text-[#B42318] dark:!bg-[#3A1818] dark:!text-[#FCA5A5] !h-[40px] !px-5 text-[14px] shadow-[0px_4px_4px_rgba(0,0,0,0.25)] hover:!brightness-95 active:!brightness-105 active:scale-95 transition-all duration-100 gap-2 border border-[#FECACA] dark:border-[#7F1D1D] disabled:opacity-60 absolute top-6 left-8 !rounded-full overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-1/2 after:h-full after:skew-x-[-25deg] after:bg-linear-to-r after:from-transparent after:via-white/40 after:to-transparent hover:after:animate-shine before:content-[''] before:absolute before:inset-0 before:rounded-full before:transition-opacity before:duration-100 before:opacity-0 active:before:opacity-100 active:before:shadow-[inset_0px_4px_8px_rgba(0,0,0,0.2)]"
-									>
-										{isDeleting ? "Eliminando..." : "Eliminar limnigrafo"}
-									</Boton>
-								) : null}
-
+							<div className="flex w-full justify-center">
 								<LimnigrafoDetailsCard
 									title="Datos Limnigrafo"
 									identification={detalles.identification}
@@ -428,15 +418,25 @@ function DetalleLimnigrafoContent() {
 									extraData={detalles.extraData}
 									description={detalles.description}
 									status={detalles.status}
+									headerStart={selectedId ? (
+										<Boton
+											onClick={handleDelete}
+											disabled={isDeleting}
+											className="!mx-0 !bg-[#FDECEC] !text-[#B42318] dark:!bg-[#3A1818] dark:!text-[#FCA5A5] !h-[40px] !px-5 text-[14px] gap-2 border border-[#FECACA] dark:border-[#7F1D1D] disabled:opacity-60 !rounded-full shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+										>
+											{isDeleting ? "Eliminando..." : "Eliminar limnigrafo"}
+										</Boton>
+									) : null}
+									headerEnd={(
+										<Boton
+											onClick={() => setIsEditModalOpen(true)}
+											className="!mx-0 !h-[40px] !px-5 text-[14px] gap-2 !rounded-full !bg-[#DDEEFF] !text-[#258CC6] dark:!bg-[#0B2A43] dark:!text-[#93C5FD] border border-[#CFE2F1] dark:border-[#1D4ED8] shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+										>
+											<Edit size={18} color="currentColor" />
+											Editar
+										</Boton>
+									)}
 								/>
-
-								<Boton
-									onClick={() => setIsEditModalOpen(true)}
-									className="!mx-0 !h-[40px] !px-5 text-[14px] absolute top-6 right-8 gap-2 !rounded-full !bg-[#DDEEFF] !text-[#258CC6] dark:!bg-[#0B2A43] dark:!text-[#93C5FD] border border-[#CFE2F1] dark:border-[#1D4ED8] shadow-[0px_4px_4px_rgba(0,0,0,0.25)] hover:!brightness-95 active:!brightness-105 active:scale-95 transition-all duration-100 overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-1/2 after:h-full after:skew-x-[-25deg] after:bg-linear-to-r after:from-transparent after:via-white/40 after:to-transparent hover:after:animate-shine before:content-[''] before:absolute before:inset-0 before:rounded-full before:transition-opacity before:duration-100 before:opacity-0 active:before:opacity-100 active:before:shadow-[inset_0px_4px_8px_rgba(0,0,0,0.2)]"
-								>
-									<Edit size={18} color="currentColor" />
-									Editar
-								</Boton>
 							</div>
 
 							{deleteError ? (
@@ -497,8 +497,8 @@ function DetalleLimnigrafoContent() {
 				titulo="Editar limnigrafo"
 				descripcion=""
 				valoresIniciales={valoresIniciales}
-				classNameVentana="md:min-w-[64rem] xl:min-w-[88rem]"
-				classNameContenido="px-8 py-7 xl:px-10 xl:py-8"
+				classNameVentana="md:min-w-[56rem] xl:min-w-[72rem]"
+				classNameContenido="px-5 py-5 xl:px-6 xl:py-6"
 				isLoading={isSavingEdit}
 			>
 				<CamposFormularioEditarLimnigrafo

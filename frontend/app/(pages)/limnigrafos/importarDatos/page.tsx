@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Boton from "@componentes/Boton";
+import BotonVariante from "@componentes/botones/BotonVariante";
 import { LIMNIGRAFOS } from "@data/limnigrafos";
 import {
 	useGetMediciones,
@@ -378,20 +378,22 @@ function ImportarDatosContent() {
 								Datos importados
 							</h2>
 							<div className="flex flex-wrap gap-3">
-								<Boton
+								<BotonVariante
 									type="button"
 									onClick={quitarRegistro}
-									className="!mx-0 !h-[40px] !bg-[#F3F4F6] !px-5 !text-[#111827] dark:!bg-[#1E293B] dark:!text-[#CBD5E1] dark:border dark:border-[#334155]"
+									variant="eliminar"
 								>
-									− Quitar
-								</Boton>
-								<Boton
+									<span className="text-2xl icon-[material-symbols--remove]" />
+									<span>Quitar</span>
+								</BotonVariante>
+								<BotonVariante
 									type="button"
 									onClick={() => inputArchivoRef.current?.click()}
-									className="!mx-0 !h-[40px] !bg-white !px-5 !text-[#0982C8] border border-[#E2E8F0] dark:!bg-[#0F172A] dark:border-[#334155] dark:!text-[#7DD3FC]"
+									variant="agregar"
 								>
-									📄 Agregar JSON
-								</Boton>
+									<span className="text-2xl icon-[material-symbols--upload-file]" />
+									<span>Agregar JSON</span>
+								</BotonVariante>
 								<input
 									type="file"
 									accept=".json,application/json"
@@ -411,13 +413,14 @@ function ImportarDatosContent() {
 						</h3>
 						<FormularioManual valores={manualValues} onChange={handleManualChange} />
 						<div className="flex justify-end">
-							<Boton
+							<BotonVariante
 								type="button"
 								onClick={agregarRegistroManual}
-								className="!mx-0 !h-[44px] !bg-white !px-6 !text-[#111827] border border-[#E2E8F0] shadow-[0px_2px_6px_rgba(0,0,0,0.15)] dark:!bg-[#1E293B] dark:border-[#334155] dark:!text-[#CBD5E1]"
+								variant="agregar"
 							>
-								+ Agregar
-							</Boton>
+								<span className="text-2xl icon-[mdi--add]" />
+								<span>Agregar</span>
+							</BotonVariante>
 						</div>
 					</section>
 
@@ -447,21 +450,21 @@ function ImportarDatosContent() {
 					</section>
 
 					<div className="mt-4 flex flex-wrap justify-end gap-4">
-						<Boton
+						<BotonVariante
 							type="button"
 							onClick={() => router.back()}
-							className="!mx-0 !h-[48px] !bg-[#E5E7EB] !px-9 !text-[#374151] dark:!bg-[#1E293B] dark:!text-[#CBD5E1] dark:border dark:border-[#334155]"
-						>
-							Cancelar
-						</Boton>
-						<Boton
+							variant="cancelar"
+						/>
+						<BotonVariante
 							type="button"
 							onClick={guardarCambios}
 							disabled={isSaving}
-							className="!mx-0 !px-9 !h-[48px] disabled:opacity-60"
+							loading={isSaving}
+							variant="guardar"
 						>
+							<span className={`text-2xl ${isSaving ? "icon-[line-md--loading-twotone-loop]" : "icon-[material-symbols--save]"}`} />
 							{isSaving ? "Guardando..." : "Guardar"}
-						</Boton>
+						</BotonVariante>
 					</div>
 				</div>
 			</main>

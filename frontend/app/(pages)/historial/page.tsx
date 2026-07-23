@@ -135,12 +135,16 @@ const historyColumns: ColumnConfig<HistoryRow>[] = [
 	{
 		id: "accion",
 		header: "Acción realizada",
-		cell: (row) => <span className="px-4 py-3">{row.accion}</span>,
+		headerClassName: "text-center",
+		cellClassName: "text-center",
+		cell: (row) => <span className="block w-full px-4 py-3 text-center">{row.accion}</span>,
 	},
 	{
 		id: "entidad",
 		header: "Entidad afectada",
-		cell: (row) => <span className="px-4 py-3 text-[#0982C8] dark:text-[#7DD3FC]">{row.entidad}</span>,
+		headerClassName: "text-center",
+		cellClassName: "text-center",
+		cell: (row) => <span className="block w-full px-4 py-3 text-center text-[#0982C8] dark:text-[#7DD3FC]">{row.entidad}</span>,
 	},
 	{
 		id: "descripcion",

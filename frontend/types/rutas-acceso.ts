@@ -29,7 +29,6 @@ export type RutaAccesoResponse = {
 	limnigrafo: number | null;
 	nombre: string;
 	formato_origen: FormatoRutaAcceso;
-	tipo_acceso: string;
 	tiempo_estimado_minutos: number | null;
 	distancia_km: number | null;
 	observaciones: string;

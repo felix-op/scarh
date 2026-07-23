@@ -31,36 +31,32 @@ export function CamposFormularioEditarLimnigrafo({
 }) {
 	const esModal = variante === "modal";
 	const wrapperClassName = esModal
-		? "flex w-full flex-col gap-8"
+		? "flex w-full flex-col gap-5"
 		: "flex w-full max-w-screen-2xl flex-col gap-6 rounded-[32px] bg-background-muted p-6 shadow-[0px_4px_18px_rgba(0,0,0,0.18)]";
 	const cardClassName = esModal
-		? "flex flex-col gap-6 rounded-[28px] border border-border/80 bg-background-muted/50 px-8 py-8 shadow-[0px_10px_30px_rgba(0,0,0,0.12)]"
+		? "flex flex-col gap-4 rounded-[20px] border border-border/80 bg-background-muted/50 px-5 py-5 shadow-[0px_8px_20px_rgba(0,0,0,0.10)]"
 		: "flex flex-col gap-4";
 	const sectionTitleClassName = esModal
-		? "text-[1.75rem] font-semibold tracking-[-0.02em] text-foreground"
+		? "text-[1.25rem] font-semibold text-foreground"
 		: "";
 	const sectionSubtitleClassName = esModal
-		? "text-sm leading-6 text-muted-foreground"
+		? "text-xs leading-5 text-muted-foreground"
 		: "hidden";
 	const dividerClassName = esModal ? "bg-border/70" : "";
 	const titleBlockClassName = esModal ? "flex flex-col gap-1" : "";
+	const formGridClassName = esModal ? "grid grid-cols-1 gap-4 md:grid-cols-2" : "";
 
 	return (
 		<div className={wrapperClassName}>
 			{esModal ? (
-				<div className="rounded-3xl border border-border/70 bg-background/60 px-6 py-5">
-					<p className="text-sm leading-6 text-muted-foreground">
-						Actualizá la configuración operativa, los umbrales de alerta y los datos
-						generales del dispositivo desde un solo lugar.
-					</p>
-					<p className="mt-3 text-sm leading-6 text-muted-foreground">
-						El estado del limnígrafo no se edita manualmente. "Fuera de rango" se
-						calcula según la última conexión y el tiempo configurado en este formulario.
+				<div className="rounded-2xl border border-border/70 bg-background/60 px-4 py-3">
+					<p className="text-xs leading-5 text-muted-foreground">
+						Editá datos generales, comunicación y umbrales. El estado se calcula automáticamente según la última conexión.
 					</p>
 				</div>
 			) : null}
 
-			<div className="flex flex-col gap-6 xl:flex-row">
+			<div className="flex flex-col gap-4 xl:flex-row">
 				<div className={`${cardClassName} flex-1`}>
 					<div className={titleBlockClassName}>
 						<h2 className={sectionTitleClassName || undefined}>Datos del limnígrafo</h2>
@@ -69,19 +65,21 @@ export function CamposFormularioEditarLimnigrafo({
 						</p>
 					</div>
 					<Separador direction="horizontal" className={dividerClassName} />
-					<CampoInput
-						name="codigo"
-						label="Identificador:"
-						placeholder="Ingrese un identificador para el limnígrafo"
-						required
-					/>
-					<CampoInput
-						name="descripcion"
-						label="Descripción:"
-						placeholder="Información adicional para el limnígrafo"
-					/>
-					<div className="pt-3">
-						<h3 className="text-xl font-semibold text-foreground">Mantenimiento</h3>
+					<div className={formGridClassName}>
+						<CampoInput
+							name="codigo"
+							label="Identificador:"
+							placeholder="Ingrese un identificador para el limnígrafo"
+							required
+						/>
+						<CampoInput
+							name="descripcion"
+							label="Descripción:"
+							placeholder="Información adicional para el limnígrafo"
+						/>
+					</div>
+					<div className={esModal ? "pt-1" : "pt-3"}>
+						<h3 className={esModal ? "text-base font-semibold text-foreground" : "text-xl font-semibold text-foreground"}>Mantenimiento</h3>
 					</div>
 					<Separador direction="horizontal" className={dividerClassName} />
 					<CampoFecha
@@ -89,7 +87,7 @@ export function CamposFormularioEditarLimnigrafo({
 						label="Último mantenimiento:"
 					/>
 					<Label text="Tiempo máximo antes de Advertencias:" />
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+					<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
 						<CampoInput
 							name="tiempo_advertencia_horas"
 							placeholder="Horas"
@@ -110,11 +108,11 @@ export function CamposFormularioEditarLimnigrafo({
 						/>
 					</div>
 					<Label text="Tiempo máximo antes de Fuera de rango:" />
-					<p className="text-sm leading-6 text-muted-foreground">
+					<p className={esModal ? "text-xs leading-5 text-muted-foreground" : "text-sm leading-6 text-muted-foreground"}>
 						Si no llegan mediciones dentro de este plazo, el sistema marcará el
 						limnígrafo como fuera de rango automáticamente.
 					</p>
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+					<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
 						<CampoInput
 							name="tiempo_peligro_horas"
 							placeholder="Horas"
@@ -162,47 +160,49 @@ export function CamposFormularioEditarLimnigrafo({
 							/>
 						</div>
 					</div>
-					<CampoInput
-						type="number"
-						name="bateria_min"
-						label="Cantidad mínima de batería:"
-					/>
-					<CampoInput
-						type="integer"
-						name="radio_cobertura_metros"
-						label="Radio de cobertura estimada (m):"
-						placeholder="Ej. 500"
-					/>
-					<CampoInput
-						type="number"
-						name="altura_maxima_agua"
-						label="Máxima altura del nivel del agua:"
-					/>
-					<CampoInput
-						type="number"
-						name="altura_minima_agua"
-						label="Mínima altura del nivel del agua:"
-					/>
-					<CampoInput
-						type="number"
-						name="temperatura_minima"
-						label="Temperatura mínima:"
-					/>
-					<CampoInput
-						type="number"
-						name="temperatura_maxima"
-						label="Temperatura máxima:"
-					/>
-					<CampoInput
-						type="number"
-						name="presion_minima"
-						label="Presión mínima:"
-					/>
-					<CampoInput
-						type="number"
-						name="presion_maxima"
-						label="Presión máxima:"
-					/>
+					<div className={formGridClassName}>
+						<CampoInput
+							type="number"
+							name="bateria_min"
+							label="Cantidad mínima de batería(%):"
+						/>
+						<CampoInput
+							type="integer"
+							name="radio_cobertura_metros"
+							label="Radio de cobertura estimada (m):"
+							placeholder="Ej. 500"
+						/>
+						<CampoInput
+							type="number"
+							name="altura_maxima_agua"
+							label="Máxima altura del nivel del agua (m):"
+						/>
+						<CampoInput
+							type="number"
+							name="altura_minima_agua"
+							label="Mínima altura del nivel del agua (m):"
+						/>
+						<CampoInput
+							type="signedNumber"
+							name="temperatura_minima"
+							label="Temperatura mínima (°C):"
+						/>
+						<CampoInput
+							type="signedNumber"
+							name="temperatura_maxima"
+							label="Temperatura máxima (°C):"
+						/>
+						<CampoInput
+							type="number"
+							name="presion_minima"
+							label="Presión mínima (kPa):"
+						/>
+						<CampoInput
+							type="number"
+							name="presion_maxima"
+							label="Presión máxima (kPa):"
+						/>
+					</div>
 					<CampoMultiCheckbox
 						name="tipo_comunicacion"
 						options={opcionesTipoComunicacion}

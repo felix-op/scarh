@@ -7,7 +7,6 @@ class RutaAcceso(models.Model):
     ]
 
     nombre = models.CharField(max_length=100)
-    tipo_acceso = models.CharField(max_length=50)
     distancia_km = models.FloatField(blank=True, null=True)
     tiempo_estimado_minutos = models.FloatField(null=True)
     observaciones = models.TextField(blank=True)
