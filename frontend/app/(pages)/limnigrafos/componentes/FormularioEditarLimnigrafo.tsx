@@ -164,7 +164,7 @@ export function CamposFormularioEditarLimnigrafo({
 						<CampoInput
 							type="number"
 							name="bateria_min"
-							label="Cantidad mínima de batería:"
+							label="Cantidad mínima de batería(%):"
 						/>
 						<CampoInput
 							type="integer"
