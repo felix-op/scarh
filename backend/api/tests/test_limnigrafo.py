@@ -3,7 +3,7 @@ from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from api.models import Limnigrafo, ConfiguracionLimnigrafo
+from api.models import Alerta, Limnigrafo, ConfiguracionLimnigrafo
 from api.models.medicion import Medicion
 from datetime import time, timedelta
 from rest_framework_api_key.models import APIKey
@@ -74,6 +74,42 @@ class LimnigrafoTests(APITestCase):
 
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado, 'advertencia')
+
+    def test_list_no_duplica_alerta_activa_por_tiempo_advertencia(self):
+        self.limnigrafo.ultima_conexion = timezone.now() - timedelta(minutes=45)
+        self.limnigrafo.estado = 'normal'
+        self.limnigrafo.save(update_fields=['ultima_conexion', 'estado'])
+
+        self.assertEqual(self.client.get(self.list_url).status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.get(self.list_url).status_code, status.HTTP_200_OK)
+
+        alertas = Alerta.objects.filter(
+            limnigrafo=self.limnigrafo,
+            tipo='advertencia_limnigrafo',
+            condicion='tiempo_advertencia',
+        )
+        self.assertEqual(alertas.count(), 1)
+        self.assertTrue(alertas.get().condicion_activa)
+
+    def test_retrieve_cierra_alerta_activa_cuando_vuelve_a_normal(self):
+        alerta = Alerta.objects.create(
+            limnigrafo=self.limnigrafo,
+            tipo='advertencia_limnigrafo',
+            condicion='tiempo_advertencia',
+            condicion_activa=True,
+        )
+        self.limnigrafo.ultima_conexion = timezone.now()
+        self.limnigrafo.bateria_actual = 12.0
+        self.limnigrafo.estado = 'advertencia'
+        self.limnigrafo.save(update_fields=['ultima_conexion', 'bateria_actual', 'estado'])
+
+        response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        alerta.refresh_from_db()
+        self.assertFalse(alerta.condicion_activa)
+        self.assertEqual(alerta.estado, 'solucionado')
+        self.assertIsNotNone(alerta.fecha_cierre)
 
     def test_list_sets_fuera_de_rango_when_time_exceeds_peligro_threshold(self):
         self.limnigrafo.ultima_conexion = timezone.now() - timedelta(hours=2)
