@@ -11,4 +11,5 @@ export {
 export {
 	useGetAlertas,
 	usePatchAlerta,
+	usePostAlertasMarkAllRead,
 } from "./alertas";
