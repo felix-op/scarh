@@ -16,7 +16,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@componentes/components/ui/dropdown-menu";
-import { useGetAlertas, useGetUsuario, usePachtUsuario, usePatchAlerta } from "@servicios/api";
+import { useGetAlertas, useGetUsuario, usePachtUsuario, usePatchAlerta, usePostAlertasMarkAllRead } from "@servicios/api";
 import VentanaNotificaciones from "../alertas/VentanaNotificaciones";
 
 type EstadoVariant = "activo" | "inactivo" | "pendiente" | "suspendido";
@@ -263,6 +263,12 @@ export default function ProfileCard({
 			queriesToInvalidate: ["useGetAlertas"],
 		},
 	});
+	const marcarAlertasLeidas = usePostAlertasMarkAllRead({
+		configuracion: {
+			queriesToInvalidate: ["useGetAlertas"],
+			refetch: true,
+		},
+	});
 
 	useEffect(() => {
 		if (!usuarioApi) return;
@@ -389,6 +395,9 @@ export default function ProfileCard({
 			data: { estado: "leido" },
 		});
 	};
+	const handleMarcarTodasLeidas = async () => {
+		await marcarAlertasLeidas.mutateAsync({ data: {} });
+	};
 	if (variant === "sidebar") {
 		return (
 			<div
@@ -481,6 +490,7 @@ export default function ProfileCard({
 					onClose={() => setIsNotificationsOpen(false)}
 					notificaciones={notificaciones}
 					onMarcarLeida={handleMarcarNotificacionLeida}
+					onMarcarTodasLeidas={handleMarcarTodasLeidas}
 				/>
 			</div>
 		);

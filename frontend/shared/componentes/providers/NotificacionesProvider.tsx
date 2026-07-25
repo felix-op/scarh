@@ -4,7 +4,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 
-import { useGetAlertas, usePatchAlerta } from "@servicios/api";
+import { useGetAlertas, usePatchAlerta, usePostAlertasMarkAllRead } from "@servicios/api";
 
 type VarianteNotificacion = "info" | "error" | "exito" | "alerta";
 type EstadoNotificacion = "nuevo" | "leido" | "solucionado";
@@ -91,6 +91,12 @@ export default function NotificacionesProvider({ children }: NotificacionesProvi
 		params: { id: "" },
 		configuracion: {
 			queriesToInvalidate: ["useGetAlertas"],
+		},
+	});
+	const marcarAlertasLeidas = usePostAlertasMarkAllRead({
+		configuracion: {
+			queriesToInvalidate: ["useGetAlertas"],
+			refetch: true,
 		},
 	});
 	const usuarioKey = useMemo(() => {
@@ -317,12 +323,11 @@ export default function NotificacionesProvider({ children }: NotificacionesProvi
 				: item
 		)));
 
-		const alertasPendientes = pendientes.filter((item) => item.fuente === "alerta" && item.alertaNotificacionId);
+		const tieneAlertasPendientes = pendientes.some((item) => item.fuente === "alerta" && item.alertaNotificacionId);
 		try {
-			await Promise.all(alertasPendientes.map((item) => patchAlerta.mutateAsync({
-				params: { id: item.alertaNotificacionId ?? "" },
-				data: { estado: "leido" },
-			})));
+			if (tieneAlertasPendientes) {
+				await marcarAlertasLeidas.mutateAsync({ data: {} });
+			}
 		} catch {
 			const idsPendientes = new Set(pendientes.map((item) => item.id));
 			setHistorial((prev) => prev.map((item) => (
@@ -331,7 +336,7 @@ export default function NotificacionesProvider({ children }: NotificacionesProvi
 					: item
 			)));
 		}
-	}, [historial, patchAlerta]);
+	}, [historial, marcarAlertasLeidas]);
 
 	const noLeidas = historial.filter((item) => item.estado === "nuevo").length;
 

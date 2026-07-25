@@ -44,16 +44,16 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
             if nuevo_estado != limnigrafo.estado:
                 limnigrafo.estado = nuevo_estado
                 actualizados.append(limnigrafo)
-                cambios_estado.append((limnigrafo, estado_anterior, nuevo_estado))
+            cambios_estado.append((limnigrafo, estado_anterior, nuevo_estado))
 
         if actualizados:
             Limnigrafo.objects.bulk_update(actualizados, ["estado"])
-            for limnigrafo, estado_anterior, nuevo_estado in cambios_estado:
-                generar_alerta_cambio_estado(
-                    limnigrafo=limnigrafo,
-                    estado_anterior=estado_anterior,
-                    nuevo_estado=nuevo_estado,
-                )
+        for limnigrafo, estado_anterior, nuevo_estado in cambios_estado:
+            generar_alerta_cambio_estado(
+                limnigrafo=limnigrafo,
+                estado_anterior=estado_anterior,
+                nuevo_estado=nuevo_estado,
+            )
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -75,11 +75,11 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
         if nuevo_estado != instance.estado:
             instance.estado = nuevo_estado
             instance.save(update_fields=["estado"])
-            generar_alerta_cambio_estado(
-                limnigrafo=instance,
-                estado_anterior=estado_anterior,
-                nuevo_estado=nuevo_estado,
-            )
+        generar_alerta_cambio_estado(
+            limnigrafo=instance,
+            estado_anterior=estado_anterior,
+            nuevo_estado=nuevo_estado,
+        )
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 

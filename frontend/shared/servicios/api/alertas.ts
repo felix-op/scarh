@@ -1,4 +1,4 @@
-import { useGet, usePatch } from "./queryHooks";
+import { useGet, usePatch, usePost } from "./queryHooks";
 import { MutationConfig, ParamsBase, UseGetConfig } from "./types";
 
 const NEXT_PROXY_URL = "/api/proxy";
@@ -16,6 +16,10 @@ export type AlertaResponse = {
 
 export type AlertaPatchRequest = {
 	estado?: "nuevo" | "leido" | "solucionado";
+};
+
+export type AlertasMarkAllReadResponse = {
+	updated: number;
 };
 
 type UseGetAlertasOptions = {
@@ -56,5 +60,23 @@ export function usePatchAlerta({ params, configuracion }: UsePatchAlertaOptions)
 		url: `${NEXT_PROXY_URL}/alertas/{id}/`,
 		configuracion: configuracion ?? defaultConfig,
 		params: params ?? defaultParams,
+	});
+}
+
+type UsePostAlertasMarkAllReadOptions = {
+	configuracion?: MutationConfig<
+		Record<string, never>,
+		AlertasMarkAllReadResponse,
+		ParamsBase
+	>;
+};
+
+export function usePostAlertasMarkAllRead({ configuracion }: UsePostAlertasMarkAllReadOptions = {}) {
+	const defaultConfig = {};
+
+	return usePost({
+		url: `${NEXT_PROXY_URL}/alertas/mark-all-read/`,
+		configuracion: configuracion ?? defaultConfig,
+		params: {},
 	});
 }

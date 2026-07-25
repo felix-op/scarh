@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.core.exceptions import ValidationError
 
 class Alerta(models.Model):
@@ -18,10 +19,22 @@ class Alerta(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADOS_CHOICES, default='nuevo')
     tipo = models.CharField(max_length=30, choices=TIPOS_CHOICES)
     fecha_hora = models.DateTimeField(auto_now_add=True)
+    fecha_cierre = models.DateTimeField(null=True, blank=True)
     limnigrafo = models.ForeignKey('Limnigrafo', on_delete=models.SET_NULL, null=True, blank=True, related_name='alertas')
     medicion = models.ForeignKey('Medicion', on_delete=models.SET_NULL, null=True, blank=True, related_name='alertas')
     usuarios = models.ManyToManyField('Usuario', related_name='alertas')
     descripcion = models.TextField(blank=True)
+    condicion = models.CharField(max_length=80, null=True, blank=True)
+    condicion_activa = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['limnigrafo', 'tipo', 'condicion'],
+                condition=Q(condicion_activa=True),
+                name='uniq_alerta_condicion_activa',
+            ),
+        ]
 
     def __str__(self):
         return f"Alerta {self.tipo} ({self.estado})"

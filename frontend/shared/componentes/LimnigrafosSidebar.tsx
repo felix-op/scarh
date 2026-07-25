@@ -26,7 +26,7 @@ const estadoColor: Record<string, string> = {
 	activo: "#82d987",
 	advertencia: "#facc15",
 	peligro: "#ef4444",
-	fuera: "#d65757",
+	fuera: "#475569",
 };
 
 type FiltroEstado = "todos" | VarianteEstadoLimnigrafo;
