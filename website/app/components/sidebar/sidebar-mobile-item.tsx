@@ -14,13 +14,12 @@ function SidebarMobileLeaf({ item }: { item: SidebarLink }) {
     <button
       type="button"
       onClick={() => router.push(item.href)}
-      aria-label={item.label}
-      title={item.label}
-      className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-shape-md ${
+      className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-shape-full ${
         isActive ? "bg-sidebar-link-active text-sidebar-foreground-active" : "button-sidebar"
       }`}
     >
       <IconifyIcon variant={item.icono} className="text-3xl shrink-0" />
+      {/* <span className="max-w-20 truncate text-base font-medium">{item.label}</span> */}
     </button>
   );
 }
@@ -40,18 +39,18 @@ function SidebarMobileGroup({ item }: { item: SidebarGroup }) {
     <Menu
       items={menuItems}
       ariaLabel={`Abrir menú de ${item.label}`}
-      side="bottom"
-      align="start"
+      side="top"
+      align="center"
+      size="lg"
       trigger={
         <button
           type="button"
-          aria-label={item.label}
-          title={item.label}
-          className={`flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-shape-md border-0 ${
+          className={`flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-shape-full border-0 ${
             algunHijoActivo ? "bg-sidebar-link-active text-sidebar-foreground-active" : "button-sidebar"
           }`}
         >
           <IconifyIcon variant={item.icono} className="text-3xl shrink-0" />
+          {/* <span className="max-w-20 truncate text-base font-medium">{item.label}</span> */}
         </button>
       }
     />

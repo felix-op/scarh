@@ -18,6 +18,7 @@ import { useMapEvents } from "react-leaflet";
 import { Mapa, MapaCapaBase, MapaControlZoom, MapaMarcador, MapaTooltip, MapaCirculo } from "./leaflet-primitivas";
 import { LimnigrafoMapaInfoPanel } from "./limnigrafo-mapa-info-panel";
 import { LimnigrafosMapaSidebar } from "./limnigrafos-mapa-sidebar";
+import { LimnigrafosMapaSidebarMobile } from "./limnigrafos-mapa-sidebar-mobile";
 import { BotonIcono } from "../ui/botones";
 import { SegmentedControl } from "../ui/segmented-control";
 import { IconifyIcon } from "../ui/iconify-icon";
@@ -337,13 +338,22 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
         )}
 
         {viewMode === "lista" && !placementMode && (
-          <LimnigrafosMapaSidebar
-            limnigrafos={limnigrafos}
-            selectedLimnigrafo={selectedLimnigrafo}
-            onSelectLimnigrafo={setSelectedLimnigrafo}
-            onMoverUbicacion={handleEditUbicacion}
-            onVerEnMapa={handleVerEnMapa}
-          />
+          <>
+            <LimnigrafosMapaSidebar
+              limnigrafos={limnigrafos}
+              selectedLimnigrafo={selectedLimnigrafo}
+              onSelectLimnigrafo={setSelectedLimnigrafo}
+              onMoverUbicacion={handleEditUbicacion}
+              onVerEnMapa={handleVerEnMapa}
+            />
+            <LimnigrafosMapaSidebarMobile
+              limnigrafos={limnigrafos}
+              selectedLimnigrafo={selectedLimnigrafo}
+              onSelectLimnigrafo={setSelectedLimnigrafo}
+              onMoverUbicacion={handleEditUbicacion}
+              onVerEnMapa={handleVerEnMapa}
+            />
+          </>
         )}
 
         {isLoading ? (

@@ -1,11 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { Usuario } from "@models";
 import { puedeVer } from "@utils";
 import { IconifyIcon, type IconVariants } from "../ui/iconify-icon";
+import { Menu, type MenuItemConfig } from "../ui/menu";
 
 export interface SidebarLink {
   label: string;
@@ -52,6 +53,20 @@ interface SidebarItemProps {
   onToggle?: () => void;
 }
 
+const COLLAPSE_ANIM_MS = 300;
+
+/** Centra el icono recién después de que el texto terminó de achicarse, para que no "salte" a mitad de la animación. */
+function useCentered(collapsed: boolean) {
+  const [centered, setCentered] = useState(collapsed);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setCentered(collapsed), collapsed ? COLLAPSE_ANIM_MS : 0);
+    return () => clearTimeout(timeout);
+  }, [collapsed]);
+
+  return centered;
+}
+
 function SidebarLabel({ children, collapsed }: { children: ReactNode; collapsed: boolean }) {
   return (
     <span
@@ -66,15 +81,16 @@ function SidebarLabel({ children, collapsed }: { children: ReactNode; collapsed:
 function SidebarLeaf({ item, collapsed }: { item: SidebarLink; collapsed: boolean }) {
   const pathname = usePathname();
   const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
+  const centered = useCentered(collapsed);
 
   return (
     <Link
       href={item.href}
-      className={`flex items-center h-11 w-full shrink-0 gap-3 rounded-shape-md px-3 ${
+      className={`flex items-center h-11 w-full shrink-0 rounded-shape-md px-3 transition-[gap] duration-300 ease-in-out ${centered ? "justify-center gap-0" : "gap-3"} ${
         isActive ? "bg-sidebar-link-active text-sidebar-foreground-active" : "button-sidebar"
       }`}
     >
-      <IconifyIcon variant={item.icono} className="text-xl shrink-0" />
+      <IconifyIcon variant={item.icono} className="text-3xl shrink-0" />
       <SidebarLabel collapsed={collapsed}>{item.label}</SidebarLabel>
     </Link>
   );
@@ -92,29 +108,53 @@ function SidebarGroupItem({
   onToggle: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const algunHijoActivo = item.children.some((child) => pathname.startsWith(child.href));
+  const centered = useCentered(collapsed);
 
-  return (
-    <div className="flex flex-col w-full">
-      <button
-        type="button"
-        onClick={onToggle}
-        className={`flex items-center h-11 w-full shrink-0 gap-3 rounded-shape-md border-0 px-3 cursor-pointer ${
-          algunHijoActivo ? "bg-sidebar-link-active text-sidebar-foreground-active" : "button-sidebar"
-        }`}
-      >
-        <IconifyIcon variant={item.icono} className="text-xl shrink-0" />
-        <SidebarLabel collapsed={collapsed}>{item.label}</SidebarLabel>
-        <span
-          className="ml-auto shrink-0 overflow-hidden transition-[max-width] duration-300 ease-in-out"
-          style={{ maxWidth: collapsed ? 0 : "1.5rem" }}
-        >
+  const trigger = (
+    <button
+      type="button"
+      onClick={collapsed ? undefined : onToggle}
+      className={`flex items-center h-11 w-full shrink-0 rounded-shape-md border-0 px-3 cursor-pointer transition-[gap] duration-300 ease-in-out ${centered ? "justify-center gap-0" : "gap-3"} ${
+        algunHijoActivo ? "bg-sidebar-link-active text-sidebar-foreground-active" : "button-sidebar"
+      }`}
+    >
+      <IconifyIcon variant={item.icono} className="text-3xl shrink-0" />
+      <SidebarLabel collapsed={collapsed}>{item.label}</SidebarLabel>
+      {!collapsed && (
+        <span className="ml-auto shrink-0 overflow-hidden transition-[max-width] duration-300 ease-in-out" style={{ maxWidth: "1.5rem" }}>
           <IconifyIcon
             variant="chevronDown"
             className={`text-lg transition-transform duration-300 ease-in-out ${isOpen ? "rotate-180" : ""}`}
           />
         </span>
-      </button>
+      )}
+    </button>
+  );
+
+  if (collapsed) {
+    const menuItems: MenuItemConfig[] = item.children.map((child) => ({
+      label: child.label,
+      icon: child.icono,
+      action: () => router.push(child.href),
+    }));
+
+    return (
+      <Menu
+        items={menuItems}
+        ariaLabel={`Abrir menú de ${item.label}`}
+        side="right"
+        align="start"
+        size="lg"
+        trigger={trigger}
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col w-full">
+      {trigger}
       <div
         className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
           isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"

@@ -58,15 +58,11 @@ export function Sidebar({ usuario }: SidebarProps) {
   };
 
   const toggleGroup = (label: string) => {
-    if (collapsed) {
-      setCollapsed(false);
-      localStorage.setItem(COLLAPSE_KEY, "false");
-    }
     setOpenGroup((prev) => (prev === label ? null : label));
   };
 
   return (
-    <aside className={`hidden md:flex h-full shrink-0 bg-sidebar font-outfit transition-[width] duration-300 ease-in-out ${collapsed ? "w-20" : "w-60"}`}>
+    <aside className={`hidden md:flex h-full shrink-0 bg-sidebar font-outfit transition-[width] duration-300 ease-in-out ${collapsed ? "w-24" : "w-80"}`}>
       <div className="flex flex-1 flex-col gap-3 overflow-hidden p-3 pl-4">
         <div className="flex flex-col gap-2 w-full">
           <div className="flex w-full justify-end">
