@@ -252,7 +252,6 @@ function MedicionesContent() {
 			queryParams,
 		},
 		config: {
-			placeholderData: (previous) => previous,
 			refetchInterval: MEDICIONES_REFETCH_INTERVAL_MS,
 			refetchIntervalInBackground: true,
 		},
@@ -275,15 +274,28 @@ function MedicionesContent() {
 		[importRowsSource, fallbackLimnigrafoId],
 	);
 
+	const appliedLimnigrafoIds = useMemo(() => {
+		const ids = appliedHistorialFilters.limnigrafo
+			.map((value) => Number.parseInt(value, 10))
+			.filter((value) => !Number.isNaN(value));
+
+		return new Set(ids);
+	}, [appliedHistorialFilters.limnigrafo]);
+
 	const tableRows = useMemo(
 		() =>
-			(medicionesData?.results ?? []).map((medicion) =>
-				mapMedicionToRow(
-					medicion,
-					limnigrafoNameById.get(medicion.limnigrafo) ?? `ID ${medicion.limnigrafo}`,
+			(medicionesData?.results ?? [])
+				.filter((medicion) => (
+					appliedLimnigrafoIds.size === 0 ||
+					appliedLimnigrafoIds.has(medicion.limnigrafo)
+				))
+				.map((medicion) =>
+					mapMedicionToRow(
+						medicion,
+						limnigrafoNameById.get(medicion.limnigrafo) ?? `ID ${medicion.limnigrafo}`,
+					),
 				),
-			),
-		[limnigrafoNameById, medicionesData],
+		[appliedLimnigrafoIds, limnigrafoNameById, medicionesData],
 	);
 
 	const serverCount = medicionesData?.count ?? 0;
