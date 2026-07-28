@@ -9,6 +9,7 @@ import BotonVariante from "@componentes/botones/BotonVariante";
 import CampoInput from "@componentes/formularios/CampoInput";
 import { TFormEditarLimnigrafo } from "../types";
 import Label from "@componentes/formularios/Label";
+import { Controller, useFormContext } from "react-hook-form";
 
 type FormularioEditarLimnigrafoProps = {
 	valoresIniciales: TFormEditarLimnigrafo;
@@ -17,6 +18,93 @@ type FormularioEditarLimnigrafoProps = {
 	handleCancelar: () => void;
 	isLoading?: boolean;
 };
+
+type CampoDuracionFieldName =
+	| "tiempo_advertencia_horas"
+	| "tiempo_advertencia_minutos"
+	| "tiempo_advertencia_segundos"
+	| "tiempo_peligro_horas"
+	| "tiempo_peligro_minutos"
+	| "tiempo_peligro_segundos";
+
+type CampoDuracionProps = {
+	label: string;
+	horasName: CampoDuracionFieldName;
+	minutosName: CampoDuracionFieldName;
+	segundosName: CampoDuracionFieldName;
+	descripcion?: string;
+};
+
+function normalizarParteDuracion(value: string, max?: number) {
+	if (!value) return "";
+
+	const onlyDigits = value.replace(/\D/g, "");
+	if (!onlyDigits) return "";
+
+	const parsed = Number(onlyDigits);
+	if (Number.isNaN(parsed)) return "";
+
+	const normalized = Math.max(0, max == null ? parsed : Math.min(parsed, max));
+	return String(normalized);
+}
+
+function CampoDuracion({
+	label,
+	horasName,
+	minutosName,
+	segundosName,
+	descripcion,
+}: CampoDuracionProps) {
+	const { control } = useFormContext<TFormEditarLimnigrafo>();
+	const partes: { name: CampoDuracionFieldName; label: string; max?: number }[] = [
+		{ name: horasName, label: "hs" },
+		{ name: minutosName, label: "min", max: 59 },
+		{ name: segundosName, label: "seg", max: 59 },
+	];
+
+	return (
+		<div className="flex flex-col gap-2">
+			<Label text={label} />
+			{descripcion ? (
+				<p className="text-sm leading-6 text-muted-foreground">
+					{descripcion}
+				</p>
+			) : null}
+			<div className="flex w-full max-w-[420px] items-center rounded-xl border-2 border-border bg-campo-input px-3 py-2 transition-colors focus-within:border-principal hover:border-foreground">
+				{partes.map((parte, index) => (
+					<div key={parte.name} className="flex min-w-0 flex-1 items-center">
+						<Controller
+							name={parte.name}
+							control={control}
+							render={({ field }) => (
+								<div className="flex min-w-0 flex-1 flex-col items-center gap-1">
+									<input
+										{...field}
+										value={field.value ?? ""}
+										type="text"
+										inputMode="numeric"
+										placeholder="00"
+										aria-label={`${label} ${parte.label}`}
+										onChange={(event) => {
+											field.onChange(normalizarParteDuracion(event.target.value, parte.max));
+										}}
+										className="h-9 w-full min-w-0 bg-transparent text-center text-lg font-semibold tabular-nums text-foreground outline-none placeholder:text-muted-foreground/70"
+									/>
+									<span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+										{parte.label}
+									</span>
+								</div>
+							)}
+						/>
+						{index < partes.length - 1 ? (
+							<span className="px-2 pb-5 text-xl font-semibold text-muted-foreground">:</span>
+						) : null}
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
 
 export function CamposFormularioEditarLimnigrafo({
 	handleCancelar,
@@ -86,52 +174,19 @@ export function CamposFormularioEditarLimnigrafo({
 						name="ultimo_mantenimiento"
 						label="Último mantenimiento:"
 					/>
-					<Label text="Tiempo máximo antes de Advertencias:" />
-					<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-						<CampoInput
-							name="tiempo_advertencia_horas"
-							placeholder="Horas"
-							label="Horas:"
-							type="number"
-						/>
-						<CampoInput
-							name="tiempo_advertencia_minutos"
-							placeholder="Minutos"
-							label="Minutos:"
-							type="number"
-						/>
-						<CampoInput
-							name="tiempo_advertencia_segundos"
-							placeholder="Segundos"
-							label="Segundos:"
-							type="number"
-						/>
-					</div>
-					<Label text="Tiempo máximo antes de Fuera de rango:" />
-					<p className={esModal ? "text-xs leading-5 text-muted-foreground" : "text-sm leading-6 text-muted-foreground"}>
-						Si no llegan mediciones dentro de este plazo, el sistema marcará el
-						limnígrafo como fuera de rango automáticamente.
-					</p>
-					<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-						<CampoInput
-							name="tiempo_peligro_horas"
-							placeholder="Horas"
-							label="Horas:"
-							type="number"
-						/>
-						<CampoInput
-							name="tiempo_peligro_minutos"
-							placeholder="Minutos"
-							label="Minutos:"
-							type="number"
-						/>
-						<CampoInput
-							name="tiempo_peligro_segundos"
-							placeholder="Segundos"
-							label="Segundos:"
-							type="number"
-						/>
-					</div>
+					<CampoDuracion
+						label="Tiempo máximo antes de Advertencias:"
+						horasName="tiempo_advertencia_horas"
+						minutosName="tiempo_advertencia_minutos"
+						segundosName="tiempo_advertencia_segundos"
+					/>
+					<CampoDuracion
+						label="Tiempo máximo antes de Fuera de rango:"
+						descripcion="Si no llegan mediciones dentro de este plazo, el sistema marcará el limnígrafo como fuera de rango automáticamente."
+						horasName="tiempo_peligro_horas"
+						minutosName="tiempo_peligro_minutos"
+						segundosName="tiempo_peligro_segundos"
+					/>
 				</div>
 
 				{esModal ? null : <Separador direction="vertical" />}
