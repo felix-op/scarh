@@ -6,34 +6,34 @@ limnigrafos:
       token: y4KZI6Oi.cpkJALA0BlsbsI1S2LS9uR7ZOG9KMJtE
       altura_min: 0.5
       altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
+      temperatura_min: 0
+      temperatura_max: 11
       presion_min: 950
       presion_max: 1050
       bateria_max: 100
       bateria_min: 10
       probabilidad_falla: 0.012
-      duracion_falla_min: 15
+      duracion_falla_min: 11
       duracion_falla_max: 60
     - id: 2
       token: ihrzCnkh.G0MqYgIzgBaKas45L0XNplIkdt2Cb5hc
       altura_min: 0.5
       altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
+      temperatura_min: 0
+      temperatura_max: 11
       presion_min: 950
       presion_max: 1050
       bateria_max: 100
       bateria_min: 10
       probabilidad_falla: 0.006
       duracion_falla_min: 8
-      duracion_falla_max: 25
+      duracion_falla_max: 11
     - id: 3
       token: f8awfBTT.ETzkbh1VyPRhO2Io7ARkC66RlCte8YrK
       altura_min: 0.5
       altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
+      temperatura_min: 0
+      temperatura_max: 11
       presion_min: 950
       presion_max: 1050
       bateria_max: 100
@@ -47,8 +47,8 @@ limnigrafos:
       token: kFMW2jlz.HTCMjyrFkGchmCWDkbJgsakB4xpVJK6G
       altura_min: 0.5
       altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
+      temperatura_min: 0
+      temperatura_max: 11
       presion_min: 950
       presion_max: 1050
       bateria_max: 100
@@ -62,34 +62,34 @@ limnigrafos:
       token: V86fNcZ8.xkS6e2UpzEXvvwwuXtcQUHKPHd7Yfbe9
       altura_min: 0.5
       altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
+      temperatura_min: 0
+      temperatura_max: 11
       presion_min: 950
       presion_max: 1050
       bateria_max: 100
       bateria_min: 10
       probabilidad_falla: 0.012
-      duracion_falla_min: 15
+      duracion_falla_min: 11
       duracion_falla_max: 60
     - id: 6
       token: ZXMPbTVQ.JfWbSrLY3wWtx46hSeir9vm7OfZ83zoK
       altura_min: 0.5
       altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
+      temperatura_min: 0
+      temperatura_max: 11
       presion_min: 950
       presion_max: 1050
       bateria_max: 100
       bateria_min: 10
       probabilidad_falla: 0.006
       duracion_falla_min: 8
-      duracion_falla_max: 25
+      duracion_falla_max: 11
     - id: 7
       token: 035LkoKN.hFxGDiUuDIFuLEsbeKLLkHoY3Kj2OsDC
       altura_min: 0.5
       altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
+      temperatura_min: 0
+      temperatura_max: 11
       presion_min: 950
       presion_max: 1050
       bateria_max: 100
@@ -103,8 +103,8 @@ limnigrafos:
       token: KWLtLXoM.d7oLGM3hcVRlZM7rk9dpNtWYJKuLe8cH
       altura_min: 0.5
       altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
+      temperatura_min: 0
+      temperatura_max: 11
       presion_min: 950
       presion_max: 1050
       bateria_max: 100
@@ -118,25 +118,25 @@ limnigrafos:
       token: wbG2iFai.X7aYpsp9i2Wg9wyvc2kdoEhlufNxPqsP
       altura_min: 0.5
       altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
+      temperatura_min: 0
+      temperatura_max: 11
       presion_min: 950
       presion_max: 1050
       bateria_max: 100
       bateria_min: 10
       probabilidad_falla: 0.012
-      duracion_falla_min: 15
+      duracion_falla_min: 11
       duracion_falla_max: 60
     - id: 10
       token: ZoWVS8C6.NpDLJgrlfbN4B0toy7hR6MOcdeh1CHIj
       altura_min: 0.5
       altura_max: 3.5
-      temperatura_min: -5
-      temperatura_max: 25
+      temperatura_min: 0
+      temperatura_max: 11
       presion_min: 950
       presion_max: 1050
       bateria_max: 100
       bateria_min: 10
       probabilidad_falla: 0.006
       duracion_falla_min: 8
-      duracion_falla_max: 25
+      duracion_falla_max: 11
