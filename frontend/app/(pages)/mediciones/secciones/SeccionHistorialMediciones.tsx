@@ -100,7 +100,6 @@ type SeccionHistorialMedicionesProps = {
 	onFuenteChange: (value: FuenteFiltro) => void;
 	onDesdeChange: (value: string) => void;
 	onHastaChange: (value: string) => void;
-	onBusquedaChange: (value: string) => void;
 	onApplyFilters: () => void;
 	onClearFilters: () => void;
 	onExport: (format: "csv" | "json") => void;
@@ -116,7 +115,6 @@ type SeccionHistorialMedicionesProps = {
 	pageSize: number;
 	pageSizeOptions: number[];
 	isFetching: boolean;
-	hasBusqueda: boolean;
 	onPageSizeChange: (value: number) => void;
 	onPrevPage: () => void;
 	onNextPage: () => void;
@@ -131,7 +129,6 @@ export default function SeccionHistorialMediciones({
 	onFuenteChange,
 	onDesdeChange,
 	onHastaChange,
-	onBusquedaChange,
 	onApplyFilters,
 	onClearFilters,
 	onExport,
@@ -147,7 +144,6 @@ export default function SeccionHistorialMediciones({
 	pageSize,
 	pageSizeOptions,
 	isFetching,
-	hasBusqueda,
 	onPageSizeChange,
 	onPrevPage,
 	onNextPage,
@@ -196,7 +192,7 @@ export default function SeccionHistorialMediciones({
 			</div>
 
 			<FiltrosContenedor>
-				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
 					<div className="flex flex-col gap-2">
 						<Label
 							name="mediciones-limnigrafos-historial"
@@ -259,18 +255,6 @@ export default function SeccionHistorialMediciones({
 							type="datetime-local"
 							value={filters.hasta}
 							onChange={(event) => onHastaChange(event.target.value)}
-						/>
-					</div>
-
-					<div className="flex flex-col gap-2">
-						<Label name="mediciones-busqueda-historial" text="Buscar" />
-						<TextField
-							id="mediciones-busqueda-historial"
-							name="mediciones-busqueda-historial"
-							type="text"
-							value={filters.busqueda}
-							onChange={(event) => onBusquedaChange(event.target.value)}
-							placeholder="ID, limnígrafo o valor"
 						/>
 					</div>
 				</div>
@@ -344,7 +328,6 @@ export default function SeccionHistorialMediciones({
 			<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
 				<p className="text-[13px] text-[#64748B] dark:text-[#94A3B8]">
 					Mostrando {startRow}-{endRow} de {serverCount}. Página {currentPage} de {totalPages}
-					{hasBusqueda ? ` (coincidencias en página: ${rows.length})` : ""}
 				</p>
 			</div>
 		</section>

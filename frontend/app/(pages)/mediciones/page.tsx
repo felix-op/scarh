@@ -71,7 +71,6 @@ function getDefaultHistorialFilters(): HistorialFilters {
 		fuente: "",
 		desde,
 		hasta,
-		busqueda: "",
 	};
 }
 
@@ -231,11 +230,6 @@ function MedicionesContent() {
 		const hastaIso = toIsoString(appliedHistorialFilters.hasta);
 		if (hastaIso) {
 			params.fecha_hasta = hastaIso;
-		}
-
-		const search = appliedHistorialFilters.busqueda.trim();
-		if (search) {
-			params.search = search;
 		}
 
 		return params;
@@ -615,7 +609,6 @@ function MedicionesContent() {
 						onFuenteChange={(value) => handleHistorialFilterChange("fuente", value)}
 						onDesdeChange={(value) => handleHistorialFilterChange("desde", value)}
 						onHastaChange={(value) => handleHistorialFilterChange("hasta", value)}
-						onBusquedaChange={(value) => handleHistorialFilterChange("busqueda", value)}
 						onApplyFilters={handleApplyHistorialFilters}
 						onClearFilters={handleClearHistorialFilters}
 						onExport={handleExport}
@@ -631,7 +624,6 @@ function MedicionesContent() {
 						pageSize={pageSize}
 						pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
 						isFetching={isFetchingMediciones}
-						hasBusqueda={Boolean(appliedHistorialFilters.busqueda)}
 						actionError={errorAccion}
 						actionMessage={mensaje}
 						onPageSizeChange={(value) => {

@@ -13,7 +13,6 @@ export type HistorialFilters = {
 	fuente: FuenteFiltro;
 	desde: string;
 	hasta: string;
-	busqueda: string;
 };
 
 export type MedicionRow = {

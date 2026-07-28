@@ -481,7 +481,7 @@ class MedicionTests(APITestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['altura_agua'], 2.0)
 
-    def test_filter_medicion_by_search_matches_limnigrafo_code(self):
+    def test_filter_medicion_by_search_does_not_match_limnigrafo_code(self):
         self.client.force_authenticate(user=self.user)
 
         other_limnigrafo = Limnigrafo.objects.create(
@@ -503,7 +503,7 @@ class MedicionTests(APITestCase):
             fecha_hora='2024-01-01T10:00:00Z',
             fuente='manual'
         )
-        target = Medicion.objects.create(
+        Medicion.objects.create(
             limnigrafo=other_limnigrafo,
             altura_agua=2.0,
             fecha_hora='2024-01-01T11:00:00Z',
@@ -512,9 +512,8 @@ class MedicionTests(APITestCase):
 
         response = self.client.get(self.list_url, {'search': 'search'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 1)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['id'], target.id)
+        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(len(response.data['results']), 0)
 
     def test_filter_medicion_by_search_matches_numeric_value(self):
         self.client.force_authenticate(user=self.user)

@@ -47,7 +47,7 @@ class MedicionFilter(django_filters.FilterSet):
     fecha_desde = django_filters.DateTimeFilter(field_name='fecha_hora', lookup_expr='gte')
     fecha_hasta = django_filters.DateTimeFilter(field_name='fecha_hora', lookup_expr='lte')
     fuente = django_filters.CharFilter(field_name='fuente', lookup_expr='iexact')
-    search = django_filters.CharFilter(method='filter_search', label='Búsqueda general (limnígrafo, fuente y valores)')
+    search = django_filters.CharFilter(method='filter_search', label='Búsqueda general (ID de medición, fuente y valores)')
 
     class Meta:
         model = Medicion
@@ -69,8 +69,6 @@ class MedicionFilter(django_filters.FilterSet):
 
         return queryset.filter(
             Q(id_text__icontains=search_value) |
-            Q(limnigrafo__codigo__icontains=search_value) |
-            Q(limnigrafo__descripcion__icontains=search_value) |
             Q(fuente__icontains=search_value) |
             Q(fecha_hora_text__icontains=search_value) |
             Q(altura_agua_text__icontains=search_value) |
