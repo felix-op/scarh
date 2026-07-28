@@ -72,6 +72,12 @@ const iconVariants = {
   pantallaCompleta: "icon-[material-symbols--fullscreen]",
   salirPantallaCompleta: "icon-[material-symbols--fullscreen-exit]",
   capas: "icon-[material-symbols--layers-outline]",
+  bateria: "icon-[mdi--battery]",
+  altura: "icon-[mdi--waves]",
+  presion: "icon-[mdi--gauge]",
+  temperatura: "icon-[mdi--thermometer]",
+  conexion: "icon-[mdi--wifi]",
+  estado: "icon-[mdi--clipboard-pulse-outline]",
 };
 
 export type IconVariants = keyof typeof iconVariants;

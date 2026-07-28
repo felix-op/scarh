@@ -16,7 +16,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { useSearchParams } from "next/navigation";
 import { useMapEvents } from "react-leaflet";
 import { Mapa, MapaCapaBase, MapaControlZoom, MapaMarcador, MapaTooltip, MapaCirculo } from "./leaflet-primitivas";
-import { LimnigrafoMapaInfoPanel } from "./limnigrafo-mapa-info-panel";
+import { CardInfoLimnigrafoMapa } from "../mapa/card-info-limnigrafo-mapa";
 import { LimnigrafosMapaSidebar } from "./limnigrafos-mapa-sidebar";
 import { LimnigrafosMapaSidebarMobile } from "./limnigrafos-mapa-sidebar-mobile";
 import { BotonIcono } from "../ui/botones";
@@ -334,7 +334,7 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
         )}
 
         {!placementMode && (
-          <LimnigrafoMapaInfoPanel limnigrafo={selectedLimnigrafo} onClose={() => setSelectedLimnigrafo(null)} />
+          <CardInfoLimnigrafoMapa limnigrafo={selectedLimnigrafo} onClose={() => setSelectedLimnigrafo(null)} />
         )}
 
         {viewMode === "lista" && !placementMode && (

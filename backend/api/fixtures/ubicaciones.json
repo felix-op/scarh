@@ -1,0 +1,8 @@
+[
+{"model": "api.ubicacion", "pk": 1, "fields": {"nombre": "Arroyo Grande - Ruta 3", "latitud": -54.7962, "longitud": -68.3130}},
+{"model": "api.ubicacion", "pk": 2, "fields": {"nombre": "Río Pipo - Parque Nacional Tierra del Fuego", "latitud": -54.8395, "longitud": -68.4023}},
+{"model": "api.ubicacion", "pk": 3, "fields": {"nombre": "Arroyo Buena Esperanza - Centro", "latitud": -54.8090, "longitud": -68.3040}},
+{"model": "api.ubicacion", "pk": 4, "fields": {"nombre": "Río Olivia - Zona Este", "latitud": -54.8010, "longitud": -68.2610}},
+{"model": "api.ubicacion", "pk": 5, "fields": {"nombre": "Arroyo Mackinlay - Puerto", "latitud": -54.8085, "longitud": -68.2950}},
+{"model": "api.ubicacion", "pk": 6, "fields": {"nombre": "Río Carbajal - Valle Tierra Mayor", "latitud": -54.7280, "longitud": -68.2870}}
+]

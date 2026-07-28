@@ -74,6 +74,7 @@ export function formatFechaHora(iso: string | null | undefined, fallback = "Sin 
   const d = new Date(iso);
   if (isNaN(d.getTime())) return fallback;
   return d.toLocaleString("es-AR", {
+    timeZone: "America/Argentina/Ushuaia",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -87,7 +88,12 @@ export function formatFecha(iso: string | null | undefined, fallback = "-"): str
   if (!iso) return fallback;
   const d = new Date(iso);
   if (isNaN(d.getTime())) return fallback;
-  return d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return d.toLocaleDateString("es-AR", {
+    timeZone: "America/Argentina/Ushuaia",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 export type TiempoUltimoDatoBucket = "todos" | "hora" | "dia" | "semana" | "mas_semana";
