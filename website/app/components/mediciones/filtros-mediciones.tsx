@@ -20,7 +20,7 @@ export interface FiltrosMedicionesProps {
   isPending?: boolean;
   exportandoCSV?: boolean;
   exportandoJSON?: boolean;
-  onChange: <K extends keyof MedicionesFiltrosState>(campo: K, valor: MedicionesFiltrosState[K]) => void;
+  onChange: <K extends keyof MedicionesFiltrosState>(_campo: K, _valor: MedicionesFiltrosState[K]) => void;
   onAplicar: () => void;
   onRestablecer: () => void;
   onExportCSV: () => void;
@@ -161,22 +161,26 @@ export function FiltrosMediciones({
 
         {/* Fila 3: Botones de acción alineados a la derecha */}
         <div className="flex flex-wrap items-center justify-end gap-3 w-full">
-          <Boton content="Restablecer" icon="restablecer" onClick={onRestablecer} disabled={isPending} />
-          <Boton content="Aplicar filtros" icon="filtro" variant="primary" onClick={onAplicar} disabled={isPending} />
-          <Boton
-            content="Exportar CSV"
-            icon="descargar"
-            onClick={onExportCSV}
-            disabled={isPending}
-            loading={exportandoCSV}
-          />
-          <Boton
-            content="Exportar JSON"
-            icon="descargar"
-            onClick={onExportJSON}
-            disabled={isPending}
-            loading={exportandoJSON}
-          />
+          <div className="flex gap-2">
+            <Boton content="Restablecer" icon="restablecer" onClick={onRestablecer} disabled={isPending} />
+            <Boton content="Aplicar filtros" icon="filtro" variant="primary" onClick={onAplicar} disabled={isPending} />
+          </div>
+          <div className="flex gap-2">
+            <Boton
+              content="Exportar CSV"
+              icon="descargar"
+              onClick={onExportCSV}
+              disabled={isPending}
+              loading={exportandoCSV}
+            />
+            <Boton
+              content="Exportar JSON"
+              icon="descargar"
+              onClick={onExportJSON}
+              disabled={isPending}
+              loading={exportandoJSON}
+            />
+          </div>
         </div>
       </div>
     </Card>

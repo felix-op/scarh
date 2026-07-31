@@ -235,8 +235,7 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-foreground-title">Mediciones</h1>
+      <div className="flex items-center justify-end gap-4">
         <BotonImportar content="Importar datos" onClick={handleImportar} />
       </div>
 
