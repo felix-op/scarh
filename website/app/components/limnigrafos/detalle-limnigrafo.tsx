@@ -2,10 +2,11 @@
 
 import { ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LayoutBase } from "../layout/layout-base";
 import { SeccionAgruparInformacion } from "../ui/seccion-agrupar-informacion";
 import { Alert } from "../ui/alerts";
 import { InfoTooltip } from "../ui/info-tooltip";
-import { Boton, BotonVolver, BotonImportar, BotonMediciones, BotonEstadisticas, BotonEditar, BotonEliminar } from "../ui/botones";
+import { Boton, BotonImportar, BotonMediciones, BotonEstadisticas, BotonEditar, BotonEliminar } from "../ui/botones";
 import { EstadoConexionLimnigrafo } from "./estado-conexion-limnigrafo";
 import { UltimaMedicionLimnigrafo } from "./ultima-medicion-limnigrafo";
 import { RutasAccesoLimnigrafo } from "./rutas-acceso-limnigrafo";
@@ -43,29 +44,20 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
     valor != null ? `${valor}${unidad}` : "-";
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="self-start">
-        <BotonVolver content="Volver" onClick={() => router.push("/dashboard/limnigrafos")} />
-      </div>
-
-      {/* Encabezado + editar/eliminar */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold text-foreground-title">Limnígrafo {limnigrafo.codigo}</h1>
-          {limnigrafo.ubicacion?.nombre && (
-            <span className="text-sm text-foreground-secondary">{limnigrafo.ubicacion.nombre}</span>
-          )}
-        </div>
-
-        {puedeEditar && (
+    <LayoutBase
+      titulo={`Limnígrafo ${limnigrafo.codigo}`}
+      subtitulo={limnigrafo.ubicacion?.nombre || undefined}
+      volver
+      acciones={
+        puedeEditar && (
           <div className="flex flex-wrap gap-2 md:justify-end">
             <Boton variant="warn" icon="llave" content="Solicitar token" onClick={() => setTokenOpen(true)} />
             <BotonEditar content="Editar" onClick={() => router.push(`/dashboard/limnigrafos/editar/${id}`)} />
             <BotonEliminar content="Eliminar" onClick={() => setEliminarOpen(true)} />
           </div>
-        )}
-      </div>
-
+        )
+      }
+    >
       {/* Acciones */}
       <div className="flex flex-wrap gap-2">
         <BotonImportar content="Importar datos" onClick={() => router.push(`/dashboard/limnigrafos/importar/${id}`)} />
@@ -144,7 +136,7 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
       />
 
       <VentanaSolicitarToken open={tokenOpen} onClose={() => setTokenOpen(false)} limnigrafo={limnigrafo} />
-    </div>
+    </LayoutBase>
   );
 }
 

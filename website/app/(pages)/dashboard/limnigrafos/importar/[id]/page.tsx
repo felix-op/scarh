@@ -3,7 +3,7 @@
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  BotonVolver,
+  LayoutBase,
   BotonImportar,
   BotonIconoEliminar,
   SelectorArchivoImportacion,
@@ -168,25 +168,19 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
   const remainingCount = parsedRows.filter((row) => row.status === "valid").length;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground-title">Importar mediciones</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Cargá un archivo con el historial de mediciones para integrarlo al sistema.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <BotonVolver onClick={() => router.back()} />
-          <BotonImportar
-            onClick={handleGuardar}
-            disabled={!canSave || hasErrors}
-            loading={isMutando}
-            content="Importar datos"
-          />
-        </div>
-      </div>
-
+    <LayoutBase
+      titulo="Importar mediciones"
+      subtitulo="Cargá un archivo con el historial de mediciones para integrarlo al sistema."
+      volver
+      acciones={
+        <BotonImportar
+          onClick={handleGuardar}
+          disabled={!canSave || hasErrors}
+          loading={isMutando}
+          content="Importar datos"
+        />
+      }
+    >
       <div className="flex flex-col gap-6 items-start">
         {/* PANEL SUPERIOR: Controles */}
         <div className="flex flex-col gap-6 w-full bg-card border border-border p-5 rounded-lg shadow-sm lg:flex-row lg:items-start lg:gap-8">
@@ -272,6 +266,6 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
         remainingCount={remainingCount}
         isLoading={importarMediciones.isPending}
       />
-    </div>
+    </LayoutBase>
   );
 }
