@@ -22,6 +22,16 @@
   box-sizing: border-box;
 }
 
+@media (max-width: 640px) {
+  .button {
+    font-size: 1rem; /* text-base, un poco más chico que text-lg */
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
 /* Animaciones del Botón (Transiciones y Escala Activa) */
 .button-animated {
   transition: all 0.1s ease-in-out;
