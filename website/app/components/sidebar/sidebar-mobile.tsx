@@ -10,7 +10,7 @@ export interface SidebarMobileProps {
 
 export function SidebarMobile({ usuario }: SidebarMobileProps) {
   return (
-    <header className="flex w-full shrink-0 items-center justify-between gap-3 bg-sidebar p-3 font-outfit shadow-sm md:hidden">
+    <header className="flex w-full shrink-0 items-center justify-between gap-3 border-b border-border bg-sidebar p-3 font-outfit shadow-md md:hidden">
       <div className="flex min-w-0 items-center gap-3">
         <img src="/logo.png" alt="Logo de SCARH" className="h-9 w-9 shrink-0" />
         <span className="truncate text-xl font-bold text-logo uppercase">SCARH</span>

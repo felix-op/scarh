@@ -34,5 +34,13 @@ export function SidebarProfileMenu({ triggerClassName = "", trigger }: SidebarPr
     },
   ];
 
-  return <Menu items={items} ariaLabel="Abrir menú de usuario" triggerClassName={triggerClassName} trigger={trigger} />;
+  return (
+    <Menu
+      items={items}
+      ariaLabel="Abrir menú de usuario"
+      triggerClassName={triggerClassName}
+      trigger={trigger}
+      size="lg"
+    />
+  );
 }
