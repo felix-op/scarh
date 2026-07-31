@@ -5,6 +5,8 @@ import { TablaSimpleContent, type TablaSimpleProps } from "./tabla-simple";
 export interface TablaPaginadaProps<T> extends TablaSimpleProps<T> {
   paginationConfig: PaginationConfig;
   paginationPosition?: "top" | "bottom" | "both";
+  /** Deshabilita el selector de filas por página y los botones de navegación, ej. mientras se aplican filtros. */
+  disabledSelector?: boolean;
 }
 
 /**
@@ -14,6 +16,7 @@ export interface TablaPaginadaProps<T> extends TablaSimpleProps<T> {
 export function TablaPaginada<T>({
   paginationConfig,
   paginationPosition = "bottom",
+  disabledSelector = false,
   className = "",
   ...tablaProps
 }: TablaPaginadaProps<T>) {
@@ -24,7 +27,7 @@ export function TablaPaginada<T>({
     <Card className={className}>
       {showTop && (
         <div className="border-b border-border">
-          <Paginado config={paginationConfig} idSuffix="top" />
+          <Paginado config={paginationConfig} idSuffix="top" disabled={disabledSelector} />
         </div>
       )}
 
@@ -32,7 +35,7 @@ export function TablaPaginada<T>({
 
       {showBottom && (
         <div className="border-t border-border">
-          <Paginado config={paginationConfig} idSuffix="bottom" />
+          <Paginado config={paginationConfig} idSuffix="bottom" disabled={disabledSelector} />
         </div>
       )}
     </Card>

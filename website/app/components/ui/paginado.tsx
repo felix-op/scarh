@@ -22,7 +22,7 @@ export interface PaginationConfig {
   onNext: () => void;
   pageLength: number;
   pageLengthOptions: number[];
-  onChangePageLength: (length: number) => void;
+  onChangePageLength: (_length: number) => void;
 }
 
 export interface PaginadoProps {
@@ -30,9 +30,11 @@ export interface PaginadoProps {
   /** Sufijo para el `name` del Select, evita colisión si se renderiza arriba y abajo a la vez. */
   idSuffix?: string;
   className?: string;
+  /** Deshabilita el selector de filas por página y los botones de navegación. */
+  disabled?: boolean;
 }
 
-export function Paginado({ config, idSuffix = "", className = "" }: PaginadoProps) {
+export function Paginado({ config, idSuffix = "", className = "", disabled = false }: PaginadoProps) {
   const { page, maxPage, totalRows, onPrev, onNext, pageLength, pageLengthOptions, onChangePageLength } = config;
 
   const from = totalRows === 0 ? 0 : (page - 1) * pageLength + 1;
@@ -52,7 +54,7 @@ export function Paginado({ config, idSuffix = "", className = "" }: PaginadoProp
         <BotonIcono
           icon="chevronLeft"
           onClick={onPrev}
-          disabled={page <= 1}
+          disabled={disabled || page <= 1}
         />
         <div className="w-28">
           <Select
@@ -62,12 +64,13 @@ export function Paginado({ config, idSuffix = "", className = "" }: PaginadoProp
             options={pageLengthOptions.map((n) => ({ value: String(n), label: String(n) }))}
             onChange={(value) => onChangePageLength(Number(value))}
             labelPosition="left"
+            disabled={disabled}
           />
         </div>
         <BotonIcono
           icon="chevronRight"
           onClick={onNext}
-          disabled={page >= maxPage}
+          disabled={disabled || page >= maxPage}
           className="button-default-icon"
         />
       </div>

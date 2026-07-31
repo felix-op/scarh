@@ -7,6 +7,8 @@ import { TablaConAccionesContent, type TablaConAccionesProps } from "./tabla-con
 export interface TablaConAccionesPaginadaProps<T> extends TablaConAccionesProps<T> {
   paginationConfig: PaginationConfig;
   paginationPosition?: "top" | "bottom" | "both";
+  /** Deshabilita el selector de filas por página y los botones de navegación, ej. mientras se aplican filtros. */
+  disabledSelector?: boolean;
 }
 
 /**
@@ -17,6 +19,7 @@ export interface TablaConAccionesPaginadaProps<T> extends TablaConAccionesProps<
 export function TablaConAccionesPaginada<T>({
   paginationConfig,
   paginationPosition = "bottom",
+  disabledSelector = false,
   className = "",
   ...tablaProps
 }: TablaConAccionesPaginadaProps<T>) {
@@ -27,7 +30,7 @@ export function TablaConAccionesPaginada<T>({
     <Card className={className}>
       {showTop && (
         <div className="border-b border-border">
-          <Paginado config={paginationConfig} idSuffix="top" />
+          <Paginado config={paginationConfig} idSuffix="top" disabled={disabledSelector} />
         </div>
       )}
 
@@ -35,7 +38,7 @@ export function TablaConAccionesPaginada<T>({
 
       {showBottom && (
         <div className="border-t border-border">
-          <Paginado config={paginationConfig} idSuffix="bottom" />
+          <Paginado config={paginationConfig} idSuffix="bottom" disabled={disabledSelector} />
         </div>
       )}
     </Card>
