@@ -13,8 +13,7 @@ import {
   Alert,
   Chip,
   Card,
-  ChipEstadoConexion,
-  ChipEstadoMedicion,
+  ChipEstadoLimnigrafo,
   VentanaAgregarLimnigrafo,
   VentanaEliminarLimnigrafo,
   VentanaSolicitarToken,
@@ -119,14 +118,17 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
 
   const columns: TableColumn<LimnigrafoResponse>[] = [
     {
-      id: "estado_conexion",
-      header: "Conexión",
-      cell: (row) => <ChipEstadoConexion estado={row.estado_conexion} tipoComunicacion={row.tipo_comunicacion} />,
-    },
-    {
-      id: "estado_medicion",
-      header: "Últ. medición",
-      cell: (row) => <ChipEstadoMedicion estado={row.estado_medicion} />,
+      id: "estado",
+      header: "Estado",
+      cell: (row) => (
+        <ChipEstadoLimnigrafo
+          estadoConexion={row.estado_conexion}
+          estadoMedicion={row.estado_medicion}
+          tipoComunicacion={row.tipo_comunicacion}
+          size="sm"
+          anchoFijo
+        />
+      ),
     },
     {
       id: "codigo",

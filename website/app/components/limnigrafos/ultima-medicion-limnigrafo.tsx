@@ -1,6 +1,6 @@
 import { SeccionAgruparInformacion } from "../ui/seccion-agrupar-informacion";
 import { Chip } from "../ui/chip";
-import { ChipEstadoMedicion } from "./chip-estado-limnigrafo";
+import { ChipEstadoLimnigrafo } from "./chip-estado-limnigrafo";
 import { formatFechaHora, formatearMedicion } from "@utils";
 import type { LimnigrafoResponse } from "@models";
 
@@ -33,10 +33,11 @@ export function UltimaMedicionLimnigrafo({ limnigrafo }: UltimaMedicionLimnigraf
 
   return (
     <SeccionAgruparInformacion title="Última medición">
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium uppercase tracking-wide text-foreground-secondary">Estado del lote</span>
-        <ChipEstadoMedicion estado={limnigrafo.estado_medicion} size="sm" />
-      </div>
+      <ChipEstadoLimnigrafo
+        estadoConexion={limnigrafo.estado_conexion}
+        estadoMedicion={limnigrafo.estado_medicion}
+        tipoComunicacion={limnigrafo.tipo_comunicacion}
+      />
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <DatoItem label="Fecha y hora" value={formatFechaHora(medicion.fecha_hora)} />
         <DatoItem label="Altura de agua" value={formatearMedicion(medicion.altura_agua, "altura_agua")} />

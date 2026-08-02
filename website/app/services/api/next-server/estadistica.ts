@@ -1,6 +1,11 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
-import type { EstadisticaTablaQueryParams, EstadisticaTablaResponse, ParamsBase } from "@models";
+import type {
+  DashboardResponse,
+  EstadisticaTablaQueryParams,
+  EstadisticaTablaResponse,
+  ParamsBase,
+} from "@models";
 
 /**
  * Tabla de estadísticas descriptivas: `GET /estadisticas/tabla/`.
@@ -16,5 +21,19 @@ export async function getSSREstadisticasTabla(
     method: "GET",
     params: { queryParams },
     tags: ["estadistica"],
+  });
+}
+
+/**
+ * Panorama de la instalación para la pantalla de inicio: `GET /estadisticas/dashboard/`.
+ *
+ * Pide sesión pero ningún rol, así que lo puede consumir cualquier usuario del
+ * sistema aunque no tenga permisos de estadísticas.
+ */
+export async function getSSREstadisticasDashboard(): Promise<DashboardResponse> {
+  return RequestSSR<DashboardResponse>({
+    url: "estadisticas/dashboard/",
+    method: "GET",
+    tags: ["estadistica", "mediciones", "limnigrafos"],
   });
 }

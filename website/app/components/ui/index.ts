@@ -21,6 +21,7 @@ export * from "./tabs";
 export * from "./segmented-control";
 export * from "./alerts";
 export * from "./chip";
+export * from "./chip-estado";
 export * from "./password";
 export * from "./mensaje-flotante";
 export * from "./seccion-agrupar-informacion";

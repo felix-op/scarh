@@ -10,3 +10,4 @@ export * from "./models.ubicacion";
 export * from "./auth";
 export * from "./backend";
 export * from "./models.medicion-serie";
+export * from "./models.dashboard";

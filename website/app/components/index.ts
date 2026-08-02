@@ -7,6 +7,7 @@ export * from "./historial";
 export * from "./mediciones";
 export * from "./estadisticas";
 export * from "./graficos";
+export * from "./dashboard";
 export * from "./limnigrafos";
 export * from "./mapa";
 export * from "./mapa-legacy";

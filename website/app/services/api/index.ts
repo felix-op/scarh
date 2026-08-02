@@ -12,7 +12,8 @@ export {
 } from "./next-server/auth";
 
 export {
-  getSSREstadisticasTabla
+  getSSREstadisticasTabla,
+  getSSREstadisticasDashboard
 } from "./next-server/estadistica";
 
 export {
