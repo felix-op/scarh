@@ -1,23 +1,8 @@
 from django.db import models
-import sys
 
-try:
-    import psycopg2
-    HAS_POSTGRES_SUPPORT = True
-except ImportError:
-    try:
-        # pyrefly: ignore [missing-import]
-        import psycopg
-        HAS_POSTGRES_SUPPORT = True
-    except ImportError:
-        HAS_POSTGRES_SUPPORT = False
-
-if 'test' in sys.argv or not HAS_POSTGRES_SUPPORT:
-    class ArrayField(models.JSONField):
-        def __init__(self, base_field=None, **kwargs):
-            super().__init__(**kwargs)
-else:
-    from django.contrib.postgres.fields import ArrayField
+# `tipo_de_comunicacion` usa `ArrayField`, que existe sólo en PostgreSQL. El
+# proyecto no soporta otro motor, tampoco en los tests.
+from django.contrib.postgres.fields import ArrayField
 
 import secrets, hashlib
 from simple_history.models import HistoricalRecords # type: ignore

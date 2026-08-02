@@ -7,7 +7,13 @@ from .medicionSerializer import (
     MedicionImportRowSerializer,
 )
 from .ubicacionSerializer import UbicacionSerializer, UbicacionOutputSerializer
-from .estadisticaSerializer import EstadisticaInputSerializer, EstadisticaOutputSerializer
+from .estadisticaSerializer import (
+    EstadisticaInputSerializer,
+    EstadisticaOutputSerializer,
+    EstadisticaTablaInputSerializer,
+    EstadisticaFilaSerializer,
+    EstadisticaTablaOutputSerializer,
+)
 from .customTokenRefreshView import CustomTokenRefreshSerializer
 from .changePasswordSerializer import ChangePasswordSerializer
 from .alertaSerializer import AlertaSerializer
@@ -25,6 +31,9 @@ __all__ = [
     "UbicacionOutputSerializer",
     "EstadisticaInputSerializer",
     "EstadisticaOutputSerializer",
+    "EstadisticaTablaInputSerializer",
+    "EstadisticaFilaSerializer",
+    "EstadisticaTablaOutputSerializer",
     "CustomTokenRefreshSerializer",
     "ChangePasswordSerializer",
     "AlertaSerializer",

@@ -296,11 +296,12 @@ class LimnigrafoTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
-    def test_verificar_conexiones_command_updates_state(self):
+    def test_generar_alerta_command_updates_state(self):
         from django.core.management import call_command
         from api.models import Alerta
-        
-        # Simular desconexión creando una última medición en el pasado
+
+        # Simular desconexión creando una última medición en el pasado.
+        # 45 min supera `tiempo_advertencia` (30 min) sin llegar a `tiempo_peligro` (1 h).
         medicion = Medicion.objects.create(
             limnigrafo=self.limnigrafo,
             altura_agua=2.0,
@@ -310,9 +311,9 @@ class LimnigrafoTests(APITestCase):
         self.limnigrafo.ultima_medicion = medicion
         self.limnigrafo.estado = 'normal'
         self.limnigrafo.save(update_fields=['ultima_medicion', 'estado'])
-        
+
         # Ejecutar comando
-        call_command('verificar_conexiones')
+        call_command('generar_alerta')
         
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado, 'advertencia')

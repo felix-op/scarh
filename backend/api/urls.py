@@ -13,7 +13,10 @@ router.register(r'limnigrafos', LimnigrafoViewSet, basename='limnigrafos')
 router.register(r'historial', HistorialViewSet, basename='historial') 
 router.register(r'medicion', MedicionViewSet, basename='medicion') 
 router.register(r'ubicacion', UbicacionViewSet, basename='ubicacion') 
-router.register(r'estadistica', EstadisticaViewSet, basename='estadistica') 
+# `estadistica` (singular) es la ruta legacy que consume el frontend anterior.
+# `estadisticas` (plural) expone la acción `tabla`, que es la que usa `website`.
+router.register(r'estadistica', EstadisticaViewSet, basename='estadistica')
+router.register(r'estadisticas', EstadisticaViewSet, basename='estadisticas')
 router.register(r'alertas', AlertaViewSet, basename='alertas')
 router.register(r'rutas-acceso', RutaAccesoViewSet, basename='rutas-acceso')
 
