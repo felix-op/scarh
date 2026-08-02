@@ -1,6 +1,6 @@
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
-from ..serializer import UsuarioSerializer, ChangePasswordSerializer
+from ..serializer import UsuarioSerializer, ChangePasswordSerializer, PerfilSerializer
 from ..models import Usuario, Rol
 from ..filters import UsuarioFilter
 from ..utils.definicion_roles import PREDEFINED_ROLE_NAMES
@@ -33,6 +33,48 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     filterset_class = UsuarioFilter
     ordering_fields = ['id', 'first_name', 'last_name', 'username', 'email']
     ordering = ['id']
+
+    @action(
+        detail=False,
+        methods=['get', 'patch'],
+        url_path='me',
+        # Sólo autenticación: un usuario siempre puede ver y editar sus propios
+        # datos, aunque no tenga el rol `usuarios-visualizar`. El permiso del
+        # viewset gobierna el acceso a los registros *de otros*.
+        permission_classes=[IsAuthenticated],
+    )
+    def me(self, request):
+        """
+        Perfil del usuario autenticado.
+
+        `GET` devuelve sus datos; `PATCH` actualiza sólo información personal. Ver
+        `PerfilSerializer` sobre qué queda fuera y por qué.
+        """
+        if request.method == 'GET':
+            return Response(PerfilSerializer(request.user).data)
+
+        serializer = PerfilSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        cambios = construir_cambios_instancia(
+            request.user,
+            serializer.validated_data,
+            campos_excluidos={"password"},
+        )
+        usuario = serializer.save()
+
+        registrar_accion_auditoria_en_commit(
+            request=request,
+            tipo_accion="modified",
+            entidad="Usuario",
+            entidad_id=usuario.id,
+            descripcion=construir_descripcion_modificacion(
+                "Editó su propio perfil.", cambios
+            ),
+            metadata=sanitizar_auditoria({"cambios": cambios}),
+        )
+
+        return Response(PerfilSerializer(usuario).data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
         usuario = serializer.save()

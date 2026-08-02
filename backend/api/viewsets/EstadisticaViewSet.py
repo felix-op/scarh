@@ -277,6 +277,7 @@ class EstadisticaViewSet(viewsets.GenericViewSet):
                 "codigo": limnigrafo.codigo,
                 "estado_medicion": limnigrafo.estado_medicion,
                 "estado_conexion": limnigrafo.estado_conexion,
+                "tipo_de_comunicacion": limnigrafo.tipo_de_comunicacion or [],
                 "ultima_medicion": (
                     {
                         "fecha_hora": limnigrafo.ultima_medicion.fecha_hora,
