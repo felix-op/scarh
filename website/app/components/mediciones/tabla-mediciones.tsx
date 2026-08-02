@@ -7,7 +7,7 @@ import { es } from "date-fns/locale";
 import { TablaConAccionesPaginada, ActionConfig, TableColumn, Chip, ChipVariant, BotonImportar } from "@components";
 import { useMensajes } from "@services";
 import { obtenerTodasLasMedicionesFiltradas } from "@hooks";
-import { opcionesFuenteMedicion, obtenerFechasVentana, exportarComoCSV, exportarComoJSON } from "@utils";
+import { opcionesFuenteMedicion, obtenerFechasVentana, exportarComoCSV, exportarComoJSON, formatearMedicion, etiquetaConUnidad } from "@utils";
 import type { MedicionResponse, PaginatedMedicionResponse, LimnigrafoResponse } from "@models";
 import { FiltrosMediciones, type MedicionesFiltrosState } from "./filtros-mediciones";
 
@@ -29,13 +29,6 @@ const fuenteVariant: Record<string, ChipVariant> = {
   import_csv: "info",
   import_json: "info",
 };
-
-function formatNumero(valor: number | null, sufijo: string, digitos = 2): string {
-  if (valor === null || valor === undefined || Number.isNaN(valor)) {
-    return "-";
-  }
-  return `${valor.toFixed(digitos)} ${sufijo}`;
-}
 
 function extraerFiltros(filtros: FiltrosMedicionesPagina): MedicionesFiltrosState {
   return {
@@ -149,10 +142,10 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
         "Fecha y hora",
         "Limnígrafo",
         "Fuente",
-        "Altura de agua (m)",
-        "Presión (hPa)",
-        "Temperatura (°C)",
-        "Batería (%)",
+        etiquetaConUnidad("altura_agua"),
+        etiquetaConUnidad("presion"),
+        etiquetaConUnidad("temperatura"),
+        etiquetaConUnidad("nivel_de_bateria"),
       ];
       exportarComoCSV("mediciones.csv", headers, filasParaExportar(rows));
       avisarResultadoExport(rows.length, truncado, "CSV");
@@ -200,22 +193,22 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
     {
       id: "altura_agua",
       header: "Altura de agua",
-      cell: (row) => formatNumero(row.altura_agua, "m"),
+      cell: (row) => formatearMedicion(row.altura_agua, "altura_agua"),
     },
     {
       id: "presion",
       header: "Presión",
-      cell: (row) => formatNumero(row.presion, "hPa"),
+      cell: (row) => formatearMedicion(row.presion, "presion"),
     },
     {
       id: "temperatura",
       header: "Temperatura",
-      cell: (row) => formatNumero(row.temperatura, "°C"),
+      cell: (row) => formatearMedicion(row.temperatura, "temperatura"),
     },
     {
       id: "nivel_de_bateria",
       header: "Batería",
-      cell: (row) => formatNumero(row.nivel_de_bateria, "%", 1),
+      cell: (row) => formatearMedicion(row.nivel_de_bateria, "nivel_de_bateria"),
     },
   ];
 

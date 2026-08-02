@@ -4,11 +4,31 @@ import type {
   MedicionResponse,
   MedicionPayload,
   PaginatedMedicionResponse,
+  ParamsBase,
   ParamsPaginated,
   MedicionImportPayload,
   MedicionImportValidationResponse,
   MedicionBulkImportResponse,
+  MedicionSerieQueryParams,
+  MedicionSerieResponse,
 } from "@models";
+
+/**
+ * Serie temporal agrupada para graficar: `GET /medicion/serie/`.
+ *
+ * El downsampling lo hace el servidor. Los query params van tipados y requeridos
+ * porque el backend responde 400 si falta cualquiera.
+ */
+export async function getSSRMedicionSerie(
+  queryParams: MedicionSerieQueryParams
+): Promise<MedicionSerieResponse> {
+  return RequestSSR<MedicionSerieResponse, ParamsBase>({
+    url: "medicion/serie/",
+    method: "GET",
+    params: { queryParams },
+    tags: ["mediciones"],
+  });
+}
 
 export async function getServerMediciones(params?: ParamsPaginated): Promise<PaginatedMedicionResponse> {
   return RequestSSR<PaginatedMedicionResponse, ParamsPaginated>({

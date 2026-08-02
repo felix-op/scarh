@@ -2,7 +2,6 @@ import { z } from "zod";
 import type { AgrupacionEstadistica, AtributoEstadistica } from "@models";
 import {
   AGRUPACION_POR_DEFECTO,
-  ATRIBUTO_METADATA,
   ATRIBUTO_POR_DEFECTO,
   VENTANAS_ESTADISTICAS,
   VENTANA_POR_DEFECTO,
@@ -11,6 +10,7 @@ import {
   opcionesAgrupacionPeriodo,
   type VistaEstadistica,
 } from "./constantes-estadisticas";
+import { ATRIBUTO_METADATA } from "./mediciones.formato";
 import { FORMATO_FECHA, obtenerRangoVentana } from "./estadisticas.utiles";
 
 /**

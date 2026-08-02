@@ -5,11 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { Tabs } from "../ui/tabs";
 import { Alert } from "../ui/alerts";
 import { Boton } from "../ui/botones";
-import { Card } from "../ui/cards";
-import { IconifyIcon } from "../ui/iconify-icon";
 import type { OpcionLimnigrafo } from "../formularios/multi-select-limnigrafos";
 import { FiltrosEstadisticas } from "./filtros-estadisticas";
 import { TablaEstadisticas } from "./tabla-estadisticas";
+import { SeccionGraficos } from "./seccion-graficos";
 import {
   AGRUPACION_METADATA,
   AGRUPACION_POR_DEFECTO,
@@ -22,7 +21,7 @@ import {
   type FiltrosEstadisticasState as TFiltrosEstadisticas,
   type VistaEstadistica,
 } from "@utils";
-import type { EstadisticaTablaResponse } from "@models";
+import type { EstadisticaTablaResponse, MedicionSerieResponse } from "@models";
 
 /**
  * Pantalla de estadísticas: tres vistas sobre la misma consulta.
@@ -35,14 +34,17 @@ import type { EstadisticaTablaResponse } from "@models";
  *
  * @property {TFiltrosEstadisticas} filtros Filtros vigentes, ya parseados de la URL.
  * @property {OpcionLimnigrafo[]} limnigrafos Limnígrafos disponibles.
- * @property {EstadisticaTablaResponse | null} datos Respuesta del endpoint, o `null`
- *   si no había selección suficiente para consultarlo.
+ * @property {EstadisticaTablaResponse | null} datos Respuesta del endpoint de tabla, o
+ *   `null` si no había selección suficiente para consultarlo.
+ * @property {MedicionSerieResponse | null} serie Series temporales, sólo en la vista
+ *   de gráficos.
  * @property {string} [errorCarga] Mensaje del backend si la consulta falló.
  */
 export interface PantallaEstadisticasProps {
   filtros: TFiltrosEstadisticas;
   limnigrafos: OpcionLimnigrafo[];
   datos: EstadisticaTablaResponse | null;
+  serie: MedicionSerieResponse | null;
   errorCarga?: string;
 }
 
@@ -50,6 +52,7 @@ export function PantallaEstadisticas({
   filtros,
   limnigrafos,
   datos,
+  serie,
   errorCarga,
 }: PantallaEstadisticasProps) {
   const router = useRouter();
@@ -96,10 +99,6 @@ export function PantallaEstadisticas({
   };
 
   /**
-   * Cambiar de pestaña navega de inmediato con los filtros ya aplicados: la vista
-   * no es un campo del formulario que haya que confirmar con "Aplicar".
-   */
-  /**
    * Vuelve a ejecutar el Server Component con los mismos filtros.
    *
    * `router.refresh()` y no `location.reload()`: si el error fue transitorio no
@@ -112,6 +111,10 @@ export function PantallaEstadisticas({
     });
   };
 
+  /**
+   * Cambiar de pestaña navega de inmediato con los filtros ya aplicados: la vista
+   * no es un campo del formulario que haya que confirmar con "Aplicar".
+   */
   const handleVista = (vista: string) => {
     const siguientes = { ...aplicados, vista: vista as VistaEstadistica };
     setPendientes(siguientes);
@@ -134,8 +137,6 @@ export function PantallaEstadisticas({
    * bien y no dio resultados, que es lo contrario de lo que pasó.
    */
   const contenido = () => {
-    if (filtros.vista === "graficos") return <SeccionEnDesarrollo />;
-
     if (errorCarga) {
       return (
         <div className="flex flex-col gap-4">
@@ -151,6 +152,20 @@ export function PantallaEstadisticas({
             onClick={handleReintentar}
           />
         </div>
+      );
+    }
+
+    if (filtros.vista === "graficos") {
+      return serie ? (
+        <SeccionGraficos
+          datos={serie}
+          atributo={filtros.atributo}
+          estadisticas={datos?.filas ?? []}
+        />
+      ) : (
+        <Alert variant="alerta" title="Sin dispositivos seleccionados">
+          Elegí al menos un limnígrafo para ver sus gráficos.
+        </Alert>
       );
     }
 
@@ -209,15 +224,3 @@ export function PantallaEstadisticas({
   );
 }
 
-function SeccionEnDesarrollo() {
-  return (
-    <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
-      <IconifyIcon variant="funcion" className="text-4xl text-foreground-disabled" />
-      <h2 className="text-lg font-semibold text-foreground-title">Gráficos en desarrollo</h2>
-      <p className="max-w-md text-sm text-foreground-secondary">
-        Las series temporales de nivel, batería, temperatura y presión hidrostática se incorporan en la
-        próxima etapa. Mientras tanto, las pestañas de tablas ya cubren los valores del período.
-      </p>
-    </Card>
-  );
-}

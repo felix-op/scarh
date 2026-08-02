@@ -104,4 +104,34 @@
   /* Popover / Menús flotantes (Radix) */
   --popover: rgb(41, 44, 49);
   --popover-foreground: #e6e1e5;
+
+  /*
+    Paleta categórica de gráficos, en pasos propios para fondo oscuro.
+    NO es un aclarado automático de la paleta clara: son los mismos ocho hues
+    re-escalonados para la banda de luminosidad del tema oscuro y validados como
+    conjunto contra la superficie de tarjeta (#292c31):
+      - 8 slots, pares adyacentes: todo PASS (peor CVD ΔE 8.6, visión normal 19.3).
+      - primeros 3, TODOS los pares: todo PASS (CVD 9.4, visión normal 20.9).
+
+    Dos pasos difieren del criterio "usar el color del tema":
+      - slot 1 no usa `--color-primary-main` (#0da2f8) porque queda fuera de la
+        banda de luminosidad para fondo oscuro (L 0.686 > 0.67).
+      - slot 4 es magenta-violeta y no el violeta claro: el violeta directo
+        colisiona con el azul del slot 1 (ΔE 1.9 protán, 9.8 visión normal), o sea
+        dos dispositivos indistinguibles.
+
+    No reordenar ni "aclarar" sin volver a correr el validador.
+  */
+  --chart-1: #3987e5;  /* azul */
+  --chart-2: #d95926;  /* naranja */
+  --chart-3: #199e70;  /* aqua */
+  --chart-4: #a855c9;  /* violeta */
+  --chart-5: #c98500;  /* amarillo */
+  --chart-6: #d55181;  /* magenta */
+  --chart-7: #008300;  /* verde */
+  --chart-8: #e66767;  /* rojo */
+
+  /* Trama de la banda mín–máx y de la grilla del gráfico */
+  --chart-banda: rgba(57, 135, 229, 0.20);
+  --chart-grid: #3a3f47;
 }

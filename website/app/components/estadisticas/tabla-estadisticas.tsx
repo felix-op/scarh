@@ -10,7 +10,7 @@ import {
   encabezadoPrimeraColumna,
   etiquetaDeFila,
   exportarTablaEstadisticasCSV,
-  formatearValorEstadistica,
+  formatearMedicion,
 } from "@utils";
 import type { AgrupacionEstadistica, AtributoEstadistica, EstadisticaFila } from "@models";
 
@@ -91,7 +91,7 @@ export function TablaEstadisticas({
     header,
     cell: (fila) => (
       <span className={clasesCelda(fila, "tabular-nums")}>
-        {formatearValorEstadistica(fila[id], atributo, { conUnidad: false })}
+        {formatearMedicion(fila[id], atributo, { conUnidad: false })}
       </span>
     ),
   });

@@ -20,12 +20,18 @@ export const opcionesMemoria = [
   { label: "GB", value: "GB" },
 ];
 
-/** Opciones del filtro de estado (incluye "Todos"). */
-export const opcionesEstado = [
+/** Opciones del filtro "estado de conexión" (incluye "Todos"). */
+export const opcionesEstadoConexion = [
+  { label: "Todos", value: "todos" },
+  { label: "En línea", value: "en_linea" },
+  { label: "Demorado", value: "demorado" },
+  { label: "Sin conexión", value: "sin_conexion" },
+];
+
+/** Opciones del filtro "estado de última medición" (incluye "Todos"). */
+export const opcionesEstadoMedicion = [
   { label: "Todos", value: "todos" },
   { label: "Normal", value: "normal" },
-  { label: "Advertencia", value: "advertencia" },
-  { label: "Peligro", value: "peligro" },
   { label: "Fuera de rango", value: "fuera_de_rango" },
 ];
 

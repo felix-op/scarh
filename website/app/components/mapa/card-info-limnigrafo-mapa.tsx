@@ -4,15 +4,12 @@ import { useRouter } from "next/navigation";
 import { IconifyIcon, type IconVariants } from "../ui/iconify-icon";
 import { Boton } from "../ui/botones";
 import { ChipEstadoConexion, ChipEstadoMedicion } from "../limnigrafos/chip-estado-limnigrafo";
+import { formatearMedicion } from "@utils";
 import type { LimnigrafoResponse } from "@models";
 
 export interface CardInfoLimnigrafoMapaProps {
   limnigrafo: LimnigrafoResponse | null;
   onClose?: () => void;
-}
-
-function formatValor(valor: number | null | undefined, unidad: string): string {
-  return valor != null ? `${valor} ${unidad}` : "-";
 }
 
 interface FilaDato {
@@ -32,13 +29,13 @@ export function CardInfoLimnigrafoMapa({ limnigrafo, onClose }: CardInfoLimnigra
   const ubicacionDetalle = coordenadas ? `X: ${coordenadas[0].toFixed(5)}  Y: ${coordenadas[1].toFixed(5)}` : undefined;
 
   const filasDispositivo: FilaDato[] = [
-    { icon: "bateria", label: "Batería", value: formatValor(limnigrafo.bateria, "V") },
+    { icon: "bateria", label: "Batería", value: formatearMedicion(limnigrafo.bateria, "nivel_de_bateria") },
   ];
 
   const filasMedicion: FilaDato[] = [
-    { icon: "altura", label: "Altura", value: formatValor(medicion?.altura_agua, "m") },
-    { icon: "presion", label: "Presión", value: formatValor(medicion?.presion, "hPa") },
-    { icon: "temperatura", label: "Temperatura", value: formatValor(medicion?.temperatura, "°C") },
+    { icon: "altura", label: "Altura", value: formatearMedicion(medicion?.altura_agua, "altura_agua") },
+    { icon: "presion", label: "Presión", value: formatearMedicion(medicion?.presion, "presion") },
+    { icon: "temperatura", label: "Temperatura", value: formatearMedicion(medicion?.temperatura, "temperatura") },
   ];
 
   return (

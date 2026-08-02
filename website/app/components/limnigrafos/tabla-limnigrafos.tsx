@@ -21,7 +21,8 @@ import {
 } from "@components";
 import { useGetLimnigrafos } from "@hooks";
 import {
-  opcionesEstado,
+  opcionesEstadoConexion,
+  opcionesEstadoMedicion,
   opcionesTiempoUltimoDato,
   coincideTiempoUltimoDato,
   formatFechaHora,
@@ -48,7 +49,8 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
 
   const [filtros, setFiltros] = useState({
     search: "",
-    estado: "todos",
+    estadoConexion: "todos",
+    estadoMedicion: "todos",
     tiempo: "todos",
   });
 
@@ -68,8 +70,12 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
     );
   }
 
-  if (filtros.estado !== "todos") {
-    filtrados = filtrados.filter((l) => l.estado === filtros.estado);
+  if (filtros.estadoConexion !== "todos") {
+    filtrados = filtrados.filter((l) => l.estado_conexion === filtros.estadoConexion);
+  }
+
+  if (filtros.estadoMedicion !== "todos") {
+    filtrados = filtrados.filter((l) => l.estado_medicion === filtros.estadoMedicion);
   }
 
   if (filtros.tiempo !== "todos") {
@@ -78,27 +84,37 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
     );
   }
 
-  const estaActivo = (campo: "search" | "estado" | "tiempo") => {
+  const estaActivo = (campo: "search" | "estadoConexion" | "estadoMedicion" | "tiempo") => {
     if (campo === "search") return Boolean(filtros.search);
-    if (campo === "estado") return filtros.estado !== "todos";
+    if (campo === "estadoConexion") return filtros.estadoConexion !== "todos";
+    if (campo === "estadoMedicion") return filtros.estadoMedicion !== "todos";
     if (campo === "tiempo") return filtros.tiempo !== "todos";
     return false;
   };
 
-  const valorMostrado = (campo: "search" | "estado" | "tiempo") => {
+  const valorMostrado = (campo: "search" | "estadoConexion" | "estadoMedicion" | "tiempo") => {
     if (campo === "search") return filtros.search;
-    if (campo === "estado") return opcionesEstado.find((o) => o.value === filtros.estado)?.label || filtros.estado;
+    if (campo === "estadoConexion")
+      return opcionesEstadoConexion.find((o) => o.value === filtros.estadoConexion)?.label || filtros.estadoConexion;
+    if (campo === "estadoMedicion")
+      return opcionesEstadoMedicion.find((o) => o.value === filtros.estadoMedicion)?.label || filtros.estadoMedicion;
     if (campo === "tiempo") return opcionesTiempoUltimoDato.find((o) => o.value === filtros.tiempo)?.label || filtros.tiempo;
     return "";
   };
 
-  const labelFiltro: Record<"search" | "estado" | "tiempo", string> = {
+  const labelFiltro: Record<"search" | "estadoConexion" | "estadoMedicion" | "tiempo", string> = {
     search: "Búsqueda",
-    estado: "Estado",
+    estadoConexion: "Estado de conexión",
+    estadoMedicion: "Estado de última medición",
     tiempo: "Tiempo últ. dato",
   };
 
-  const camposFiltro: ("search" | "estado" | "tiempo")[] = ["search", "estado", "tiempo"];
+  const camposFiltro: ("search" | "estadoConexion" | "estadoMedicion" | "tiempo")[] = [
+    "search",
+    "estadoConexion",
+    "estadoMedicion",
+    "tiempo",
+  ];
   const filtrosActivos = camposFiltro.filter(estaActivo);
 
   const columns: TableColumn<LimnigrafoResponse>[] = [
@@ -196,8 +212,8 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
       {/* Toolbar en Card con padding 2 */}
       <Card className="p-2">
         <div className="flex flex-col gap-4">
-          {/* Fila 1: Buscador y Filtros (Grid responsivo: buscador en fila propia en medianas (md:col-span-2), alineados juntos en grandes (lg:grid-cols-3)) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+          {/* Fila 1: Buscador y Filtros (Grid responsivo: buscador en fila propia en medianas (md:col-span-2), alineados juntos en grandes (lg:grid-cols-4)) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
             <div className="w-full md:col-span-2 lg:col-span-1">
               <TextField
                 name="search"
@@ -215,11 +231,21 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
 
             <div className="w-full">
               <Select
-                label="Estado"
-                name="estado"
-                options={opcionesEstado}
-                value={filtros.estado}
-                onChange={(val) => handleFilterChange("estado", val)}
+                label="Estado de conexión"
+                name="estadoConexion"
+                options={opcionesEstadoConexion}
+                value={filtros.estadoConexion}
+                onChange={(val) => handleFilterChange("estadoConexion", val)}
+              />
+            </div>
+
+            <div className="w-full">
+              <Select
+                label="Estado de última medición"
+                name="estadoMedicion"
+                options={opcionesEstadoMedicion}
+                value={filtros.estadoMedicion}
+                onChange={(val) => handleFilterChange("estadoMedicion", val)}
               />
             </div>
 

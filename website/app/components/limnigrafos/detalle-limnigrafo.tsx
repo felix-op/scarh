@@ -12,7 +12,7 @@ import { UltimaMedicionLimnigrafo } from "./ultima-medicion-limnigrafo";
 import { RutasAccesoLimnigrafo } from "./rutas-acceso-limnigrafo";
 import { VentanaEliminarLimnigrafo } from "./ventana-eliminar-limnigrafo";
 import { VentanaSolicitarToken } from "./ventana-solicitar-token";
-import { memoriaLegible, hmsLegibles, formatFecha, valuesToLabels, opcionesTipoComunicacion, tieneCoberturaAlertas } from "@utils";
+import { memoriaLegible, hmsLegibles, formatFecha, valuesToLabels, opcionesTipoComunicacion, tieneCoberturaAlertas, formatearMedicion } from "@utils";
 import type { LimnigrafoResponse } from "@models";
 
 function DatoItem({ label, value, tooltip }: { label: string; value: ReactNode; tooltip?: ReactNode }) {
@@ -39,9 +39,6 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
 
   const cfg = limnigrafo.configuracion;
   const id = limnigrafo.id;
-
-  const conUnidad = (valor: number | null | undefined, unidad: string): string =>
-    valor != null ? `${valor}${unidad}` : "-";
 
   return (
     <LayoutBase
@@ -80,8 +77,8 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <DatoItem label="Batería mínima" value={conUnidad(cfg?.bateria_min, " V")} />
-              <DatoItem label="Batería máxima" value={conUnidad(cfg?.bateria_max, " V")} />
+              <DatoItem label="Batería mínima" value={formatearMedicion(cfg?.bateria_min, "nivel_de_bateria")} />
+              <DatoItem label="Batería máxima" value={formatearMedicion(cfg?.bateria_max, "nivel_de_bateria")} />
             </div>
             <div className="pt-2 border-t border-border">
               <EstadoConexionLimnigrafo limnigrafo={limnigrafo} />
@@ -105,12 +102,12 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <DatoItem label="Altura mínima del agua" value={conUnidad(cfg?.altura_minima_agua, " m")} />
-            <DatoItem label="Altura máxima del agua" value={conUnidad(cfg?.altura_maxima_agua, " m")} />
-            <DatoItem label="Temperatura mínima" value={conUnidad(cfg?.temperatura_minima, " °")} />
-            <DatoItem label="Temperatura máxima" value={conUnidad(cfg?.temperatura_maxima, " °")} />
-            <DatoItem label="Presión mínima" value={conUnidad(cfg?.presion_minima, "")} />
-            <DatoItem label="Presión máxima" value={conUnidad(cfg?.presion_maxima, "")} />
+            <DatoItem label="Altura mínima del agua" value={formatearMedicion(cfg?.altura_minima_agua, "altura_agua")} />
+            <DatoItem label="Altura máxima del agua" value={formatearMedicion(cfg?.altura_maxima_agua, "altura_agua")} />
+            <DatoItem label="Temperatura mínima" value={formatearMedicion(cfg?.temperatura_minima, "temperatura")} />
+            <DatoItem label="Temperatura máxima" value={formatearMedicion(cfg?.temperatura_maxima, "temperatura")} />
+            <DatoItem label="Presión mínima" value={formatearMedicion(cfg?.presion_minima, "presion")} />
+            <DatoItem label="Presión máxima" value={formatearMedicion(cfg?.presion_maxima, "presion")} />
           </div>
           <DatoItem
             label="Tipo de comunicación"

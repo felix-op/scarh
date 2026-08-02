@@ -1,5 +1,5 @@
-import type { AgrupacionEstadistica, AtributoEstadistica, EstadisticaFila } from "@models";
-import { AGRUPACION_METADATA, ATRIBUTO_METADATA, VENTANAS_ESTADISTICAS } from "./constantes-estadisticas";
+import type { AgrupacionEstadistica, EstadisticaFila } from "@models";
+import { AGRUPACION_METADATA, VENTANAS_ESTADISTICAS } from "./constantes-estadisticas";
 
 /**
  * Zona horaria en la que el backend interpreta las fechas sin offset y agrupa los
@@ -74,21 +74,6 @@ export function limitesDelRango(desde: string, hasta: string): { fecha_inicio: s
   };
 }
 
-/**
- * Formatea un valor de una estadística con la unidad y los decimales de su variable.
- * Devuelve `-` cuando el valor es `null`, que es como el backend informa "sin datos".
- */
-export function formatearValorEstadistica(
-  valor: number | null | undefined,
-  atributo: AtributoEstadistica,
-  { conUnidad = true }: { conUnidad?: boolean } = {}
-): string {
-  if (valor === null || valor === undefined || Number.isNaN(valor)) return "-";
-
-  const { unidad, decimales } = ATRIBUTO_METADATA[atributo];
-  const numero = valor.toFixed(decimales);
-  return conUnidad && unidad ? `${numero} ${unidad}` : numero;
-}
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",

@@ -1,7 +1,7 @@
 import { PantallaEstadisticas } from "@components";
-import { getSSREstadisticasTabla, getServerLimnigrafos } from "@services";
+import { getSSREstadisticasTabla, getSSRMedicionSerie, getServerLimnigrafos } from "@services";
 import { limitesDelRango, parsearFiltrosEstadisticas } from "@utils";
-import { ApiError, type EstadisticaTablaResponse } from "@models";
+import { ApiError, type EstadisticaTablaResponse, type MedicionSerieResponse } from "@models";
 
 export interface EstadisticasPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -27,16 +27,41 @@ export default async function EstadisticasPage({ searchParams }: EstadisticasPag
   const consultados = filtros.vista === "resumen" ? seleccionados.slice(0, 1) : seleccionados;
 
   let datos: EstadisticaTablaResponse | null = null;
+  let serie: MedicionSerieResponse | null = null;
   let errorCarga: string | undefined;
 
-  if (filtros.vista !== "graficos" && consultados.length > 0) {
+  if (consultados.length > 0) {
     try {
-      datos = await getSSREstadisticasTabla({
-        limnigrafos: consultados.join(","),
-        atributo: filtros.atributo,
-        agrupar_por: filtros.vista === "resumen" ? filtros.agrupar : "dispositivo",
-        ...limitesDelRango(filtros.desde, filtros.hasta),
-      });
+      const rango = limitesDelRango(filtros.desde, filtros.hasta);
+
+      // La vista de gráficos necesita las dos cosas: la serie temporal para dibujar y
+      // la tabla para las tiras de resumen. Se pide la tabla y no se derivan los
+      // números de las cubetas porque la mediana no se puede reconstruir a partir de
+      // promedios, y porque así los dos lugares no pueden mostrar cifras distintas de
+      // lo mismo.
+      if (filtros.vista === "graficos") {
+        [serie, datos] = await Promise.all([
+          getSSRMedicionSerie({
+            limnigrafos: consultados.join(","),
+            atributo: filtros.atributo,
+            max_puntos: 200,
+            ...rango,
+          }),
+          getSSREstadisticasTabla({
+            limnigrafos: consultados.join(","),
+            atributo: filtros.atributo,
+            agrupar_por: "dispositivo",
+            ...rango,
+          }),
+        ]);
+      } else {
+        datos = await getSSREstadisticasTabla({
+          limnigrafos: consultados.join(","),
+          atributo: filtros.atributo,
+          agrupar_por: filtros.vista === "resumen" ? filtros.agrupar : "dispositivo",
+          ...rango,
+        });
+      }
     } catch (error) {
       // Sólo se degrada el error de negocio, que casi siempre viene de una
       // combinación de filtros que el backend rechaza: eso se corrige cambiando un
@@ -56,6 +81,7 @@ export default async function EstadisticasPage({ searchParams }: EstadisticasPag
       filtros={{ ...filtros, limnigrafos: seleccionados }}
       limnigrafos={limnigrafos}
       datos={datos}
+      serie={serie}
       errorCarga={errorCarga}
     />
   );

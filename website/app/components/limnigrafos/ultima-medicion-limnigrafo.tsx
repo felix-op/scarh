@@ -1,7 +1,7 @@
 import { SeccionAgruparInformacion } from "../ui/seccion-agrupar-informacion";
 import { Chip } from "../ui/chip";
 import { ChipEstadoMedicion } from "./chip-estado-limnigrafo";
-import { formatFechaHora } from "@utils";
+import { formatFechaHora, formatearMedicion } from "@utils";
 import type { LimnigrafoResponse } from "@models";
 
 function DatoItem({ label, value }: { label: string; value: string }) {
@@ -31,9 +31,6 @@ export function UltimaMedicionLimnigrafo({ limnigrafo }: UltimaMedicionLimnigraf
     );
   }
 
-  const conUnidad = (valor: number | null | undefined, unidad: string): string =>
-    valor != null ? `${valor}${unidad}` : "-";
-
   return (
     <SeccionAgruparInformacion title="Última medición">
       <div className="flex items-center gap-2">
@@ -42,9 +39,9 @@ export function UltimaMedicionLimnigrafo({ limnigrafo }: UltimaMedicionLimnigraf
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <DatoItem label="Fecha y hora" value={formatFechaHora(medicion.fecha_hora)} />
-        <DatoItem label="Altura de agua" value={conUnidad(medicion.altura_agua, " m")} />
-        <DatoItem label="Temperatura" value={conUnidad(medicion.temperatura, " °C")} />
-        <DatoItem label="Presión" value={conUnidad(medicion.presion, " hPa")} />
+        <DatoItem label="Altura de agua" value={formatearMedicion(medicion.altura_agua, "altura_agua")} />
+        <DatoItem label="Temperatura" value={formatearMedicion(medicion.temperatura, "temperatura")} />
+        <DatoItem label="Presión" value={formatearMedicion(medicion.presion, "presion")} />
       </div>
     </SeccionAgruparInformacion>
   );

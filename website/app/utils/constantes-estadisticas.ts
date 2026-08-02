@@ -1,32 +1,5 @@
 import type { AgrupacionEstadistica, AtributoEstadistica } from "@models";
-
-/**
- * Metadatos de presentación de cada variable medida.
- *
- * Definición única a propósito: en el frontend legacy esto estaba duplicado en
- * dos archivos con etiquetas distintas, y las tarjetas y el gráfico de la misma
- * pantalla nombraban diferente la misma cosa.
- *
- * @property {string} label Nombre visible de la variable.
- * @property {string} unidad Sufijo de unidad, vacío si no corresponde.
- * @property {number} decimales Decimales con los que se formatea.
- * @property {string} [aclaracion] Texto de `info-tooltip` cuando el nombre puede confundirse.
- */
-export const ATRIBUTO_METADATA: Record<
-  AtributoEstadistica,
-  { label: string; unidad: string; decimales: number; aclaracion?: string }
-> = {
-  altura_agua: { label: "Nivel del agua", unidad: "m", decimales: 2 },
-  presion: {
-    label: "Presión hidrostática",
-    unidad: "hPa",
-    decimales: 2,
-    aclaracion:
-      "Presión ejercida por la columna de agua sobre el sensor. No es presión atmosférica.",
-  },
-  temperatura: { label: "Temperatura", unidad: "°C", decimales: 2 },
-  nivel_de_bateria: { label: "Nivel de batería", unidad: "%", decimales: 1 },
-};
+import { ATRIBUTO_METADATA } from "./mediciones.formato";
 
 /** Opciones del selector de variable, en el orden en que se muestran. */
 export const opcionesAtributoEstadistica = (

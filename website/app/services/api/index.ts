@@ -43,6 +43,7 @@ export {
 
 export {
   getServerMediciones,
+  getSSRMedicionSerie,
   postServerMedicion,
   getServerMedicion,
   postServerValidateImportMediciones,

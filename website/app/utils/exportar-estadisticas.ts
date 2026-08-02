@@ -1,5 +1,5 @@
 import type { AgrupacionEstadistica, AtributoEstadistica, EstadisticaFila } from "@models";
-import { ATRIBUTO_METADATA } from "./constantes-estadisticas";
+import { ATRIBUTO_METADATA } from "./mediciones.formato";
 import { encabezadoPrimeraColumna, etiquetaDeFila } from "./estadisticas.utiles";
 import { exportarComoCSV } from "./exportar.utiles";
 
