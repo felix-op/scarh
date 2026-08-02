@@ -107,6 +107,10 @@ class EstadisticaDashboardTests(APITestCase):
         for item in limnigrafos:
             self.assertIn('estado_medicion', item)
             self.assertIn('estado_conexion', item)
+            # El tablero grada la gravedad de "sin conexión" según el medio: sin este
+            # campo, un equipo con enlace remoto caído se vería tan benigno como uno
+            # que sólo se descarga por USB.
+            self.assertEqual(item['tipo_de_comunicacion'], ['fisico-usb'])
 
     def test_incluye_la_ultima_medicion(self):
         response = self.client.get(self.url)

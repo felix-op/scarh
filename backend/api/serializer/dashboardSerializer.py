@@ -21,6 +21,10 @@ class DashboardLimnigrafoSerializer(serializers.Serializer):
     @property {str} codigo Código visible.
     @property {str} estado_medicion `normal` o `fuera_de_rango`.
     @property {str} estado_conexion `en_linea`, `demorado` o `sin_conexion`.
+    @property {list[str]} tipo_de_comunicacion Medios de comunicación del equipo. El
+        tablero lo necesita para graduar la gravedad de "sin conexión": un equipo que
+        sólo se descarga por USB estando offline es lo normal, uno con enlace remoto
+        es una falla.
     @property {object} [ultima_medicion] Última medición recibida, o `null`.
     """
 
@@ -28,6 +32,7 @@ class DashboardLimnigrafoSerializer(serializers.Serializer):
     codigo = serializers.CharField()
     estado_medicion = serializers.CharField()
     estado_conexion = serializers.CharField()
+    tipo_de_comunicacion = serializers.ListField(child=serializers.CharField())
     ultima_medicion = DashboardUltimaMedicionSerializer(allow_null=True)
 
 
