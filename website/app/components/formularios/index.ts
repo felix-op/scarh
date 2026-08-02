@@ -12,3 +12,4 @@ export * from "./time-hms-field-rhf";
 export * from "./file-field-rhf";
 export * from "./formulario";
 export * from "./form-acciones";
+export * from "./multi-select-limnigrafos";

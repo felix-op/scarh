@@ -1,12 +1,20 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
-import type { EstadisticaResponse, ParamsBase } from "@models";
+import type { EstadisticaTablaQueryParams, EstadisticaTablaResponse, ParamsBase } from "@models";
 
-export async function getServerEstadistica(params?: ParamsBase): Promise<EstadisticaResponse> {
-  return RequestSSR<EstadisticaResponse, ParamsBase>({
-    url: "estadistica/",
+/**
+ * Tabla de estadísticas descriptivas: `GET /estadisticas/tabla/`.
+ *
+ * Los query params van tipados y requeridos porque el backend responde 400 si
+ * falta cualquiera; es preferible que el error salte al compilar y no en runtime.
+ */
+export async function getSSREstadisticasTabla(
+  queryParams: EstadisticaTablaQueryParams
+): Promise<EstadisticaTablaResponse> {
+  return RequestSSR<EstadisticaTablaResponse, ParamsBase>({
+    url: "estadisticas/tabla/",
     method: "GET",
-    params,
+    params: { queryParams },
     tags: ["estadistica"],
   });
 }

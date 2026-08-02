@@ -5,6 +5,7 @@ export * from "./formularios";
 export * from "./menu-exportar";
 export * from "./historial";
 export * from "./mediciones";
+export * from "./estadisticas";
 export * from "./limnigrafos";
 export * from "./mapa";
 export * from "./mapa-legacy";

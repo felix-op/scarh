@@ -4,7 +4,7 @@ import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   LayoutBase,
-  BotonImportar,
+  BotonGuardar,
   BotonIconoEliminar,
   SelectorArchivoImportacion,
   SelectorLimnigrafoImportacion,
@@ -96,7 +96,7 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
     const resultado = await importarMediciones.mutateAsync(buildPayload(filas));
     mensajes.success("Importación completada", `Se importaron ${resultado.imported_rows} mediciones correctamente.`);
     handleReset();
-    router.push(`/dashboard/limnigrafos/${limnigrafoId}`);
+    router.back();
   };
 
   const handleGuardar = async () => {
@@ -172,14 +172,6 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
       titulo="Importar mediciones"
       subtitulo="Cargá un archivo con el historial de mediciones para integrarlo al sistema."
       volver
-      acciones={
-        <BotonImportar
-          onClick={handleGuardar}
-          disabled={!canSave || hasErrors}
-          loading={isMutando}
-          content="Importar datos"
-        />
-      }
     >
       <div className="flex flex-col gap-6 items-start">
         {/* PANEL SUPERIOR: Controles */}
@@ -224,7 +216,15 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
             </div>
           ) : (
             <div className="p-5">
-              <h3 className="text-lg font-semibold mb-4 text-foreground">Previsualización de datos</h3>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h3 className="text-lg font-semibold text-foreground">Previsualización de datos</h3>
+                <BotonGuardar
+                  onClick={handleGuardar}
+                  disabled={!canSave || hasErrors}
+                  loading={isMutando}
+                  content="Importar datos"
+                />
+              </div>
 
               {hasErrors && (
                 <div className="mb-4 p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20 flex items-center gap-2">

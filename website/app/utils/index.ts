@@ -17,3 +17,7 @@ export * from "./api-server";
 export * from "./mediciones.utiles";
 export * from "./mediciones.schemas";
 export * from "./exportar.utiles";
+export * from "./constantes-estadisticas";
+export * from "./estadisticas.utiles";
+export * from "./estadisticas.schemas";
+export * from "./exportar-estadisticas";

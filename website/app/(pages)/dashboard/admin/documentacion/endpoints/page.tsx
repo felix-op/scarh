@@ -2,15 +2,41 @@ import Link from "next/link";
 import { Card, RenderServerResponse, BotonVolver } from "@components";
 
 // Importaciones de los endpoints generados
-import { 
+import {
   getServerAlertas,
-  getServerEstadistica,
+  getSSREstadisticasTabla,
   getServerHistorial,
   getServerLimnigrafos,
   getServerMediciones,
   getServerUbicaciones,
   getServerUsuarios
 } from "@services";
+
+/**
+ * `/estadisticas/tabla/` es el único endpoint de esta página que no se puede
+ * invocar sin argumentos: exige limnígrafos, variable y rango, y responde 400 si
+ * falta alguno. El ejemplo arma una consulta válida de los últimos 7 días sobre
+ * los primeros limnígrafos que encuentre.
+ */
+async function probarEstadisticasTabla() {
+  "use server";
+
+  const limnigrafos = await getServerLimnigrafos({ queryParams: { limit: 5, page: 1 } });
+
+  if (limnigrafos.results.length === 0) {
+    return { detalle: "No hay limnígrafos cargados para armar el ejemplo." };
+  }
+
+  const hasta = new Date();
+  const desde = new Date(hasta.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  return getSSREstadisticasTabla({
+    limnigrafos: limnigrafos.results.map((limnigrafo) => limnigrafo.id).join(","),
+    atributo: "altura_agua",
+    fecha_inicio: desde.toISOString(),
+    fecha_fin: hasta.toISOString(),
+  });
+}
 
 export default function DocumentacionEndpointsPage() {
   const apiUrl = process.env.API_URL!;
@@ -44,9 +70,9 @@ export default function DocumentacionEndpointsPage() {
 
       <Card className="flex flex-col gap-6 p-6">
         <div>
-          <h2 className="text-xl font-bold text-foreground mb-1">Estadística</h2>
-          <p className="text-foreground-secondary text-sm mb-4">GET /estadistica/</p>
-          <RenderServerResponse title="getServerEstadistica()" action={getServerEstadistica} swaggerUrl={swaggerUrl} />
+          <h2 className="text-xl font-bold text-foreground mb-1">Estadísticas</h2>
+          <p className="text-foreground-secondary text-sm mb-4">GET /estadisticas/tabla/</p>
+          <RenderServerResponse title="getSSREstadisticasTabla()" action={probarEstadisticasTabla} swaggerUrl={swaggerUrl} />
         </div>
       </Card>
 

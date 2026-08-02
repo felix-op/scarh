@@ -22,7 +22,7 @@ export function LayoutBase({ titulo, subtitulo, acciones, children, noPadding = 
   return (
     <div
       className={`flex flex-col gap-6 ${
-        noPadding ? "" : "p-2 pb-24 md:p-4 md:pb-12 2xl:p-6 2xl:pb-12"
+        noPadding ? "h-full min-h-0 flex-1" : "p-2 pb-24 md:p-4 md:pb-12 2xl:p-6 2xl:pb-12"
       }`}
     >
       {tieneHeader && (
