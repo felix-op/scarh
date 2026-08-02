@@ -6,6 +6,18 @@ from .medicionSerializer import (
     MedicionImportPayloadSerializer,
     MedicionImportRowSerializer,
 )
+from .medicionSerieSerializer import (
+    MedicionSerieInputSerializer,
+    MedicionSeriePuntoSerializer,
+    MedicionSerieSerializer,
+    MedicionSerieOutputSerializer,
+)
+from .dashboardSerializer import (
+    DashboardLimnigrafoSerializer,
+    DashboardResumenSerializer,
+    DashboardAccionSerializer,
+    DashboardOutputSerializer,
+)
 from .ubicacionSerializer import UbicacionSerializer, UbicacionOutputSerializer
 from .estadisticaSerializer import (
     EstadisticaInputSerializer,
@@ -27,6 +39,14 @@ __all__ = [
     "MedicionSerializer",
     "MedicionImportPayloadSerializer",
     "MedicionImportRowSerializer",
+    "MedicionSerieInputSerializer",
+    "MedicionSeriePuntoSerializer",
+    "MedicionSerieSerializer",
+    "MedicionSerieOutputSerializer",
+    "DashboardLimnigrafoSerializer",
+    "DashboardResumenSerializer",
+    "DashboardAccionSerializer",
+    "DashboardOutputSerializer",
     "UbicacionSerializer",
     "UbicacionOutputSerializer",
     "EstadisticaInputSerializer",

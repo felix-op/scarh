@@ -1,16 +1,25 @@
 from collections import Counter
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Avg, Count, F, Max, Min, Q, Value
+from django.db.models import DateTimeField as DateTimeOutputField
+from django.db.models import DurationField as DurationOutputField
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from ..models import Medicion, Limnigrafo
-from ..serializer import MedicionImportPayloadSerializer, MedicionSerializer
+from ..serializer import (
+    MedicionImportPayloadSerializer,
+    MedicionSerializer,
+    MedicionSerieInputSerializer,
+    MedicionSerieOutputSerializer,
+)
 from ..permissions import MedicionesPermissionWithAPIKey
 from ..filters import MedicionFilter
+from ..utils.series import DateBin, elegir_bucket, generar_grilla, origen_de_cubetas
 from ..utils.audit import registrar_accion_auditoria_en_commit
 from ..utils.alertas import generar_alerta_medicion_fuera_de_rango
 from ..utils.estado_limnigrafo import calcular_estado_limnigrafo
@@ -39,6 +48,154 @@ class MedicionViewSet(
 
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'], url_path='serie')
+    def serie(self, request):
+        """
+        Serie temporal agrupada, lista para graficar.
+
+        El downsampling se hace acá y no en el navegador: 90 días de 10 sensores a
+        una medición cada 5 minutos son ~260.000 filas, y la pantalla tiene 1.500
+        píxeles de ancho. El cliente pide un techo de puntos (`max_puntos`) y el
+        servidor elige el ancho de cubeta, informándolo en `bucket_segundos`.
+
+        Query params: `limnigrafos` (IDs separados por coma), `atributo`,
+        `fecha_inicio`, `fecha_fin` y `max_puntos`.
+        """
+        datos = self._validar_serie(request)
+        atributo = datos['atributo']
+        inicio, fin = datos['fecha_inicio'], datos['fecha_fin']
+
+        codigos = self._codigos_de_limnigrafos(datos['limnigrafos'])
+
+        base = (
+            Medicion.objects
+            .filter(limnigrafo_id__in=datos['limnigrafos'], fecha_hora__range=(inicio, fin))
+            .exclude(**{f"{atributo}__isnull": True})
+        )
+
+        # Cuántas mediciones tiene el dispositivo más denso: es el que determina
+        # hasta dónde se puede afinar la cubeta sin fabricar huecos vacíos.
+        conteos = {
+            fila['limnigrafo_id']: fila['n']
+            for fila in base.values('limnigrafo_id').annotate(n=Count('id')).order_by()
+        }
+        bucket = elegir_bucket(inicio, fin, datos['max_puntos'], max(conteos.values(), default=0))
+        origen = origen_de_cubetas(inicio)
+        grilla = generar_grilla(inicio, fin, bucket, origen)
+
+        cubetas = (
+            base
+            .annotate(
+                cubeta=DateBin(
+                    Value(bucket, output_field=DurationOutputField()),
+                    F('fecha_hora'),
+                    Value(origen, output_field=DateTimeOutputField()),
+                )
+            )
+            .values('limnigrafo_id', 'cubeta')
+            .annotate(
+                minimo=Min(atributo),
+                maximo=Max(atributo),
+                promedio=Avg(atributo),
+                total_registros=Count('id'),
+            )
+            # `order_by()` vacío es obligatorio: el queryset del viewset ordena por
+            # `-fecha_hora`, y Django suma las columnas de orden al GROUP BY, lo que
+            # devolvería una fila por medición en lugar de una por cubeta.
+            .order_by()
+        )
+
+        por_dispositivo = {limnigrafo_id: {} for limnigrafo_id in datos['limnigrafos']}
+        for fila in cubetas:
+            por_dispositivo[fila['limnigrafo_id']][fila['cubeta']] = fila
+
+        series = [
+            {
+                "limnigrafo": limnigrafo_id,
+                "codigo": codigos[limnigrafo_id],
+                "total_registros": conteos.get(limnigrafo_id, 0),
+                "puntos": [
+                    self._punto(inicio_cubeta, por_dispositivo[limnigrafo_id].get(inicio_cubeta))
+                    for inicio_cubeta in grilla
+                ],
+            }
+            for limnigrafo_id in datos['limnigrafos']
+        ]
+
+        salida = MedicionSerieOutputSerializer({
+            "atributo": atributo,
+            "fecha_inicio": inicio,
+            "fecha_fin": fin,
+            "bucket_segundos": int(bucket.total_seconds()),
+            "total_puntos": len(grilla),
+            "series": series,
+        })
+        return Response(salida.data, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def _punto(inicio_cubeta, agregados):
+        """Una cubeta sin mediciones va con todo en `null` y `total_registros` en 0."""
+        if agregados is None:
+            return {
+                "inicio": inicio_cubeta,
+                "total_registros": 0,
+                "minimo": None,
+                "maximo": None,
+                "promedio": None,
+            }
+
+        return {
+            "inicio": inicio_cubeta,
+            "total_registros": agregados['total_registros'],
+            "minimo": agregados['minimo'],
+            "maximo": agregados['maximo'],
+            "promedio": agregados['promedio'],
+        }
+
+    def _validar_serie(self, request):
+        limnigrafos_param = request.query_params.get("limnigrafos", "").strip()
+
+        limnigrafos = []
+        if limnigrafos_param:
+            try:
+                limnigrafos = [
+                    int(item.strip())
+                    for item in limnigrafos_param.split(",")
+                    if item.strip()
+                ]
+            except ValueError as exc:
+                raise ValidationError({
+                    "limnigrafos": "Debe ser una lista de IDs numéricos separados por coma."
+                }) from exc
+
+        payload = {
+            "limnigrafos": limnigrafos,
+            "atributo": request.query_params.get("atributo"),
+            "fecha_inicio": request.query_params.get("fecha_inicio"),
+            "fecha_fin": request.query_params.get("fecha_fin"),
+        }
+
+        max_puntos = request.query_params.get("max_puntos")
+        if max_puntos is not None:
+            payload["max_puntos"] = max_puntos
+
+        serializer = MedicionSerieInputSerializer(data=payload)
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data
+
+    @staticmethod
+    def _codigos_de_limnigrafos(ids):
+        """Mapa `id -> codigo`. Un ID inexistente es un error del cliente."""
+        codigos = dict(Limnigrafo.objects.filter(id__in=ids).values_list('id', 'codigo'))
+
+        faltantes = [str(limnigrafo_id) for limnigrafo_id in ids if limnigrafo_id not in codigos]
+        if faltantes:
+            raise ValidationError({
+                "limnigrafos": f"No existen los limnígrafos con ID: {', '.join(faltantes)}."
+            })
+
+        return codigos
 
     def perform_create(self, serializer):
         limnigrafo = serializer.validated_data["limnigrafo"]

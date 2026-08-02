@@ -1,25 +1,33 @@
 from collections import defaultdict
+from datetime import timedelta
 
+from django.db.models import Count, Prefetch
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ..models import Limnigrafo, Medicion
+from ..models import Accion, ConfiguracionLimnigrafo, Limnigrafo, Medicion
 from ..permissions import EstadisticasPermission
 from ..serializer import (
+    DashboardOutputSerializer,
     EstadisticaInputSerializer,
     EstadisticaOutputSerializer,
     EstadisticaTablaInputSerializer,
     EstadisticaTablaOutputSerializer,
 )
+
 from ..utils.estadisticas import (
     AGRUPACION_DISPOSITIVO,
     calcular_estadisticas,
     clave_de_medicion,
     generar_periodos,
 )
+
+#: Cantidad de acciones recientes que muestra el tablero.
+ACCIONES_EN_DASHBOARD = 10
 
 
 class EstadisticaViewSet(viewsets.GenericViewSet):
@@ -219,6 +227,115 @@ class EstadisticaViewSet(viewsets.GenericViewSet):
         }
         fila.update(calcular_estadisticas(valores))
         return fila
+
+    # ------------------------------------------------------------------ #
+    # Tablero
+    # ------------------------------------------------------------------ #
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='dashboard',
+        # Pide sesión pero ningún rol: es la pantalla de inicio, la ve cualquier
+        # usuario del sistema aunque no tenga permisos de estadísticas.
+        permission_classes=[IsAuthenticated],
+    )
+    def dashboard(self, request):
+        """
+        Panorama de la instalación para la pantalla de inicio.
+
+        Accesible a cualquier usuario autenticado, sin exigir roles. Por eso se
+        limita a estado de dispositivos, totales agregados y un resumen de actividad
+        reciente: el detalle del historial vive en `/historial/`, que sí pide rol.
+        """
+        salida = DashboardOutputSerializer({
+            "limnigrafos": self._estado_de_limnigrafos(),
+            "resumen": self._resumen_de_instalacion(),
+            "ultimas_acciones": self._ultimas_acciones(),
+        })
+        return Response(salida.data, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def _estado_de_limnigrafos():
+        """
+        Estado actual de cada dispositivo.
+
+        `estado_conexion` es una property que consulta la configuración activa: sin
+        el `prefetch_related` sería una consulta por limnígrafo (la property
+        aprovecha el caché de prefetch cuando está disponible).
+        """
+        limnigrafos = (
+            Limnigrafo.objects
+            .select_related('ultima_medicion')
+            .prefetch_related(Prefetch('configuraciones', queryset=ConfiguracionLimnigrafo.objects.all()))
+            .order_by('codigo')
+        )
+
+        return [
+            {
+                "id": limnigrafo.id,
+                "codigo": limnigrafo.codigo,
+                "estado_medicion": limnigrafo.estado_medicion,
+                "estado_conexion": limnigrafo.estado_conexion,
+                "ultima_medicion": (
+                    {
+                        "fecha_hora": limnigrafo.ultima_medicion.fecha_hora,
+                        "altura_agua": limnigrafo.ultima_medicion.altura_agua,
+                        "nivel_de_bateria": limnigrafo.ultima_medicion.nivel_de_bateria,
+                    }
+                    if limnigrafo.ultima_medicion
+                    else None
+                ),
+            }
+            for limnigrafo in limnigrafos
+        ]
+
+    @staticmethod
+    def _resumen_de_instalacion():
+        conteos = {
+            fila['fuente']: fila['n']
+            for fila in Medicion.objects.values('fuente').annotate(n=Count('id')).order_by()
+        }
+
+        # Se emiten todas las fuentes declaradas en el modelo, incluidas las que
+        # están en cero: así el cliente no tiene que adivinar qué claves pueden
+        # faltar ni tratar la ausencia como un caso aparte.
+        fuentes = [clave for clave, _etiqueta in Medicion._meta.get_field('fuente').choices]
+
+        return {
+            "cant_dispositivos": Limnigrafo.objects.count(),
+            "mediciones_por_carga": {fuente: conteos.get(fuente, 0) for fuente in fuentes},
+            "total_mediciones_24hs": Medicion.objects.filter(
+                fecha_hora__gte=timezone.now() - timedelta(hours=24)
+            ).count(),
+        }
+
+    @staticmethod
+    def _ultimas_acciones():
+        etiquetas = dict(Accion.TIPO_ACCION_CHOICES)
+
+        acciones = (
+            Accion.objects
+            .select_related('usuario')
+            .order_by('-fecha_hora')[:ACCIONES_EN_DASHBOARD]
+        )
+
+        return [
+            {
+                "id": accion.id,
+                "fecha_hora": accion.fecha_hora,
+                "tipo_accion": accion.tipo_accion,
+                "tipo_accion_label": etiquetas.get(accion.tipo_accion, accion.tipo_accion),
+                "entidad": accion.entidad,
+                "estado": accion.estado,
+                "usuario": (
+                    {"id": accion.usuario.id, "username": accion.usuario.username}
+                    if accion.usuario
+                    else None
+                ),
+            }
+            for accion in acciones
+        ]
 
     # ------------------------------------------------------------------ #
     # Auxiliares
