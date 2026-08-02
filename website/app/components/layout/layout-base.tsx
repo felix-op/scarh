@@ -5,7 +5,8 @@ import type { ReactNode } from "react";
 import { BotonVolver } from "../ui/botones";
 
 export interface LayoutBaseProps {
-  titulo?: string;
+  /** Acepta nodos además de texto: la pantalla de inicio pasa un componente. */
+  titulo?: ReactNode;
   subtitulo?: string;
   acciones?: ReactNode;
   children?: ReactNode;

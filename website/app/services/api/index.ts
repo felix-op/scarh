@@ -68,5 +68,7 @@ export {
   patchServerUsuario,
   deleteServerUsuario,
   postServerUsuarioCambiarPassword,
-  putServerUsuarioRoles
+  putServerUsuarioRoles,
+  getSSRPerfil,
+  patchSSRPerfil
 } from "./next-server/usuarios";

@@ -1,17 +1,29 @@
 import { auth } from "@auth";
 import {
   Alert,
+  AutoRefresco,
+  Saludo,
   GrillaLimnigrafos,
   LayoutBase,
   LineaTiempoAcciones,
   ResumenInstalacion,
 } from "@components";
 import { getSSREstadisticasDashboard } from "@services";
+import { obtenerSaludo } from "@utils";
 import { ApiError, type DashboardResponse } from "@models";
 
 export default async function DashboardPage() {
   const session = await auth();
   const nombre = session?.user?.first_name || session?.user?.username;
+
+  // Momento en que se resolvieron los datos, para el "actualizado hace…".
+  //
+  // La regla de pureza apunta a componentes que se re-renderizan, donde `Date.now()`
+  // daría un valor distinto en cada pasada. Este es un Server Component asíncrono:
+  // corre una vez por request y su resultado viaja al cliente ya serializado, que es
+  // precisamente lo que hace confiable la marca de tiempo.
+  // eslint-disable-next-line react-hooks/purity
+  const generadoEn = Date.now();
 
   let datos: DashboardResponse | null = null;
   let error: string | undefined;
@@ -31,8 +43,11 @@ export default async function DashboardPage() {
 
   return (
     <LayoutBase
-      titulo={nombre ? `Hola, ${nombre}` : "Inicio"}
+      titulo={
+        nombre ? <Saludo inicial={obtenerSaludo(nombre, new Date(generadoEn), generadoEn)} /> : "Inicio"
+      }
       subtitulo="Estado de la red de limnígrafos y actividad reciente del sistema."
+      acciones={<AutoRefresco generadoEn={generadoEn} />}
     >
       {error && (
         <Alert variant="error" title="No se pudo cargar el tablero">

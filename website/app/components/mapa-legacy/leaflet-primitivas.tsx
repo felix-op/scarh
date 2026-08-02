@@ -21,6 +21,7 @@ import type {
   Map as LeafletMap,
   Marker,
   PointExpression,
+  Polyline,
   TileLayer,
   Tooltip,
 } from "leaflet";
@@ -43,6 +44,7 @@ import {
   type CircleProps,
   type MapContainerProps,
   type MarkerProps,
+  type PolylineProps,
   type TileLayerProps,
   type TooltipProps,
 } from "react-leaflet";
@@ -88,6 +90,9 @@ const LeafletTooltip = createLazyComponent(() =>
 );
 const LeafletCircle = createLazyComponent(() =>
   import("react-leaflet").then((mod) => ({ default: mod.Circle }))
+);
+const LeafletPolyline = createLazyComponent(() =>
+  import("react-leaflet").then((mod) => ({ default: mod.Polyline }))
 );
 
 export function Mapa({
@@ -176,6 +181,10 @@ export function MapaCirculo({ className, ...props }: CircleProps & { ref?: Ref<C
   return (
     <LeafletCircle className={cn("fill-foreground stroke-foreground stroke-2", className)} {...props} />
   );
+}
+
+export function MapaPolyline({ className, ...props }: PolylineProps & { ref?: Ref<Polyline> }) {
+  return <LeafletPolyline className={className} {...props} />;
 }
 
 export function MapaTooltip({

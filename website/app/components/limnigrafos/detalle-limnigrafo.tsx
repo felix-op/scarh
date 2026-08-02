@@ -123,7 +123,7 @@ export function DetalleLimnigrafo({ limnigrafo, puedeEditar }: DetalleLimnigrafo
       </div>
 
       {/* Rutas de acceso */}
-      <RutasAccesoLimnigrafo limnigrafoId={id} puedeEditar={puedeEditar} />
+      <RutasAccesoLimnigrafo limnigrafoId={id} puedeEditar={puedeEditar} ubicacion={limnigrafo.ubicacion} />
 
       <VentanaEliminarLimnigrafo
         open={eliminarOpen}

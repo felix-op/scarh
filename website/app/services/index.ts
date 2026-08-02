@@ -7,3 +7,4 @@ export * from "./provider.query";
 export * from "./provider.mensajes";
 export * from "./requestClient";
 export * from "./handler-server";
+export * from "./configuracion-local";

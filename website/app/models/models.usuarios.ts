@@ -62,3 +62,38 @@ export interface PaginatedResponse<T> {
   previous: string | null;
   results: T[];
 }
+
+/**
+ * Datos propios del usuario autenticado (`GET /usuarios/me/`).
+ *
+ * `estado` y `roles` vienen para mostrarlos pero son de sólo lectura: cambiarlos
+ * sigue siendo tarea de la administración de usuarios.
+ *
+ * @property {number} id Identificador del usuario.
+ * @property {string} nombre_usuario Nombre de usuario.
+ * @property {string | null} legajo Legajo administrativo.
+ * @property {string} email Correo electrónico.
+ * @property {string} first_name Nombre.
+ * @property {string} last_name Apellido.
+ * @property {boolean} estado Si la cuenta está activa.
+ * @property {string[]} roles Roles asignados.
+ */
+export interface PerfilResponse {
+  id: number;
+  nombre_usuario: string;
+  legajo: string | null;
+  email: string;
+  first_name: string;
+  last_name: string;
+  estado: boolean;
+  roles: string[];
+}
+
+/**
+ * Campos que el usuario puede editar de sí mismo. La contraseña, el estado y los
+ * roles quedan fuera a propósito; el backend los rechaza.
+ */
+export type PerfilPayload = Pick<
+  PerfilResponse,
+  "nombre_usuario" | "email" | "first_name" | "last_name"
+> & { legajo?: string | null };

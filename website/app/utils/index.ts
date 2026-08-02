@@ -23,3 +23,4 @@ export * from "./estadisticas.utiles";
 export * from "./estadisticas.schemas";
 export * from "./exportar-estadisticas";
 export * from "./graficos.utiles";
+export * from "./saludos";

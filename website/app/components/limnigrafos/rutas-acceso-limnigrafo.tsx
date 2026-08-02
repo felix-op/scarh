@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Boton } from "../ui/botones";
 import { IconifyIcon } from "../ui/iconify-icon";
 import { VentanaConfirmar } from "../ui/modals";
@@ -8,14 +9,21 @@ import { RutaAccesoCard } from "./ruta-acceso-card";
 import { VentanaCargarRuta } from "./ventana-cargar-ruta";
 import { useGetRutasAcceso, useDeleteRutaAcceso } from "@hooks";
 import { useMensajes } from "@services";
-import type { RutaAccesoResponse } from "@models";
+import type { RutaAccesoResponse, UbicacionResponse } from "@models";
+
+// Leaflet necesita `window`; ssr:false sólo puede usarse desde un Client Component.
+// Se carga sólo si el usuario abre el mapa de alguna ruta, para no afectar la carga del resto del detalle.
+const RutaAccesoMapaSinSSR = dynamic(() => import("./ruta-acceso-mapa").then((mod) => mod.RutaAccesoMapa), {
+  ssr: false,
+});
 
 export interface RutasAccesoLimnigrafoProps {
   limnigrafoId: number;
   puedeEditar: boolean;
+  ubicacion?: UbicacionResponse | null;
 }
 
-export function RutasAccesoLimnigrafo({ limnigrafoId, puedeEditar }: RutasAccesoLimnigrafoProps) {
+export function RutasAccesoLimnigrafo({ limnigrafoId, puedeEditar, ubicacion }: RutasAccesoLimnigrafoProps) {
   const mensajes = useMensajes();
   const { data, isPending } = useGetRutasAcceso(limnigrafoId);
   const { mutate: eliminarRuta, isPending: eliminando } = useDeleteRutaAcceso(limnigrafoId);
@@ -23,8 +31,13 @@ export function RutasAccesoLimnigrafo({ limnigrafoId, puedeEditar }: RutasAcceso
   const [cargarOpen, setCargarOpen] = useState(false);
   const [rutaEditar, setRutaEditar] = useState<RutaAccesoResponse | null>(null);
   const [rutaEliminar, setRutaEliminar] = useState<RutaAccesoResponse | null>(null);
+  const [rutaEnMapa, setRutaEnMapa] = useState<RutaAccesoResponse | null>(null);
 
   const rutas = data?.results || [];
+
+  const toggleMapa = (ruta: RutaAccesoResponse) => {
+    setRutaEnMapa((actual) => (actual?.id === ruta.id ? null : ruta));
+  };
 
   const abrirCrear = () => {
     setRutaEditar(null);
@@ -41,6 +54,7 @@ export function RutasAccesoLimnigrafo({ limnigrafoId, puedeEditar }: RutasAcceso
     eliminarRuta(rutaEliminar.id, {
       onSuccess: () => {
         mensajes.success("Ruta eliminada", `La ruta ${rutaEliminar.nombre} se eliminó correctamente.`);
+        setRutaEnMapa((actual) => (actual?.id === rutaEliminar.id ? null : actual));
         setRutaEliminar(null);
       },
       onError: (error: Error) => {
@@ -72,12 +86,16 @@ export function RutasAccesoLimnigrafo({ limnigrafoId, puedeEditar }: RutasAcceso
               key={ruta.id}
               ruta={ruta}
               puedeEditar={puedeEditar}
+              mapaVisible={rutaEnMapa?.id === ruta.id}
+              onToggleMapa={toggleMapa}
               onEditar={abrirEditar}
               onEliminar={setRutaEliminar}
             />
           ))}
         </div>
       )}
+
+      {rutaEnMapa && <RutaAccesoMapaSinSSR ruta={rutaEnMapa} ubicacion={ubicacion} />}
 
       <VentanaCargarRuta
         open={cargarOpen}

@@ -40,7 +40,7 @@ export function EstadoConexionLimnigrafo({ limnigrafo }: EstadoConexionLimnigraf
   if (!medicion) {
     return (
       <div className="flex items-center gap-2">
-        <Chip variant="none">Sin datos</Chip>
+        <Chip variant="none" className="shrink-0">Sin datos</Chip>
         <span className="text-sm text-foreground-secondary">Este limnígrafo todavía no registró ninguna medición.</span>
       </div>
     );

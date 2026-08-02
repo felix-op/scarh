@@ -7,12 +7,14 @@ import type { RutaAccesoResponse } from "@models";
 export interface RutaAccesoCardProps {
   ruta: RutaAccesoResponse;
   puedeEditar: boolean;
+  mapaVisible: boolean;
+  onToggleMapa: (ruta: RutaAccesoResponse) => void;
   onEditar: (ruta: RutaAccesoResponse) => void;
   onEliminar: (ruta: RutaAccesoResponse) => void;
 }
 
-/** Tarjeta de una ruta de acceso con acciones descargar / editar / eliminar. */
-export function RutaAccesoCard({ ruta, puedeEditar, onEditar, onEliminar }: RutaAccesoCardProps) {
+/** Tarjeta de una ruta de acceso con acciones ver en mapa / descargar / editar / eliminar. */
+export function RutaAccesoCard({ ruta, puedeEditar, mapaVisible, onToggleMapa, onEditar, onEliminar }: RutaAccesoCardProps) {
   const descargar = () => {
     const a = document.createElement("a");
     a.href = `/api/rutas-acceso/${ruta.id}/descargar`;
@@ -46,6 +48,14 @@ export function RutaAccesoCard({ ruta, puedeEditar, onEditar, onEliminar }: Ruta
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
+        {ruta.geometria && (
+          <BotonIcono
+            icon={mapaVisible ? "ocultar" : "mapa"}
+            onClick={() => onToggleMapa(ruta)}
+            aria-label={mapaVisible ? "Ocultar del mapa" : "Ver en mapa"}
+            title={mapaVisible ? "Ocultar del mapa" : "Ver en mapa"}
+          />
+        )}
         <BotonIcono icon="descargar" onClick={descargar} />
         {puedeEditar && (
           <>

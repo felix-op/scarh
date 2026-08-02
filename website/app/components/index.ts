@@ -11,6 +11,7 @@ export * from "./dashboard";
 export * from "./limnigrafos";
 export * from "./mapa";
 export * from "./mapa-legacy";
+export * from "./perfil";
 export * from "./usuarios";
 export * from "./render-server-response";
 

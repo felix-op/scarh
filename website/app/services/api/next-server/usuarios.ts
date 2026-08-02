@@ -7,6 +7,8 @@ import type {
   UsuarioRolesPutRequest, 
   PaginatedResponse,
   ParamsPaginated,
+  PerfilResponse,
+  PerfilPayload,
 } from "@models";
 
 export async function getServerUsuarios(params?: ParamsPaginated): Promise<PaginatedResponse<UsuarioResponse>> {
@@ -116,5 +118,24 @@ export async function putServerUsuarioRoles({ params, data }: PutServerUsuarioRo
     method: "PUT",
     params,
     body: data,
+  });
+}
+
+/** Perfil del usuario autenticado. No requiere roles. */
+export async function getSSRPerfil(): Promise<PerfilResponse> {
+  return RequestSSR<PerfilResponse>({
+    url: "usuarios/me/",
+    method: "GET",
+    tags: ["perfil"],
+  });
+}
+
+/** Actualiza la información personal del usuario autenticado. */
+export async function patchSSRPerfil(data: PerfilPayload): Promise<PerfilResponse> {
+  return RequestSSR<PerfilResponse, Record<string, never>, PerfilPayload>({
+    url: "usuarios/me/",
+    method: "PATCH",
+    body: data,
+    tags: ["perfil"],
   });
 }

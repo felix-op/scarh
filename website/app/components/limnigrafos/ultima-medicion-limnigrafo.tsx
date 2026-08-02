@@ -24,7 +24,7 @@ export function UltimaMedicionLimnigrafo({ limnigrafo }: UltimaMedicionLimnigraf
     return (
       <SeccionAgruparInformacion title="Última medición">
         <div className="flex items-center gap-2">
-          <Chip variant="none">Sin datos</Chip>
+          <Chip variant="none" className="shrink-0">Sin datos</Chip>
           <span className="text-sm text-foreground-secondary">Este limnígrafo todavía no registró ninguna medición.</span>
         </div>
       </SeccionAgruparInformacion>
