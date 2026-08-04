@@ -111,3 +111,46 @@ Toda adición de código debe ubicarse estrictamente en la carpeta que le corres
       tags?: string[];
     }
     ```
+
+---
+
+## 9. Dependencias
+
+El conjunto instalado en `website/package.json` cubre las necesidades del proyecto.
+Antes de agregar una librería, revisar esta lista: varias entradas están acá porque
+ya se evaluaron y se descartaron con un motivo concreto.
+
+* **Versiones exactas**: sin `^` ni `~`. Instalar con `pnpm add --save-exact`.
+
+* **No agregar**:
+
+  | Paquete | Motivo |
+  |---|---|
+  | `xlsx`, `exceljs` | Entre 600 kB y 1 MB de bundle para una acción ocasional. La exportación a Excel se genera en Django con `openpyxl`, donde no viaja al navegador. |
+  | `simple-statistics`, `d3-array` | El cálculo estadístico es del backend (`/estadisticas/tabla/`). Duplicarlo en el cliente es lo que hacía que la misma variable, en el mismo rango, mostrara un desvío estándar distinto según la pestaña: el backend lo calcula muestral (divide por n-1) y el cliente lo hacía poblacional (divide por n). |
+  | `papaparse` | El armado de CSV está resuelto en `utils/exportar.utiles.ts`, con BOM UTF-8 para que Excel respete los acentos. |
+  | `radix-ui` (paquete monolítico) | Duplica los primitivos individuales `@radix-ui/react-*` ya instalados. |
+  | `moment` | `date-fns` ya está instalado y es tree-shakeable. |
+
+* **Clientes HTTP**: no se llama a `axios` ni a `fetch` directamente desde un
+  componente. Hay dos envoltorios, uno por contexto:
+
+  | Envoltorio | Cuándo |
+  |---|---|
+  | `RequestSSR` (`services/apiClient.ts`) | Lectura desde el servidor: Server Components y Server Actions. Inyecta el token de sesión y maneja los tags de caché de Next. |
+  | `RequestClient` (`services/requestClient.ts`) | Interacciones de cliente, normalmente detrás de TanStack Query. Envuelve una instancia de `axios` con interceptores propios. |
+
+  Si `RequestClient` no alcanza para un caso, se lo extiende; y si hace falta algo que
+  no encaja en el envoltorio, usar `axios` directamente es válido. Lo que no
+  corresponde es duplicar la configuración base en cada llamada.
+
+* **Iconos**: `lucide-react` está instalado porque lo traen los primitivos de shadcn.
+  Los iconos propios van por `components/ui/iconify-icon.tsx`, que es el estándar del
+  proyecto.
+
+* **`recharts`** es la librería de gráficos. Se eligió sobre `chart.js` (API imperativa
+  sobre canvas: no es estilable con Tailwind ni inspeccionable), `visx`/`d3` (exigen
+  escribir ejes, escalas y tooltips a mano) y `echarts` (>300 kB, necesario recién si
+  aparecen requisitos de zoom sobre millones de puntos). Los componentes propios
+  envuelven recharts en `components/graficos/lienzo-grafico.tsx`; no se usa el
+  `chart.tsx` de shadcn, escrito para recharts 2.

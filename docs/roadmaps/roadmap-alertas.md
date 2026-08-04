@@ -3,7 +3,7 @@
 Tareas de backend relacionadas con alertas y estados, separadas del roadmap del simulador
 porque **se ignoran por ahora**. Se anotan acá para no perderlas.
 
-Ver `docs/roadmap-simulador.md` para el trabajo del simulador y su CLI.
+Ver `docs/roadmaps/roadmap-simulador.md` para el trabajo del simulador y su CLI.
 
 ---
 

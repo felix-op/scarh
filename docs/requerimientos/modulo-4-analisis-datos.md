@@ -19,8 +19,8 @@ Este módulo provee las herramientas necesarias para visualizar, analizar y expo
 * **Descripción**: El sistema debe permitir a los usuarios aplicar filtros por fecha, palabras clave y otros criterios relevantes para facilitar la localización y análisis de datos. Por ejemplo:
   * Historial de datos (consulta general de registros).
   * Generación de gráficos (para ajustar los datos visualizados).
-  * Exportación de datos (para descargar solo la información filtrada en CSV, Excel o PDF).
+  * Exportación de datos (para descargar solo la información filtrada en CSV o Excel).
 
 ### RF [4.05] Descarga de información
 * **Usuarios**: Administrador, usuarios.
-* **Descripción**: Los datos y reportes podrán exportarse en formatos como CSV, Excel o PDF.
+* **Descripción**: Los datos y reportes podrán exportarse en formatos como CSV o Excel.

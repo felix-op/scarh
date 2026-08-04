@@ -11,4 +11,4 @@ El sistema se compone de 4 módulos principales:
 *   **[Módulo 3: Administración de Usuarios y Permisos](./modulo-3-administracion-usuarios-permisos.md)**: Gestión de cuentas, roles, permisos, autenticación y auditoría.
 *   **[Módulo 4: Análisis de los Datos](./modulo-4-analisis-datos.md)**: Consulta histórica, visualización, filtros, comparación de métricas y exportación.
 
-Para los detalles de implementación pendientes y roadmap de desarrollo (como el uso de Tanstack Query y creación de páginas específicas), referirse al documento **[Roadmap de Implementación](./roadmap.md)**.
+Para los detalles de implementación pendientes y roadmap de desarrollo, referirse a los documentos **[Roadmaps de Implementación](./roadmapsd)**.

@@ -13,7 +13,7 @@ El documento tiene dos partes:
   la lista de dispositivos con el backend, rota tokens y fuerza escenarios (clima, hora, época).
 
 Temas derivados que quedan fuera:
-`docs/migracion-alertas.md` (alertas y estados de error) y `docs/deuda-tecnica.md`.
+`docs/roadmaps/roadmap-alertas.md` (alertas y estados de error) y `docs/deuda-tecnica.md`.
 
 ---
 
@@ -294,7 +294,7 @@ Tareas:
       `-1000` (checksum), `-1001` (sin ACK tras 20 reintentos), `-1002` (sin respuesta),
       `-1003` (batería baja). Van en el campo de altura.
       Que el backend los reciba y genere la alerta/estado correspondiente es tarea de
-      `docs/migracion-alertas.md`, no del simulador.
+      `docs/roadmaps/roadmap-alertas.md`, no del simulador.
 - [ ] Deriva de calibración: dejar que `m`/`b` se desvíen lentamente en algún dispositivo
       (sensor descalibrado) → offset sistemático, caso de prueba distinto al ruido.
 - [ ] Deriva del RTC: `cambia_alarma()` suma el intervalo a la hora leída, así que el error se
@@ -445,7 +445,7 @@ mutable compartido.** Un equipo real no coordina con otro.
 - [ ] **Modo backfill histórico**: generar N días de mediciones pasadas y cargarlas por
       `POST /medicion/bulk/` en tandas, para que las estadísticas y los gráficos tengan datos
       desde el primer día. Ojo: `bulk_create` evalúa alertas por cada medición del lote
-      (ver `docs/migracion-alertas.md`).
+      (ver `docs/roadmaps/roadmap-alertas.md`).
 
 ## A.7 Tests — sólo la parte matemática
 
@@ -465,7 +465,7 @@ gastar más tiempo del necesario.
 - [ ] Escribir `simulator-go/README.md` de cero, después de A.1–A.6, describiendo lo que el
       simulador **realmente** hace. Incluir la tabla de separación de responsabilidades y la
       justificación de las decisiones físicas.
-- [ ] Eliminar `docs/SINCRONIZACION_LIMNIGRAFOS.md`: documenta un comando
+- [x] Eliminar `docs/SINCRONIZACION_LIMNIGRAFOS.md`: documentaba un comando
       `sincronizar_simulador` que no existe y un flujo (Django escribe el `config.yaml` del
       simulador) que la Parte B invierte. Ver `docs/deuda-tecnica.md`.
 
@@ -624,7 +624,7 @@ que requiere código nuevo y no sólo ajuste de datos.
 - [ ] Responder algo, pero sin esperar que el equipo lo lea: el firmware **nunca parsea la
       respuesta HTTP**, no distingue un 200 de un 500.
 
-## C.3 Estados de error y alertas → `docs/migracion-alertas.md`
+## C.3 Estados de error y alertas → `docs/roadmaps/roadmap-alertas.md`
 
 Se ignora por ahora. Lo que el simulador necesita de ahí, cuando se retome:
 
@@ -656,7 +656,7 @@ Se ignora por ahora. Lo que el simulador necesita de ahí, cuando se retome:
 - [ ] **`signals.py`**: eliminar los receivers de `Limnigrafo`, que sólo imprimen a stdout y
       llaman a una función con el cuerpo comentado. La Parte B invierte el flujo (el CLI
       consulta al backend; el backend no escribe nada del simulador), así que quedan sin sentido.
-      Eliminar también `docs/SINCRONIZACION_LIMNIGRAFOS.md`.
+      `docs/SINCRONIZACION_LIMNIGRAFOS.md` ya fue eliminado.
 
 ---
 
