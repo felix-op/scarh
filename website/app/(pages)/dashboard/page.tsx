@@ -65,8 +65,7 @@ export default async function DashboardPage() {
             dispositivos primero.
           */}
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <section className="flex flex-col gap-3 xl:col-span-2">
-              <h2 className="text-sm font-semibold text-foreground-title">Dispositivos</h2>
+            <section className="xl:col-span-2">
               <GrillaLimnigrafos limnigrafos={datos.limnigrafos} />
             </section>
 

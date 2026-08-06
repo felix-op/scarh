@@ -10,7 +10,7 @@
  * portar desde el archivo legacy citado arriba.
  *
  * TODO(migración-mapa): esto vive en `mapa-legacy` como puerto rápido; migrar
- * a primitivas propias en `components/ui/mapa.tsx` según `docs/migracion-mapa.md`.
+ * a primitivas propias en `components/ui/mapa.tsx` según `docs/roadmaps/roadmap-mapa.md`.
  */
 
 import { cn } from "@utils";

@@ -4,7 +4,7 @@
  * Puerto rápido de `shared/componentes/MapView.tsx` del frontend legacy.
  * Objetivo: que la pantalla de mapa funcione end-to-end; no está prolijo
  * ni sigue todavía la arquitectura de primitivas propuesta en
- * docs/migracion-mapa.md (eso es una fase posterior).
+ * docs/roadmaps/roadmap-mapa.md (eso es una fase posterior).
  *
  * Simplificación respecto al legacy: `LimnigrafoResponse` de este proyecto ya
  * trae `ultima_medicion` embebida, así que no hace falta pedir mediciones por

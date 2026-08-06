@@ -2,11 +2,21 @@ import Link from "next/link";
 import { Card } from "../ui/cards";
 import { IconifyIcon } from "../ui/iconify-icon";
 import { ChipEstadoLimnigrafo } from "../limnigrafos/chip-estado-limnigrafo";
-import { formatFechaHora, formatearMedicion } from "@utils";
+import {
+  evaluarEstadoLimnigrafo,
+  formatFechaHora,
+  formatearMedicion,
+  ordenarPorCriticidad,
+} from "@utils";
 import type { DashboardLimnigrafo } from "@models";
 
 /**
  * Grilla de dispositivos: el contenido principal del tablero.
+ *
+ * Se ordena por criticidad —lo que necesita atención primero— y el encabezado lleva
+ * la cuenta, para no tener que recorrer las tarjetas para saber si hay algo mal. A
+ * igual criticidad manda el orden alfabético, así el refresco automático no
+ * reacomoda la grilla salvo que el estado de un dispositivo haya cambiado.
  *
  * Cada tarjeta enlaza a la ficha del limnígrafo, que es adonde se va cuando algo
  * llama la atención acá.
@@ -18,6 +28,22 @@ export interface GrillaLimnigrafosProps {
 }
 
 export function GrillaLimnigrafos({ limnigrafos }: GrillaLimnigrafosProps) {
+  const ordenados = ordenarPorCriticidad(limnigrafos, (limnigrafo) => ({
+    codigo: limnigrafo.codigo,
+    estadoConexion: limnigrafo.estado_conexion,
+    estadoMedicion: limnigrafo.estado_medicion,
+    tipoComunicacion: limnigrafo.tipo_de_comunicacion,
+  }));
+
+  const conProblemas = ordenados.filter(
+    (limnigrafo) =>
+      evaluarEstadoLimnigrafo({
+        estadoConexion: limnigrafo.estado_conexion,
+        estadoMedicion: limnigrafo.estado_medicion,
+        tipoComunicacion: limnigrafo.tipo_de_comunicacion,
+      }).requiereAtencion
+  ).length;
+
   if (limnigrafos.length === 0) {
     return (
       <Card className="flex flex-col items-center gap-2 p-10 text-center">
@@ -30,10 +56,25 @@ export function GrillaLimnigrafos({ limnigrafos }: GrillaLimnigrafosProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      {limnigrafos.map((limnigrafo) => (
-        <TarjetaLimnigrafo key={limnigrafo.id} limnigrafo={limnigrafo} />
-      ))}
+    <div className="flex flex-col gap-3">
+      <h2 className="text-sm font-semibold text-foreground-title">
+        {conProblemas === 0 ? (
+          <>Dispositivos · todos en orden</>
+        ) : (
+          <>
+            <span className="text-warn">
+              {conProblemas} de {ordenados.length}
+            </span>{" "}
+            {conProblemas === 1 ? "requiere" : "requieren"} atención
+          </>
+        )}
+      </h2>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {ordenados.map((limnigrafo) => (
+          <TarjetaLimnigrafo key={limnigrafo.id} limnigrafo={limnigrafo} />
+        ))}
+      </div>
     </div>
   );
 }

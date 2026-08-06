@@ -1,6 +1,6 @@
 import { Chip, type ChipSize } from "../ui/chip";
 import { ChipEstado } from "../ui/chip-estado";
-import { tieneCoberturaAlertas } from "@utils";
+import { evaluarEstadoLimnigrafo, tieneCoberturaAlertas } from "@utils";
 import type { EstadoLimnigrafoVariant } from "@utils";
 
 export interface ChipEstadoConexionProps {
@@ -99,26 +99,11 @@ export function ChipEstadoLimnigrafo({
   size = "md",
   anchoFijo = false,
 }: ChipEstadoLimnigrafoProps) {
-  const comun = { size, anchoFijo };
-  const fueraDeRango = estadoMedicion === "fuera_de_rango";
+  const { etiqueta, variante } = evaluarEstadoLimnigrafo({
+    estadoConexion,
+    estadoMedicion,
+    tipoComunicacion,
+  });
 
-  if (!tieneCoberturaAlertas(tipoComunicacion)) {
-    return fueraDeRango ? (
-      <ChipEstado etiqueta="Fuera de rango" variante="warn" {...comun} />
-    ) : (
-      <ChipEstado etiqueta="Sin envío de datos" variante="neutral" {...comun} />
-    );
-  }
-
-  if (estadoConexion === "sin_conexion") {
-    return <ChipEstado etiqueta="Sin conexión" variante="error" {...comun} />;
-  }
-  if (estadoConexion === "demorado") {
-    return <ChipEstado etiqueta="Demorado" variante="warn" {...comun} />;
-  }
-  if (fueraDeRango) {
-    return <ChipEstado etiqueta="Fuera de rango" variante="warn" {...comun} />;
-  }
-
-  return <ChipEstado etiqueta="En línea" variante="success" {...comun} />;
+  return <ChipEstado etiqueta={etiqueta} variante={variante} size={size} anchoFijo={anchoFijo} />;
 }

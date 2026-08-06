@@ -19,7 +19,7 @@ export const ATRIBUTO_METADATA: Record<
   { label: string; unidad: string; decimales: number; aclaracion?: string }
 > = {
   // Centímetros, no metros, y con 1 decimal: es lo que mide y reporta el equipo, y
-  // nada convierte en ningún punto de la cadena (`docs/roadmap-simulador.md` §A.3.5,
+  // nada convierte en ningún punto de la cadena (`docs/roadmaps/roadmap-simulador.md` §A.3.5,
   // verificado sobre 4744 registros reales). Rotularlo "m" mostraba un arroyo de
   // 63 cm como 63 metros.
   altura_agua: { label: "Nivel del agua", unidad: "cm", decimales: 1 },

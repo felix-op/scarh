@@ -24,3 +24,4 @@ export * from "./estadisticas.schemas";
 export * from "./exportar-estadisticas";
 export * from "./graficos.utiles";
 export * from "./saludos";
+export * from "./limnigrafos.estado";
