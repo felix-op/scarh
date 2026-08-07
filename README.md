@@ -12,7 +12,7 @@ Sistema de Control y Análisis de Recursos Hídricos.
     - Windows: ./venv/bin/activate.bat
     - Linux: source .venv/bin/activate
 3. Instalar dependecias: pip install -r requirements.txt
-4. Realizar migraciones: python manage.py runserver
+4. Realizar migraciones: python manage.py migrate
 5. Iniciar servidor: python manage.py runserver
 
 # Inicializar frontend local

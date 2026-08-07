@@ -300,11 +300,112 @@ class MedicionTests(APITestCase):
         response = self.client.post(self.list_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        alerta = Alerta.objects.filter(tipo='fuera_rango_medicion', limnigrafo=self.limnigrafo).latest('id')
-        self.assertIn('altura_agua', alerta.descripcion)
-        self.assertIn('temperatura', alerta.descripcion)
-        self.assertIn('presion', alerta.descripcion)
-        self.assertTrue(UsuarioNotificacion.objects.filter(alerta=alerta, usuario=self.user).exists())
+        alertas = Alerta.objects.filter(tipo='fuera_rango_medicion', limnigrafo=self.limnigrafo)
+        self.assertEqual(alertas.count(), 3)
+        self.assertSetEqual(
+            set(alertas.values_list("condicion", flat=True)),
+            {"altura_agua.max", "temperatura.max", "presion.max"},
+        )
+        self.assertTrue(
+            UsuarioNotificacion.objects.filter(alerta__in=alertas, usuario=self.user).exists()
+        )
+
+    def test_medicion_fuera_de_rango_no_duplica_condicion_persistente(self):
+        self.client.force_authenticate(user=self.user)
+
+        primera = {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 4.2,
+            'nivel_de_bateria': 11.2,
+            'fecha_hora': '2024-01-01T10:00:00Z',
+        }
+        segunda = {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 4.4,
+            'nivel_de_bateria': 11.1,
+            'fecha_hora': '2024-01-01T11:00:00Z',
+        }
+
+        self.assertEqual(self.client.post(self.list_url, primera, format='json').status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.client.post(self.list_url, segunda, format='json').status_code, status.HTTP_201_CREATED)
+
+        alertas = Alerta.objects.filter(
+            tipo='fuera_rango_medicion',
+            limnigrafo=self.limnigrafo,
+            condicion='altura_agua.max',
+        )
+        self.assertEqual(alertas.count(), 1)
+        self.assertTrue(alertas.get().condicion_activa)
+
+    def test_medicion_fuera_de_rango_reaparece_y_crea_nueva_alerta(self):
+        self.client.force_authenticate(user=self.user)
+
+        fuera_de_rango = {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 4.2,
+            'nivel_de_bateria': 11.2,
+            'fecha_hora': '2024-01-01T10:00:00Z',
+        }
+        normal = {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 1.2,
+            'nivel_de_bateria': 11.2,
+            'fecha_hora': '2024-01-01T11:00:00Z',
+        }
+        reaparicion = {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 4.3,
+            'nivel_de_bateria': 11.2,
+            'fecha_hora': '2024-01-01T12:00:00Z',
+        }
+
+        self.client.post(self.list_url, fuera_de_rango, format='json')
+        self.client.post(self.list_url, normal, format='json')
+        self.client.post(self.list_url, reaparicion, format='json')
+
+        alertas = Alerta.objects.filter(
+            tipo='fuera_rango_medicion',
+            limnigrafo=self.limnigrafo,
+            condicion='altura_agua.max',
+        ).order_by("id")
+        self.assertEqual(alertas.count(), 2)
+        self.assertFalse(alertas[0].condicion_activa)
+        self.assertEqual(alertas[0].estado, "solucionado")
+        self.assertTrue(alertas[1].condicion_activa)
+
+    def test_medicion_fuera_de_rango_separa_liminigrafos_y_condiciones(self):
+        self.client.force_authenticate(user=self.user)
+        other_limnigrafo = Limnigrafo.objects.create(
+            codigo='LMG-OTRO',
+            descripcion='Otro',
+            memoria=1024,
+            bateria_actual=12,
+        )
+        ConfiguracionLimnigrafo.objects.create(
+            limnigrafo=other_limnigrafo,
+            bateria_min=10,
+            tiempo_advertencia=3600,
+            tiempo_peligro=7200,
+            altura_maxima_agua=2.8,
+            temperatura_minima=-5.0,
+            temperatura_maxima=35.0,
+        )
+
+        self.client.post(self.list_url, {
+            'limnigrafo': self.limnigrafo.id,
+            'altura_agua': 4.2,
+            'temperatura': 42,
+            'fecha_hora': '2024-01-01T10:00:00Z',
+        }, format='json')
+        self.client.post(self.list_url, {
+            'limnigrafo': other_limnigrafo.id,
+            'altura_agua': 4.2,
+            'fecha_hora': '2024-01-01T10:00:00Z',
+        }, format='json')
+
+        self.assertTrue(Alerta.objects.filter(limnigrafo=self.limnigrafo, condicion='altura_agua.max').exists())
+        self.assertTrue(Alerta.objects.filter(limnigrafo=self.limnigrafo, condicion='temperatura.max').exists())
+        self.assertTrue(Alerta.objects.filter(limnigrafo=other_limnigrafo, condicion='altura_agua.max').exists())
 
     def test_create_medicion_sets_sin_conexion_when_time_exceeds_peligro_threshold(self):
         self.client.force_authenticate(user=self.user)
@@ -468,7 +569,7 @@ class MedicionTests(APITestCase):
         self.assertIn('descripcion_tecnica', response.data)
         self.assertIn("Ya existe una medición para este limnígrafo en la fecha y hora especificadas.", response.data['descripcion_tecnica'])
 
-    def test_filter_medicion_by_search_matches_limnigrafo_code(self):
+    def test_filter_medicion_by_search_does_not_match_limnigrafo_code(self):
         self.client.force_authenticate(user=self.user)
 
         other_limnigrafo = Limnigrafo.objects.create(
@@ -490,7 +591,7 @@ class MedicionTests(APITestCase):
             fecha_hora='2024-01-01T10:00:00Z',
             fuente='manual'
         )
-        target = Medicion.objects.create(
+        Medicion.objects.create(
             limnigrafo=other_limnigrafo,
             altura_agua=2.0,
             fecha_hora='2024-01-01T11:00:00Z',
@@ -499,9 +600,8 @@ class MedicionTests(APITestCase):
 
         response = self.client.get(self.list_url, {'search': 'search'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 1)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['id'], target.id)
+        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(len(response.data['results']), 0)
 
     def test_filter_medicion_by_search_matches_numeric_value(self):
         self.client.force_authenticate(user=self.user)

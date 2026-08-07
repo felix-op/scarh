@@ -10,7 +10,6 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_api_key.models import APIKey
 from ..permissions import LimnigrafosPermission
-from ..utils.alertas import generar_alerta_cambio_estado
 from ..utils.estado_limnigrafo import calcular_estado_limnigrafo
 from ..utils.audit import (
     registrar_accion_auditoria_en_commit,
@@ -36,24 +35,22 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
     ordering = ['id']
 
     def _refrescar_estados(self, limnigrafos):
+        """Recalcula `estado` para que la lectura no devuelva un estado vencido.
+
+        **No genera alertas**: de eso se encarga el comando `generar_alerta`, que corre
+        cada pocos segundos. Un `GET` no debe tener ese efecto de escritura — además de
+        que hacerlo acá significaba recorrer el generador una vez por limnígrafo en cada
+        listado.
+        """
         actualizados = []
-        cambios_estado = []
         for limnigrafo in limnigrafos:
-            estado_anterior = limnigrafo.estado
             nuevo_estado = calcular_estado_limnigrafo(limnigrafo)
             if nuevo_estado != limnigrafo.estado:
                 limnigrafo.estado = nuevo_estado
                 actualizados.append(limnigrafo)
-                cambios_estado.append((limnigrafo, estado_anterior, nuevo_estado))
 
         if actualizados:
             Limnigrafo.objects.bulk_update(actualizados, ["estado"])
-            for limnigrafo, estado_anterior, nuevo_estado in cambios_estado:
-                generar_alerta_cambio_estado(
-                    limnigrafo=limnigrafo,
-                    estado_anterior=estado_anterior,
-                    nuevo_estado=nuevo_estado,
-                )
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -70,16 +67,10 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        estado_anterior = instance.estado
         nuevo_estado = calcular_estado_limnigrafo(instance)
         if nuevo_estado != instance.estado:
             instance.estado = nuevo_estado
             instance.save(update_fields=["estado"])
-            generar_alerta_cambio_estado(
-                limnigrafo=instance,
-                estado_anterior=estado_anterior,
-                nuevo_estado=nuevo_estado,
-            )
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 

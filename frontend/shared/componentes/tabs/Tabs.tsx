@@ -13,17 +13,17 @@ type TabsProps = {
 };
 
 export default function Tabs({ tab, handleChange, options }: TabsProps) {
-    return (
-        <TabsContainer>
-            {options.map((option) => (
-                <Tab
-                    key={option.value}
-                    active={tab === option.value}
-                    onClick={() => handleChange(option.value)}
-                >
-                    {option.label}
-                </Tab>
-            ))}
-        </TabsContainer>
-    );
+	return (
+		<TabsContainer>
+			{options.map((option) => (
+				<Tab
+					key={option.value}
+					active={tab === option.value}
+					onClick={() => handleChange(option.value)}
+				>
+					{option.label}
+				</Tab>
+			))}
+		</TabsContainer>
+	);
 }

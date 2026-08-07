@@ -35,7 +35,7 @@ export default function PasoVerificar({ email, onNext }: PasoVerificarProps) {
 		});
 
 		if (result?.error) {
-            // NextAuth returns error descriptions depending on authorize function errors
+			// NextAuth returns error descriptions depending on authorize function errors
 			setError(result.error);
 			setLoading(false);
 		} else if (result?.ok) {

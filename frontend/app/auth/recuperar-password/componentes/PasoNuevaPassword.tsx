@@ -35,7 +35,7 @@ export default function PasoNuevaPassword() {
 		setExito(null);
 
 		try {
-            // El proxy inyecta el token de NextAuth que configuramos al iniciar sesión en el Paso 2
+			// El proxy inyecta el token de NextAuth que configuramos al iniciar sesión en el Paso 2
 			await axios.post("/api/proxy/auth/recuperar-password/nueva", {
 				password: data.password,
 			});

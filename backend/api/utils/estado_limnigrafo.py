@@ -101,6 +101,5 @@ def calcular_estado_medicion_limnigrafo(limnigrafo):
     if not config:
         return "normal"
         
-    from api.utils.alertas import _campos_fuera_de_rango
-    campos = _campos_fuera_de_rango(medicion, config)
-    return "fuera_de_rango" if campos else "normal"
+    from api.utils.alertas import _condiciones_fuera_de_rango
+    return "fuera_de_rango" if _condiciones_fuera_de_rango(medicion, config) else "normal"

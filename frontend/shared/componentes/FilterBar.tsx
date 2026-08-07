@@ -1,6 +1,6 @@
-import BotonVariante from "@componentes/botones/BotonVariante";
 import Selector from "@componentes/campos/Selector";
 import TextField from "@componentes/campos/TextField";
+import FiltrosAcciones from "@componentes/filtros/FiltrosAcciones";
 
 export type FilterOption = {
 	label: string;
@@ -107,23 +107,27 @@ export default function FilterBar({
 					</label>
 				</div>
 
-				<div className="flex flex-wrap items-center gap-3 pt-1">
-					<BotonVariante
-						type="button"
-						variant="guardar"
-						onClick={onApply}
-						disabled={isLoading}
-					>
-						<span>{isLoading ? "Filtrando..." : "Aplicar filtros"}</span>
-					</BotonVariante>
-					<BotonVariante
-						type="button"
-						variant="default"
-						onClick={onClear}
-					>
-						<span>Limpiar</span>
-					</BotonVariante>
-				</div>
+				<FiltrosAcciones
+					className="pt-1"
+					acciones={[
+						{
+							key: "restablecer",
+							label: "Limpiar",
+							icon: "icon-[mdi--broom]",
+							variant: "cerrar",
+							onClick: onClear,
+						},
+						{
+							key: "aplicar",
+							label: isLoading ? "Filtrando..." : "Aplicar filtros",
+							icon: "icon-[mage--filter]",
+							variant: "guardar",
+							onClick: onApply,
+							disabled: isLoading,
+							loading: isLoading,
+						},
+					]}
+				/>
 			</div>
 		</section>
 	);

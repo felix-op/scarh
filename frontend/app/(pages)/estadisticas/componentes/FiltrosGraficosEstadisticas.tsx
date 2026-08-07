@@ -1,7 +1,7 @@
 "use client";
 
 import MultiSelect, { type MultiSelectOption } from "@componentes/components/ui/multi-select";
-import BotonVariante from "@componentes/botones/BotonVariante";
+import FiltrosAcciones from "@componentes/filtros/FiltrosAcciones";
 import { type Dispatch, type SetStateAction } from "react";
 import {
 	type EstadisticaAtributo,
@@ -165,36 +165,32 @@ export default function FiltrosGraficosEstadisticas({
 					Período actual: {activeRangeLabel}
 				</p>
 
-				<div className="flex flex-wrap items-center gap-3">
-					<BotonVariante
-						type="button"
-						onClick={onExport}
-						disabled={exportDisabled}
-						variant="filtro"
-						className="text-[14px]"
-					>
-						<span className="text-2xl icon-[material-symbols--download]" />
-						Exportar resumen CSV
-					</BotonVariante>
-					<BotonVariante
-						type="button"
-						onClick={onReset}
-						variant="cerrar"
-						className="text-[14px]"
-					>
-						<span className="text-2xl icon-[mdi--restore]" />
-						Restablecer
-					</BotonVariante>
-					<BotonVariante
-						type="button"
-						onClick={onApply}
-						variant="guardar"
-						className="text-[14px]"
-					>
-						<span className="text-2xl icon-[mage--filter]" />
-						Aplicar filtros
-					</BotonVariante>
-				</div>
+				<FiltrosAcciones
+					acciones={[
+						{
+							key: "exportar-resumen",
+							label: "Exportar resumen CSV",
+							icon: "icon-[material-symbols--download]",
+							variant: "filtro",
+							onClick: onExport,
+							disabled: exportDisabled,
+						},
+						{
+							key: "restablecer",
+							label: "Limpiar",
+							icon: "icon-[mdi--broom]",
+							variant: "cerrar",
+							onClick: onReset,
+						},
+						{
+							key: "aplicar",
+							label: "Aplicar filtros",
+							icon: "icon-[mage--filter]",
+							variant: "guardar",
+							onClick: onApply,
+						},
+					]}
+				/>
 			</div>
 		</section>
 	);

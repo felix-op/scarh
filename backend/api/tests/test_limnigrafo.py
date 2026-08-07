@@ -3,7 +3,7 @@ from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from api.models import Limnigrafo, ConfiguracionLimnigrafo
+from api.models import Alerta, Limnigrafo, ConfiguracionLimnigrafo
 from api.models.medicion import Medicion
 from datetime import time, timedelta
 from rest_framework_api_key.models import APIKey
@@ -80,6 +80,25 @@ class LimnigrafoTests(APITestCase):
 
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado, 'advertencia')
+
+    def test_list_no_genera_alertas(self):
+        """Listar es sólo lectura: las alertas las genera el comando `generar_alerta`."""
+        medicion = Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            altura_agua=2.0,
+            fecha_hora=timezone.now() - timedelta(minutes=45),
+            fuente='automatico',
+        )
+        self.limnigrafo.ultima_medicion = medicion
+        self.limnigrafo.estado = 'normal'
+        self.limnigrafo.save(update_fields=['ultima_medicion', 'estado'])
+
+        self.assertEqual(self.client.get(self.list_url).status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.get(self.list_url).status_code, status.HTTP_200_OK)
+
+        self.limnigrafo.refresh_from_db()
+        self.assertEqual(self.limnigrafo.estado, 'advertencia')
+        self.assertFalse(Alerta.objects.filter(limnigrafo=self.limnigrafo).exists())
 
     def test_list_sets_sin_conexion_when_time_exceeds_peligro_threshold(self):
         medicion = Medicion.objects.create(

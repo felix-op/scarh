@@ -71,7 +71,7 @@ export default function VisualizacionEstadisticas() {
 			</SeccionCard>
 
 			<EstadisticasPorAtributo
-				label="Promedio Agua"
+				label="Promedio de Nivel del Agua"
 				atributo="altura_agua"
 				fechaInicio={fechasConsulta.inicio}
 				fechaFin={fechasConsulta.fin}

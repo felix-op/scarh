@@ -4,12 +4,14 @@ type ProfileImageProps = {
 	url?: string
 	username: string
 	iniciales: string
+	showUsername?: boolean
 }
 
 export default function ProfileImage({
 	username,
 	iniciales,
-	url
+	url,
+	showUsername = true,
 }: ProfileImageProps) {
 	if (url) {
 		return (
@@ -40,7 +42,7 @@ export default function ProfileImage({
 			>
 				{iniciales}
 			</div>
-			{username}
+			{showUsername ? username : null}
 		</div>
 	);
 }

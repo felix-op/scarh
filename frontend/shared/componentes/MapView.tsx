@@ -7,6 +7,7 @@ import { useMapEvents } from "react-leaflet";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@componentes/components/ui/button";
 import { ButtonGroup } from "@componentes/components/ui/button-group";
+import { ESTILOS_ESTADO_LIMNIGRAFO } from "@componentes/BotonEstadoLimnigrafo";
 import { LimnigrafoMapInfoPanel } from "@componentes/LimnigrafoMapInfoPanel";
 import { LimnigrafosSidebar } from "./LimnigrafosSidebar";
 import {
@@ -28,15 +29,9 @@ export type MapViewProps = {
 
 const DEFAULT_CENTER: [number, number] = [-54.79930469196583, -68.30601485928138];
 
-const estadoColor: Record<string, string> = {
-	activo: "#82d987",
-	advertencia: "#facc15",
-	peligro: "#ef4444",
-	fuera: "#d65757",
-};
-
 function getEstadoColor(variant?: string) {
-	return estadoColor[variant ?? "activo"] ?? "#82d987";
+	const variante = (variant ?? "activo") as keyof typeof ESTILOS_ESTADO_LIMNIGRAFO;
+	return ESTILOS_ESTADO_LIMNIGRAFO[variante]?.indicadorColor ?? ESTILOS_ESTADO_LIMNIGRAFO.activo.indicadorColor;
 }
 
 type MapClickEvent = {
@@ -329,9 +324,9 @@ const MapView: React.FC<MapViewProps> = ({ resizeToken: _resizeToken = 0 }) => {
 										pathOptions={{
 											color,
 											weight: selectedLimnigrafo?.id === limnigrafo.id ? 3 : 2,
-											opacity: 0.55,
+											opacity: selectedLimnigrafo?.id === limnigrafo.id ? 0.42 : 0.28,
 											fillColor: color,
-											fillOpacity: selectedLimnigrafo?.id === limnigrafo.id ? 0.22 : 0.14,
+											fillOpacity: selectedLimnigrafo?.id === limnigrafo.id ? 0.14 : 0.08,
 										}}
 									/>
 								) : null}

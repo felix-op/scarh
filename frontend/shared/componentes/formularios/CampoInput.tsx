@@ -8,7 +8,7 @@ export type CampoInputProps<T extends FieldValues> = {
 	name: Path<T>;
 	label?: string;
 	placeholder?: string;
-	type?: "text" | "password" | "email" | "tel" | "integer" | "number";
+	type?: "text" | "password" | "email" | "tel" | "integer" | "number" | "signedNumber";
 	icon?: string;
 	disabled?: boolean;
 	isLoading?: boolean;
@@ -39,7 +39,8 @@ export default function CampoInput<T extends FieldValues>({
 }: CampoInputProps<T>) {
 	const resolvedPattern =
 		pattern ||
-		((type === 'email' || type === 'integer' || type === "number") ? DEFAULT_VALIDATIONS[type] : undefined);
+		((type === 'email' || type === 'integer' || type === "number" || type === "signedNumber") ? DEFAULT_VALIDATIONS[type] : undefined);
+	const inputType = type === "integer" || type === "signedNumber" ? "number" : type;
 
 	return (
 		<WrapperCampo
@@ -54,7 +55,7 @@ export default function CampoInput<T extends FieldValues>({
 			render={({ field, fieldState }) => (
 				<TextField
 					{...field}
-					type={(type === "integer") ? "number" : type}
+					type={inputType}
 					id={name}
 					placeholder={placeholder}
 					disabled={disabled || isLoading}

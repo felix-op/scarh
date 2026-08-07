@@ -25,7 +25,7 @@ export default async function authorizeRecuperacion(credentials: AuthorizeRecupe
 	};
 
 	try {
-        // We use POST as requested by the user for step 2: "Enviar solicitud a /auth/recuperar-password/verificar"
+		// We use POST as requested by the user for step 2: "Enviar solicitud a /auth/recuperar-password/verificar"
 		const response = await axios.post(RECOVER_URL, payload);
 
 		if (response.status < 200 || response.status >= 300) {
@@ -58,8 +58,8 @@ export default async function authorizeRecuperacion(credentials: AuthorizeRecupe
 	} catch (error) {
 		console.error("Error durante la autorización de recuperación:", error);
 		if (axios.isAxiosError(error) && error.response) {
-             throw new Error(error.response.data?.descripcion_tecnica || "Código inválido o expirado");
-        }
+			throw new Error(error.response.data?.descripcion_tecnica || "Código inválido o expirado");
+		}
 		throw error;
 	}
 }

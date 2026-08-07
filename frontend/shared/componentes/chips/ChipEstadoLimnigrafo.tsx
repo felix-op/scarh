@@ -36,17 +36,29 @@ export const ESTILOS_ESTADO_LIMNIGRAFO = {
 	},
 };
 
-export default function ChipEstadoLimnigrafo({ estado }: ChipEstadoLimnigrafoProps) {
-	const varianteBase =
+type VarianteEstadoLimnigrafo = keyof typeof ESTILOS_ESTADO_LIMNIGRAFO;
+
+function isVarianteEstadoLimnigrafo(variante: string): variante is VarianteEstadoLimnigrafo {
+	return variante in ESTILOS_ESTADO_LIMNIGRAFO;
+}
+
+function getVarianteEstadoLimnigrafo(estado: EstadoLimnigrafoBackend | EstadoLimnigrafoVisual): VarianteEstadoLimnigrafo {
+	const varianteBase: string =
 		typeof estado === "string"
 			? estado
 			: estado.variante ?? "normal";
-	const variante =
-		varianteBase === "activo"
-			? "normal"
-			: varianteBase === "fuera_de_rango" || varianteBase === "fuera_de_servicio"
-				? "fuera"
-				: varianteBase;
+
+	const variante = varianteBase === "activo"
+		? "normal"
+		: varianteBase === "fuera_de_rango" || varianteBase === "fuera_de_servicio"
+			? "fuera"
+			: varianteBase;
+
+	return isVarianteEstadoLimnigrafo(variante) ? variante : "normal";
+}
+
+export default function ChipEstadoLimnigrafo({ estado }: ChipEstadoLimnigrafoProps) {
+	const variante = getVarianteEstadoLimnigrafo(estado);
 	const config = ESTILOS_ESTADO_LIMNIGRAFO[variante] ?? ESTILOS_ESTADO_LIMNIGRAFO.normal;
 
 	return (
@@ -63,5 +75,22 @@ export default function ChipEstadoLimnigrafo({ estado }: ChipEstadoLimnigrafoPro
 				{config.etiqueta}
 			</span>
 		</div>
+	);
+}
+
+export function ChipEstadoLimnigrafoCompacto({ estado }: ChipEstadoLimnigrafoProps) {
+	const variante = getVarianteEstadoLimnigrafo(estado);
+	const config = ESTILOS_ESTADO_LIMNIGRAFO[variante] ?? ESTILOS_ESTADO_LIMNIGRAFO.normal;
+
+	return (
+		<span className={`inline-flex w-fit items-center gap-2 rounded-full border px-2.5 py-1 text-sm font-semibold ${config.lightClassName} ${config.darkClassName}`}>
+			<span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white shadow-[0px_0px_0px_1px_rgba(148,163,184,0.18)] dark:bg-[#223149]">
+				<span
+					className="block h-3.5 w-3.5 rounded-full border"
+					style={{ backgroundColor: config.backgroundColor, borderColor: config.borderColor }}
+				/>
+			</span>
+			{config.etiqueta}
+		</span>
 	);
 }

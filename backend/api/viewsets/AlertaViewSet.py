@@ -1,5 +1,8 @@
 from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.utils import timezone
 
 from ..models import UsuarioNotificacion
 from ..serializer import AlertaSerializer
@@ -21,3 +24,11 @@ class AlertaViewSet(
             .order_by("-alerta__fecha_hora")
             .distinct()
         )
+
+    @action(detail=False, methods=["post"], url_path="mark-all-read")
+    def mark_all_read(self, request):
+        updated = self.get_queryset().filter(estado="nuevo").update(
+            estado="leido",
+            fecha_leida=timezone.now(),
+        )
+        return Response({"updated": updated})

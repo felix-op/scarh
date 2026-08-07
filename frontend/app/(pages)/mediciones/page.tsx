@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import PaginaBase from "@componentes/base/PaginaBase";
+import BotonVariante from "@componentes/botones/BotonVariante";
 import {
 	ImportPreviewRow,
 	MedicionPaginatedResponse,
@@ -41,12 +42,6 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 75, 100] as const;
 const EXPORT_PAGE_SIZE = 1000;
 const MEDICIONES_REFETCH_INTERVAL_MS = 15000;
 
-const HEADER_ACTION_PRIMARY_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#CFE2F1] bg-[#DDEEFF] px-6 text-sm font-semibold text-[#258CC6] shadow-[0px_4px_10px_rgba(37,140,198,0.22)] transition hover:bg-[#CFE5FB] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#1D4ED8] dark:bg-[#0B2A43] dark:text-[#93C5FD] dark:hover:bg-[#12385B]";
-
-const HEADER_ACTION_SECONDARY_BUTTON_CLASS =
-	"inline-flex h-11 items-center gap-2 rounded-full border border-[#EFCAD5] bg-[#F7E0E8] px-6 text-sm font-semibold text-[#F05275] shadow-[0px_4px_10px_rgba(240,82,117,0.2)] transition hover:bg-[#F3D3DE] disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#9D174D] dark:bg-[#3F1222] dark:text-[#FDA4AF] dark:hover:bg-[#4D162B]";
-
 function inferImportFuenteByFileName(fileName: string): "import_csv" | "import_json" | null {
 	const lowerName = fileName.toLowerCase();
 	if (lowerName.endsWith(".csv")) {
@@ -76,7 +71,6 @@ function getDefaultHistorialFilters(): HistorialFilters {
 		fuente: "",
 		desde,
 		hasta,
-		busqueda: "",
 	};
 }
 
@@ -238,11 +232,6 @@ function MedicionesContent() {
 			params.fecha_hasta = hastaIso;
 		}
 
-		const search = appliedHistorialFilters.busqueda.trim();
-		if (search) {
-			params.search = search;
-		}
-
 		return params;
 	}, [appliedHistorialFilters, currentPage, pageSize]);
 
@@ -257,7 +246,6 @@ function MedicionesContent() {
 			queryParams,
 		},
 		config: {
-			placeholderData: (previous) => previous,
 			refetchInterval: MEDICIONES_REFETCH_INTERVAL_MS,
 			refetchIntervalInBackground: true,
 		},
@@ -280,15 +268,28 @@ function MedicionesContent() {
 		[importRowsSource, fallbackLimnigrafoId],
 	);
 
+	const appliedLimnigrafoIds = useMemo(() => {
+		const ids = appliedHistorialFilters.limnigrafo
+			.map((value) => Number.parseInt(value, 10))
+			.filter((value) => !Number.isNaN(value));
+
+		return new Set(ids);
+	}, [appliedHistorialFilters.limnigrafo]);
+
 	const tableRows = useMemo(
 		() =>
-			(medicionesData?.results ?? []).map((medicion) =>
-				mapMedicionToRow(
-					medicion,
-					limnigrafoNameById.get(medicion.limnigrafo) ?? `ID ${medicion.limnigrafo}`,
+			(medicionesData?.results ?? [])
+				.filter((medicion) => (
+					appliedLimnigrafoIds.size === 0 ||
+					appliedLimnigrafoIds.has(medicion.limnigrafo)
+				))
+				.map((medicion) =>
+					mapMedicionToRow(
+						medicion,
+						limnigrafoNameById.get(medicion.limnigrafo) ?? `ID ${medicion.limnigrafo}`,
+					),
 				),
-			),
-		[limnigrafoNameById, medicionesData],
+		[appliedLimnigrafoIds, limnigrafoNameById, medicionesData],
 	);
 
 	const serverCount = medicionesData?.count ?? 0;
@@ -580,22 +581,24 @@ function MedicionesContent() {
 						</div>
 
 						<div className="flex flex-wrap items-center gap-3 lg:justify-end">
-							<button
+							<BotonVariante
 								type="button"
 								onClick={() => handleManualModalOpenChange(true)}
-								className={HEADER_ACTION_PRIMARY_BUTTON_CLASS}
+								variant="guardar"
+								className="text-[14px]"
 							>
-								<span className="icon-[mdi--pencil] text-base" aria-hidden="true" />
+								<span className="text-2xl icon-[mdi--pencil]" aria-hidden="true" />
 								<span>Carga manual</span>
-							</button>
-							<button
+							</BotonVariante>
+							<BotonVariante
 								type="button"
 								onClick={() => handleImportModalOpenChange(true)}
-								className={HEADER_ACTION_SECONDARY_BUTTON_CLASS}
+								variant="agregar"
+								className="text-[14px]"
 							>
-								<span className="icon-[mdi--upload] text-base" aria-hidden="true" />
+								<span className="text-2xl icon-[mdi--upload]" aria-hidden="true" />
 								<span>Importación</span>
-							</button>
+							</BotonVariante>
 						</div>
 					</header>
 
@@ -606,7 +609,6 @@ function MedicionesContent() {
 						onFuenteChange={(value) => handleHistorialFilterChange("fuente", value)}
 						onDesdeChange={(value) => handleHistorialFilterChange("desde", value)}
 						onHastaChange={(value) => handleHistorialFilterChange("hasta", value)}
-						onBusquedaChange={(value) => handleHistorialFilterChange("busqueda", value)}
 						onApplyFilters={handleApplyHistorialFilters}
 						onClearFilters={handleClearHistorialFilters}
 						onExport={handleExport}
@@ -622,7 +624,6 @@ function MedicionesContent() {
 						pageSize={pageSize}
 						pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
 						isFetching={isFetchingMediciones}
-						hasBusqueda={Boolean(appliedHistorialFilters.busqueda)}
 						actionError={errorAccion}
 						actionMessage={mensaje}
 						onPageSizeChange={(value) => {
