@@ -2,8 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import {
   TablaConAccionesPaginada,
   ActionConfig,
@@ -15,7 +13,7 @@ import {
 } from "@components";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "../shadcn/tooltip";
 import { RequestClient, useMensajes } from "@services";
-import { opcionesTipoAccion, obtenerFechasVentana } from "@utils";
+import { opcionesTipoAccion, obtenerFechasVentana, formatFechaHora } from "@utils";
 import type { HistorialResponse, PaginatedHistorialResponse, UsuarioResponse, PaginatedResponse } from "@models";
 import { FiltrosHistorial, type HistorialFiltrosState } from "./filtros-historial";
 
@@ -144,7 +142,7 @@ export function TablaHistorial({ data, usuariosOpciones, filtros }: TablaHistori
     {
       id: "date",
       header: "Fecha",
-      cell: (row) => format(new Date(row.date), "dd/MM/yyyy HH:mm", { locale: es }),
+      cell: (row) => formatFechaHora(row.date),
     },
     {
       id: "type",

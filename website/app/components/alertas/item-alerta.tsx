@@ -1,11 +1,9 @@
 "use client";
 
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { CardStatus } from "../ui/cards";
 import { ChipEstado } from "../ui/chip-estado";
 import { Boton } from "../ui/botones";
-import { ETIQUETAS_ESTADO_ALERTA, ETIQUETAS_TIPO_ALERTA, estadoTarjetaPorTipo, varianteEstadoAlerta } from "@utils";
+import { ETIQUETAS_ESTADO_ALERTA, ETIQUETAS_TIPO_ALERTA, estadoTarjetaPorTipo, varianteEstadoAlerta, formatFechaHora } from "@utils";
 import type { AlertaResponse } from "@models";
 
 /**
@@ -48,7 +46,7 @@ export function ItemAlerta({ alerta, seleccionada, onSeleccionar, onVerDispositi
             size="sm"
           />
           <span className="text-xs text-foreground-secondary">
-            {format(new Date(alerta.fecha_hora), "dd/MM/yyyy HH:mm", { locale: es })}
+            {formatFechaHora(alerta.fecha_hora)}
           </span>
           {noLeida && (
             <span className="ml-auto size-2 shrink-0 rounded-shape-full bg-warn" aria-label="No leída" />

@@ -68,9 +68,27 @@ export function hmsASegundos({ horas, minutos, segundos }: TiempoDescompuesto): 
   return Math.trunc((isNaN(h) ? 0 : h * 3600) + (isNaN(m) ? 0 : m * 60) + (isNaN(s) ? 0 : s));
 }
 
-/** Formatea una fecha ISO como "dd/mm/aaaa hh:mm" (es-AR) o un texto por defecto. */
-export function formatFechaHora(iso: string | null | undefined, fallback = "Sin registros"): string {
-  if (!iso) return fallback;
+/**
+ * Formatea una fecha como "dd/mm/aaaa hh:mm" (es-AR) o un texto por defecto.
+ *
+ * **La zona horaria fija no es decorativa: es lo que evita un error de hidratación.**
+ * `format()` de date-fns y los `toLocale*` sin `timeZone` usan la zona del runtime, y
+ * ésa no es la misma a los dos lados: el contenedor de Next corre en UTC y el navegador
+ * en la zona del equipo. El mismo instante daba "20:52" en el HTML del servidor y
+ * "17:52" al hidratar, y React descartaba el árbol. Fijando la zona, las dos corridas
+ * producen el mismo texto.
+ *
+ * Además es lo correcto para el dominio: las mediciones son de ríos de Ushuaia, así que
+ * la hora que se muestra tiene que ser la de allá, la vea quien la vea.
+ *
+ * Acepta epoch en milisegundos además de ISO, porque los timestamps de recharts son
+ * números.
+ */
+export function formatFechaHora(
+  iso: string | number | null | undefined,
+  fallback = "Sin registros"
+): string {
+  if (iso === null || iso === undefined || iso === "") return fallback;
   const d = new Date(iso);
   if (isNaN(d.getTime())) return fallback;
   return d.toLocaleString("es-AR", {
@@ -83,9 +101,9 @@ export function formatFechaHora(iso: string | null | undefined, fallback = "Sin 
   });
 }
 
-/** Formatea una fecha ISO como "dd/mm/aaaa" (es-AR) o un texto por defecto. */
-export function formatFecha(iso: string | null | undefined, fallback = "-"): string {
-  if (!iso) return fallback;
+/** Formatea una fecha como "dd/mm/aaaa" (es-AR) o un texto por defecto. Ver `formatFechaHora`. */
+export function formatFecha(iso: string | number | null | undefined, fallback = "-"): string {
+  if (iso === null || iso === undefined || iso === "") return fallback;
   const d = new Date(iso);
   if (isNaN(d.getTime())) return fallback;
   return d.toLocaleDateString("es-AR", {

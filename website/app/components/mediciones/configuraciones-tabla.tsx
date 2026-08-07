@@ -1,8 +1,6 @@
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import type { TableColumn } from "../ui/tabla";
 import { ChipEstadoImportacion } from "./chip-estado-importacion";
-import type { MedicionRowType } from "@utils";
+import { formatFechaHora, type MedicionRowType } from "@utils";
 
 export type FormatoImportacionMediciones = "viejo" | "nuevo";
 
@@ -22,7 +20,7 @@ function celdaFechaHora(row: MedicionRowType) {
   if (row.fechaHora) {
     const date = new Date(row.fechaHora);
     if (!Number.isNaN(date.getTime())) {
-      return format(date, "dd/MM/yyyy HH:mm", { locale: es });
+      return formatFechaHora(row.fechaHora);
     }
   }
 

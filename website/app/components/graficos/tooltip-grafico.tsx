@@ -1,7 +1,6 @@
 "use client";
 
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { formatFechaHora } from "@utils";
 
 /**
  * Fila del tooltip: una serie con su color, nombre y valor ya formateado.
@@ -37,7 +36,7 @@ export function TooltipGrafico({ timestamp, filas, nota }: TooltipGraficoProps) 
     <div className="rounded-shape-sm border border-border bg-background-paper p-2.5 shadow-card">
       {timestamp !== undefined && (
         <p className="mb-1.5 text-xs font-medium text-foreground-title">
-          {format(new Date(timestamp), "dd/MM/yyyy HH:mm", { locale: es })}
+          {formatFechaHora(timestamp)}
         </p>
       )}
 

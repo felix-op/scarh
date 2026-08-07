@@ -2,15 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { TablaConAccionesPaginada, type ActionConfig, type TableColumn } from "../ui/tabla";
 import { ChipEstado } from "../ui/chip-estado";
 import { Chip } from "../ui/chip";
 import { Boton } from "../ui/botones";
 import { useMensajes } from "@services";
 import { useMarcarAlertaLeida, useMarcarTodasLeidas } from "@hooks";
-import { ETIQUETAS_ESTADO_ALERTA, ETIQUETAS_TIPO_ALERTA, varianteEstadoAlerta } from "@utils";
+import { ETIQUETAS_ESTADO_ALERTA, ETIQUETAS_TIPO_ALERTA, varianteEstadoAlerta, formatFechaHora } from "@utils";
 import type { AlertaResponse, PaginatedAlertaResponse } from "@models";
 import { FiltrosAlertas, FILTROS_ALERTAS_POR_DEFECTO, type AlertasFiltrosState } from "./filtros-alertas";
 
@@ -159,7 +157,7 @@ export function TablaAlertas({ data, limnigrafosOpciones, filtros }: TablaAlerta
     {
       id: "fecha_hora",
       header: "Fecha y hora",
-      cell: (row) => format(new Date(row.fecha_hora), "dd/MM/yyyy HH:mm", { locale: es }),
+      cell: (row) => formatFechaHora(row.fecha_hora),
     },
   ];
 

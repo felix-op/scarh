@@ -2,12 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { TablaConAccionesPaginada, ActionConfig, TableColumn, Chip, ChipVariant, BotonImportar } from "@components";
 import { useMensajes } from "@services";
 import { obtenerTodasLasMedicionesFiltradas } from "@hooks";
-import { opcionesFuenteMedicion, obtenerFechasVentana, exportarComoCSV, exportarComoJSON, formatearMedicion, etiquetaConUnidad } from "@utils";
+import { opcionesFuenteMedicion, obtenerFechasVentana, exportarComoCSV, exportarComoJSON, formatearMedicion, etiquetaConUnidad, formatFechaHora } from "@utils";
 import type { MedicionResponse, PaginatedMedicionResponse, LimnigrafoResponse } from "@models";
 import { FiltrosMediciones, type MedicionesFiltrosState } from "./filtros-mediciones";
 
@@ -114,7 +112,7 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
 
   const filasParaExportar = (rows: MedicionResponse[]) =>
     rows.map((m) => [
-      format(new Date(m.fecha_hora), "dd/MM/yyyy HH:mm", { locale: es }),
+      formatFechaHora(m.fecha_hora),
       m.limnigrafo !== null ? limnigrafoNombrePorId.get(m.limnigrafo) ?? `ID ${m.limnigrafo}` : "-",
       opcionesFuenteMedicion.find((o) => o.value === m.fuente)?.label || m.fuente,
       m.altura_agua,
@@ -173,7 +171,7 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
     {
       id: "fecha_hora",
       header: "Fecha y hora",
-      cell: (row) => format(new Date(row.fecha_hora), "dd/MM/yyyy HH:mm", { locale: es }),
+      cell: (row) => formatFechaHora(row.fecha_hora),
     },
     {
       id: "limnigrafo",
