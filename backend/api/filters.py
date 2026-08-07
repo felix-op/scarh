@@ -1,7 +1,7 @@
 import django_filters
 from django.db.models import CharField, Q
 from django.db.models.functions import Cast
-from .models import Usuario, Limnigrafo, Medicion
+from .models import Usuario, Limnigrafo, Medicion, UsuarioNotificacion
 
 class NumberInFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
     pass
@@ -76,3 +76,51 @@ class MedicionFilter(django_filters.FilterSet):
             Q(temperatura_text__icontains=search_value) |
             Q(nivel_de_bateria_text__icontains=search_value)
         )
+
+class AlertaFilter(django_filters.FilterSet):
+    """Filtros del listado de alertas del usuario autenticado.
+
+    El queryset del viewset es de `UsuarioNotificacion`, así que hay dos estados en juego
+    y conviene no confundirlos:
+
+    - `estado` y `leida` son de **la notificación**: si este usuario la leyó o no. Cada
+      usuario tiene la suya.
+    - `activa` es de **la alerta**: si la condición que la disparó sigue vigente. Es global
+      y la mantiene el cierre automático de condiciones.
+
+    Se pueden combinar: `?activa=true&leida=false` son las alertas que siguen pasando y
+    este usuario todavía no vio.
+    """
+
+    estado = django_filters.CharFilter(field_name='estado', lookup_expr='iexact')
+    leida = django_filters.BooleanFilter(method='filter_leida', label='Sólo leídas (true) o sólo no leídas (false)')
+    activa = django_filters.BooleanFilter(field_name='alerta__condicion_activa')
+    limnigrafo = NumberInFilter(field_name='alerta__limnigrafo__id', lookup_expr='in')
+    tipo = django_filters.CharFilter(field_name='alerta__tipo', lookup_expr='iexact')
+    fecha_desde = django_filters.DateTimeFilter(field_name='alerta__fecha_hora', lookup_expr='gte')
+    fecha_hasta = django_filters.DateTimeFilter(field_name='alerta__fecha_hora', lookup_expr='lte')
+    search = django_filters.CharFilter(method='filter_search', label='Búsqueda general (descripción y código de limnígrafo)')
+
+    class Meta:
+        model = UsuarioNotificacion
+        fields = ['estado', 'tipo', 'limnigrafo', 'activa']
+
+    def filter_leida(self, queryset, name, value):
+        # Lo único sin leer es `nuevo`: `solucionado` implica que el usuario ya la vio, así
+        # que cuenta como leída.
+        if value is True:
+            return queryset.exclude(estado='nuevo')
+        if value is False:
+            return queryset.filter(estado='nuevo')
+        return queryset
+
+    def filter_search(self, queryset, name, value):
+        search_value = (value or '').strip()
+        if not search_value:
+            return queryset
+
+        return queryset.filter(
+            Q(alerta__descripcion__icontains=search_value) |
+            Q(alerta__limnigrafo__codigo__icontains=search_value)
+        )
+

@@ -2,6 +2,7 @@
 
 import type { Usuario } from "@models";
 import { Avatar } from "../ui/avatar";
+import { BadgeAlertas } from "../alertas/badge-alertas";
 import { SidebarProfileMenu } from "./sidebar-profile-menu";
 
 export interface SidebarMobileProps {
@@ -22,7 +23,9 @@ export function SidebarMobile({ usuario }: SidebarMobileProps) {
             aria-label="Abrir menú de usuario"
             className="shrink-0 cursor-pointer border-0 bg-transparent p-0"
           >
-            <Avatar size="sm" nombre={usuario.first_name} apellido={usuario.last_name} username={usuario.username} />
+            <BadgeAlertas>
+              <Avatar size="sm" nombre={usuario.first_name} apellido={usuario.last_name} username={usuario.username} />
+            </BadgeAlertas>
           </button>
         }
       />

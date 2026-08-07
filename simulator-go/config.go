@@ -75,6 +75,13 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("error parseando YAML: %w", err)
 	}
 
+	// El entorno gana sobre el archivo: dentro de Docker el backend es `http://api:8000`,
+	// mientras que el config.yaml versionado apunta a localhost para correrlo suelto.
+	// `compose.simulator.yml` ya inyectaba BACKEND_URL, pero nadie la leía.
+	if desdeEntorno := strings.TrimSpace(os.Getenv("BACKEND_URL")); desdeEntorno != "" {
+		cfg.BackendURL = desdeEntorno
+	}
+
 	cfg.BackendURL = strings.TrimRight(strings.TrimSpace(cfg.BackendURL), "/")
 	if cfg.BackendURL == "" {
 		return nil, fmt.Errorf("backend_url es obligatorio")

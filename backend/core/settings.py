@@ -122,6 +122,10 @@ DATABASES = {
 
 # Los tests corren sobre PostgreSQL, igual que el resto de los entornos: el
 # proyecto usa `ArrayField` y no es portable a otro motor.
+#
+# El runner propio crea el schema `limnigrafos` en la base de tests antes de migrar. Ver
+# `core/test_runner.py` sobre por qué hace falta.
+TEST_RUNNER = 'core.test_runner.SchemaTestRunner'
 
 
 

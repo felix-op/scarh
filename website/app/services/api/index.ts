@@ -2,7 +2,8 @@ export {
   getServerAlertas,
   getServerAlerta,
   putServerAlerta,
-  patchServerAlerta
+  patchServerAlerta,
+  postServerAlertasMarcarTodasLeidas
 } from "./next-server/alertas";
 
 export {

@@ -1,0 +1,150 @@
+# Entorno de desarrollo local completo: base de datos, backend y frontend.
+#
+# Se invoca desde la raíz del repositorio, para que el contexto de build sea la raíz:
+#
+#   docker compose -f docker/desarrollo-local/docker-compose.yml up -d
+#
+# Las rutas relativas de este archivo (`context`, `env_file`, volúmenes) se resuelven
+# contra la carpeta de este compose, no contra el directorio desde el que se ejecuta el
+# comando. De ahí los `../..`.
+
+name: labsoft
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: labsoft_db
+    # Postgres espera POSTGRES_USER/PASSWORD/DB, y el resto del proyecto usa DB_*. Las
+    # dos versiones están en `.env.docker` con los mismos valores; no se puede mapear
+    # una a la otra acá porque `env_file` no alimenta la interpolación `${...}` del
+    # propio compose, sólo el entorno del contenedor.
+    env_file:
+      - .env.docker
+    ports:
+      # Expuesto para poder conectar pgAdmin o correr los tests desde el host.
+      - "${DB_PUERTO_HOST:-5433}:5432"
+    volumes:
+      - postgres_datos:/var/lib/postgresql/data
+      # Crea el schema `limnigrafos`, que es el `search_path` que configura Django.
+      # Sólo corre la primera vez, cuando el volumen está vacío.
+      - ../../init:/docker-entrypoint-initdb.d
+    healthcheck:
+      # `$$` es un `$` literal: la variable la resuelve el shell de dentro del
+      # contenedor, que sí tiene las POSTGRES_*.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - labsoft
+
+  api:
+    build:
+      context: ../..
+      dockerfile: docker/desarrollo-local/Dockerfile.api
+    container_name: labsoft_api
+    env_file:
+      - .env.docker
+    ports:
+      - "${API_PUERTO_HOST:-8000}:8000"
+    volumes:
+      # Código montado desde el host: `runserver` recarga solo al guardar.
+      - ../../backend:/app
+      # Los .pyc del contenedor no van al repo.
+      - /app/__pycache__
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      # El primer arranque corre migraciones, fixtures y creación de usuarios, así que
+      # Django tarda unos segundos en escuchar. El healthcheck no bloquea a nadie: está
+      # para que `docker compose ps` muestre cuándo la API está realmente lista.
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/hola/')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    networks:
+      - labsoft
+
+  # Equivalente en desarrollo al cron de Hostinger que en producción dispara
+  # `generar_alerta`. Reusa la imagen de `api` y sólo cambia el entrypoint por un bucle.
+  # A diferencia del simulador, no va detrás de un perfil: sin esto las alertas de estado
+  # del limnígrafo nunca se generan **ni se cierran**, así que el listado de alertas
+  # miente en lugar de quedar vacío.
+  alertas:
+    build:
+      context: ../..
+      dockerfile: docker/desarrollo-local/Dockerfile.api
+    container_name: labsoft_alertas
+    entrypoint: ["/usr/local/bin/entrypoint.alertas.sh"]
+    env_file:
+      - .env.docker
+    environment:
+      ALERTAS_INTERVALO_SEGUNDOS: ${ALERTAS_INTERVALO_SEGUNDOS:-30}
+    volumes:
+      # Mismo bind mount que `api`: al tocar el comando o las utilidades de alertas, la
+      # próxima pasada ya usa el código nuevo sin reconstruir la imagen.
+      - ../../backend:/app
+      - /app/__pycache__
+    depends_on:
+      # `service_healthy` y no sólo `service_started`: la primera pasada tiene que
+      # encontrar las migraciones aplicadas.
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - labsoft
+
+  web:
+    build:
+      context: ../..
+      dockerfile: docker/desarrollo-local/Dockerfile.web
+    container_name: labsoft_web
+    env_file:
+      - .env.docker
+    ports:
+      - "${WEB_PUERTO_HOST:-3000}:3000"
+    volumes:
+      - ../../website:/app
+      # Volumen anónimo: preserva el node_modules de la imagen y evita que el del host
+      # (compilado para otra plataforma) lo tape.
+      - /app/node_modules
+      - /app/.next
+    # Sólo orden de arranque, no espera. Next levanta sin la API; las pantallas que la
+    # necesitan andan en cuanto Django termina de migrar, unos segundos después.
+    depends_on:
+      - api
+    networks:
+      - labsoft
+
+  # El simulador queda detrás de un perfil: no arranca con `up -d`, sólo cuando se lo pide
+  # explícitamente (`--profile simulador`, o desde `cli.py`). Genera mediciones todo el
+  # tiempo, así que conviene prenderlo a demanda.
+  simulador:
+    build:
+      context: ../../simulator-go
+      dockerfile: Dockerfile
+    container_name: labsoft_simulador
+    profiles: ["simulador"]
+    environment:
+      # `config.go` prioriza esta variable sobre el `backend_url` del archivo, que apunta a
+      # localhost para poder correr el simulador fuera de Docker.
+      BACKEND_URL: http://api:8000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      # Montado y no copiado: `cli.py` reescribe este archivo al sincronizar los tokens, y
+      # el contenedor tiene que ver la versión nueva sin reconstruir la imagen.
+      - ../../simulator-go/config.yaml:/app/config.yaml:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - labsoft
+
+volumes:
+  postgres_datos:
+
+networks:
+  labsoft:
+    driver: bridge

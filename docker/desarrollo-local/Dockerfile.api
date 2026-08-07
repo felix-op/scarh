@@ -1,0 +1,30 @@
+# Imagen del backend Django para desarrollo local.
+#
+# El contexto de build es la raíz del repositorio, no esta carpeta: por eso las rutas
+# de los COPY empiezan en `backend/` y `docker/`. Ver el README para el comando exacto.
+#
+# El código se monta como volumen desde el compose, así que el `COPY backend` de acá
+# sólo sirve para que la imagen funcione suelta (sin el bind mount). El entrypoint vive
+# fuera de /app justamente para que el volumen no lo tape.
+
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY backend/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+COPY backend /app
+
+# El segundo entrypoint es el del servicio `alertas`, que reusa esta misma imagen y lo
+# elige desde el compose. Van juntos para no mantener dos Dockerfile casi idénticos.
+COPY docker/desarrollo-local/entrypoint.api.sh /usr/local/bin/entrypoint.api.sh
+COPY docker/desarrollo-local/entrypoint.alertas.sh /usr/local/bin/entrypoint.alertas.sh
+RUN chmod +x /usr/local/bin/entrypoint.api.sh /usr/local/bin/entrypoint.alertas.sh
+
+EXPOSE 8000
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.api.sh"]

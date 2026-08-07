@@ -9,6 +9,7 @@ export * from "./estadisticas";
 export * from "./graficos";
 export * from "./dashboard";
 export * from "./limnigrafos";
+export * from "./alertas";
 export * from "./mapa";
 export * from "./mapa-legacy";
 export * from "./perfil";

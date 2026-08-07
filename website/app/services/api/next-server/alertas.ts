@@ -1,6 +1,12 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
-import type { AlertaResponse, AlertaPayload, PaginatedAlertaResponse, ParamsPaginated } from "@models";
+import type {
+  AlertaResponse,
+  AlertaPayload,
+  MarcarTodasLeidasResponse,
+  PaginatedAlertaResponse,
+  ParamsPaginated,
+} from "@models";
 
 export async function getServerAlertas(params?: ParamsPaginated): Promise<PaginatedAlertaResponse> {
   return RequestSSR<PaginatedAlertaResponse, ParamsPaginated>({
@@ -55,5 +61,13 @@ export async function patchServerAlerta({ params, data }: PatchServerAlertaOptio
     method: "PATCH",
     params,
     body: data,
+  });
+}
+
+/** Marca como leídas todas las notificaciones sin leer del usuario autenticado. */
+export async function postServerAlertasMarcarTodasLeidas(): Promise<MarcarTodasLeidasResponse> {
+  return RequestSSR<MarcarTodasLeidasResponse>({
+    url: "alertas/mark-all-read/",
+    method: "POST",
   });
 }
