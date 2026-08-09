@@ -810,3 +810,141 @@ class MedicionTests(APITestCase):
         
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado_medicion, 'fuera_de_rango')
+
+    def test_import_exported_format_success(self):
+        self.client.force_authenticate(user=self.user)
+        
+        # Simular filas exportadas a CSV con nombres de columnas amigables, comas decimales y código del limnígrafo
+        payload = {
+            "file_name": "mediciones_exportadas.csv",
+            "fuente": "import_csv",
+            "fallback_limnigrafo_id": self.limnigrafo.id,
+            "rows": [
+                {
+                    "row_number": 1,
+                    "Limnígrafo": "LMG-001",
+                    "Fecha y hora": "2024-02-01T12:00:00Z",
+                    "Nivel del agua (cm)": "2,55",
+                    "Tensión de batería (V)": "11,8",
+                    "Presión hidrostática (hPa)": "1015,2",
+                    "Temperatura (°C)": "22,4",
+                    "Fuente": "Manual",
+                    "Clave de idempotencia": "idemp-key-1"
+                },
+                {
+                    "row_number": 2,
+                    "Limnígrafo": "LMG-001",
+                    "Fecha y hora": "2024-02-01T13:00:00Z",
+                    "Nivel del agua (cm)": "2,80",
+                    "Tensión de batería (V)": "11,7",
+                    "Presión hidrostática (hPa)": "1014,8",
+                    "Temperatura (°C)": "21,9",
+                    "Fuente": "Automática",
+                    "Clave de idempotencia": "idemp-key-2"
+                }
+            ]
+        }
+
+        # 1. Validar importación
+        response_validate = self.client.post(self.validate_import_url, payload, format='json')
+        self.assertEqual(response_validate.status_code, status.HTTP_200_OK)
+        self.assertTrue(response_validate.data["is_valid"])
+        self.assertEqual(response_validate.data["summary"]["valid_rows"], 2)
+        self.assertEqual(response_validate.data["summary"]["error_rows"], 0)
+
+        # 2. Ejecutar importación masiva definitiva
+        response_bulk = self.client.post(self.bulk_import_url, payload, format='json')
+        self.assertEqual(response_bulk.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Medicion.objects.count(), 2)
+
+        # 3. Comprobar normalización, idempotencia y fuente de los datos insertados
+        medicion_1 = Medicion.objects.get(idempotency_key="idemp-key-1")
+        self.assertEqual(medicion_1.limnigrafo, self.limnigrafo)
+        self.assertEqual(medicion_1.altura_agua, 2.55)
+        self.assertEqual(medicion_1.nivel_de_bateria, 11.8)
+        self.assertEqual(medicion_1.presion, 1015.2)
+        self.assertEqual(medicion_1.temperatura, 22.4)
+        self.assertEqual(medicion_1.fuente, "manual")
+
+        medicion_2 = Medicion.objects.get(idempotency_key="idemp-key-2")
+        self.assertEqual(medicion_2.limnigrafo, self.limnigrafo)
+        self.assertEqual(medicion_2.altura_agua, 2.80)
+        self.assertEqual(medicion_2.nivel_de_bateria, 11.7)
+        self.assertEqual(medicion_2.presion, 1014.8)
+        self.assertEqual(medicion_2.temperatura, 21.9)
+        self.assertEqual(medicion_2.fuente, "automatico")
+
+    def test_import_validation_identifies_duplicates_and_physical_issues(self):
+        self.client.force_authenticate(user=self.user)
+        
+        # Insertar previamente una medición en la base de datos para simular duplicado
+        Medicion.objects.create(
+            limnigrafo=self.limnigrafo,
+            fecha_hora=parse_datetime("2024-02-01T12:00:00Z"),
+            altura_agua=1.5,
+            idempotency_key="idemp-ya-existente",
+            fuente="manual"
+        )
+
+        payload = {
+            "file_name": "mediciones_con_conflictos.csv",
+            "fuente": "import_csv",
+            "rows": [
+                {
+                    "row_number": 1,
+                    "Limnígrafo": "LMG-001",
+                    "Fecha y hora": "2024-02-01T12:00:00Z", # Duplicado en BD por fecha_hora
+                    "Nivel del agua (cm)": "2,55"
+                },
+                {
+                    "row_number": 2,
+                    "Limnígrafo": "LMG-001",
+                    "Fecha y hora": "2024-02-01T15:00:00Z",
+                    "Nivel del agua (cm)": "2,80",
+                    "Clave de idempotencia": "idemp-ya-existente" # Duplicado en BD por idempotencia
+                },
+                {
+                    "row_number": 3,
+                    "Limnígrafo": "LMG-001",
+                    "Fecha y hora": "2024-02-01T16:00:00Z",
+                    "Nivel del agua (cm)": "-1,2" # Error físico (negativo)
+                },
+                {
+                    "row_number": 4,
+                    "Limnígrafo": "LMG-001",
+                    "Fecha y hora": "2024-02-01T17:00:00Z", # Duplicado interno (con fila 5) por fecha_hora
+                    "Nivel del agua (cm)": "2,0"
+                },
+                {
+                    "row_number": 5,
+                    "Limnígrafo": "LMG-001",
+                    "Fecha y hora": "2024-02-01T17:00:00Z", # Duplicado interno (con fila 4) por fecha_hora
+                    "Nivel del agua (cm)": "2,1"
+                }
+            ]
+        }
+
+        response = self.client.post(self.validate_import_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["is_valid"])
+        self.assertEqual(response.data["summary"]["error_rows"], 5)
+
+        rows = {r["rowNumber"]: r for r in response.data["rows"]}
+        
+        # Fila 1: duplicada en base de datos (fecha_hora)
+        self.assertEqual(rows[1]["status"], "duplicate_database")
+        self.assertTrue(any(issue["code"] == "duplicate_database" and issue["field"] == "fecha_hora" for issue in rows[1]["issues"]))
+
+        # Fila 2: duplicada en base de datos (idempotencia)
+        self.assertEqual(rows[2]["status"], "duplicate_database")
+        self.assertTrue(any(issue["code"] == "duplicate_database" and issue["field"] == "idempotency_key" for issue in rows[2]["issues"]))
+
+        # Fila 3: error físico
+        self.assertEqual(rows[3]["status"], "error")
+        self.assertTrue(any(issue["code"] == "invalid" and issue["field"] == "altura_agua" for issue in rows[3]["issues"]))
+
+        # Fila 4 y 5: duplicadas entre sí (archivo)
+        self.assertEqual(rows[4]["status"], "duplicate_file")
+        self.assertEqual(rows[5]["status"], "duplicate_file")
+        self.assertTrue(any(issue["code"] == "duplicate_file" for issue in rows[4]["issues"]))
+        self.assertTrue(any(issue["code"] == "duplicate_file" for issue in rows[5]["issues"]))

@@ -12,7 +12,14 @@ Este runner se mete entre la creación de la base de tests y la corrida de las m
 para crear el schema. Con eso, `manage.py test` funciona sin preparar nada a mano.
 """
 
-import psycopg2
+try:
+    import psycopg2 as psycopg_conn
+except ImportError:
+    try:
+        import psycopg as psycopg_conn
+    except ImportError:
+        psycopg_conn = None
+
 from django.db import connections
 from django.test.runner import DiscoverRunner
 
@@ -21,7 +28,16 @@ SCHEMA = "limnigrafos"
 
 def _crear_schema(connection, nombre_base):
     ajustes = connection.settings_dict
-    conexion = psycopg2.connect(
+    
+    # Si la base de datos es SQLite, no hay necesidad de crear esquemas
+    if "sqlite" in ajustes.get("ENGINE", ""):
+        return
+
+    if psycopg_conn is None:
+        raise ImportError("No se encontró psycopg2 ni psycopg instalado para configurar el esquema de PostgreSQL.")
+
+    # psycopg 3 y psycopg 2 aceptan los mismos parámetros de conexión básicos
+    conexion = psycopg_conn.connect(
         dbname=nombre_base,
         user=ajustes["USER"],
         password=ajustes["PASSWORD"],
@@ -50,3 +66,4 @@ class SchemaTestRunner(DiscoverRunner):
             creacion._create_test_db = crear
 
         return super().setup_databases(**kwargs)
+

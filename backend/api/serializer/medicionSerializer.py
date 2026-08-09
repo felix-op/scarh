@@ -63,18 +63,100 @@ def validar_datos_medicion(attrs, *, check_duplicates=True):
 class MedicionImportRowSerializer(serializers.Serializer):
     row_number = serializers.IntegerField(min_value=1)
     limnigrafo_id = serializers.IntegerField(required=False, allow_null=True)
-    fecha_hora = serializers.CharField()
+    limnigrafo = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    fecha_hora = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     altura_agua = serializers.FloatField(required=False, allow_null=True)
     presion = serializers.FloatField(required=False, allow_null=True)
     temperatura = serializers.FloatField(required=False, allow_null=True)
     nivel_de_bateria = serializers.FloatField(required=False, allow_null=True)
+    idempotency_key = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    fuente = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+    def to_internal_value(self, data):
+        normalized_data = {}
+        
+        def normalize_key(k):
+            import unicodedata
+            k_str = str(k).lower().strip()
+            k_str = ''.join(c for c in unicodedata.normalize('NFD', k_str) if unicodedata.category(c) != 'Mn')
+            return k_str.replace(" ", "_")
+
+        raw_map = {normalize_key(k): v for k, v in data.items()}
+        
+        # 1. row_number
+        row_num = raw_map.get("row_number") or raw_map.get("rownumber") or data.get("row_number")
+        if row_num is not None:
+            normalized_data["row_number"] = row_num
+
+        # 2. limnigrafo y limnigrafo_id
+        lim_val = (
+            raw_map.get("limnigrafo") or 
+            raw_map.get("limnigrafo_id") or 
+            raw_map.get("id_limnigrafo")
+        )
+        if lim_val is not None and lim_val != "":
+            try:
+                float_val = float(str(lim_val).replace(",", "."))
+                normalized_data["limnigrafo_id"] = int(float_val)
+            except ValueError:
+                normalized_data["limnigrafo"] = str(lim_val).strip()
+
+        # 3. fecha_hora
+        fh_val = (
+            raw_map.get("fecha_y_hora") or 
+            raw_map.get("fecha_hora") or 
+            raw_map.get("fechayhora")
+        )
+        if fh_val:
+            normalized_data["fecha_hora"] = str(fh_val).strip()
+        else:
+            fecha = raw_map.get("fecha")
+            hora = raw_map.get("hora")
+            if fecha and hora:
+                normalized_data["fecha_hora"] = f"{str(fecha).strip()}T{str(hora).strip()}"
+
+        # 4. Campos físicos con reemplazo de coma decimal por punto
+        mappings = {
+            "altura_agua": ["nivel_del_agua_(cm)", "nivel_del_agua", "altura_agua", "altura_escala", "altura"],
+            "presion": ["presion_hidrostatica_(hpa)", "presion_hidrostatica", "presion"],
+            "temperatura": ["temperatura_(°c)", "temperatura_(oc)", "temperatura_(c)", "temperatura"],
+            "nivel_de_bateria": ["tension_de_bateria_(v)", "tension_de_bateria", "nivel_de_bateria", "bateria"],
+        }
+        for field, keys in mappings.items():
+            val = next((raw_map[k] for k in keys if k in raw_map), None)
+            if val is not None and val != "":
+                if isinstance(val, str):
+                    val = val.replace(",", ".")
+                normalized_data[field] = val
+
+        # 5. idempotency_key
+        ik_val = raw_map.get("idempotency_key") or raw_map.get("idempotency") or raw_map.get("clave_de_idempotencia")
+        if ik_val is not None:
+            normalized_data["idempotency_key"] = str(ik_val).strip()
+
+        # 6. fuente
+        fuente_val = raw_map.get("fuente")
+        if fuente_val:
+            fuente_str = str(fuente_val).strip().lower()
+            mapping = {
+                "manual": "manual",
+                "automatica": "automatico",
+                "automatico": "automatico",
+                "importacion csv": "import_csv",
+                "import_csv": "import_csv",
+                "importacion json": "import_json",
+                "import_json": "import_json"
+            }
+            normalized_data["fuente"] = mapping.get(fuente_str, fuente_str)
+
+        return super().to_internal_value(normalized_data)
 
 
 class MedicionImportPayloadSerializer(serializers.Serializer):
     file_name = serializers.CharField()
     fuente = serializers.ChoiceField(choices=['import_csv', 'import_json'])
     fallback_limnigrafo_id = serializers.IntegerField(required=False, allow_null=True)
-    rows = MedicionImportRowSerializer(many=True)
+    rows = serializers.ListField(child=serializers.DictField())
 
 
 def normalizar_fecha_importacion(raw_fecha_hora):

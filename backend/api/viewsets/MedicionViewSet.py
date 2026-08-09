@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from ..models import Medicion, Limnigrafo
 from ..serializer import (
     MedicionImportPayloadSerializer,
+    MedicionImportRowSerializer,
     MedicionSerializer,
     MedicionSerieInputSerializer,
     MedicionSerieOutputSerializer,
@@ -260,33 +261,75 @@ class MedicionViewSet(
 
     def _validar_lote_importacion(self, payload):
         fallback_limnigrafo_id = payload.get("fallback_limnigrafo_id")
-        rows = payload["rows"]
-        issues_by_row = {row["row_number"]: [] for row in rows}
-        normalized_rows = []
-
-        limnigrafo_ids = {
-            row.get("limnigrafo_id")
-            for row in rows
-            if row.get("limnigrafo_id") is not None
-        }
+        raw_rows = payload.get("rows", [])
+        
+        validated_rows = []
+        issues_by_row = {}
+        
+        for idx, raw_row in enumerate(raw_rows):
+            row_number = raw_row.get("row_number")
+            if row_number is None or not isinstance(row_number, int):
+                row_number = idx + 1
+            
+            issues_by_row[row_number] = []
+            
+            row_serializer = MedicionImportRowSerializer(data=raw_row)
+            if not row_serializer.is_valid():
+                for field, messages in row_serializer.errors.items():
+                    for msg in (messages if isinstance(messages, list) else [messages]):
+                        issues_by_row[row_number].append(
+                            self._build_row_issue(
+                                field=field,
+                                code="invalid",
+                                message=str(msg)
+                            )
+                        )
+                continue
+                
+            validated_rows.append(row_serializer.validated_data)
+            
+        limnigrafo_ids = set()
+        limnigrafo_codigos = set()
+        for row in validated_rows:
+            l_id = row.get("limnigrafo_id")
+            if l_id is not None:
+                limnigrafo_ids.add(l_id)
+            l_cod = row.get("limnigrafo")
+            if l_cod:
+                limnigrafo_codigos.add(l_cod)
+                
         if fallback_limnigrafo_id is not None:
             limnigrafo_ids.add(fallback_limnigrafo_id)
-
-        limnigrafos = {
-            limnigrafo.id: limnigrafo
-            for limnigrafo in Limnigrafo.objects.filter(id__in=limnigrafo_ids).prefetch_related("configuraciones")
+            
+        limnigrafos_by_id = {
+            lim.id: lim
+            for lim in Limnigrafo.objects.filter(id__in=limnigrafo_ids).prefetch_related("configuraciones")
         }
-
+        limnigrafos_by_codigo = {
+            lim.codigo: lim
+            for lim in Limnigrafo.objects.filter(codigo__in=limnigrafo_codigos).prefetch_related("configuraciones")
+        }
+        
+        normalized_rows = []
         seen_keys = Counter()
-        seen_row_numbers_by_key = {}
-
-        for row in rows:
+        seen_idempotency = Counter()
+        
+        for row in validated_rows:
             row_number = row["row_number"]
-            limnigrafo_id = row.get("limnigrafo_id")
-            resolved_limnigrafo_id = limnigrafo_id if limnigrafo_id is not None else fallback_limnigrafo_id
-            fecha_hora = None
-
-            if resolved_limnigrafo_id is None:
+            resolved_limnigrafo = None
+            
+            l_id = row.get("limnigrafo_id")
+            l_cod = row.get("limnigrafo")
+            
+            if l_id is not None:
+                resolved_limnigrafo = limnigrafos_by_id.get(l_id)
+            elif l_cod:
+                resolved_limnigrafo = limnigrafos_by_codigo.get(l_cod)
+                
+            if resolved_limnigrafo is None and fallback_limnigrafo_id is not None:
+                resolved_limnigrafo = limnigrafos_by_id.get(fallback_limnigrafo_id)
+                
+            if resolved_limnigrafo is None:
                 issues_by_row[row_number].append(
                     self._build_row_issue(
                         field="limnigrafo_id",
@@ -294,15 +337,8 @@ class MedicionViewSet(
                         message="La fila no tiene limnígrafo y tampoco se definió uno por defecto.",
                     )
                 )
-            elif resolved_limnigrafo_id not in limnigrafos:
-                issues_by_row[row_number].append(
-                    self._build_row_issue(
-                        field="limnigrafo_id",
-                        code="not_found",
-                        message=f"No existe el limnígrafo con ID {resolved_limnigrafo_id}.",
-                    )
-                )
-
+            
+            fecha_hora = None
             raw_fecha_hora = row.get("fecha_hora")
             if not raw_fecha_hora:
                 issues_by_row[row_number].append(
@@ -323,18 +359,9 @@ class MedicionViewSet(
                             message="La fecha y hora no tiene un formato válido.",
                         )
                     )
-
-            attrs = {
-                "limnigrafo": limnigrafos.get(resolved_limnigrafo_id),
-                "fecha_hora": fecha_hora,
-                "altura_agua": row.get("altura_agua"),
-                "presion": row.get("presion"),
-                "temperatura": row.get("temperatura"),
-                "nivel_de_bateria": row.get("nivel_de_bateria"),
-                "idempotency_key": None,
-            }
-
-            if attrs["altura_agua"] is None:
+                    
+            altura_agua = row.get("altura_agua")
+            if altura_agua is None:
                 issues_by_row[row_number].append(
                     self._build_row_issue(
                         field="altura_agua",
@@ -342,15 +369,24 @@ class MedicionViewSet(
                         message="La altura del agua es obligatoria.",
                     )
                 )
-            else:
+                
+            attrs = {
+                "limnigrafo": resolved_limnigrafo,
+                "fecha_hora": fecha_hora,
+                "altura_agua": altura_agua,
+                "presion": row.get("presion"),
+                "temperatura": row.get("temperatura"),
+                "nivel_de_bateria": row.get("nivel_de_bateria"),
+                "idempotency_key": row.get("idempotency_key"),
+            }
+            
+            if resolved_limnigrafo is not None and fecha_hora is not None:
                 try:
                     validar_datos_medicion(attrs, check_duplicates=False)
                 except Exception as exc:
                     detail = getattr(exc, "detail", {})
                     for field, messages in detail.items():
-                        if not isinstance(messages, list):
-                            messages = [messages]
-                        for message in messages:
+                        for message in (messages if isinstance(messages, list) else [messages]):
                             issues_by_row[row_number].append(
                                 self._build_row_issue(
                                     field=field,
@@ -358,31 +394,41 @@ class MedicionViewSet(
                                     message=str(message),
                                 )
                             )
-
+                            
             duplicate_key = None
-            if resolved_limnigrafo_id is not None and fecha_hora is not None:
-                duplicate_key = (resolved_limnigrafo_id, fecha_hora.isoformat())
+            if resolved_limnigrafo is not None and fecha_hora is not None:
+                duplicate_key = (resolved_limnigrafo.id, fecha_hora.isoformat())
                 seen_keys[duplicate_key] += 1
-                seen_row_numbers_by_key.setdefault(duplicate_key, []).append(row_number)
-
+                
+            dup_idempotency_key = None
+            idempotency_key = row.get("idempotency_key")
+            if resolved_limnigrafo is not None and idempotency_key:
+                dup_idempotency_key = (resolved_limnigrafo.id, idempotency_key.strip())
+                seen_idempotency[dup_idempotency_key] += 1
+                
+            fuente_fila = row.get("fuente") or payload.get("fuente")
+            
             normalized_rows.append(
                 {
                     "row_number": row_number,
-                    "limnigrafo_id": resolved_limnigrafo_id,
+                    "limnigrafo_id": resolved_limnigrafo.id if resolved_limnigrafo else None,
                     "fecha_hora": fecha_hora,
-                    "altura_agua": row.get("altura_agua"),
+                    "altura_agua": altura_agua,
                     "presion": row.get("presion"),
                     "temperatura": row.get("temperatura"),
                     "nivel_de_bateria": row.get("nivel_de_bateria"),
+                    "idempotency_key": idempotency_key,
+                    "fuente": fuente_fila,
                     "duplicate_key": duplicate_key,
+                    "dup_idempotency_key": dup_idempotency_key,
                 }
             )
-
-        duplicate_keys = {key for key, count in seen_keys.items() if count > 1}
+            
         for normalized_row in normalized_rows:
-            duplicate_key = normalized_row["duplicate_key"]
-            if duplicate_key and duplicate_key in duplicate_keys:
-                row_number = normalized_row["row_number"]
+            row_number = normalized_row["row_number"]
+            
+            dk = normalized_row["duplicate_key"]
+            if dk and seen_keys[dk] > 1:
                 issues_by_row[row_number].append(
                     self._build_row_issue(
                         field="fecha_hora",
@@ -390,40 +436,85 @@ class MedicionViewSet(
                         message="Ya existe otra fila en el archivo con el mismo limnígrafo y fecha/hora.",
                     )
                 )
-
+                
+            dik = normalized_row["dup_idempotency_key"]
+            if dik and seen_idempotency[dik] > 1:
+                issues_by_row[row_number].append(
+                    self._build_row_issue(
+                        field="idempotency_key",
+                        code="duplicate_file",
+                        message="Ya existe otra fila en el archivo con el mismo limnígrafo y clave de idempotencia.",
+                    )
+                )
+                
         db_duplicate_keys = set()
+        db_duplicate_idempotency_keys = set()
+        
         if normalized_rows:
             duplicate_query = Q()
+            idempotency_query = Q()
+            
             for normalized_row in normalized_rows:
-                duplicate_key = normalized_row["duplicate_key"]
-                if duplicate_key is None:
+                lim_id = normalized_row["limnigrafo_id"]
+                if lim_id is None:
                     continue
-                duplicate_query |= Q(
-                    limnigrafo_id=duplicate_key[0],
-                    fecha_hora=normalized_row["fecha_hora"],
-                )
-
+                
+                if normalized_row["fecha_hora"] is not None:
+                    duplicate_query |= Q(
+                        limnigrafo_id=lim_id,
+                        fecha_hora=normalized_row["fecha_hora"],
+                    )
+                
+                ik = normalized_row["idempotency_key"]
+                if ik:
+                    idempotency_query |= Q(
+                        limnigrafo_id=lim_id,
+                        idempotency_key=ik.strip(),
+                    )
+                    
             if duplicate_query:
                 db_duplicate_keys = {
                     (medicion.limnigrafo_id, medicion.fecha_hora.isoformat())
                     for medicion in Medicion.objects.filter(duplicate_query)
                 }
-
+                
+            if idempotency_query:
+                db_duplicate_idempotency_keys = {
+                    (medicion.limnigrafo_id, medicion.idempotency_key)
+                    for medicion in Medicion.objects.filter(idempotency_query)
+                }
+                
         response_rows = []
-        for normalized_row in normalized_rows:
-            row_number = normalized_row["row_number"]
-            duplicate_key = normalized_row["duplicate_key"]
-            row_issues = list(issues_by_row[row_number])
-
-            if duplicate_key and duplicate_key in db_duplicate_keys:
-                row_issues.append(
-                    self._build_row_issue(
-                        field="fecha_hora",
-                        code="duplicate_database",
-                        message="Ya existe una medición guardada con el mismo limnígrafo y fecha/hora.",
+        limnigrafos_afectados = {**limnigrafos_by_id, **{lim.id: lim for lim in limnigrafos_by_codigo.values()}}
+        
+        all_row_numbers = sorted(list(issues_by_row.keys()))
+        valid_rows_map = {row["row_number"]: row for row in normalized_rows}
+        
+        for r_num in all_row_numbers:
+            row_issues = list(issues_by_row[r_num])
+            norm_row = valid_rows_map.get(r_num)
+            
+            if norm_row:
+                dk = norm_row["duplicate_key"]
+                if dk and dk in db_duplicate_keys:
+                    row_issues.append(
+                        self._build_row_issue(
+                            field="fecha_hora",
+                            code="duplicate_database",
+                            message="Ya existe una medición guardada con el mismo limnígrafo y fecha/hora.",
+                        )
                     )
-                )
-
+                    
+                dik = norm_row["dup_idempotency_key"]
+                if dik and dik in db_duplicate_idempotency_keys:
+                    row_issues.append(
+                        self._build_row_issue(
+                            field="idempotency_key",
+                            code="duplicate_database",
+                            message="Ya existe una medición guardada con el mismo limnígrafo y clave de idempotencia.",
+                        )
+                    )
+                    
             status_value = "valid"
             issue_codes = {issue["code"] for issue in row_issues}
             if "duplicate_database" in issue_codes:
@@ -432,22 +523,24 @@ class MedicionViewSet(
                 status_value = "duplicate_file"
             elif row_issues:
                 status_value = "error"
-
+                
             response_rows.append(
                 {
-                    "rowNumber": row_number,
-                    "limnigrafoId": normalized_row["limnigrafo_id"],
-                    "fechaHora": normalized_row["fecha_hora"].isoformat() if normalized_row["fecha_hora"] else "",
-                    "alturaAgua": normalized_row["altura_agua"],
-                    "presion": normalized_row["presion"],
-                    "temperatura": normalized_row["temperatura"],
-                    "nivelBateria": normalized_row["nivel_de_bateria"],
+                    "rowNumber": r_num,
+                    "limnigrafoId": norm_row["limnigrafo_id"] if norm_row else None,
+                    "fechaHora": norm_row["fecha_hora"].isoformat() if norm_row and norm_row["fecha_hora"] else "",
+                    "alturaAgua": norm_row["altura_agua"] if norm_row else raw_rows[r_num - 1].get("altura_agua"),
+                    "presion": norm_row["presion"] if norm_row else raw_rows[r_num - 1].get("presion"),
+                    "temperatura": norm_row["temperatura"] if norm_row else raw_rows[r_num - 1].get("temperatura"),
+                    "nivelBateria": norm_row["nivel_de_bateria"] if norm_row else raw_rows[r_num - 1].get("nivel_de_bateria"),
+                    "idempotencyKey": norm_row["idempotency_key"] if norm_row else None,
+                    "fuente": norm_row["fuente"] if norm_row else None,
                     "status": status_value,
                     "issues": row_issues,
                 }
             )
-
-        return response_rows, limnigrafos
+            
+        return response_rows, limnigrafos_afectados
 
     @action(detail=False, methods=["post"], url_path="validate-import")
     def validate_import(self, request):
@@ -484,6 +577,7 @@ class MedicionViewSet(
         for row in rows:
             limnigrafo_id = row["limnigrafoId"]
             limnigrafo = limnigrafos[limnigrafo_id]
+            fuente_medicion = row.get("fuente") or validated_payload["fuente"]
             rows_to_create.append(
                 Medicion(
                     limnigrafo=limnigrafo,
@@ -492,7 +586,8 @@ class MedicionViewSet(
                     presion=row["presion"],
                     temperatura=row["temperatura"],
                     nivel_de_bateria=row["nivelBateria"],
-                    fuente=validated_payload["fuente"],
+                    idempotency_key=row.get("idempotencyKey"),
+                    fuente=fuente_medicion,
                 )
             )
             limnigrafo_ids_afectados.add(limnigrafo_id)
