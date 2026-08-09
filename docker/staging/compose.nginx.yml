@@ -1,0 +1,25 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: scarh_nginx_staging
+    volumes:
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.scarh_frontend.rule=Host(`api.scarh.online`) || Host(`scarh.online`)
+      - traefik.http.routers.scarh_frontend.entrypoints=websecure
+      - traefik.http.routers.scarh_frontend.tls.certresolver=letsencrypt
+      - traefik.http.services.scarh_frontend.loadbalancer.server.port=80
+      - traefik.docker.network=red_prueba
+    networks:
+      - red_prueba
+
+volumes:
+  static_volume:
+  media_volume:
+
+networks:
+  red_prueba:
+    external: true

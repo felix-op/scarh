@@ -1,0 +1,15 @@
+services:
+  web:
+    image: felixop/scarh-frontend:latest
+    container_name: scarh_web_staging
+    networks:
+      - red_prueba
+    env_file:
+      - .env
+    environment:
+      - API_URL=${API_URL}
+      - AUTH_SECRET=${AUTH_SECRET}
+
+networks:
+  red_prueba:
+    external: true

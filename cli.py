@@ -26,6 +26,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent
 ARCHIVO_COMPOSE = RAIZ / "docker" / "desarrollo-local" / "docker-compose.yml"
 ARCHIVO_CONFIG_SIMULADOR = RAIZ / "simulator-go" / "config.yaml"
+ARCHIVO_DATOS_LIMNIGRAFOS = RAIZ / "recursos" / "datos_limnigrafos.json"
 # El simulador vive detrás de un perfil del compose, así que hay que habilitarlo para que
 # los comandos lo alcancen.
 COMPOSE = ["docker", "compose", "-f", str(ARCHIVO_COMPOSE), "--profile", "simulador"]
@@ -414,6 +415,36 @@ def esperar_api(intentos=60):
     return False
 
 
+def importar_datos_limnigrafos():
+    """Carga `recursos/datos_limnigrafos.json` (mediciones históricas de prueba).
+
+    Es un fixture de sólo `api.medicion`: usa los limnígrafos que ya crean las fixtures
+    por defecto (`backend/api/fixtures/limnigrafos.json`), no crea limnígrafos nuevos.
+    """
+    print(titulo("Importar datos de prueba (histórico de mediciones)"))
+    print()
+    if not ARCHIVO_DATOS_LIMNIGRAFOS.exists():
+        print(error(f"No se encontró {ARCHIVO_DATOS_LIMNIGRAFOS.relative_to(RAIZ)}."))
+        pausar()
+        return
+    print(apagado("Son ~36.000 mediciones históricas repartidas entre los limnígrafos que"))
+    print(apagado("ya existen en la base (no crea limnígrafos nuevos)."))
+    print()
+    if not confirmar("¿Importar?"):
+        return
+    if "api" not in servicios_corriendo():
+        print(error("El backend no está corriendo."))
+        pausar()
+        return
+
+    destino_nombre = ARCHIVO_DATOS_LIMNIGRAFOS.name
+    if not correr(COMPOSE + ["cp", str(ARCHIVO_DATOS_LIMNIGRAFOS), f"api:/app/{destino_nombre}"]):
+        pausar()
+        return
+    manage("loaddata", f"/app/{destino_nombre}")
+    pausar()
+
+
 # ---------------------------------------------------------------------------
 # Simulador
 # ---------------------------------------------------------------------------
@@ -606,6 +637,7 @@ ACCIONES = {
     "test": lambda: (manage("test", "api"), pausar()),
     "alertas": lambda: (manage("generar_alerta"), pausar()),
     "libre": comando_libre,
+    "importar_datos": importar_datos_limnigrafos,
     "sim_tokens": sincronizar_tokens,
     "sim_up": levantar_simulador,
     "sim_logs": lambda: seguir_logs("simulador"),
@@ -644,6 +676,7 @@ OPCIONES_MENU = [
     ("Correr los tests", "test"),
     ("Generar alertas (recalcula estados)", "alertas"),
     ("Ejecutar otro comando de manage.py", "libre"),
+    ("Importar datos de prueba (histórico de mediciones)", "importar_datos"),
     ("", None),
     ("Simulador", None),
     ("Sincronizar los tokens con la base", "sim_tokens"),

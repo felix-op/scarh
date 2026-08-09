@@ -27,7 +27,7 @@ services:
       - postgres_datos:/var/lib/postgresql/data
       # Crea el schema `limnigrafos`, que es el `search_path` que configura Django.
       # Sólo corre la primera vez, cuando el volumen está vacío.
-      - ../../init:/docker-entrypoint-initdb.d
+      - ./init:/docker-entrypoint-initdb.d
     healthcheck:
       # `$$` es un `$` literal: la variable la resuelve el shell de dentro del
       # contenedor, que sí tiene las POSTGRES_*.
@@ -130,7 +130,7 @@ services:
     environment:
       # `config.go` prioriza esta variable sobre el `backend_url` del archivo, que apunta a
       # localhost para poder correr el simulador fuera de Docker.
-      BACKEND_URL: http://api:8000
+      BACKEND_URL: ${API_URL}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     volumes:
       # Montado y no copiado: `cli.py` reescribe este archivo al sincronizar los tokens, y

@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: scarh_db_prod
+    container_name: scarh_db_staging
     env_file:
       - .env
     environment:
@@ -9,9 +9,9 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
-      - postgres_prod_data:/var/lib/postgresql/data
+      - postgres_staging_data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
@@ -22,7 +22,7 @@ services:
       - red_prueba
 
 volumes:
-  postgres_prod_data:
+  postgres_staging_data:
 
 networks:
   red_prueba:
