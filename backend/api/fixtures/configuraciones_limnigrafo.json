@@ -1,0 +1,22 @@
+[
+  {
+    "model": "api.configuracionlimnigrafo",
+    "pk": 1,
+    "fields": {
+      "limnigrafo": 4,
+      "tiempo_advertencia": 3600,
+      "tiempo_peligro": 7200,
+      "bateria_min": 10.0,
+      "bateria_max": 13.5,
+      "altura_minima_agua": 0.5,
+      "altura_maxima_agua": 2.8,
+      "temperatura_minima": -5.0,
+      "temperatura_maxima": 35.0,
+      "presion_minima": 950.0,
+      "presion_maxima": 1050.0,
+      "fecha_inicio": "2026-01-01T00:00:00Z",
+      "fecha_fin": null,
+      "activo": true
+    }
+  }
+]

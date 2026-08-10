@@ -21,7 +21,7 @@ if [ "${CARGAR_FIXTURES:-true}" = "true" ]; then
     echo "▶ Fixtures ya cargadas, se omiten."
   else
     echo "▶ Cargando fixtures: roles, limnígrafos y ubicaciones..."
-    python manage.py loaddata roles.json limnigrafos.json ubicaciones.json
+    python manage.py loaddata roles.json limnigrafos.json ubicaciones.json configuraciones_limnigrafo.json
   fi
 fi
 

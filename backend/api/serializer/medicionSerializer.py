@@ -17,7 +17,7 @@ def validar_datos_medicion(attrs, *, check_duplicates=True):
         idempotency_key = idempotency_key.strip()
         attrs['idempotency_key'] = idempotency_key or None
 
-    if altura_agua is not None and altura_agua < 0:
+    if altura_agua is not None and altura_agua < 0 and altura_agua not in (-1000.0, -1001.0, -1002.0, -1003.0):
         raise serializers.ValidationError({
             'altura_agua': 'La altura del agua no puede ser negativa.'
         })
