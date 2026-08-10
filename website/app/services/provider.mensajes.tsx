@@ -46,7 +46,7 @@ export function MensajesProvider({ children }: { children: ReactNode }) {
   return (
     <MensajesContext.Provider value={contextValue}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-3">
+      <div className="fixed bottom-4 right-4 z-[1400] flex flex-col gap-3">
         {mensajes.map((mensaje) => (
           <MensajeFlotante key={mensaje.id} mensaje={mensaje} onRemove={removeMensaje} />
         ))}

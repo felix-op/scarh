@@ -37,7 +37,7 @@ function DrawerOverlay({
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50 duration-300",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[1200] bg-black/50 duration-300",
         className
       )}
       {...props}
@@ -56,7 +56,7 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "group/drawer-content bg-background-paper text-foreground fixed z-50 flex h-auto flex-col",
+          "group/drawer-content bg-background-paper text-foreground fixed z-[1200] flex h-auto flex-col",
           "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b border-border shadow-card",
           "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t border-border shadow-card",
           "data-[vaul-drawer-direction=right]:inset-y-2 data-[vaul-drawer-direction=right]:right-2 data-[vaul-drawer-direction=right]:h-[calc(100%-1rem)] data-[vaul-drawer-direction=right]:w-[calc(100%-1rem)] data-[vaul-drawer-direction=right]:rounded-shape-lg data-[vaul-drawer-direction=right]:sm:inset-y-0 data-[vaul-drawer-direction=right]:sm:right-0 data-[vaul-drawer-direction=right]:sm:h-full data-[vaul-drawer-direction=right]:sm:w-[40%] data-[vaul-drawer-direction=right]:sm:max-w-none data-[vaul-drawer-direction=right]:sm:rounded-none data-[vaul-drawer-direction=right]:border-l border-border shadow-card",

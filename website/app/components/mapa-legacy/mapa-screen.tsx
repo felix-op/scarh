@@ -24,7 +24,7 @@ import { SegmentedControl } from "../ui/segmented-control";
 import { IconifyIcon } from "../ui/iconify-icon";
 import { useGetLimnigrafos, useCrearUbicacion, usePatchLimnigrafo } from "@hooks";
 import { useMensajes } from "@services";
-import { tieneCoberturaAlertas } from "@utils";
+import { tieneCoberturaAlertas, formatearMedicion } from "@utils";
 import type { LimnigrafoResponse, PaginatedLimnigrafoResponse } from "@models";
 
 const DEFAULT_CENTER: [number, number] = [-54.79930469196583, -68.30601485928138];
@@ -60,11 +60,28 @@ function coordenadasLatLng(ubicacion: NonNullable<LimnigrafoResponse["ubicacion"
 
 type MapClickEvent = { latlng: { lat: number; lng: number } };
 
-/** Captura clicks en el mapa mientras se está ubicando un limnígrafo (cambia el cursor). */
-function MapaClickHandler({ onClick, active }: { onClick: (e: MapClickEvent) => void; active: boolean }) {
+/**
+ * Captura clicks en el mapa mientras se está ubicando un limnígrafo (cambia el
+ * cursor) y va informando la posición del puntero para el cartel de ayuda.
+ *
+ * A propósito no escucha `mouseout`: al salirse del mapa queda la última
+ * coordenada leída en lugar de vaciarse, que es lo que hacía saltar el cartel.
+ */
+function MapaClickHandler({
+  onClick,
+  onMover,
+  active,
+}: {
+  onClick: (_e: MapClickEvent) => void;
+  onMover: (_coordenadas: { lat: number; lng: number }) => void;
+  active: boolean;
+}) {
   const map = useMapEvents({
     click: (e) => {
       if (active) onClick(e);
+    },
+    mousemove: (e) => {
+      if (active) onMover({ lat: e.latlng.lat, lng: e.latlng.lng });
     },
   });
 
@@ -106,6 +123,7 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [placementMode, setPlacementMode] = useState<LimnigrafoResponse | null>(null);
   const [tempMarker, setTempMarker] = useState<{ lat: number; lng: number } | null>(null);
+  const [punteroCoords, setPunteroCoords] = useState<{ lat: number; lng: number } | null>(null);
   const initialSelectionAppliedRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -176,11 +194,13 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
   const handleEditUbicacion = useCallback((lim: LimnigrafoResponse) => {
     setPlacementMode(lim);
     setTempMarker(null);
+    setPunteroCoords(null);
   }, []);
 
   const handleCancelPlacement = useCallback(() => {
     setPlacementMode(null);
     setTempMarker(null);
+    setPunteroCoords(null);
   }, []);
 
   const handleVerEnMapa = useCallback((lim: LimnigrafoResponse) => {
@@ -206,6 +226,7 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
         mensajes.success("Ubicación guardada", `Se actualizó la ubicación de ${placementMode.codigo}.`);
         setPlacementMode(null);
         setTempMarker(null);
+        setPunteroCoords(null);
       } catch (err) {
         mensajes.error(
           "Error al guardar la ubicación",
@@ -221,7 +242,11 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
     <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-background">
       <div className="relative h-full w-full">
         <Mapa center={cameraCenter} zoom={15} className="h-full w-full">
-          <MapaClickHandler onClick={handleMapClickForPlacement} active={!!placementMode} />
+          <MapaClickHandler
+            onClick={handleMapClickForPlacement}
+            onMover={setPunteroCoords}
+            active={!!placementMode}
+          />
           <MapaCambiarVista center={cameraCenter} />
 
           {mapStyle === "claro" ? (
@@ -318,10 +343,22 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
 
         {/* Banner de modo edición de ubicación */}
         {placementMode && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-1002 flex items-center gap-3 rounded-shape-lg bg-primary px-5 py-2.5 text-primary-contrast shadow-lg">
-            <span className="text-sm font-medium">
-              Hacé click en el mapa para ubicar <strong>{placementMode.codigo}</strong>
-            </span>
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-1002 flex items-start gap-3 rounded-shape-lg bg-primary px-5 py-2.5 text-primary-contrast shadow-lg">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">
+                Hacé click en el mapa para ubicar <strong>{placementMode.codigo}</strong>
+              </span>
+              <span className="text-xs font-normal tabular-nums opacity-90">
+                {punteroCoords
+                  ? `X: ${punteroCoords.lng.toFixed(5)}  Y: ${punteroCoords.lat.toFixed(5)}`
+                  : "Movés el mouse sobre el mapa y acá van las coordenadas"}
+              </span>
+              {placementMode.ultima_medicion?.altura_agua != null && (
+                <span className="text-xs font-normal tabular-nums opacity-90">
+                  Altura: {formatearMedicion(placementMode.ultima_medicion.altura_agua, "altura_agua")}
+                </span>
+              )}
+            </div>
             <button
               type="button"
               onClick={handleCancelPlacement}

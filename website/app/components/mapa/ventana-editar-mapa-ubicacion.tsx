@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Ventana } from "../ui/modals";
-import { TextField } from "../ui/textfield";
-import { Boton, BotonCancelar } from "../ui/botones";
+import { VentanaFormularioRHF } from "../ui/modals";
+import { TextFieldRHF } from "../formularios";
 import { useEditarUbicacion } from "@hooks";
 import { useMensajes } from "@services";
+import { ubicacionEditarSchema } from "@utils";
 import type { UbicacionResponse } from "@models";
+
+type FormValues = {
+  nombre: string;
+  longitud: string;
+  latitud: string;
+};
 
 export interface VentanaEditarMapaUbicacionProps {
   isOpen: boolean;
@@ -14,47 +20,77 @@ export interface VentanaEditarMapaUbicacionProps {
   ubicacion: UbicacionResponse | null;
 }
 
-/** Renombra la ubicación de un limnígrafo. Mover la posición se hace desde el mapa, no acá. */
+/**
+ * Edita el nombre y las coordenadas de la ubicación de un limnígrafo. Mover el
+ * punto arrastrando desde el mapa sigue estando en «Mover ubicación»; acá se
+ * corrigen los números a mano.
+ *
+ * La ubicación no guarda altura: el modelo `Ubicacion` del backend sólo tiene
+ * `nombre`, `latitud` y `longitud`.
+ */
 export function VentanaEditarMapaUbicacion({ isOpen, onClose, ubicacion }: VentanaEditarMapaUbicacionProps) {
   const mensajes = useMensajes();
   const { mutate, isPending } = useEditarUbicacion();
-  const [nombre, setNombre] = useState(ubicacion?.nombre ?? "");
+  const [erroresServidor, setErroresServidor] = useState<Record<string, string | string[]>>({});
 
   if (!ubicacion) return null;
 
-  const handleGuardar = () => {
+  const [longitudActual, latitudActual] = ubicacion.geometry.coordinates;
+
+  const onSubmit = (data: FormValues) => {
+    setErroresServidor({});
     mutate(
-      { id: String(ubicacion.id), data: { nombre } },
+      {
+        id: String(ubicacion.id),
+        data: {
+          nombre: data.nombre.trim(),
+          longitud: Number(data.longitud),
+          latitud: Number(data.latitud),
+        },
+      },
       {
         onSuccess: () => {
           mensajes.success("Ubicación actualizada", "Se guardaron los cambios correctamente.");
           onClose();
         },
         onError: (error) => {
-          mensajes.error(
-            "Error al actualizar",
-            error instanceof Error ? error.message : "No se pudo actualizar la ubicación."
-          );
+          const descripcion = error instanceof Error ? error.message : "No se pudo actualizar la ubicación.";
+          setErroresServidor({ general: descripcion });
+          mensajes.error("Error al actualizar", descripcion);
         },
       }
     );
   };
 
   return (
-    <Ventana open={isOpen} handleClose={onClose} title="Editar ubicación">
+    <VentanaFormularioRHF<FormValues>
+      open={isOpen}
+      handleClose={onClose}
+      title="Editar ubicación"
+      icon="ubicacion"
+      zodSchema={ubicacionEditarSchema}
+      initialValues={{
+        nombre: ubicacion.nombre ?? "",
+        longitud: String(longitudActual),
+        latitud: String(latitudActual),
+      }}
+      onSubmit={onSubmit}
+      errorResponse={erroresServidor}
+      isLoading={isPending}
+    >
       <div className="flex flex-col gap-4">
-        <TextField
-          label="Nombre de la ubicación"
-          name="nombre-ubicacion"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-        />
-        <div className="flex justify-end gap-3 pt-2">
-          <BotonCancelar onClick={onClose} disabled={isPending} />
-          <Boton content="Guardar" loading={isPending} onClick={handleGuardar} />
+        <TextFieldRHF name="nombre" label="Nombre de la ubicación" required />
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <TextFieldRHF name="longitud" label="X (longitud)" type="number" step="any" required />
+          <TextFieldRHF name="latitud" label="Y (latitud)" type="number" step="any" required />
         </div>
+
+        <p className="text-xs text-foreground-secondary">
+          Las coordenadas van en grados decimales. X entre -180 y 180, Y entre -90 y 90.
+        </p>
       </div>
-    </Ventana>
+    </VentanaFormularioRHF>
   );
 }
 

@@ -117,6 +117,21 @@
   --radius-shape-lg: var(--shape-corner-large);
   --radius-shape-full: var(--shape-corner-full);
 
+  /*
+   * Capas de apilado (z-index). Leaflet pinta sus panes entre 200 y 700 y no se
+   * puede bajar, así que todo lo que va sobre el mapa arranca en 1000 y el resto
+   * de la app se acomoda por encima:
+   *
+   *   1000-1100  overlays del mapa (controles, tarjeta de datos, lista, navbar mobile)
+   *   1200       modales y drawers (Dialog, Sheet, Drawer de shadcn)
+   *   1300       popovers, menús, selects y tooltips (tienen que ganarle a un modal abierto)
+   *   1400       mensajes / toasts
+   *
+   * Están escritos como clases (`z-[1200]`) en cada primitivo de `components/shadcn`;
+   * al agregar un overlay nuevo, ubicarlo en la capa que le corresponda en vez de
+   * inventar un número más alto.
+   */
+
   /* Sombras */
   --shadow-card: var(--card-shadow);
   --shadow-card-hover: var(--card-shadow-hover);

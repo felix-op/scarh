@@ -2,7 +2,7 @@
 
 /** Contenido compartido (filtros + listado) entre `LimnigrafosMapaSidebar` (desktop) y `LimnigrafosMapaSidebarMobile`. */
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   LimnigrafosMapaPanel,
   LimnigrafoMapaMenu,
@@ -17,9 +17,9 @@ import type { LimnigrafoResponse } from "@models";
 export interface LimnigrafosMapaListaProps {
   limnigrafos: LimnigrafoResponse[];
   selectedLimnigrafo: LimnigrafoResponse | null;
-  onSelectLimnigrafo: (limnigrafo: LimnigrafoResponse) => void;
-  onMoverUbicacion?: (limnigrafo: LimnigrafoResponse) => void;
-  onVerEnMapa?: (limnigrafo: LimnigrafoResponse) => void;
+  onSelectLimnigrafo: (_limnigrafo: LimnigrafoResponse) => void;
+  onMoverUbicacion?: (_limnigrafo: LimnigrafoResponse) => void;
+  onVerEnMapa?: (_limnigrafo: LimnigrafoResponse) => void;
 }
 
 const ESTADO_CONEXION_COLOR: Record<string, string> = {
@@ -80,7 +80,7 @@ export function LimnigrafosMapaLista({
         <LimnigrafosMapaPanel filtros={filtros} onChange={handleFiltroChange} />
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scroll px-4 pb-4 pt-3 space-y-2 min-w-0">
+      <div className="flex-1 overflow-y-auto custom-scroll px-4 pb-4 pt-3 space-y-1 min-w-0">
         {limnigrafos.length === 0 ? (
           <p className="text-center text-sm text-foreground-secondary mt-8">
             Aún no hay limnígrafos cargados en el sistema.
@@ -90,62 +90,75 @@ export function LimnigrafosMapaLista({
             No se encontraron limnígrafos con los filtros actuales.
           </p>
         ) : (
-          filtrados.map((lim) => (
-            <div
-              key={lim.id}
-              className={`w-full min-w-0 rounded-shape-md border-2 transition-all ${
-                isSelected(lim) ? "border-primary bg-primary-light/10 shadow-sm" : "border-transparent hover:border-border"
-              }`}
-            >
+          filtrados.map((lim, indice) => (
+            <Fragment key={lim.id}>
               <div
-                role="button"
-                tabIndex={0}
-                onClick={() => onSelectLimnigrafo(lim)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") onSelectLimnigrafo(lim);
-                }}
-                className="w-full min-w-0 text-left p-2.5 focus:outline-none flex items-center gap-2.5 hover:bg-hover rounded-shape-md cursor-pointer"
+                className={`w-full min-w-0 rounded-shape-md border-2 transition-all ${
+                  isSelected(lim) ? "border-primary bg-primary-light/10 shadow-sm" : "border-transparent hover:border-border"
+                }`}
               >
-                <div className="flex items-center justify-center shrink-0">
-                  <div
-                    className="w-4 h-4 rounded-full border-2 border-white shadow-sm shrink-0"
-                    style={{ backgroundColor: getColor(lim) }}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-foreground-title leading-tight truncate" title={lim.codigo}>
-                    {lim.codigo}
-                  </h3>
-                  <p
-                    className="text-xs text-foreground-secondary truncate"
-                    title={lim.ubicacion?.nombre || "Desconocida"}
-                  >
-                    Ubicación: {lim.ubicacion?.nombre || "Desconocida"}
-                  </p>
-                </div>
-                <div className="text-[10px] text-foreground-secondary border-l border-border pl-2 flex flex-col justify-center shrink-0">
-                  {tieneUbicacion(lim) ? (
-                    <>
-                      <div>alt: {lim.ultima_medicion?.altura_agua ?? "0.0"}</div>
-                      <div>x: {lim.ubicacion!.geometry.coordinates[1].toFixed(1)}</div>
-                      <div>y: {lim.ubicacion!.geometry.coordinates[0].toFixed(1)}</div>
-                    </>
-                  ) : (
-                    <div className="text-warn italic">Sin coords</div>
-                  )}
-                </div>
-                <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-                  <LimnigrafoMapaMenu
-                    limnigrafo={lim}
-                    tieneUbicacion={tieneUbicacion(lim)}
-                    onMoverUbicacion={(l) => onMoverUbicacion?.(l)}
-                    onEditarUbicacion={(l) => setEditandoUbicacion(l)}
-                    onVerEnMapa={(l) => onVerEnMapa?.(l)}
-                    onQuitarUbicacion={(l) => setQuitandoUbicacion(l)}
-                  />
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onSelectLimnigrafo(lim)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") onSelectLimnigrafo(lim);
+                  }}
+                  className="w-full min-w-0 text-left p-2.5 focus:outline-none flex flex-col hover:bg-hover rounded-shape-md cursor-pointer"
+                >
+                  {/* Encabezado: el punto de estado sólo desplaza al código y al label. */}
+                  <div className="flex items-start gap-2.5">
+                    {/* `mt-1` alinea el punto con la línea del código, no con el alto del bloque. */}
+                    <div
+                      className="mt-1 w-4 h-4 rounded-full border-2 border-white shadow-sm shrink-0"
+                      style={{ backgroundColor: getColor(lim) }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3
+                        className="text-sm font-semibold text-foreground-title leading-tight truncate"
+                        title={lim.codigo}
+                      >
+                        {lim.codigo}
+                      </h3>
+                      <span className="block text-[10px] font-medium uppercase tracking-wide text-foreground-secondary">
+                        Ubicación
+                      </span>
+                    </div>
+                    <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <LimnigrafoMapaMenu
+                        limnigrafo={lim}
+                        tieneUbicacion={tieneUbicacion(lim)}
+                        onMoverUbicacion={(l) => onMoverUbicacion?.(l)}
+                        onEditarUbicacion={(l) => setEditandoUbicacion(l)}
+                        onVerEnMapa={(l) => onVerEnMapa?.(l)}
+                        onQuitarUbicacion={(l) => setQuitandoUbicacion(l)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Detalle a ancho completo, por debajo del punto de estado. */}
+                  <div className="min-w-0">
+                    <p
+                      className="text-xs leading-tight text-foreground truncate"
+                      title={lim.ubicacion?.nombre || "Desconocida"}
+                    >
+                      {lim.ubicacion?.nombre || "Desconocida"}
+                    </p>
+                    {tieneUbicacion(lim) ? (
+                      <p className="-mt-0.5 text-[9px] leading-none tabular-nums text-foreground-secondary truncate">
+                        X: {lim.ubicacion!.geometry.coordinates[0].toFixed(5)} Y:{" "}
+                        {lim.ubicacion!.geometry.coordinates[1].toFixed(5)}
+                      </p>
+                    ) : (
+                      <p className="-mt-0.5 text-[9px] leading-none italic text-warn">Sin coordenadas</p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* Separa un dispositivo del siguiente sin encerrar cada uno en su propia card. */}
+              {indice < filtrados.length - 1 && <div className="mx-2.5 h-px bg-border" />}
+            </Fragment>
           ))
         )}
       </div>

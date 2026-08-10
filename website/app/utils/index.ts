@@ -9,6 +9,7 @@ export * from "./roles";
 export * from "./zod-rhf";
 export * from "./usuarios.schemas";
 export * from "./limnigrafos.schemas";
+export * from "./ubicacion.schemas";
 export * from "./constantes-limnigrafos";
 export * from "./strings";
 export * from "./dates";

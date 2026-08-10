@@ -106,7 +106,7 @@ export function MultiSelectLimnigrafos({
 
         <PopoverContent
           align="start"
-          className="w-[var(--radix-popover-trigger-width)] min-w-64 p-0 z-[1100] border-border bg-background-paper text-foreground shadow-card rounded-shape-sm"
+          className="w-[var(--radix-popover-trigger-width)] min-w-64 p-0 z-[1300] border-border bg-background-paper text-foreground shadow-card rounded-shape-sm"
         >
           <Command>
             <CommandInput placeholder="Buscar limnígrafo..." />

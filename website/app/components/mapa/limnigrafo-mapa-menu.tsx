@@ -6,10 +6,10 @@ import type { LimnigrafoResponse } from "@models";
 interface LimnigrafoMapaMenuProps {
   limnigrafo: LimnigrafoResponse;
   tieneUbicacion: boolean;
-  onMoverUbicacion: (limnigrafo: LimnigrafoResponse) => void;
-  onEditarUbicacion: (limnigrafo: LimnigrafoResponse) => void;
-  onVerEnMapa: (limnigrafo: LimnigrafoResponse) => void;
-  onQuitarUbicacion: (limnigrafo: LimnigrafoResponse) => void;
+  onMoverUbicacion: (_limnigrafo: LimnigrafoResponse) => void;
+  onEditarUbicacion: (_limnigrafo: LimnigrafoResponse) => void;
+  onVerEnMapa: (_limnigrafo: LimnigrafoResponse) => void;
+  onQuitarUbicacion: (_limnigrafo: LimnigrafoResponse) => void;
 }
 
 export function LimnigrafoMapaMenu({
@@ -40,7 +40,6 @@ export function LimnigrafoMapaMenu({
       ariaLabel={`Acciones de ${limnigrafo.codigo}`}
       side="left"
       align="start"
-      className="z-[1100]"
     />
   );
 }
