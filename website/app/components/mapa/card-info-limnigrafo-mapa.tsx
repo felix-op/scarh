@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { IconifyIcon, type IconVariants } from "../ui/iconify-icon";
 import { Boton } from "../ui/botones";
 import { ChipEstadoConexion, ChipEstadoMedicion } from "../limnigrafos/chip-estado-limnigrafo";
-import { formatearMedicion } from "@utils";
+import { formatearMedicion, formatearBateria } from "@utils";
 import type { LimnigrafoResponse } from "@models";
 
 export interface CardInfoLimnigrafoMapaProps {
@@ -29,7 +29,7 @@ export function CardInfoLimnigrafoMapa({ limnigrafo, onClose }: CardInfoLimnigra
   const ubicacionDetalle = coordenadas ? `X: ${coordenadas[0].toFixed(5)}  Y: ${coordenadas[1].toFixed(5)}` : undefined;
 
   const filasDispositivo: FilaDato[] = [
-    { icon: "bateria", label: "Batería", value: formatearMedicion(limnigrafo.bateria, "nivel_de_bateria") },
+    { icon: "bateria", label: "Batería", value: formatearBateria(limnigrafo.bateria, limnigrafo.configuracion) },
   ];
 
   const filasMedicion: FilaDato[] = [

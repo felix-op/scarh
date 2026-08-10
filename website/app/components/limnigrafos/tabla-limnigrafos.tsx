@@ -25,6 +25,7 @@ import {
   opcionesTiempoUltimoDato,
   coincideTiempoUltimoDato,
   formatFechaHora,
+  formatearBateria,
   type TiempoUltimoDatoBucket,
 } from "@utils";
 import type { LimnigrafoResponse, PaginatedLimnigrafoResponse } from "@models";
@@ -32,11 +33,6 @@ import type { LimnigrafoResponse, PaginatedLimnigrafoResponse } from "@models";
 export interface TablaLimnigrafosProps {
   initialData: PaginatedLimnigrafoResponse;
   puedeEditar: boolean;
-}
-
-function formatBateria(bateria: number | null | undefined): string {
-  if (bateria == null) return "-";
-  return `${Number(bateria).toFixed(1)} V`;
 }
 
 export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosProps) {
@@ -143,7 +139,7 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
     {
       id: "bateria",
       header: "Batería",
-      cell: (row) => formatBateria(row.bateria),
+      cell: (row) => formatearBateria(row.bateria, row.configuracion),
     },
     {
       id: "ultima_conexion",

@@ -1,5 +1,23 @@
 import type { Usuario } from "@models";
-import { ROLES } from "./constantes-roles";
+import { ROLES, RolesMap } from "./constantes-roles";
+
+/**
+ * Etiqueta legible de un rol técnico: `limnigrafos-editar` → `Editar limnígrafos`.
+ *
+ * Los roles viajan por la API con su valor técnico, que es lo que hay que mandar de
+ * vuelta al backend, pero no es lo que se le muestra a nadie. Sale de `opcionesRoles`,
+ * que es el mismo catálogo con el que se arma la pantalla de permisos, así que un rol
+ * se lee igual en todas partes.
+ *
+ * Si el rol no está en el catálogo —uno viejo que quedó en la base, o uno nuevo del
+ * backend que todavía no se agregó acá— devuelve el valor crudo. Mostrar el
+ * identificador es peor que mostrar la etiqueta, pero es mucho mejor que ocultar un
+ * permiso que el usuario efectivamente tiene.
+ * @property {string} rol Valor técnico del rol.
+ */
+export function etiquetaRol(rol: string): string {
+  return RolesMap[rol] ?? rol;
+}
 
 /**
  * Determina si un listado de roles de usuario incluye el/los rol(es) buscado(s).

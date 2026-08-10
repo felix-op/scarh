@@ -27,6 +27,7 @@ RAIZ = Path(__file__).resolve().parent
 ARCHIVO_COMPOSE = RAIZ / "docker" / "desarrollo-local" / "docker-compose.yml"
 ARCHIVO_CONFIG_SIMULADOR = RAIZ / "simulator-go" / "config.yaml"
 ARCHIVO_DATOS_LIMNIGRAFOS = RAIZ / "recursos" / "datos_limnigrafos.json"
+DIRECTORIO_FIXTURES = RAIZ / "backend" / "api" / "fixtures"
 # El simulador vive detrás de un perfil del compose, así que hay que habilitarlo para que
 # los comandos lo alcancen.
 COMPOSE = ["docker", "compose", "-f", str(ARCHIVO_COMPOSE), "--profile", "simulador"]
@@ -445,6 +446,47 @@ def importar_datos_limnigrafos():
     pausar()
 
 
+def recargar_fixtures():
+    """Vuelve a aplicar las fixtures base sobre una base que ya existe.
+
+    `entrypoint.api.sh` las carga sólo en el primer arranque, porque traen pks explícitas
+    y recargarlas en cada `up` pisaría lo que se haya tocado durante el desarrollo. El
+    efecto secundario es que una base ya creada no ve una fixture nueva ni un cambio a
+    una existente, y la única salida era bajar borrando los datos. Esto es esa recarga,
+    a pedido.
+
+    Los archivos no se copian al contenedor: el compose monta `backend/` en `/app`, así
+    que `loaddata` ya lee la versión del host. La lista sale de leer el directorio y no
+    de una constante para que una fixture nueva entre sola.
+    """
+    print(titulo("Recargar las fixtures base"))
+    print()
+
+    nombres = sorted(ruta.name for ruta in DIRECTORIO_FIXTURES.glob("*.json"))
+    if not nombres:
+        print(error(f"No hay fixtures en {DIRECTORIO_FIXTURES.relative_to(RAIZ)}."))
+        pausar()
+        return
+
+    print(apagado("Las fixtures se cargan sólo en el primer arranque, así que una base que ya"))
+    print(apagado("existía no ve las que se agregaron después. Se van a volver a aplicar:"))
+    print()
+    for nombre in nombres:
+        print(f"    {nombre}")
+    print()
+    print(apagado("Traen pks explícitas: esos registros se sobrescriben y se pierde lo que hayas"))
+    print(apagado("editado a mano sobre ellos. Las mediciones y el resto de la base no se tocan."))
+    print()
+
+    if not confirmar("¿Recargar?"):
+        return
+
+    if manage("loaddata", *nombres):
+        print()
+        print(apagado("Si cambiaron los limnígrafos, sincronizá los tokens del simulador."))
+    pausar()
+
+
 # ---------------------------------------------------------------------------
 # Simulador
 # ---------------------------------------------------------------------------
@@ -637,6 +679,7 @@ ACCIONES = {
     "test": lambda: (manage("test", "api"), pausar()),
     "alertas": lambda: (manage("generar_alerta"), pausar()),
     "libre": comando_libre,
+    "fixtures": recargar_fixtures,
     "importar_datos": importar_datos_limnigrafos,
     "sim_tokens": sincronizar_tokens,
     "sim_up": levantar_simulador,
@@ -676,6 +719,7 @@ OPCIONES_MENU = [
     ("Correr los tests", "test"),
     ("Generar alertas (recalcula estados)", "alertas"),
     ("Ejecutar otro comando de manage.py", "libre"),
+    ("Recargar las fixtures base (limnígrafos, ubicaciones, configuración)", "fixtures"),
     ("Importar datos de prueba (histórico de mediciones)", "importar_datos"),
     ("", None),
     ("Simulador", None),

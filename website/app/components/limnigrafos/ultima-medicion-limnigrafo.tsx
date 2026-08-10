@@ -1,7 +1,7 @@
 import { SeccionAgruparInformacion } from "../ui/seccion-agrupar-informacion";
 import { Chip } from "../ui/chip";
 import { ChipEstadoLimnigrafo } from "./chip-estado-limnigrafo";
-import { formatFechaHora, formatearMedicion } from "@utils";
+import { formatFechaHora, formatearMedicion, formatearBateria } from "@utils";
 import type { LimnigrafoResponse } from "@models";
 
 function DatoItem({ label, value }: { label: string; value: string }) {
@@ -43,6 +43,12 @@ export function UltimaMedicionLimnigrafo({ limnigrafo }: UltimaMedicionLimnigraf
         <DatoItem label="Altura de agua" value={formatearMedicion(medicion.altura_agua, "altura_agua")} />
         <DatoItem label="Temperatura" value={formatearMedicion(medicion.temperatura, "temperatura")} />
         <DatoItem label="Presión" value={formatearMedicion(medicion.presion, "presion")} />
+        {/*
+          `bateria` es `Limnigrafo.bateria_actual`, que el backend reescribe con el
+          `nivel_de_bateria` de cada medición que entra (`views.py:154`), así que es
+          la batería de esta misma medición y no un dato suelto del equipo.
+        */}
+        <DatoItem label="Batería" value={formatearBateria(limnigrafo.bateria, limnigrafo.configuracion)} />
       </div>
     </SeccionAgruparInformacion>
   );

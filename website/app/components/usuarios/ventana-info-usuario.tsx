@@ -2,6 +2,7 @@
 
 import { VentanaInfo } from "@/components/ui/modals";
 import { Chip } from "@/components/ui/chip";
+import { etiquetaRol } from "@utils";
 import type { UsuarioResponse } from "@models";
 
 export interface VentanaInfoUsuarioProps {
@@ -84,15 +85,17 @@ export function VentanaInfoUsuario({
 
         <div className="flex flex-col gap-1 pb-4">
           <span className="text-sm text-foreground-secondary font-medium">Roles Técnicos Asignados</span>
-          <ul className="list-disc list-inside mt-2 text-sm text-foreground flex flex-col gap-1">
+          <div className="mt-2 flex flex-wrap gap-2">
             {usuario.roles && usuario.roles.length > 0 ? (
               usuario.roles.map((rol) => (
-                <li key={rol}>{rol}</li>
+                <Chip key={rol} variant="none" size="sm">
+                  {etiquetaRol(rol)}
+                </Chip>
               ))
             ) : (
-              <span className="text-foreground-disabled">No tiene roles asignados</span>
+              <span className="text-sm text-foreground-disabled">No tiene roles asignados</span>
             )}
-          </ul>
+          </div>
         </div>
         </div>
       )}

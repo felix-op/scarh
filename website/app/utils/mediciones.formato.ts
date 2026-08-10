@@ -71,3 +71,55 @@ export function etiquetaConUnidad(atributo: AtributoEstadistica): string {
   const { label, unidad } = ATRIBUTO_METADATA[atributo];
   return unidad ? `${label} (${unidad})` : label;
 }
+
+/** Umbrales de batería de `ConfiguracionLimnigrafo`, que es lo único que define el 0 % y el 100 %. */
+export type UmbralesBateria = { bateria_min: number | null; bateria_max: number | null };
+
+/**
+ * Estima el porcentaje de carga a partir de la tensión medida, interpolando
+ * linealmente entre `bateria_min` (0 %) y `bateria_max` (100 %).
+ *
+ * Devuelve `null` cuando no se puede estimar, y ese caso **no es un error**: el
+ * equipo no tiene forma de saber cuál es su batería llena. El firmware sólo
+ * reporta tensión (`Bat()` en `recursos/limnigrafo-firmware.ino`, con un decimal),
+ * así que el 100 % sale siempre de la configuración que carga un operador. Sin
+ * `bateria_max` no hay porcentaje posible y hay que mostrar los volts.
+ *
+ * La interpolación es lineal y la curva de descarga real no lo es (una batería de
+ * plomo-ácido se mantiene plana en el medio del rango y después cae de golpe), así
+ * que el resultado se redondea a entero: es una estimación, no una medición, y no
+ * conviene darle decimales que aparenten una precisión inexistente.
+ */
+export function porcentajeBateria(
+  volts: number | null | undefined,
+  umbrales: UmbralesBateria | null | undefined
+): number | null {
+  if (volts === null || volts === undefined || Number.isNaN(volts)) return null;
+
+  const minimo = umbrales?.bateria_min;
+  const maximo = umbrales?.bateria_max;
+  if (minimo === null || minimo === undefined || maximo === null || maximo === undefined) return null;
+  // Un rango invertido o de ancho cero es config inválida, no un 0 % ni una división por cero.
+  if (maximo <= minimo) return null;
+
+  const bruto = ((volts - minimo) / (maximo - minimo)) * 100;
+  return Math.round(Math.min(100, Math.max(0, bruto)));
+}
+
+/**
+ * Batería para las pantallas de estado: `78 % (12.40 V)`, o sólo los volts cuando
+ * no hay umbrales configurados. El voltaje queda siempre a la vista porque es el
+ * único número que el equipo midió de verdad.
+ *
+ * No usar en la tabla de mediciones ni en las exportaciones: ahí el porcentaje
+ * sería un valor derivado de una configuración de hoy aplicada a filas viejas, y
+ * cambiaría solo al editar `bateria_max`.
+ */
+export function formatearBateria(
+  volts: number | null | undefined,
+  umbrales: UmbralesBateria | null | undefined
+): string {
+  const voltaje = formatearMedicion(volts, "nivel_de_bateria");
+  const porcentaje = porcentajeBateria(volts, umbrales);
+  return porcentaje === null ? voltaje : `${porcentaje} % (${voltaje})`;
+}

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { VentanaFormulario } from "../ui/modals";
 import type { UsuarioResponse } from "@models";
-import { opcionesRoles } from "@utils";
+import { etiquetaRol } from "@utils";
 import { usePutUsuarioRoles } from "@hooks";
 import { useMensajes } from "@services";
 import { Chip } from "../ui/chip";
@@ -47,15 +47,6 @@ export function VentanaPermisosUsuario({
   const removedRoles = initialRoles.filter((r) => !selectedRoles.includes(r));
   const unchangedRoles = initialRoles.filter((r) => selectedRoles.includes(r));
 
-  // Mapa para mostrar labels de roles
-  const roleLabelMap = useMemo(() => {
-    const map = new Map<string, string>();
-    opcionesRoles.forEach((entidad) => {
-      entidad.roles.forEach((rol) => map.set(rol.value, rol.label));
-    });
-    return map;
-  }, []);
-
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!usuario) return;
@@ -94,7 +85,7 @@ export function VentanaPermisosUsuario({
               <div className="flex flex-wrap gap-2 items-center">
                 <span className="text-sm font-semibold text-success w-24 shrink-0">Agregados:</span>
                 {addedRoles.map((r) => (
-                  <Chip key={r} variant="success" size="sm">{roleLabelMap.get(r) || r}</Chip>
+                  <Chip key={r} variant="success" size="sm">{etiquetaRol(r)}</Chip>
                 ))}
               </div>
             )}
@@ -104,7 +95,7 @@ export function VentanaPermisosUsuario({
               <div className="flex flex-wrap gap-2 items-center">
                 <span className="text-sm font-semibold text-error w-24 shrink-0">Quitados:</span>
                 {removedRoles.map((r) => (
-                  <Chip key={r} variant="error" size="sm">{roleLabelMap.get(r) || r}</Chip>
+                  <Chip key={r} variant="error" size="sm">{etiquetaRol(r)}</Chip>
                 ))}
               </div>
             )}
@@ -116,7 +107,7 @@ export function VentanaPermisosUsuario({
                 <span className="text-sm text-foreground-disabled">Ninguno</span>
               ) : unchangedRoles.length > 0 ? (
                 unchangedRoles.map((r) => (
-                  <Chip key={r} variant="none" size="sm">{roleLabelMap.get(r) || r}</Chip>
+                  <Chip key={r} variant="none" size="sm">{etiquetaRol(r)}</Chip>
                 ))
               ) : (
                 <span className="text-sm text-foreground-disabled">Ninguno</span>

@@ -18,5 +18,105 @@
       "fecha_fin": null,
       "activo": true
     }
+  },
+  {
+    "model": "api.configuracionlimnigrafo",
+    "pk": 2,
+    "fields": {
+      "limnigrafo": 1,
+      "tiempo_advertencia": 900,
+      "tiempo_peligro": 1800,
+      "bateria_min": 10.5,
+      "bateria_max": 13.0,
+      "altura_minima_agua": 0.5,
+      "altura_maxima_agua": 3.0,
+      "temperatura_minima": -10.0,
+      "temperatura_maxima": 30.0,
+      "presion_minima": 950.0,
+      "presion_maxima": 1050.0,
+      "fecha_inicio": "2026-01-01T00:00:00Z",
+      "fecha_fin": null,
+      "activo": true
+    }
+  },
+  {
+    "model": "api.configuracionlimnigrafo",
+    "pk": 3,
+    "fields": {
+      "limnigrafo": 2,
+      "tiempo_advertencia": 1800,
+      "tiempo_peligro": 3600,
+      "bateria_min": 10.5,
+      "bateria_max": 13.0,
+      "altura_minima_agua": 0.5,
+      "altura_maxima_agua": 3.5,
+      "temperatura_minima": -10.0,
+      "temperatura_maxima": 30.0,
+      "presion_minima": 950.0,
+      "presion_maxima": 1050.0,
+      "fecha_inicio": "2026-01-01T00:00:00Z",
+      "fecha_fin": null,
+      "activo": true
+    }
+  },
+  {
+    "model": "api.configuracionlimnigrafo",
+    "pk": 4,
+    "fields": {
+      "limnigrafo": 3,
+      "tiempo_advertencia": 900,
+      "tiempo_peligro": 1800,
+      "bateria_min": 10.5,
+      "bateria_max": 13.0,
+      "altura_minima_agua": 0.5,
+      "altura_maxima_agua": 2.5,
+      "temperatura_minima": -10.0,
+      "temperatura_maxima": 30.0,
+      "presion_minima": 950.0,
+      "presion_maxima": 1050.0,
+      "fecha_inicio": "2026-01-01T00:00:00Z",
+      "fecha_fin": null,
+      "activo": true
+    }
+  },
+  {
+    "model": "api.configuracionlimnigrafo",
+    "pk": 5,
+    "fields": {
+      "limnigrafo": 5,
+      "tiempo_advertencia": 2700,
+      "tiempo_peligro": 5400,
+      "bateria_min": 10.5,
+      "bateria_max": 13.0,
+      "altura_minima_agua": 0.5,
+      "altura_maxima_agua": 3.2,
+      "temperatura_minima": -10.0,
+      "temperatura_maxima": 30.0,
+      "presion_minima": 950.0,
+      "presion_maxima": 1050.0,
+      "fecha_inicio": "2026-01-01T00:00:00Z",
+      "fecha_fin": null,
+      "activo": true
+    }
+  },
+  {
+    "model": "api.configuracionlimnigrafo",
+    "pk": 6,
+    "fields": {
+      "limnigrafo": 6,
+      "tiempo_advertencia": 3600,
+      "tiempo_peligro": 7200,
+      "bateria_min": 10.5,
+      "bateria_max": null,
+      "altura_minima_agua": 0.5,
+      "altura_maxima_agua": 3.5,
+      "temperatura_minima": -10.0,
+      "temperatura_maxima": 30.0,
+      "presion_minima": 950.0,
+      "presion_maxima": 1050.0,
+      "fecha_inicio": "2026-01-01T00:00:00Z",
+      "fecha_fin": null,
+      "activo": true
+    }
   }
 ]
