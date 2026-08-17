@@ -4,7 +4,12 @@ from .ubicacionSerializer import UbicacionSerializer
 from .configuracion_limnigrafoSerializer import ConfiguracionLimnigrafoSerializer
 
 
-    
+class LimnigrafoCatalogoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Limnigrafo
+        fields = ['id', 'codigo']
+
+
 class LimnigrafoSerializer(serializers.ModelSerializer):
     tipo_comunicacion = serializers.ListField(
         child=serializers.CharField(),

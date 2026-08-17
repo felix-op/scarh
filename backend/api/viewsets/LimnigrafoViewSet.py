@@ -1,7 +1,7 @@
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from ..models import Limnigrafo
-from ..serializer import LimnigrafoSerializer, ConfiguracionLimnigrafoSerializer
+from ..serializer import LimnigrafoSerializer, ConfiguracionLimnigrafoSerializer, LimnigrafoCatalogoSerializer
 from ..filters import LimnigrafoFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
@@ -9,7 +9,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_api_key.models import APIKey
-from ..permissions import LimnigrafosPermission
+from ..permissions import LimnigrafosPermission, LimnigrafosCatalogoPermission
+from drf_spectacular.utils import extend_schema
 from ..utils.estado_limnigrafo import calcular_estado_limnigrafo
 from ..utils.audit import (
     registrar_accion_auditoria_en_commit,
@@ -235,4 +236,21 @@ class LimnigrafoViewSet(viewsets.ModelViewSet):
         limnigrafo = self.get_object()
         configuraciones = limnigrafo.configuraciones.all().order_by('-fecha_inicio')
         serializer = self.get_serializer(configuraciones, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(
+        responses={200: LimnigrafoCatalogoSerializer(many=True)},
+        description="Obtiene un listado simple de todos los limnígrafos (sólo id y codigo) sin paginar y ordenado por codigo."
+    )
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='catalogo',
+        permission_classes=[IsAuthenticated, LimnigrafosCatalogoPermission],
+        serializer_class=LimnigrafoCatalogoSerializer,
+        pagination_class=None,
+    )
+    def catalogo(self, request):
+        queryset = self.get_queryset().order_by('codigo')
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)

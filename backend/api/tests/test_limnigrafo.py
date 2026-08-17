@@ -3,7 +3,7 @@ from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from api.models import Alerta, Limnigrafo, ConfiguracionLimnigrafo
+from api.models import Alerta, Limnigrafo, ConfiguracionLimnigrafo, Rol
 from api.models.medicion import Medicion
 from datetime import time, timedelta
 from rest_framework_api_key.models import APIKey
@@ -337,3 +337,88 @@ class LimnigrafoTests(APITestCase):
         self.limnigrafo.refresh_from_db()
         self.assertEqual(self.limnigrafo.estado, 'advertencia')
         self.assertTrue(Alerta.objects.filter(tipo='advertencia_limnigrafo', limnigrafo=self.limnigrafo).exists())
+
+    def test_catalogo_access_with_various_roles(self):
+        # Create non-superuser
+        User = get_user_model()
+        user = User.objects.create_user(username='test_role_user', password='password', email='role@example.com')
+        self.client.force_authenticate(user=user)
+        
+        # Test default access denied (no roles)
+        url = reverse('limnigrafos-catalogo')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        
+        # Define roles to test
+        allowed_roles = [
+            'limnigrafos-visualizar',
+            'mediciones-visualizar',
+            'estadisticas-visualizar',
+            'ubicaciones-visualizar',
+            'administracion'
+        ]
+        
+        for role_name in allowed_roles:
+            # Assign role
+            rol, _ = Rol.objects.get_or_create(nombre=role_name)
+            user.roles.add(rol)
+            
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK, f"Failed for role {role_name}")
+            
+            # Clean up role for next iteration
+            user.roles.remove(rol)
+
+    def test_catalogo_access_denied_with_unallowed_roles(self):
+        User = get_user_model()
+        user = User.objects.create_user(username='test_unallowed_user', password='password', email='unallowed@example.com')
+        self.client.force_authenticate(user=user)
+        
+        # Roles not allowed
+        unallowed_roles = ['usuarios-visualizar', 'mapa-visualizar', 'mediciones-editar']
+        for role_name in unallowed_roles:
+            rol, _ = Rol.objects.get_or_create(nombre=role_name)
+            user.roles.add(rol)
+            
+            url = reverse('limnigrafos-catalogo')
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, f"Role {role_name} should be denied access")
+            
+            user.roles.remove(rol)
+
+    def test_catalogo_unauthenticated_access(self):
+        self.client.force_authenticate(user=None)
+        url = reverse('limnigrafos-catalogo')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_catalogo_response_fields_and_no_leak(self):
+        # We need a user with permissions to check this, let's use the setup superuser (which is already set up as self.user)
+        self.client.force_authenticate(user=self.user)
+        url = reverse('limnigrafos-catalogo')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Response should be a list (no pagination)
+        self.assertIsInstance(response.data, list)
+        self.assertGreaterEqual(len(response.data), 1)
+        
+        # Each item must only have 'id' and 'codigo'
+        for item in response.data:
+            self.assertEqual(set(item.keys()), {'id', 'codigo'})
+
+    def test_catalogo_ordering_by_codigo(self):
+        self.client.force_authenticate(user=self.user)
+        # Create a few more limnigrafos to test sorting
+        Limnigrafo.objects.create(codigo='AAA-TEST', descripcion='A')
+        Limnigrafo.objects.create(codigo='ZZZ-TEST', descripcion='Z')
+        Limnigrafo.objects.create(codigo='MMM-TEST', descripcion='M')
+        
+        url = reverse('limnigrafos-catalogo')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        codigos = [item['codigo'] for item in response.data]
+        # Filter only our test/existing ones to verify they are sorted
+        relevant_codigos = [c for c in codigos if c in ['AAA-TEST', 'MMM-TEST', 'ZZZ-TEST', 'LMG-EXISTING']]
+        self.assertEqual(relevant_codigos, sorted(relevant_codigos))

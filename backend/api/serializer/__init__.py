@@ -1,5 +1,5 @@
 from .usuarioSerializer import UsuarioSerializer
-from .limnigrafoSerializer import LimnigrafoSerializer
+from .limnigrafoSerializer import LimnigrafoSerializer, LimnigrafoCatalogoSerializer
 from .historialListSerializer import HistorialListSerializer, HistorialDetailSerializer
 from .medicionSerializer import (
     MedicionSerializer,
@@ -35,6 +35,7 @@ from .ruta_accesoSerializer import RutaAccesoSerializer
 __all__ = [
     "UsuarioSerializer",
     "LimnigrafoSerializer",
+    "LimnigrafoCatalogoSerializer",
     "HistorialListSerializer",
     "HistorialDetailSerializer",
     "MedicionSerializer",

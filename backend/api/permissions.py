@@ -46,6 +46,36 @@ class LimnigrafosPermission(RoleBasedPermission):
     resource_name = 'limnigrafos'
 
 
+class LimnigrafosCatalogoPermission(permissions.BasePermission):
+    """
+    Permiso para catálogo de limnígrafos: accesible por usuarios autenticados
+    que posean al menos uno de los siguientes roles:
+    - limnigrafos-visualizar
+    - mediciones-visualizar
+    - estadisticas-visualizar
+    - ubicaciones-visualizar
+    - administracion
+    """
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+            
+        if request.user.is_superuser:
+            return True
+            
+        user_roles = set(request.user.roles.values_list('nombre', flat=True))
+        
+        roles_permitidos = {
+            'administracion',
+            'limnigrafos-visualizar',
+            'mediciones-visualizar',
+            'estadisticas-visualizar',
+            'ubicaciones-visualizar',
+        }
+        
+        return any(role in user_roles for role in roles_permitidos)
+
+
 class MedicionesPermissionWithAPIKey(permissions.BasePermission):
     """
     Permiso especial para mediciones que permite:
