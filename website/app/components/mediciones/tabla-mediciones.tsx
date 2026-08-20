@@ -6,7 +6,7 @@ import { TablaConAccionesPaginada, ActionConfig, TableColumn, Chip, ChipVariant,
 import { useMensajes } from "@services";
 import { obtenerTodasLasMedicionesFiltradas } from "@hooks";
 import { opcionesFuenteMedicion, obtenerFechasVentana, exportarComoCSV, exportarComoJSON, formatearMedicion, etiquetaConUnidad, formatFechaHora } from "@utils";
-import type { MedicionResponse, PaginatedMedicionResponse, LimnigrafoResponse } from "@models";
+import type { LimnigrafoCatalogoResponse, MedicionResponse, PaginatedMedicionResponse } from "@models";
 import { FiltrosMediciones, type MedicionesFiltrosState } from "./filtros-mediciones";
 
 export interface FiltrosMedicionesPagina extends MedicionesFiltrosState {
@@ -16,9 +16,10 @@ export interface FiltrosMedicionesPagina extends MedicionesFiltrosState {
 
 export interface TablaMedicionesProps {
   data: PaginatedMedicionResponse;
-  limnigrafos: LimnigrafoResponse[];
+  limnigrafos: LimnigrafoCatalogoResponse[];
   limnigrafosOpciones: { label: string; value: string }[];
   filtros: FiltrosMedicionesPagina;
+  errorCatalogo?: string;
 }
 
 const fuenteVariant: Record<string, ChipVariant> = {
@@ -39,7 +40,7 @@ function extraerFiltros(filtros: FiltrosMedicionesPagina): MedicionesFiltrosStat
   };
 }
 
-export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtros }: TablaMedicionesProps) {
+export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtros, errorCatalogo }: TablaMedicionesProps) {
   const router = useRouter();
   const pathname = usePathname();
   const mensajes = useMensajes();
@@ -234,6 +235,7 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
         pendientes={filtrosPendientes}
         aplicados={filtrosAplicados}
         limnigrafosOpciones={limnigrafosOpciones}
+        errorCatalogo={errorCatalogo}
         isPending={isPending || exportando !== null}
         exportandoCSV={exportando === "csv"}
         exportandoJSON={exportando === "json"}

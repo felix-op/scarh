@@ -1,6 +1,16 @@
 import type { Paginado } from "./backend";
 import type { UbicacionResponse } from "./models.ubicacion";
 
+/**
+ * Elemento del catálogo liviano de limnígrafos.
+ * @property {number} id ID del limnígrafo.
+ * @property {string} codigo Código visible del limnígrafo.
+ */
+export type LimnigrafoCatalogoResponse = {
+  id: number;
+  codigo: string;
+};
+
 export type UltimaMedicionResumen = {
   id: number;
   fecha_hora: string;
@@ -136,4 +146,3 @@ export type LimnigrafoEditarPayload = {
   presion_minima: number | null;
   presion_maxima: number | null;
 };
-

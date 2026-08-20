@@ -1,11 +1,13 @@
 import { format, subDays } from "date-fns";
-import { getServerMediciones, getServerLimnigrafos } from "@services";
+import { getServerMediciones, getSSRLimnigrafosCatalogo } from "@services";
 import { TablaMediciones, type FiltrosMedicionesPagina } from "@components";
 import { obtenerFechasVentana } from "@utils";
 
 export interface MedicionesPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
 }
+
+const ERROR_CATALOGO = "No se pudo cargar el catálogo de limnígrafos. El filtro por dispositivo no está disponible.";
 
 export default async function MedicionesPage({ searchParams }: MedicionesPageProps) {
   const params = await searchParams;
@@ -27,7 +29,11 @@ export default async function MedicionesPage({ searchParams }: MedicionesPagePro
     limit: Number(params.limit) || 50,
   };
 
-  const [data, limnigrafosResponse] = await Promise.all([
+  const catalogoPromise = getSSRLimnigrafosCatalogo()
+    .then((limnigrafos) => ({ limnigrafos, errorCatalogo: undefined as string | undefined }))
+    .catch(() => ({ limnigrafos: [], errorCatalogo: ERROR_CATALOGO }));
+
+  const [data, catalogo] = await Promise.all([
     getServerMediciones({
       queryParams: {
         limnigrafo: filtros.limnigrafo !== "todos" ? filtros.limnigrafo : undefined,
@@ -39,10 +45,12 @@ export default async function MedicionesPage({ searchParams }: MedicionesPagePro
         limit: filtros.limit,
       },
     }),
-    getServerLimnigrafos({ queryParams: { limit: 1000, page: 1 } }),
+    catalogoPromise,
   ]);
 
-  const limnigrafosOpciones = limnigrafosResponse.results.map((limnigrafo) => ({
+  const { limnigrafos, errorCatalogo } = catalogo;
+
+  const limnigrafosOpciones = limnigrafos.map((limnigrafo) => ({
     label: limnigrafo.codigo,
     value: String(limnigrafo.id),
   }));
@@ -50,9 +58,10 @@ export default async function MedicionesPage({ searchParams }: MedicionesPagePro
   return (
     <TablaMediciones
       data={data}
-      limnigrafos={limnigrafosResponse.results}
+      limnigrafos={limnigrafos}
       limnigrafosOpciones={limnigrafosOpciones}
       filtros={filtros}
+      errorCatalogo={errorCatalogo}
     />
   );
 }

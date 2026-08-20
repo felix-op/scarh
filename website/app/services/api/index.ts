@@ -24,6 +24,7 @@ export {
 
 export {
   getServerLimnigrafos,
+  getSSRLimnigrafosCatalogo,
   postServerLimnigrafo,
   getServerLimnigrafo,
   putServerLimnigrafo,

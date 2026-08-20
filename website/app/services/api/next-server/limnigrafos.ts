@@ -1,6 +1,6 @@
 "use server";
 import { RequestSSR } from "../../apiClient";
-import type { LimnigrafoResponse, LimnigrafoPostPayload, LimnigrafosPutPayload, PaginatedLimnigrafoResponse, ParamsPaginated, ConfiguracionLimnigrafoResponse, ConfiguracionLimnigrafoPayload, LimnigrafoGenerateKeyResponse } from "@models";
+import type { LimnigrafoCatalogoResponse, LimnigrafoResponse, LimnigrafoPostPayload, LimnigrafosPutPayload, PaginatedLimnigrafoResponse, ParamsPaginated, ConfiguracionLimnigrafoResponse, ConfiguracionLimnigrafoPayload, LimnigrafoGenerateKeyResponse } from "@models";
 
 export async function getServerLimnigrafos(params?: ParamsPaginated): Promise<PaginatedLimnigrafoResponse> {
   return RequestSSR<PaginatedLimnigrafoResponse, ParamsPaginated>({
@@ -8,6 +8,15 @@ export async function getServerLimnigrafos(params?: ParamsPaginated): Promise<Pa
     method: "GET",
     params,
     tags: ["limnigrafos"],
+  });
+}
+
+/** Obtiene el catálogo no paginado para selectores que no necesitan el detalle del dispositivo. */
+export async function getSSRLimnigrafosCatalogo(): Promise<LimnigrafoCatalogoResponse[]> {
+  return RequestSSR<LimnigrafoCatalogoResponse[]>({
+    url: "limnigrafos/catalogo/",
+    method: "GET",
+    tags: ["limnigrafos-catalogo"],
   });
 }
 

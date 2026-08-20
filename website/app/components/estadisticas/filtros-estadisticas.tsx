@@ -31,6 +31,7 @@ import type { AgrupacionEstadistica, AtributoEstadistica } from "@models";
  * @property {FiltrosEstadisticasState} aplicados Valores vigentes, los que están en la URL.
  * @property {OpcionLimnigrafo[]} limnigrafos Limnígrafos disponibles.
  * @property {Record<string, string>} errores Mensajes de validación por campo.
+ * @property {string} [errorCatalogo] Explicación si el selector de dispositivos no está disponible.
  * @property {boolean} [isPending] Bloquea todo el formulario mientras se aplica la
  *   consulta. No alcanza con deshabilitar los botones: al aterrizar la navegación,
  *   el formulario se resincroniza con la URL y descartaría lo editado mientras tanto.
@@ -44,6 +45,7 @@ export interface FiltrosEstadisticasProps {
   limnigrafos: OpcionLimnigrafo[];
   errores: Record<string, string>;
   isPending?: boolean;
+  errorCatalogo?: string;
   onChange: (_cambios: Partial<FiltrosEstadisticasState>) => void;
   onAplicar: () => void;
   onRestablecer: () => void;
@@ -55,6 +57,7 @@ export function FiltrosEstadisticas({
   limnigrafos,
   errores,
   isPending = false,
+  errorCatalogo,
   onChange,
   onAplicar,
   onRestablecer,
@@ -155,9 +158,10 @@ export function FiltrosEstadisticas({
             value={seleccionVisible}
             onChange={handleLimnigrafos}
             seleccionUnica={esResumen}
-            disabled={isPending}
+            disabled={isPending || errorCatalogo !== undefined}
             error={errores.limnigrafos}
           />
+          {errorCatalogo && <p className="text-sm text-foreground-secondary sm:col-span-2">{errorCatalogo}</p>}
         </div>
 
         <div className="h-px w-full bg-border" />

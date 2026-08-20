@@ -1,5 +1,5 @@
 import { PantallaEstadisticas } from "@components";
-import { getSSREstadisticasTabla, getSSRMedicionSerie, getServerLimnigrafos } from "@services";
+import { getSSREstadisticasTabla, getSSRLimnigrafosCatalogo, getSSRMedicionSerie } from "@services";
 import { limitesDelRango, parsearFiltrosEstadisticas } from "@utils";
 import { ApiError, type EstadisticaTablaResponse, type MedicionSerieResponse } from "@models";
 
@@ -7,20 +7,27 @@ export interface EstadisticasPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
 }
 
+const ERROR_CATALOGO = "No se pudo cargar el catálogo de limnígrafos. El filtro por dispositivo no está disponible.";
+
 export default async function EstadisticasPage({ searchParams }: EstadisticasPageProps) {
   const filtros = parsearFiltrosEstadisticas(await searchParams);
 
-  const limnigrafosResponse = await getServerLimnigrafos({ queryParams: { limit: 1000, page: 1 } });
-  const limnigrafos = limnigrafosResponse.results.map((limnigrafo) => ({
-    id: limnigrafo.id,
-    codigo: limnigrafo.codigo,
-    descripcion: limnigrafo.descripcion ?? undefined,
-  }));
+  let limnigrafos: { id: number; codigo: string }[] = [];
+  let errorCatalogo: string | undefined;
+
+  try {
+    limnigrafos = (await getSSRLimnigrafosCatalogo()).map((limnigrafo) => ({
+      id: limnigrafo.id,
+      codigo: limnigrafo.codigo,
+    }));
+  } catch {
+    errorCatalogo = ERROR_CATALOGO;
+  }
 
   // La primera visita no trae limnígrafos en la URL: se arranca con todos, que es
   // el caso de uso de la vista comparativa.
   const seleccionados =
-    filtros.limnigrafos.length > 0 ? filtros.limnigrafos : limnigrafos.map((limnigrafo) => limnigrafo.id);
+    errorCatalogo !== undefined ? [] : filtros.limnigrafos.length > 0 ? filtros.limnigrafos : limnigrafos.map((limnigrafo) => limnigrafo.id);
 
   // El resumen por período compara períodos de un mismo sensor y el endpoint
   // rechaza varios, así que se consulta sólo el activo.
@@ -83,6 +90,7 @@ export default async function EstadisticasPage({ searchParams }: EstadisticasPag
       datos={datos}
       serie={serie}
       errorCarga={errorCarga}
+      errorCatalogo={errorCatalogo}
     />
   );
 }

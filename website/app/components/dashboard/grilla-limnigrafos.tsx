@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card } from "../ui/cards";
+import { Card, CardStatus } from "../ui/cards";
 import { IconifyIcon } from "../ui/iconify-icon";
 import { ChipEstadoLimnigrafo } from "../limnigrafos/chip-estado-limnigrafo";
 import {
@@ -87,7 +87,7 @@ function TarjetaLimnigrafo({ limnigrafo }: { limnigrafo: DashboardLimnigrafo }) 
       href={`/dashboard/limnigrafos/datos/${limnigrafo.id}`}
       className="no-underline outline-none"
     >
-      <Card className="flex h-full flex-col gap-3 p-4 transition-colors hover:bg-hover">
+      <CardStatus status="error" direction="left" className="flex h-full flex-col gap-3 p-4 transition-colors hover:bg-hover">
         {/* El estado va arriba del código: es lo que se barre con la vista al
             recorrer la grilla, y el nombre sólo hace falta cuando algo llama la
             atención. */}
@@ -117,7 +117,7 @@ function TarjetaLimnigrafo({ limnigrafo }: { limnigrafo: DashboardLimnigrafo }) 
         ) : (
           <p className="text-sm text-foreground-disabled">Sin mediciones registradas.</p>
         )}
-      </Card>
+      </CardStatus>
     </Link>
   );
 }

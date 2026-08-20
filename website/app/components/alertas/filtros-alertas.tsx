@@ -26,6 +26,7 @@ export interface FiltrosAlertasProps {
   aplicados: AlertasFiltrosState;
   limnigrafosOpciones: { label: string; value: string }[];
   isPending?: boolean;
+  errorCatalogo?: string;
   onChange: <K extends keyof AlertasFiltrosState>(_campo: K, _valor: AlertasFiltrosState[K]) => void;
   onAplicar: () => void;
   onRestablecer: () => void;
@@ -57,6 +58,7 @@ export function FiltrosAlertas({
   aplicados,
   limnigrafosOpciones,
   isPending = false,
+  errorCatalogo,
   onChange,
   onAplicar,
   onRestablecer,
@@ -99,8 +101,10 @@ export function FiltrosAlertas({
               name="limnigrafo"
               options={[{ label: "Todos", value: "todos" }, ...limnigrafosOpciones]}
               value={pendientes.limnigrafo}
+              disabled={errorCatalogo !== undefined}
               onChange={(val) => onChange("limnigrafo", val)}
             />
+            {errorCatalogo && <p className="mt-1 text-sm text-foreground-secondary">{errorCatalogo}</p>}
           </div>
 
           <div className="w-full">

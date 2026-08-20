@@ -39,6 +39,7 @@ import type { EstadisticaTablaResponse, MedicionSerieResponse } from "@models";
  * @property {MedicionSerieResponse | null} serie Series temporales, sólo en la vista
  *   de gráficos.
  * @property {string} [errorCarga] Mensaje del backend si la consulta falló.
+ * @property {string} [errorCatalogo] Explicación si no se pudo cargar el selector de dispositivos.
  */
 export interface PantallaEstadisticasProps {
   filtros: TFiltrosEstadisticas;
@@ -46,6 +47,7 @@ export interface PantallaEstadisticasProps {
   datos: EstadisticaTablaResponse | null;
   serie: MedicionSerieResponse | null;
   errorCarga?: string;
+  errorCatalogo?: string;
 }
 
 export function PantallaEstadisticas({
@@ -54,6 +56,7 @@ export function PantallaEstadisticas({
   datos,
   serie,
   errorCarga,
+  errorCatalogo,
 }: PantallaEstadisticasProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -214,6 +217,7 @@ export function PantallaEstadisticas({
         limnigrafos={limnigrafos}
         errores={errores}
         isPending={isPending}
+        errorCatalogo={errorCatalogo}
         onChange={(cambios) => setPendientes((previos) => ({ ...previos, ...cambios }))}
         onAplicar={handleAplicar}
         onRestablecer={handleRestablecer}
@@ -223,4 +227,3 @@ export function PantallaEstadisticas({
     </div>
   );
 }
-

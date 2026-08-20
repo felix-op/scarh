@@ -21,6 +21,7 @@ export interface TablaAlertasProps {
   data: PaginatedAlertaResponse;
   limnigrafosOpciones: { label: string; value: string }[];
   filtros: FiltrosAlertasPagina;
+  errorCatalogo?: string;
 }
 
 const LIMITE_POR_DEFECTO = 10;
@@ -36,7 +37,7 @@ function extraerFiltros(filtros: FiltrosAlertasPagina): AlertasFiltrosState {
   };
 }
 
-export function TablaAlertas({ data, limnigrafosOpciones, filtros }: TablaAlertasProps) {
+export function TablaAlertas({ data, limnigrafosOpciones, filtros, errorCatalogo }: TablaAlertasProps) {
   const router = useRouter();
   const pathname = usePathname();
   const mensajes = useMensajes();
@@ -197,6 +198,7 @@ export function TablaAlertas({ data, limnigrafosOpciones, filtros }: TablaAlerta
         aplicados={filtrosAplicados}
         limnigrafosOpciones={limnigrafosOpciones}
         isPending={isPending}
+        errorCatalogo={errorCatalogo}
         onChange={(campo, valor) => setFiltrosPendientes((prev) => ({ ...prev, [campo]: valor }))}
         onAplicar={handleAplicarFiltros}
         onRestablecer={handleRestablecerFiltros}

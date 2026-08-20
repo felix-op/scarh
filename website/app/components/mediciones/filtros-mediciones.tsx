@@ -18,6 +18,7 @@ export interface FiltrosMedicionesProps {
   aplicados: MedicionesFiltrosState;
   limnigrafosOpciones: { label: string; value: string }[];
   isPending?: boolean;
+  errorCatalogo?: string;
   exportandoCSV?: boolean;
   exportandoJSON?: boolean;
   onChange: <K extends keyof MedicionesFiltrosState>(_campo: K, _valor: MedicionesFiltrosState[K]) => void;
@@ -43,6 +44,7 @@ export function FiltrosMediciones({
   aplicados,
   limnigrafosOpciones,
   isPending = false,
+  errorCatalogo,
   exportandoCSV = false,
   exportandoJSON = false,
   onChange,
@@ -101,8 +103,10 @@ export function FiltrosMediciones({
               name="limnigrafo"
               options={[{ label: "Todos", value: "todos" }, ...limnigrafosOpciones]}
               value={pendientes.limnigrafo}
+              disabled={errorCatalogo !== undefined}
               onChange={(val) => onChange("limnigrafo", val)}
             />
+            {errorCatalogo && <p className="mt-1 text-sm text-foreground-secondary">{errorCatalogo}</p>}
           </div>
 
           <div className="w-full">

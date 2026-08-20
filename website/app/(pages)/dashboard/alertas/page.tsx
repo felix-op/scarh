@@ -1,9 +1,11 @@
-import { getServerAlertas, getServerLimnigrafos } from "@services";
+import { getServerAlertas, getSSRLimnigrafosCatalogo } from "@services";
 import { TablaAlertas, FILTROS_ALERTAS_POR_DEFECTO, type FiltrosAlertasPagina } from "@components";
 
 export interface AlertasPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
 }
+
+const ERROR_CATALOGO = "No se pudo cargar el catálogo de limnígrafos. El filtro por dispositivo no está disponible.";
 
 /** `lectura` y `condicion` son de la UI; el backend espera dos booleanos distintos. */
 function booleanoDeSelector(valor: string, valorVerdadero: string, valorFalso: string) {
@@ -26,7 +28,11 @@ export default async function AlertasPage({ searchParams }: AlertasPageProps) {
     limit: Number(params.limit) || 10,
   };
 
-  const [data, limnigrafosResponse] = await Promise.all([
+  const catalogoPromise = getSSRLimnigrafosCatalogo()
+    .then((limnigrafos) => ({ limnigrafos, errorCatalogo: undefined as string | undefined }))
+    .catch(() => ({ limnigrafos: [], errorCatalogo: ERROR_CATALOGO }));
+
+  const [data, catalogo] = await Promise.all([
     getServerAlertas({
       queryParams: {
         estado: filtros.estado !== "todos" ? filtros.estado : undefined,
@@ -39,13 +45,15 @@ export default async function AlertasPage({ searchParams }: AlertasPageProps) {
         limit: filtros.limit,
       },
     }),
-    getServerLimnigrafos({ queryParams: { limit: 1000, page: 1 } }),
+    catalogoPromise,
   ]);
 
-  const limnigrafosOpciones = limnigrafosResponse.results.map((limnigrafo) => ({
+  const { limnigrafos, errorCatalogo } = catalogo;
+
+  const limnigrafosOpciones = limnigrafos.map((limnigrafo) => ({
     label: limnigrafo.codigo,
     value: String(limnigrafo.id),
   }));
 
-  return <TablaAlertas data={data} limnigrafosOpciones={limnigrafosOpciones} filtros={filtros} />;
+  return <TablaAlertas data={data} limnigrafosOpciones={limnigrafosOpciones} filtros={filtros} errorCatalogo={errorCatalogo} />;
 }

@@ -54,7 +54,7 @@ export function Sidebar({ usuario }: SidebarProps) {
   }, [collapsed]);
 
   return (
-    <aside className={`hidden md:flex h-full shrink-0 bg-sidebar font-outfit transition-[width] duration-300 ease-in-out ${collapsed ? "w-24" : "w-80"}`}>
+    <aside className={`hidden md:flex h-full shrink-0 bg-sidebar font-outfit transition-[width] duration-300 ease-in-out ${collapsed ? "w-24" : "w-60"}`}>
       <div className="flex flex-1 flex-col gap-3 overflow-hidden p-3 pl-4">
         <div className="flex h-12 w-full items-center">
           <div className={`flex w-full items-center overflow-hidden px-1 transition-[gap] duration-300 ease-in-out ${logoCentrado ? "justify-center gap-0" : "gap-3"}`}>
