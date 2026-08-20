@@ -126,13 +126,13 @@ export function TablaEstadisticas({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+      <div className="flex flex-col gap-2 md:flex-row-reverse md:items-start md:justify-between">
         <Alert variant="alerta" title="Cómo leer las celdas vacías" className="w-full md:max-w-md">
           Un <strong>-</strong> significa que no hubo mediciones en ese período. No es lo mismo que un{" "}
           <strong>0</strong>, que es un valor efectivamente medido.
         </Alert>
 
-        <div className="flex flex-col items-start gap-2">
+        <div className={`flex flex-col items-start gap-2 ${subtitulo ? "" : "md:self-end"}`.trim()}>
           {subtitulo && (
             <h2 className="text-base font-semibold text-foreground-title">{subtitulo}</h2>
           )}
