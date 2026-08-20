@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { Carrusel, Select } from "../ui";
 import { Card, CardStatus } from "../ui/cards";
 import { IconifyIcon } from "../ui/iconify-icon";
 import { ChipEstadoLimnigrafo } from "../limnigrafos/chip-estado-limnigrafo";
@@ -6,7 +10,9 @@ import {
   evaluarEstadoLimnigrafo,
   formatFechaHora,
   formatearMedicion,
+  opcionesEstadoLimnigrafoUnificado,
   ordenarPorCriticidad,
+  type EstadoLimnigrafoClave,
 } from "@utils";
 import type { DashboardLimnigrafo } from "@models";
 
@@ -25,9 +31,13 @@ import type { DashboardLimnigrafo } from "@models";
  */
 export interface GrillaLimnigrafosProps {
   limnigrafos: DashboardLimnigrafo[];
+  className?: string;
 }
 
-export function GrillaLimnigrafos({ limnigrafos }: GrillaLimnigrafosProps) {
+type FiltroEstado = "todos" | EstadoLimnigrafoClave;
+
+export function GrillaLimnigrafos({ limnigrafos, className = "" }: GrillaLimnigrafosProps) {
+  const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>("todos");
   const ordenados = ordenarPorCriticidad(limnigrafos, (limnigrafo) => ({
     codigo: limnigrafo.codigo,
     estadoConexion: limnigrafo.estado_conexion,
@@ -43,10 +53,18 @@ export function GrillaLimnigrafos({ limnigrafos }: GrillaLimnigrafosProps) {
         tipoComunicacion: limnigrafo.tipo_de_comunicacion,
       }).requiereAtencion
   ).length;
+  const filtrados = ordenados.filter((limnigrafo) => {
+    if (filtroEstado === "todos") return true;
+    return evaluarEstadoLimnigrafo({
+      estadoConexion: limnigrafo.estado_conexion,
+      estadoMedicion: limnigrafo.estado_medicion,
+      tipoComunicacion: limnigrafo.tipo_de_comunicacion,
+    }).clave === filtroEstado;
+  });
 
   if (limnigrafos.length === 0) {
     return (
-      <Card className="flex flex-col items-center gap-2 p-10 text-center">
+      <Card className={`flex flex-col items-center gap-2 p-10 text-center ${className}`.trim()}>
         <IconifyIcon variant="chip" className="text-3xl text-foreground-disabled" />
         <p className="text-sm text-foreground-secondary">
           Todavía no hay limnígrafos dados de alta.
@@ -56,38 +74,73 @@ export function GrillaLimnigrafos({ limnigrafos }: GrillaLimnigrafosProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-foreground-title">
+    <section className={`flex min-h-0 flex-col gap-3 ${className}`.trim()}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h2 className="mb-0 text-lg font-semibold text-foreground-title">{ordenados.length} dispositivos</h2>
+        <div className="w-full sm:w-64">
+          <Select
+            label="Estado"
+            name="estado-dispositivos-dashboard"
+            options={opcionesEstadoLimnigrafoUnificado}
+            value={filtroEstado}
+            onChange={(valor) => setFiltroEstado(valor as FiltroEstado)}
+            labelPosition="left"
+          />
+        </div>
+      </div>
+
+      {filtrados.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center rounded-shape-md border border-dashed border-border p-6 text-sm text-foreground-secondary">
+          No hay dispositivos con este estado.
+        </div>
+      ) : (
+        <Carrusel
+          elementosPorPagina={4}
+          ariaLabel="Dispositivos"
+          className="flex-1"
+          controlesFlotantes
+          classNamePagina="grid h-full grid-cols-1 grid-rows-4 content-start items-center gap-3 sm:grid-cols-2 sm:grid-rows-2"
+        >
+          {filtrados.map((limnigrafo) => (
+            <TarjetaLimnigrafo key={limnigrafo.id} limnigrafo={limnigrafo} />
+          ))}
+        </Carrusel>
+      )}
+
+      <span className="text-center text-sm font-semibold text-foreground-title">
         {conProblemas === 0 ? (
-          <>Dispositivos · todos en orden</>
+          "Todos los dispositivos están en orden"
         ) : (
           <>
-            <span className="text-warn">
-              {conProblemas} de {ordenados.length}
-            </span>{" "}
+            <span className="text-warn">{conProblemas}</span>{" "}
             {conProblemas === 1 ? "requiere" : "requieren"} atención
           </>
         )}
-      </h2>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {ordenados.map((limnigrafo) => (
-          <TarjetaLimnigrafo key={limnigrafo.id} limnigrafo={limnigrafo} />
-        ))}
-      </div>
-    </div>
+      </span>
+    </section>
   );
 }
 
 function TarjetaLimnigrafo({ limnigrafo }: { limnigrafo: DashboardLimnigrafo }) {
   const { ultima_medicion: ultima } = limnigrafo;
+  const estado = evaluarEstadoLimnigrafo({
+    estadoConexion: limnigrafo.estado_conexion,
+    estadoMedicion: limnigrafo.estado_medicion,
+    tipoComunicacion: limnigrafo.tipo_de_comunicacion,
+  });
+  const estiloEstado = {
+    success: "success",
+    warn: "warning",
+    error: "error",
+    neutral: "info",
+  } as const;
 
   return (
     <Link
       href={`/dashboard/limnigrafos/datos/${limnigrafo.id}`}
       className="no-underline outline-none"
     >
-      <CardStatus status="error" direction="left" className="flex h-full flex-col gap-3 p-4 transition-colors hover:bg-hover">
+      <CardStatus status={estiloEstado[estado.variante]} direction="left" className="flex w-full flex-col gap-2 p-3 transition-colors hover:bg-hover">
         {/* El estado va arriba del código: es lo que se barre con la vista al
             recorrer la grilla, y el nombre sólo hace falta cuando algo llama la
             atención. */}

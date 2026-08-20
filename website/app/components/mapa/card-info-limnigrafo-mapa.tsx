@@ -1,15 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconifyIcon, type IconVariants } from "../ui/iconify-icon";
 import { Boton } from "../ui/botones";
+import { VentanaInfo } from "../ui/modals";
 import { ChipEstadoConexion, ChipEstadoMedicion } from "../limnigrafos/chip-estado-limnigrafo";
 import { formatearMedicion, formatearBateria } from "@utils";
 import type { LimnigrafoResponse } from "@models";
 
 export interface CardInfoLimnigrafoMapaProps {
   limnigrafo: LimnigrafoResponse | null;
-  onClose?: () => void;
+  onClose: () => void;
 }
 
 interface FilaDato {
@@ -20,6 +22,17 @@ interface FilaDato {
 
 export function CardInfoLimnigrafoMapa({ limnigrafo, onClose }: CardInfoLimnigrafoMapaProps) {
   const router = useRouter();
+  const [esMovil, setEsMovil] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const actualizarEsMovil = (event: MediaQueryListEvent) => setEsMovil(event.matches);
+
+    mediaQuery.addEventListener("change", actualizarEsMovil);
+    return () => mediaQuery.removeEventListener("change", actualizarEsMovil);
+  }, []);
 
   if (!limnigrafo) return null;
 
@@ -38,22 +51,9 @@ export function CardInfoLimnigrafoMapa({ limnigrafo, onClose }: CardInfoLimnigra
     { icon: "temperatura", label: "Temperatura", value: formatearMedicion(medicion?.temperatura, "temperatura") },
   ];
 
-  return (
-    <div className="absolute left-4 bottom-4 z-1001 w-[320px]">
-      <div className="rounded-shape-lg bg-background-paper shadow-card border border-border">
-        <header className="relative px-4 pb-2 pt-3 text-center">
-          <h3 className="text-base font-semibold text-foreground-title">Datos de {limnigrafo.codigo}</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-3 top-3 text-foreground-secondary hover:text-foreground transition-colors"
-            aria-label="Cerrar panel"
-          >
-            <IconifyIcon variant="cancelar" className="text-sm" />
-          </button>
-        </header>
-
-        <div className="flex flex-col gap-3 px-4 pb-3">
+  const contenido = (
+    <>
+      <div className="flex flex-col gap-3 px-4 pb-3">
           <section className="flex flex-col gap-2">
             <span className="text-[10px] font-medium text-foreground-secondary uppercase tracking-wide">
               Dispositivo
@@ -112,6 +112,32 @@ export function CardInfoLimnigrafoMapa({ limnigrafo, onClose }: CardInfoLimnigra
             onClick={() => router.push(`/dashboard/limnigrafos/datos/${limnigrafo.id}`)}
           />
         </div>
+    </>
+  );
+
+  if (esMovil) {
+    return (
+      <VentanaInfo open handleClose={onClose} title={`Datos de ${limnigrafo.codigo}`} icon="chip">
+        {contenido}
+      </VentanaInfo>
+    );
+  }
+
+  return (
+    <div className="absolute bottom-4 right-4 z-1001 hidden w-[320px] md:block">
+      <div className="rounded-shape-lg border border-border bg-background-paper shadow-card">
+        <header className="relative px-4 pb-2 pt-3 text-center">
+          <h3 className="text-base font-semibold text-foreground-title">Datos de {limnigrafo.codigo}</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-3 text-foreground-secondary transition-colors hover:text-foreground"
+            aria-label="Cerrar panel"
+          >
+            <IconifyIcon variant="cancelar" className="text-sm" />
+          </button>
+        </header>
+        {contenido}
       </div>
     </div>
   );

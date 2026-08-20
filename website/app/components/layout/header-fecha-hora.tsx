@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ZONA_PROYECTO } from "@utils";
 
 /** Fecha y hora local, actualizada en vivo sin competir con los controles del header. */
 export function HeaderFechaHora() {
@@ -14,11 +15,13 @@ export function HeaderFechaHora() {
   if (!ahora) return <span className="hidden lg:block lg:w-44" aria-hidden="true" />;
 
   const fecha = new Intl.DateTimeFormat("es-AR", {
+    timeZone: ZONA_PROYECTO,
     weekday: "long",
     day: "numeric",
     month: "long",
   }).format(ahora);
   const hora = new Intl.DateTimeFormat("es-AR", {
+    timeZone: ZONA_PROYECTO,
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",

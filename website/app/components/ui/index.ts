@@ -28,3 +28,6 @@ export * from "./seccion-agrupar-informacion";
 export * from "./filters-placeholder";
 export * from "./table-placeholder";
 export * from "./info-tooltip";
+export * from "./carrusel";
+export * from "./acordeon";
+export * from "./date-time-field";

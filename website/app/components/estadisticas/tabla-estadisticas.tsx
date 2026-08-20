@@ -37,6 +37,7 @@ export interface TablaEstadisticasProps {
   agrupacion: AgrupacionEstadistica;
   isLoading?: boolean;
   nombreArchivo?: string;
+  mostrarExportar?: boolean;
   mensajeVacio?: string;
   subtitulo?: string;
 }
@@ -69,6 +70,7 @@ export function TablaEstadisticas({
   agrupacion,
   isLoading = false,
   nombreArchivo = "estadisticas.csv",
+  mostrarExportar = true,
   mensajeVacio = "Elegí al menos un limnígrafo para ver estadísticas.",
   subtitulo,
 }: TablaEstadisticasProps) {
@@ -124,8 +126,13 @@ export function TablaEstadisticas({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+        <Alert variant="alerta" title="Cómo leer las celdas vacías" className="w-full md:max-w-md">
+          Un <strong>-</strong> significa que no hubo mediciones en ese período. No es lo mismo que un{" "}
+          <strong>0</strong>, que es un valor efectivamente medido.
+        </Alert>
+
+        <div className="flex flex-col items-start gap-2">
           {subtitulo && (
             <h2 className="text-base font-semibold text-foreground-title">{subtitulo}</h2>
           )}
@@ -136,37 +143,33 @@ export function TablaEstadisticas({
             </span>
             {metadata.aclaracion && <InfoTooltip content={metadata.aclaracion} />}
           </div>
+
+          {mostrarExportar && (
+            <InfoTooltip
+              content={
+                hayDatos
+                  ? undefined
+                  : "No hay mediciones en el rango elegido, así que no hay nada que exportar. Ampliá el rango o probá con otra variable."
+              }
+            >
+              <Boton
+                content="Exportar CSV"
+                icon="descargar"
+                disabled={!hayDatos}
+                onClick={() =>
+                  exportarTablaEstadisticasCSV({
+                    nombreArchivo,
+                    atributo,
+                    agrupacion,
+                    filas,
+                    total,
+                  })
+                }
+              />
+            </InfoTooltip>
+          )}
         </div>
-
-        {/* Un botón deshabilitado sin motivo se lee como una función que no anda. */}
-        <InfoTooltip
-          content={
-            hayDatos
-              ? undefined
-              : "No hay mediciones en el rango elegido, así que no hay nada que exportar. Ampliá el rango o probá con otra variable."
-          }
-        >
-          <Boton
-            content="Exportar CSV"
-            icon="descargar"
-            disabled={!hayDatos}
-            onClick={() =>
-              exportarTablaEstadisticasCSV({
-                nombreArchivo,
-                atributo,
-                agrupacion,
-                filas,
-                total,
-              })
-            }
-          />
-        </InfoTooltip>
       </div>
-
-      <Alert variant="alerta" title="Cómo leer las celdas vacías">
-        Un <strong>-</strong> significa que no hubo mediciones en ese período. No es lo mismo que un{" "}
-        <strong>0</strong>, que es un valor efectivamente medido.
-      </Alert>
 
       <TablaSimple
         columns={columns}

@@ -63,7 +63,7 @@ const iconVariants = {
   accesoDenegado: "icon-[mdi--account-lock-outline]",
   candado: "icon-[solar--lock-outline]",
   restablecer: "icon-[mdi--refresh]",
-  importar: "icon-[material-symbols--download]",
+  importar: "icon-[material-symbols--upload]",
   exportar: "icon-[material-symbols--upload]",
   descargar: "icon-[material-symbols--download]",
   ubicacion: "icon-[material-symbols--location-on-outline]",

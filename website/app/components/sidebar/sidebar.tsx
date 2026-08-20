@@ -13,20 +13,9 @@ const NAV_ITEMS: SidebarNavItem[] = [
   { label: "Limnígrafos", icono: "chip", href: "/dashboard/limnigrafos", permiso: ROLES.LIMNIGRAFOS_VISUALIZAR },
   { label: "Mediciones", icono: "documento", href: "/dashboard/mediciones", permiso: ROLES.MEDICIONES_VISUALIZAR },
   { label: "Estadísticas", icono: "funcion", href: "/dashboard/estadisticas", permiso: ROLES.ESTADISTICAS_VISUALIZAR },
-  {
-    label: "Administración",
-    icono: "tuerca",
-    children: [
-      { label: "Usuarios", icono: "user1", href: "/dashboard/admin/usuarios", permiso: ROLES.USUARIOS_VISUALIZAR },
-      { label: "Historial", icono: "historial", href: "/dashboard/admin/historial", permiso: ROLES.HISTORIAL_VISUALIZAR },
-      {
-        label: "Documentación",
-        icono: "documentacion",
-        href: "/dashboard/admin/documentacion",
-        permiso: ROLES.ADMINISTRACION,
-      },
-    ],
-  },
+  { label: "Usuarios", icono: "user1", href: "/dashboard/admin/usuarios", permiso: ROLES.USUARIOS_VISUALIZAR },
+  { label: "Historial", icono: "historial", href: "/dashboard/admin/historial", permiso: ROLES.HISTORIAL_VISUALIZAR },
+  { label: "Documentación", icono: "documentacion", href: "/dashboard/admin/documentacion", permiso: ROLES.ADMINISTRACION },
 ];
 
 export interface SidebarProps {

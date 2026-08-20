@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Select, DateField, Chip, Boton, MenuExportar, Card } from "@components";
+import { Select, DateField, Chip, Boton, Card } from "@components";
 import { opcionesTipoAccion, opcionesEntidad, opcionesVentanaTiempo, obtenerFechasVentana } from "@utils";
 
 export interface HistorialFiltrosState {
@@ -18,11 +18,9 @@ export interface FiltrosHistorialProps {
   aplicados: HistorialFiltrosState;
   usuariosOpciones: { label: string; value: string }[];
   isPending?: boolean;
-  onChange: (cambios: Partial<HistorialFiltrosState>) => void;
+  onChange: (_cambios: Partial<HistorialFiltrosState>) => void;
   onAplicar: () => void;
   onRestablecer: () => void;
-  onExportCSV: () => void;
-  onExportJSON: () => void;
 }
 
 export function FiltrosHistorial({
@@ -33,8 +31,6 @@ export function FiltrosHistorial({
   onChange,
   onAplicar,
   onRestablecer,
-  onExportCSV,
-  onExportJSON,
 }: FiltrosHistorialProps) {
   const handleVentanaChange = (val: string) => {
     if (val !== "personalizado") {
@@ -81,9 +77,8 @@ export function FiltrosHistorial({
 
   return (
     <Card className="p-2">
-      <div className="flex flex-col gap-4 w-full">
-        {/* Fila 1: Filtros de entrada (Responsive grid: 1 col móvil, 2 col tablet, 6 col 2xl+) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-6 gap-4 w-full">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,auto)]">
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
           <div className="w-full">
             <Select
               label="Acción"
@@ -145,8 +140,12 @@ export function FiltrosHistorial({
           </div>
         </div>
 
-        {/* Fila 2: Chips de filtros activos */}
-        <div className="flex flex-wrap items-center gap-2 w-full">
+        <div className="grid items-end grid-cols-2 gap-2 lg:grid-cols-1 lg:grid-rows-3 xl:grid-rows-2">
+          <Boton content="Restablecer" icon="restablecer" className="w-full self-end lg:row-start-2" onClick={onRestablecer} disabled={isPending} />
+          <Boton content="Aplicar filtros" icon="filtro" variant="primary" className="w-full self-end lg:row-start-1" onClick={onAplicar} disabled={isPending} />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 lg:col-span-2">
           {filtrosActivos.length === 0 ? (
             <span className="text-sm text-foreground-disabled">Sin filtros activos</span>
           ) : (
@@ -156,17 +155,6 @@ export function FiltrosHistorial({
               </Chip>
             ))
           )}
-        </div>
-
-        {/* Fila 3: Botones de acción alineados a la derecha */}
-        <div className="flex flex-wrap items-center justify-end gap-3 w-full">
-          <Boton content="Restablecer" icon="restablecer" onClick={onRestablecer} disabled={isPending} />
-          <Boton content="Aplicar filtros" icon="filtro" variant="primary" onClick={onAplicar} disabled={isPending} />
-          <MenuExportar
-            handleExportCSV={onExportCSV}
-            handleExportJSON={onExportJSON}
-            disabled={isPending}
-          />
         </div>
       </div>
     </Card>

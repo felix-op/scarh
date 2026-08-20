@@ -61,8 +61,8 @@ export interface CheckboxConfig<T> {
  * @property {keyof T} rowIdKey Clave única por fila, usada como `key` de React.
  * @property {boolean} [isLoading] Muestra skeleton de carga cuando es `true`.
  * @property {number} [loadingRowCount] Cantidad de filas skeleton. Default: 5.
- * @property {ReactNode} [emptyStateContent] Contenido a mostrar cuando `data` está vacío.
- *   Se renderiza debajo de la tabla y antes del paginado.
+ * @property {boolean} [rellenarEspacioRestante] Agrega una fila vacía final que absorbe el alto libre.
+ * @property {ReactNode} [emptyStateContent] Contenido a mostrar centrado dentro de la tabla cuando `data` está vacío.
  */
 export interface TablaBaseProps<T> {
   columns: TableColumn<T>[];
@@ -70,6 +70,7 @@ export interface TablaBaseProps<T> {
   rowIdKey: keyof T;
   isLoading?: boolean;
   loadingRowCount?: number;
+  rellenarEspacioRestante?: boolean;
   emptyStateContent?: ReactNode;
   bordered?: boolean;
 }

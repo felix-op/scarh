@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Alert } from "../ui/alerts";
 import { Switch } from "../ui/switch";
-import { InfoTooltip } from "../ui/info-tooltip";
 import { ResumenGrafico } from "./resumen-grafico";
 import {
   ATRIBUTO_METADATA,
@@ -52,9 +51,17 @@ export interface SeccionGraficosProps {
   datos: MedicionSerieResponse;
   atributo: AtributoEstadistica;
   estadisticas: EstadisticaFila[];
+  agruparSiempre: boolean;
+  onAgruparSiempreChange: (_agruparSiempre: boolean) => void;
 }
 
-export function SeccionGraficos({ datos, atributo, estadisticas }: SeccionGraficosProps) {
+export const SeccionGraficos = memo(function SeccionGraficos({
+  datos,
+  atributo,
+  estadisticas,
+  agruparSiempre,
+  onAgruparSiempreChange,
+}: SeccionGraficosProps) {
   const [superpuesto, setSuperpuesto] = useState(false);
 
   const series = datos.series;
@@ -89,30 +96,37 @@ export function SeccionGraficos({ datos, atributo, estadisticas }: SeccionGrafic
 
   return (
     <div className="flex flex-col gap-4">
-      {sinDatos && (
-        <Alert variant="alerta" title="Sin mediciones en el rango elegido">
-          Los gráficos quedan vacíos porque no hay datos en este período, no porque los
-          valores sean cero. Probá con un rango más amplio u otra variable.
-        </Alert>
-      )}
+      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+        {sinDatos ? (
+          <Alert variant="alerta" title="Sin mediciones" className="md:flex-1">
+            Probá con otro rango o variable.
+          </Alert>
+        ) : (
+          <div />
+        )}
 
-      {!unSoloDispositivo && (
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <Switch
-            label="Superponer dispositivos"
-            name="superpuesto"
-            checked={superpuesto}
-            onChange={setSuperpuesto}
-          />
-          <InfoTooltip
-            content={
-              superpuesto
-                ? "Todas las series en un mismo gráfico. Cómodo para comparar formas, incómodo si los niveles absolutos son muy distintos."
-                : "Un gráfico por dispositivo, apilados. Todos comparten el eje vertical para que la comparación visual sea válida."
-            }
-          />
+        <div className="flex flex-col items-start gap-2">
+          <div className="w-fit">
+            <Switch
+              description="Agrupar mediciones siempre"
+              name="agrupar-siempre"
+              checked={agruparSiempre}
+              onChange={onAgruparSiempreChange}
+            />
+          </div>
+
+          {!unSoloDispositivo && (
+            <div className="w-fit">
+              <Switch
+                description="Superponer dispositivos"
+                name="superpuesto"
+                checked={superpuesto}
+                onChange={setSuperpuesto}
+              />
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {superpuesto && series.length > MAX_SERIES_SOLO_COLOR && (
         <Alert variant="info" title={`${series.length} series superpuestas`}>
@@ -191,7 +205,12 @@ export function SeccionGraficos({ datos, atributo, estadisticas }: SeccionGrafic
       )}
     </div>
   );
-}
+}, (previas, siguientes) =>
+  previas.datos === siguientes.datos &&
+  previas.atributo === siguientes.atributo &&
+  previas.estadisticas === siguientes.estadisticas &&
+  previas.agruparSiempre === siguientes.agruparSiempre
+);
 
 function EsqueletoGrafico() {
   return (

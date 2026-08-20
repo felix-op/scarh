@@ -20,12 +20,11 @@ export interface FiltrosMedicionesProps {
   isPending?: boolean;
   errorCatalogo?: string;
   exportandoCSV?: boolean;
-  exportandoJSON?: boolean;
   onChange: <K extends keyof MedicionesFiltrosState>(_campo: K, _valor: MedicionesFiltrosState[K]) => void;
   onAplicar: () => void;
   onRestablecer: () => void;
   onExportCSV: () => void;
-  onExportJSON: () => void;
+  onImportar: () => void;
 }
 
 const labelFiltro: Record<keyof MedicionesFiltrosState, string> = {
@@ -46,12 +45,11 @@ export function FiltrosMediciones({
   isPending = false,
   errorCatalogo,
   exportandoCSV = false,
-  exportandoJSON = false,
   onChange,
   onAplicar,
   onRestablecer,
   onExportCSV,
-  onExportJSON,
+  onImportar,
 }: FiltrosMedicionesProps) {
   const handleVentanaChange = (val: string) => {
     onChange("ventana", val);
@@ -92,11 +90,9 @@ export function FiltrosMediciones({
 
   return (
     <Card className="p-2">
-      <div className="flex flex-col gap-4">
-        {/* 
-          Fila 1: Campos de entrada (Grid responsivo: 1 col móvil, 2 en sm/md, 5 en xl+)
-        */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 w-full">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,auto)]">
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div className="w-full">
             <Select
               label="Limnígrafo"
@@ -129,6 +125,9 @@ export function FiltrosMediciones({
             />
           </div>
 
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div className="w-full">
             <DateField
               label="Desde"
@@ -139,7 +138,7 @@ export function FiltrosMediciones({
             />
           </div>
 
-          <div className="w-full sm:col-span-2 xl:col-span-1">
+          <div className="w-full">
             <DateField
               label="Hasta"
               name="hasta"
@@ -149,9 +148,24 @@ export function FiltrosMediciones({
             />
           </div>
         </div>
+        </div>
 
-        {/* Fila 2: Chips de filtros activos */}
-        <div className="flex flex-wrap items-center gap-2 w-full">
+        <div className="grid grid-cols-2 grid-rows-2 items-end gap-2">
+          <Boton content="Restablecer" icon="restablecer" className="w-full" onClick={onRestablecer} disabled={isPending} />
+          <Boton content="Aplicar filtros" icon="filtro" variant="primary" className="w-full" onClick={onAplicar} disabled={isPending} />
+          <Boton content="Importar datos" icon="importar" className="w-full" onClick={onImportar} disabled={isPending} />
+          <Boton
+            content="Exportar CSV"
+            icon="descargar"
+            className="w-full"
+            onClick={onExportCSV}
+            disabled={isPending}
+            loading={exportandoCSV}
+          />
+          {/* La exportación JSON queda desactivada hasta definir un caso de uso concreto. */}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 lg:col-span-2">
           {filtrosActivos.length === 0 ? (
             <span className="text-sm text-foreground-disabled">Sin filtros activos</span>
           ) : (
@@ -163,29 +177,6 @@ export function FiltrosMediciones({
           )}
         </div>
 
-        {/* Fila 3: Botones de acción alineados a la derecha */}
-        <div className="flex flex-wrap items-center justify-end gap-3 w-full">
-          <div className="flex gap-2">
-            <Boton content="Restablecer" icon="restablecer" onClick={onRestablecer} disabled={isPending} />
-            <Boton content="Aplicar filtros" icon="filtro" variant="primary" onClick={onAplicar} disabled={isPending} />
-          </div>
-          <div className="flex gap-2">
-            <Boton
-              content="Exportar CSV"
-              icon="descargar"
-              onClick={onExportCSV}
-              disabled={isPending}
-              loading={exportandoCSV}
-            />
-            <Boton
-              content="Exportar JSON"
-              icon="descargar"
-              onClick={onExportJSON}
-              disabled={isPending}
-              loading={exportandoJSON}
-            />
-          </div>
-        </div>
       </div>
     </Card>
   );

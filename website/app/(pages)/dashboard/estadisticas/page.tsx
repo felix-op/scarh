@@ -51,7 +51,8 @@ export default async function EstadisticasPage({ searchParams }: EstadisticasPag
           getSSRMedicionSerie({
             limnigrafos: consultados.join(","),
             atributo: filtros.atributo,
-            max_puntos: 200,
+            max_puntos: 400,
+            agrupar_siempre: filtros.agruparSiempre,
             ...rango,
           }),
           getSSREstadisticasTabla({

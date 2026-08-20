@@ -81,35 +81,77 @@ class MedicionViewSet(
             fila['limnigrafo_id']: fila['n']
             for fila in base.values('limnigrafo_id').annotate(n=Count('id')).order_by()
         }
-        bucket = elegir_bucket(inicio, fin, datos['max_puntos'], max(conteos.values(), default=0))
-        origen = origen_de_cubetas(inicio)
-        grilla = generar_grilla(inicio, fin, bucket, origen)
-
-        cubetas = (
-            base
-            .annotate(
-                cubeta=DateBin(
-                    Value(bucket, output_field=DurationOutputField()),
-                    F('fecha_hora'),
-                    Value(origen, output_field=DateTimeOutputField()),
-                )
-            )
-            .values('limnigrafo_id', 'cubeta')
-            .annotate(
-                minimo=Min(atributo),
-                maximo=Max(atributo),
-                promedio=Avg(atributo),
-                total_registros=Count('id'),
-            )
-            # `order_by()` vacío es obligatorio: el queryset del viewset ordena por
-            # `-fecha_hora`, y Django suma las columnas de orden al GROUP BY, lo que
-            # devolvería una fila por medición en lugar de una por cubeta.
-            .order_by()
-        )
+        maximo_registros = max(conteos.values(), default=0)
+        sin_agrupar = not datos['agrupar_siempre'] and maximo_registros <= datos['max_puntos']
 
         por_dispositivo = {limnigrafo_id: {} for limnigrafo_id in datos['limnigrafos']}
-        for fila in cubetas:
-            por_dispositivo[fila['limnigrafo_id']][fila['cubeta']] = fila
+        fecha_inicio_salida = inicio
+        fecha_fin_salida = fin
+
+        if sin_agrupar:
+            # Si todas las mediciones entran en el límite no se necesita inventar
+            # cubetas. La grilla es la unión de sus timestamps, por lo que las
+            # series continúan alineadas al superponer dispositivos.
+            instantes = set()
+            mediciones = base.values('limnigrafo_id', 'fecha_hora', atributo).order_by('fecha_hora', 'id')
+            for fila in mediciones:
+                instante = fila['fecha_hora']
+                instantes.add(instante)
+                puntos = por_dispositivo[fila['limnigrafo_id']]
+                anterior = puntos.get(instante)
+                valor = fila[atributo]
+                if anterior:
+                    cantidad = anterior['total_registros'] + 1
+                    puntos[instante] = {
+                        'minimo': min(anterior['minimo'], valor),
+                        'maximo': max(anterior['maximo'], valor),
+                        'promedio': (anterior['promedio'] * anterior['total_registros'] + valor) / cantidad,
+                        'total_registros': cantidad,
+                    }
+                    continue
+
+                puntos[instante] = {
+                    'minimo': valor,
+                    'maximo': valor,
+                    'promedio': valor,
+                    'total_registros': 1,
+                }
+
+            grilla = sorted(instantes)
+            bucket_segundos = 0
+            if len(grilla) > 1:
+                fecha_inicio_salida = grilla[0]
+                fecha_fin_salida = grilla[-1]
+        else:
+            bucket = elegir_bucket(inicio, fin, datos['max_puntos'], maximo_registros)
+            origen = origen_de_cubetas(inicio)
+            grilla = generar_grilla(inicio, fin, bucket, origen)
+
+            cubetas = (
+                base
+                .annotate(
+                    cubeta=DateBin(
+                        Value(bucket, output_field=DurationOutputField()),
+                        F('fecha_hora'),
+                        Value(origen, output_field=DateTimeOutputField()),
+                    )
+                )
+                .values('limnigrafo_id', 'cubeta')
+                .annotate(
+                    minimo=Min(atributo),
+                    maximo=Max(atributo),
+                    promedio=Avg(atributo),
+                    total_registros=Count('id'),
+                )
+                # `order_by()` vacío es obligatorio: el queryset del viewset ordena por
+                # `-fecha_hora`, y Django suma las columnas de orden al GROUP BY, lo que
+                # devolvería una fila por medición en lugar de una por cubeta.
+                .order_by()
+            )
+
+            for fila in cubetas:
+                por_dispositivo[fila['limnigrafo_id']][fila['cubeta']] = fila
+            bucket_segundos = int(bucket.total_seconds())
 
         series = [
             {
@@ -126,9 +168,9 @@ class MedicionViewSet(
 
         salida = MedicionSerieOutputSerializer({
             "atributo": atributo,
-            "fecha_inicio": inicio,
-            "fecha_fin": fin,
-            "bucket_segundos": int(bucket.total_seconds()),
+            "fecha_inicio": fecha_inicio_salida,
+            "fecha_fin": fecha_fin_salida,
+            "bucket_segundos": bucket_segundos,
             "total_puntos": len(grilla),
             "series": series,
         })
@@ -180,6 +222,10 @@ class MedicionViewSet(
         max_puntos = request.query_params.get("max_puntos")
         if max_puntos is not None:
             payload["max_puntos"] = max_puntos
+
+        agrupar_siempre = request.query_params.get("agrupar_siempre")
+        if agrupar_siempre is not None:
+            payload["agrupar_siempre"] = agrupar_siempre
 
         serializer = MedicionSerieInputSerializer(data=payload)
         serializer.is_valid(raise_exception=True)

@@ -54,10 +54,12 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
 
       // Si el usuario ya había seleccionado un limnígrafo destino, lo aplicamos
       if (limnigrafoId !== null) {
-        rows = rows.map((r) => ({
-          ...r,
-          limnigrafoId: r.limnigrafoId ?? limnigrafoId,
-        }));
+        rows = revalidarFilas(
+          rows.map((r) => ({
+            ...r,
+            limnigrafoId: r.limnigrafoId ?? limnigrafoId,
+          }))
+        );
       }
       setParsedRows(rows);
     } catch (err) {
@@ -72,10 +74,12 @@ export default function ImportarDatosPage({ params }: { params: Promise<{ id: st
     setLimnigrafoId(newId);
     if (parsedRows.length > 0) {
       setParsedRows((prev) =>
-        prev.map((r) => ({
-          ...r,
-          limnigrafoId: newId,
-        }))
+        revalidarFilas(
+          prev.map((r) => ({
+            ...r,
+            limnigrafoId: newId,
+          }))
+        )
       );
     }
   };

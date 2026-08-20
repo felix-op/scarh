@@ -12,8 +12,8 @@ export interface TableBodyProps {
 
 /**
  * Cuerpo de tabla (`<tbody>`).
- * Maneja el skeleton de loading. El empty state se renderiza fuera de la tabla
- * (a nivel de variante) para no romper el layout.
+ * Maneja el skeleton de loading. El estado vacío lo provee la variante de tabla,
+ * que conoce la cantidad final de columnas.
  */
 export function TableBody({
   isLoading = false,

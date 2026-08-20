@@ -118,9 +118,10 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
   const limnigrafoParam = searchParams.get("limnigrafo");
   const modoParam = searchParams.get("modo");
 
-  const [viewMode, setViewMode] = useState<"limpio" | "lista">("lista");
   const [mapStyle, setMapStyle] = useState<"claro" | "satelite">("claro");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [acordeonAbierto, setAcordeonAbierto] = useState(false);
+  const [restaurarAcordeonAlCerrarTarjeta, setRestaurarAcordeonAlCerrarTarjeta] = useState(false);
   const [placementMode, setPlacementMode] = useState<LimnigrafoResponse | null>(null);
   const [tempMarker, setTempMarker] = useState<{ lat: number; lng: number } | null>(null);
   const [punteroCoords, setPunteroCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -159,7 +160,6 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
 
     if (modoParam === "ubicacion") {
       setPlacementMode(limnigrafoSeleccionado);
-      setViewMode("limpio");
     }
   }, [limnigrafoParam, limnigrafos, modoParam]);
 
@@ -197,17 +197,35 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
     setPunteroCoords(null);
   }, []);
 
-  const handleCancelPlacement = useCallback(() => {
-    setPlacementMode(null);
-    setTempMarker(null);
-    setPunteroCoords(null);
+  const handleAcordeonChange = useCallback((abierto: boolean) => {
+    setAcordeonAbierto(abierto);
+    if (abierto) setSelectedLimnigrafo(null);
+    setRestaurarAcordeonAlCerrarTarjeta(false);
   }, []);
 
-  const handleVerEnMapa = useCallback((lim: LimnigrafoResponse) => {
+  const handleSeleccionarLimnigrafo = useCallback((lim: LimnigrafoResponse) => {
     setSelectedLimnigrafo(lim);
     if (tieneCoordenadas(lim)) {
       setCameraCenter(coordenadasLatLng(lim.ubicacion));
     }
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setRestaurarAcordeonAlCerrarTarjeta(false);
+      return;
+    }
+    setRestaurarAcordeonAlCerrarTarjeta(acordeonAbierto);
+    setAcordeonAbierto(false);
+  }, [acordeonAbierto]);
+
+  const handleCerrarTarjeta = useCallback(() => {
+    setSelectedLimnigrafo(null);
+    if (restaurarAcordeonAlCerrarTarjeta) setAcordeonAbierto(true);
+    setRestaurarAcordeonAlCerrarTarjeta(false);
+  }, [restaurarAcordeonAlCerrarTarjeta]);
+
+  const handleCancelPlacement = useCallback(() => {
+    setPlacementMode(null);
+    setTempMarker(null);
+    setPunteroCoords(null);
   }, []);
 
   const handleMapClickForPlacement = useCallback(
@@ -290,7 +308,7 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
                 <MapaMarcador
                   position={posicion}
                   iconAnchor={[12, 12]}
-                  eventHandlers={{ click: () => setSelectedLimnigrafo(limnigrafo) }}
+                  eventHandlers={{ click: () => handleSeleccionarLimnigrafo(limnigrafo) }}
                   icon={
                     <div
                       className={`w-6 h-6 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-110 transition-transform ${
@@ -310,8 +328,8 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
           })}
         </Mapa>
 
-        {/* Controles superiores izquierdos */}
-        <div className="absolute top-4 left-4 z-1000 flex gap-3">
+        {/* Controles inferiores, separados del zoom de Leaflet. */}
+        <div className="absolute left-1/2 top-4 z-1000 flex -translate-x-1/2 gap-3 md:bottom-4 md:left-24 md:top-auto md:translate-x-0">
           <div className="rounded-shape-md border border-border bg-background-paper shadow-md">
             <BotonIcono
               icon={isFullscreen ? "salirPantallaCompleta" : "pantallaCompleta"}
@@ -327,16 +345,6 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
             ]}
             value={mapStyle}
             onChange={(val) => setMapStyle(val as "claro" | "satelite")}
-            className="shadow-md bg-background-paper"
-          />
-
-          <SegmentedControl
-            options={[
-              { value: "limpio", label: "Limpio" },
-              { value: "lista", label: "Lista" },
-            ]}
-            value={viewMode}
-            onChange={(val) => setViewMode(val as "limpio" | "lista")}
             className="shadow-md bg-background-paper"
           />
         </div>
@@ -371,24 +379,26 @@ export function MapaScreen({ initialData }: MapaScreenProps) {
         )}
 
         {!placementMode && (
-          <CardInfoLimnigrafoMapa limnigrafo={selectedLimnigrafo} onClose={() => setSelectedLimnigrafo(null)} />
+          <CardInfoLimnigrafoMapa limnigrafo={selectedLimnigrafo} onClose={handleCerrarTarjeta} />
         )}
 
-        {viewMode === "lista" && !placementMode && (
+        {!placementMode && (
           <>
             <LimnigrafosMapaSidebar
               limnigrafos={limnigrafos}
               selectedLimnigrafo={selectedLimnigrafo}
-              onSelectLimnigrafo={setSelectedLimnigrafo}
+              onSelectLimnigrafo={handleSeleccionarLimnigrafo}
               onMoverUbicacion={handleEditUbicacion}
-              onVerEnMapa={handleVerEnMapa}
+              abierto={acordeonAbierto}
+              onAbiertoChange={handleAcordeonChange}
             />
             <LimnigrafosMapaSidebarMobile
               limnigrafos={limnigrafos}
               selectedLimnigrafo={selectedLimnigrafo}
-              onSelectLimnigrafo={setSelectedLimnigrafo}
+              onSelectLimnigrafo={handleSeleccionarLimnigrafo}
               onMoverUbicacion={handleEditUbicacion}
-              onVerEnMapa={handleVerEnMapa}
+              abierto={acordeonAbierto}
+              onAbiertoChange={handleAcordeonChange}
             />
           </>
         )}

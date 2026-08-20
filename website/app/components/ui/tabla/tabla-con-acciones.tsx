@@ -32,6 +32,7 @@ export function TablaConAccionesContent<T>({
   checkboxConfig,
   isLoading = false,
   loadingRowCount = 5,
+  rellenarEspacioRestante = false,
   emptyStateContent,
   bordered = false,
 }: TablaConAccionesContentProps<T>) {
@@ -76,8 +77,8 @@ export function TablaConAccionesContent<T>({
 
   return (
     <>
-      <div className="overflow-x-auto overflow-y-hidden">
-        <table className="w-full border-collapse">
+      <div className="flex min-h-0 flex-1 overflow-x-auto overflow-y-auto">
+        <table className={`w-full border-collapse ${rellenarEspacioRestante || isEmpty ? "h-full" : ""}`.trim()}>
           <TableHeader>
             <tr>
               {/* Checkbox sticky izquierda */}
@@ -128,7 +129,15 @@ export function TablaConAccionesContent<T>({
             loadingRowCount={loadingRowCount}
             columnCount={totalColumnCount}
           >
-            {data.map((row, index) => {
+            {isEmpty ? (
+              <tr className="h-full">
+                <td colSpan={totalColumnCount} className="h-full p-0">
+                  <div className="flex h-full min-h-48 w-full items-center justify-center">
+                    {emptyStateContent ?? defaultEmptyState}
+                  </div>
+                </td>
+              </tr>
+            ) : data.map((row, index) => {
               const rowId = String(row[rowIdKey]);
               const selected = isRowSelected(row);
 
@@ -199,11 +208,15 @@ export function TablaConAccionesContent<T>({
                 </TableRow>
               );
             })}
+            {rellenarEspacioRestante && !isLoading && data.length > 0 && (
+              <tr aria-hidden="true" className="h-full">
+                <td colSpan={totalColumnCount} className={`h-full border-border ${bordered ? "border" : "border-b"}`} />
+              </tr>
+            )}
           </TableBody>
         </table>
       </div>
 
-      {isEmpty && (emptyStateContent ?? defaultEmptyState)}
     </>
   );
 }

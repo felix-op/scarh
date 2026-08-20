@@ -217,13 +217,13 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-6">
       {/* Toolbar en Card p-2 */}
       <Card className="p-2">
-        <div className="flex flex-col gap-4">
-          {/* Fila 1: Buscador y Filtros */}
-          <div className="flex flex-col md:flex-row gap-4 items-end justify-between w-full">
-            <div className="w-full md:flex-1">
+        <div className="flex flex-col gap-2">
+          {/* Fila 1: buscador y alta de usuario. */}
+          <div className="grid grid-cols-1 items-end gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="min-w-0">
               <TextField
                 name="search"
                 label="Buscar Usuario"
@@ -237,9 +237,13 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
                 }}
               />
             </div>
+            <BotonAgregar content="Agregar" onClick={() => setIsAddOpen(true)} disabled={!canEdit} />
+          </div>
 
-            <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
-              <div className="w-full md:w-48">
+          {/* Fila 2: filtros y permisos masivos, alineados con sus acciones. */}
+          <div className="grid grid-cols-1 items-end gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="w-full sm:flex-1">
                 <Select
                   label="Estado"
                   name="estado"
@@ -249,7 +253,7 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
                 />
               </div>
 
-              <div className="w-full md:w-48">
+              <div className="w-full sm:flex-1">
                 <Select
                   label="Rol"
                   name="rol"
@@ -259,9 +263,14 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
                 />
               </div>
             </div>
+            <BotonPermisosMasivos
+              content="Permisos"
+              onClick={handleManagePermissions}
+              disabled={!canEdit || selectedUsers.length === 0}
+            />
           </div>
 
-          {/* Fila 2: Chips de filtros activos */}
+          {/* Fila 3: Chips de filtros activos */}
           <div className="flex flex-wrap items-center gap-2 w-full">
             {filtrosActivos.length === 0 ? (
               <span className="text-sm text-foreground-disabled">Sin filtros activos</span>
@@ -274,16 +283,6 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
             )}
           </div>
 
-          {/* Fila 3: Botones de acción alineados a la derecha */}
-          <div className="flex flex-wrap items-center justify-end gap-3 w-full">
-            <BotonAgregar content="Agregar" onClick={() => setIsAddOpen(true)} disabled={!canEdit} />
-            <BotonPermisosMasivos
-              content="Gestionar Permisos"
-              onClick={handleManagePermissions}
-              disabled={!canEdit || selectedUsers.length === 0}
-            />
-          </div>
-
           {!canEdit && (
             <Alert variant="alerta" title="Modo de Sólo Lectura">
               No dispones de los permisos necesarios para realizar modificaciones o agregar usuarios.
@@ -294,12 +293,14 @@ export function TablaUsuarios({ initialData, rolesOpciones, esAdministrador }: T
 
       {/* Tabla */}
       <TablaConAcciones
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
         columns={columns}
         data={usuariosFiltrados}
         rowIdKey="id"
         actionConfig={actionConfig}
         isLoading={isLoadingQuery}
         bordered={true}
+        rellenarEspacioRestante
         checkboxConfig={{
           onSelectionChange: setSelectedUsers,
         }}

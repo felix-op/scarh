@@ -103,13 +103,38 @@ class MedicionSerieTests(APITestCase):
         separación real entre mediciones: si lo hiciera, la mayoría quedarían
         vacías y la serie se vería cortada por huecos inexistentes.
         """
-        response = self.client.get(self.url, self._params(max_puntos=200))
+        response = self.client.get(self.url, self._params(max_puntos=200, agrupar_siempre=True))
 
         self.assertGreaterEqual(response.data['bucket_segundos'], 30 * 60)
         self.assertLessEqual(response.data['total_puntos'], 49)
 
         vacios = [p for p in response.data['series'][0]['puntos'] if p['total_registros'] == 0]
         self.assertEqual(vacios, [], "no debería haber cubetas vacías con datos continuos")
+
+    def test_no_agrupa_mediciones_escasas_aunque_el_rango_sea_amplio(self):
+        escaso = self._crear_limnigrafo('LMG-S5')
+        fechas = [_local(2024, 5, 24, 8), _local(2024, 5, 25, 12), _local(2024, 5, 27, 16)]
+        for indice, fecha in enumerate(fechas):
+            Medicion.objects.create(
+                limnigrafo=escaso,
+                altura_agua=3.0 + indice,
+                fecha_hora=fecha,
+                fuente='automatico',
+            )
+
+        response = self.client.get(self.url, self._params(
+            limnigrafos=str(escaso.id),
+            fecha_inicio=_local(2024, 1, 1).isoformat(),
+            fecha_fin=_local(2025, 1, 1).isoformat(),
+            max_puntos=400,
+        ))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['bucket_segundos'], 0)
+        self.assertEqual(response.data['total_puntos'], 3)
+        self.assertTrue(response.data['fecha_inicio'].startswith('2024-05-24'))
+        self.assertTrue(response.data['fecha_fin'].startswith('2024-05-27'))
+        self.assertTrue(all(punto['total_registros'] == 1 for punto in response.data['series'][0]['puntos']))
 
     def test_agrega_minimo_maximo_y_promedio_por_cubeta(self):
         response = self.client.get(self.url, self._params(max_puntos=12))

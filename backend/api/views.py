@@ -81,9 +81,7 @@ from django.http import HttpResponse
 from rest_framework.decorators import permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
 import os
-import logging
-
-logger = logging.getLogger(__name__)
+from urllib.parse import unquote_plus
 
 @api_view(['GET'])
 @authentication_classes([])
@@ -92,13 +90,29 @@ def save_get_legacy(request):
     dato_raw = request.GET.get('dato')
     if not dato_raw:
         return HttpResponse("Missing 'dato' parameter", status=400)
-    
+
     try:
-        parts = dato_raw.strip().split()
-        if len(parts) != 4:
-            return HttpResponse("Invalid format. Expected 4 space-separated parts", status=400)
-        
-        date_str, time_str, height_str, battery_str = parts
+        print(f"Legacy GET recibido: dato_raw={dato_raw!r}", flush=True)
+
+        # Django normalmente ya decodifica el query string. Algunos equipos
+        # legacy, sin embargo, codifican ``dato`` una segunda vez y hacen que
+        # llegue texto como ``20-8-2026%209%3A27...``. Decodificamos hasta dos
+        # veces para aceptar ambos formatos sin alterar el caso normal.
+        dato_normalizado = dato_raw.strip()
+        for _ in range(2):
+            dato_decodificado = unquote_plus(dato_normalizado)
+            if dato_decodificado == dato_normalizado:
+                break
+            dato_normalizado = dato_decodificado
+
+        print(f"Legacy GET normalizado: dato={dato_normalizado!r}", flush=True)
+        parts = dato_normalizado.split()
+        print(f"Legacy GET separado: partes={parts!r} (cantidad={len(parts)})", flush=True)
+        if len(parts) not in (3, 4):
+            return HttpResponse("Invalid format. Expected date, time, height and optional battery", status=400)
+
+        date_str, time_str, height_str = parts[:3]
+        battery_str = parts[3] if len(parts) == 4 else None
         
         # Parse date: DD-MM-YYYY or D-M-YYYY
         day, month, year = map(int, date_str.split('-'))
@@ -115,11 +129,15 @@ def save_get_legacy(request):
         # Parse height (replace comma with dot)
         height = float(height_str.replace(',', '.'))
         
-        # Parse battery (replace comma with dot)
-        battery = float(battery_str.replace(',', '.'))
+        # Parse battery (replace comma with dot) when the legacy device sends it.
+        battery = float(battery_str.replace(',', '.')) if battery_str is not None else None
+        print(
+            f"Legacy GET parseado: fecha={aware_dt.isoformat()} altura={height} bateria={battery}",
+            flush=True,
+        )
         
     except Exception as e:
-        logger.error(f"Error parsing legacy GET data '{dato_raw}': {e}")
+        print(f"Error parsing legacy GET data {dato_raw!r}: {e}", flush=True)
         return HttpResponse(f"Error parsing data: {str(e)}", status=400)
         
     default_codigo = os.getenv('DEFAULT_LIMNIGRAFO_CODIGO', 'LM-RIO-OLIVIA-01')
@@ -127,9 +145,16 @@ def save_get_legacy(request):
     try:
         limnigrafo = Limnigrafo.objects.get(codigo=default_codigo)
     except Limnigrafo.DoesNotExist:
-        logger.error(f"Default limnigrafo '{default_codigo}' not found.")
+        print(f"Default limnigrafo '{default_codigo}' not found.", flush=True)
         return HttpResponse(f"Limnigrafo '{default_codigo}' not found", status=500)
-        
+
+    # El equipo puede reenviar una lectura si no alcanzó a recibir el OK. La
+    # combinación limnígrafo/fecha ya es única en la base, por lo que un
+    # reintento no debe crear otra medición ni ser tratado como un error.
+    from api.models import Medicion
+    if Medicion.objects.filter(limnigrafo=limnigrafo, fecha_hora=aware_dt).exists():
+        return HttpResponse(status=204)
+
     from api.serializer.medicionSerializer import MedicionSerializer
     data = {
         'limnigrafo': limnigrafo.id,
@@ -141,7 +166,7 @@ def save_get_legacy(request):
     
     serializer = MedicionSerializer(data=data)
     if not serializer.is_valid():
-        logger.error(f"Validation error saving legacy measurement: {serializer.errors}")
+        print(f"Validation error saving legacy measurement: {serializer.errors}", flush=True)
         return HttpResponse(f"Validation error: {serializer.errors}", status=400)
         
     try:
@@ -164,7 +189,7 @@ def save_get_legacy(request):
         generar_alerta_medicion_fuera_de_rango(medicion_instance)
         
     except Exception as e:
-        logger.error(f"Error saving legacy measurement: {e}")
+        print(f"Error saving legacy measurement: {e}", flush=True)
         return HttpResponse(f"Server error saving measurement: {str(e)}", status=500)
         
-    return HttpResponse("OK")
+    return HttpResponse(status=204)

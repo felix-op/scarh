@@ -2,7 +2,8 @@
 
 import { Card } from "../ui/cards";
 import { Select } from "../ui/select";
-import { DateField } from "../ui/datefield";
+import { DateTimeField } from "../ui/date-time-field";
+import { IconifyIcon } from "../ui/iconify-icon";
 import { Chip } from "../ui/chip";
 import { Boton } from "../ui/botones";
 import { InfoTooltip } from "../ui/info-tooltip";
@@ -11,8 +12,8 @@ import {
   AGRUPACION_METADATA,
   ATRIBUTO_METADATA,
   VENTANAS_ESTADISTICAS,
-  aDateDesdeFecha,
-  aFechaDesdeDate,
+  aDateDesdeFechaHora,
+  aFechaHoraDesdeDate,
   obtenerRangoVentana,
   opcionesAgrupacionPeriodo,
   opcionesAtributoEstadistica,
@@ -46,6 +47,7 @@ export interface FiltrosEstadisticasProps {
   errores: Record<string, string>;
   isPending?: boolean;
   errorCatalogo?: string;
+  exportarCSV: { disabled: boolean; onClick: () => void };
   onChange: (_cambios: Partial<FiltrosEstadisticasState>) => void;
   onAplicar: () => void;
   onRestablecer: () => void;
@@ -58,11 +60,14 @@ export function FiltrosEstadisticas({
   errores,
   isPending = false,
   errorCatalogo,
+  exportarCSV,
   onChange,
   onAplicar,
   onRestablecer,
 }: FiltrosEstadisticasProps) {
   const esResumen = pendientes.vista === "resumen";
+  const esComparativa = pendientes.vista === "comparativa";
+  const esGraficos = pendientes.vista === "graficos";
   const esRangoPersonalizado = pendientes.ventana === "personalizado";
 
   const fechasBloqueadas = !esRangoPersonalizado || isPending;
@@ -116,12 +121,10 @@ export function FiltrosEstadisticas({
       campo: "limnigrafos",
       texto:
         aplicados.limnigrafos.length > 0
-          ? `Dispositivos: ${
-              aplicados.vista === "resumen"
-                ? codigoDe(aplicados.limnigrafos[0])
-                : aplicados.limnigrafos.map(codigoDe).join(", ")
-            }`
-          : "Dispositivos: ninguno",
+          ? aplicados.vista === "resumen"
+            ? `Dispositivo: ${codigoDe(aplicados.limnigrafos[0])}`
+            : `${aplicados.limnigrafos.length} dispositivos seleccionados`
+          : "0 dispositivos seleccionados",
     },
     {
       campo: "rango",
@@ -137,12 +140,290 @@ export function FiltrosEstadisticas({
 
   return (
     <Card className="p-2">
+      {esResumen ? (
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,auto)]">
+          <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            <Select
+              label="Variable"
+              name="atributo"
+              options={opcionesAtributoEstadistica}
+              value={pendientes.atributo}
+              disabled={isPending}
+              onChange={(valor) => onChange({ atributo: valor as AtributoEstadistica })}
+            />
+
+            <MultiSelectLimnigrafos
+              label="Dispositivo"
+              opciones={limnigrafos}
+              value={seleccionVisible}
+              onChange={handleLimnigrafos}
+              seleccionUnica
+              disabled={isPending || errorCatalogo !== undefined}
+              error={errores.limnigrafos}
+            />
+
+            <Select
+              label="Ventana de tiempo"
+              name="ventana"
+              options={VENTANAS_ESTADISTICAS.map(({ value, label }) => ({ value, label }))}
+              value={pendientes.ventana}
+              disabled={isPending}
+              onChange={handleVentana}
+            />
+
+            <Select
+              label="Agrupar por"
+              name="agrupar"
+              options={opcionesAgrupacionPeriodo}
+              value={pendientes.agrupar}
+              disabled={isPending}
+              onChange={(valor) => onChange({ agrupar: valor as AgrupacionEstadistica })}
+            />
+
+            <InfoTooltip content={ayudaFechas} className="w-full">
+              <DateTimeField
+                label="Desde"
+                name="desde"
+                disabled={fechasBloqueadas}
+                value={aDateDesdeFechaHora(pendientes.desde)}
+                onChange={(fecha) => fecha && onChange({ desde: aFechaHoraDesdeDate(fecha) })}
+                endIcon={<IconifyIcon variant="calendario" className="text-lg" />}
+                errors={errores.desde ? [errores.desde] : undefined}
+              />
+            </InfoTooltip>
+
+            <InfoTooltip content={ayudaFechas} className="w-full">
+              <DateTimeField
+                label="Hasta"
+                name="hasta"
+                disabled={fechasBloqueadas}
+                value={aDateDesdeFechaHora(pendientes.hasta)}
+                onChange={(fecha) => fecha && onChange({ hasta: aFechaHoraDesdeDate(fecha) })}
+                endIcon={<IconifyIcon variant="calendario" className="text-lg" />}
+                errors={errores.hasta ? [errores.hasta] : undefined}
+              />
+            </InfoTooltip>
+
+            {errorCatalogo && <p className="text-sm text-foreground-secondary sm:col-span-2 xl:col-span-3">{errorCatalogo}</p>}
+          </div>
+
+          <div className="grid items-end grid-cols-2 gap-2 lg:grid-cols-1 lg:grid-rows-3 xl:grid-cols-2 xl:grid-rows-2">
+            <Boton content="Restablecer" icon="restablecer" className="w-full self-end" onClick={onRestablecer} disabled={isPending} />
+            <Boton content="Aplicar filtros" icon="filtro" variant="primary" className="w-full self-end" onClick={onAplicar} disabled={isPending} />
+            <div className="col-span-2 w-full self-end lg:col-span-1 xl:col-span-2">
+              <InfoTooltip
+                content={
+                  exportarCSV.disabled
+                    ? "No hay mediciones en el rango elegido, así que no hay nada que exportar. Ampliá el rango o probá con otra variable."
+                    : undefined
+                }
+                className="w-full"
+              >
+                <Boton
+                  content="Exportar CSV"
+                  icon="descargar"
+                  className="w-full"
+                  onClick={exportarCSV.onClick}
+                  disabled={exportarCSV.disabled || isPending}
+                />
+              </InfoTooltip>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 lg:col-span-2">
+            {chipsActivos.map(({ campo, texto }) => (
+              <Chip key={campo} variant="info" size="sm">
+                {texto}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      ) : esComparativa ? (
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,auto)]">
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Select
+                label="Variable"
+                name="atributo"
+                options={opcionesAtributoEstadistica}
+                value={pendientes.atributo}
+                disabled={isPending}
+                onChange={(valor) => onChange({ atributo: valor as AtributoEstadistica })}
+              />
+
+              <MultiSelectLimnigrafos
+                label="Dispositivos"
+                opciones={limnigrafos}
+                value={seleccionVisible}
+                onChange={handleLimnigrafos}
+                disabled={isPending || errorCatalogo !== undefined}
+                error={errores.limnigrafos}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              <Select
+                label="Ventana de tiempo"
+                name="ventana"
+                options={VENTANAS_ESTADISTICAS.map(({ value, label }) => ({ value, label }))}
+                value={pendientes.ventana}
+                disabled={isPending}
+                onChange={handleVentana}
+              />
+
+              <InfoTooltip content={ayudaFechas} className="w-full">
+                <DateTimeField
+                  label="Desde"
+                  name="desde"
+                  disabled={fechasBloqueadas}
+                  value={aDateDesdeFechaHora(pendientes.desde)}
+                  onChange={(fecha) => fecha && onChange({ desde: aFechaHoraDesdeDate(fecha) })}
+                  endIcon={<IconifyIcon variant="calendario" className="text-lg" />}
+                  errors={errores.desde ? [errores.desde] : undefined}
+                />
+              </InfoTooltip>
+
+              <InfoTooltip content={ayudaFechas} className="w-full">
+                <DateTimeField
+                  label="Hasta"
+                  name="hasta"
+                  disabled={fechasBloqueadas}
+                  value={aDateDesdeFechaHora(pendientes.hasta)}
+                  onChange={(fecha) => fecha && onChange({ hasta: aFechaHoraDesdeDate(fecha) })}
+                  endIcon={<IconifyIcon variant="calendario" className="text-lg" />}
+                  errors={errores.hasta ? [errores.hasta] : undefined}
+                />
+              </InfoTooltip>
+            </div>
+
+            {errorCatalogo && <p className="text-sm text-foreground-secondary">{errorCatalogo}</p>}
+          </div>
+
+          <div className="grid items-end grid-cols-2 gap-2 lg:grid-cols-1 lg:grid-rows-3 xl:grid-cols-2 xl:grid-rows-2">
+            <Boton content="Restablecer" icon="restablecer" className="w-full self-end" onClick={onRestablecer} disabled={isPending} />
+            <Boton content="Aplicar filtros" icon="filtro" variant="primary" className="w-full self-end" onClick={onAplicar} disabled={isPending} />
+            <div className="col-span-2 w-full self-end lg:col-span-1 xl:col-span-2">
+              <InfoTooltip
+                content={
+                  exportarCSV.disabled
+                    ? "No hay mediciones en el rango elegido, así que no hay nada que exportar. Ampliá el rango o probá con otra variable."
+                    : undefined
+                }
+                className="w-full"
+              >
+                <Boton
+                  content="Exportar CSV"
+                  icon="descargar"
+                  className="w-full"
+                  onClick={exportarCSV.onClick}
+                  disabled={exportarCSV.disabled || isPending}
+                />
+              </InfoTooltip>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 lg:col-span-2">
+            {chipsActivos.map(({ campo, texto }) => (
+              <Chip key={campo} variant="info" size="sm">
+                {texto}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      ) : esGraficos ? (
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,auto)]">
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Select
+                label="Variable"
+                name="atributo"
+                options={opcionesAtributoEstadistica}
+                value={pendientes.atributo}
+                disabled={isPending}
+                onChange={(valor) => onChange({ atributo: valor as AtributoEstadistica })}
+              />
+
+              <MultiSelectLimnigrafos
+                label="Dispositivos"
+                opciones={limnigrafos}
+                value={seleccionVisible}
+                onChange={handleLimnigrafos}
+                disabled={isPending || errorCatalogo !== undefined}
+                error={errores.limnigrafos}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              <Select
+                label="Ventana de tiempo"
+                name="ventana"
+                options={VENTANAS_ESTADISTICAS.map(({ value, label }) => ({ value, label }))}
+                value={pendientes.ventana}
+                disabled={isPending}
+                onChange={handleVentana}
+              />
+
+              <InfoTooltip content={ayudaFechas} className="w-full">
+                <DateTimeField
+                  label="Desde"
+                  name="desde"
+                  disabled={fechasBloqueadas}
+                  value={aDateDesdeFechaHora(pendientes.desde)}
+                  onChange={(fecha) => fecha && onChange({ desde: aFechaHoraDesdeDate(fecha) })}
+                  endIcon={<IconifyIcon variant="calendario" className="text-lg" />}
+                  errors={errores.desde ? [errores.desde] : undefined}
+                />
+              </InfoTooltip>
+
+              <InfoTooltip content={ayudaFechas} className="w-full">
+                <DateTimeField
+                  label="Hasta"
+                  name="hasta"
+                  disabled={fechasBloqueadas}
+                  value={aDateDesdeFechaHora(pendientes.hasta)}
+                  onChange={(fecha) => fecha && onChange({ hasta: aFechaHoraDesdeDate(fecha) })}
+                  endIcon={<IconifyIcon variant="calendario" className="text-lg" />}
+                  errors={errores.hasta ? [errores.hasta] : undefined}
+                />
+              </InfoTooltip>
+            </div>
+
+            {errorCatalogo && <p className="text-sm text-foreground-secondary">{errorCatalogo}</p>}
+          </div>
+
+          <div className="grid items-end grid-cols-2 gap-2 lg:grid-cols-1 lg:grid-rows-3 xl:grid-rows-2">
+            <Boton
+              content="Restablecer"
+              icon="restablecer"
+              className="w-full self-end lg:row-start-2"
+              onClick={onRestablecer}
+              disabled={isPending}
+            />
+            <Boton
+              content="Aplicar filtros"
+              icon="filtro"
+              variant="primary"
+              className="w-full self-end lg:row-start-1"
+              onClick={onAplicar}
+              disabled={isPending}
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 lg:col-span-2">
+            {chipsActivos.map(({ campo, texto }) => (
+              <Chip key={campo} variant="info" size="sm">
+                {texto}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      ) : (
       <div className="flex flex-col gap-4">
         {/*
           Qué se mide y de dónde: son las dos decisiones que el usuario toma
           primero y las que cambian el significado de todo lo demás.
         */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
           <Select
             label="Variable"
             name="atributo"
@@ -167,7 +448,7 @@ export function FiltrosEstadisticas({
         <div className="h-px w-full bg-border" />
 
         {/* Recorte temporal: ventana o rango, y con qué granularidad se agrupa. */}
-        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 w-full ${esResumen ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}>
+        <div className={`grid w-full grid-cols-1 gap-2 sm:grid-cols-2 ${esResumen ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}>
           <Select
             label="Ventana de tiempo"
             name="ventana"
@@ -189,23 +470,25 @@ export function FiltrosEstadisticas({
           )}
 
           <InfoTooltip content={ayudaFechas} className="w-full">
-            <DateField
+            <DateTimeField
               label="Desde"
               name="desde"
               disabled={fechasBloqueadas}
-              value={aDateDesdeFecha(pendientes.desde)}
-              onChange={(fecha) => fecha && onChange({ desde: aFechaDesdeDate(fecha) })}
+              value={aDateDesdeFechaHora(pendientes.desde)}
+              onChange={(fecha) => fecha && onChange({ desde: aFechaHoraDesdeDate(fecha) })}
+              endIcon={<IconifyIcon variant="calendario" className="text-lg" />}
               errors={errores.desde ? [errores.desde] : undefined}
             />
           </InfoTooltip>
 
           <InfoTooltip content={ayudaFechas} className="w-full">
-            <DateField
+            <DateTimeField
               label="Hasta"
               name="hasta"
               disabled={fechasBloqueadas}
-              value={aDateDesdeFecha(pendientes.hasta)}
-              onChange={(fecha) => fecha && onChange({ hasta: aFechaDesdeDate(fecha) })}
+              value={aDateDesdeFechaHora(pendientes.hasta)}
+              onChange={(fecha) => fecha && onChange({ hasta: aFechaHoraDesdeDate(fecha) })}
+              endIcon={<IconifyIcon variant="calendario" className="text-lg" />}
               errors={errores.hasta ? [errores.hasta] : undefined}
             />
           </InfoTooltip>
@@ -230,6 +513,7 @@ export function FiltrosEstadisticas({
           />
         </div>
       </div>
+      )}
     </Card>
   );
 }

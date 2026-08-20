@@ -8,7 +8,6 @@ interface LimnigrafoMapaMenuProps {
   tieneUbicacion: boolean;
   onMoverUbicacion: (_limnigrafo: LimnigrafoResponse) => void;
   onEditarUbicacion: (_limnigrafo: LimnigrafoResponse) => void;
-  onVerEnMapa: (_limnigrafo: LimnigrafoResponse) => void;
   onQuitarUbicacion: (_limnigrafo: LimnigrafoResponse) => void;
 }
 
@@ -17,14 +16,12 @@ export function LimnigrafoMapaMenu({
   tieneUbicacion,
   onMoverUbicacion,
   onEditarUbicacion,
-  onVerEnMapa,
   onQuitarUbicacion,
 }: LimnigrafoMapaMenuProps) {
   const items: MenuItemConfig[] = tieneUbicacion
     ? [
         { label: "Mover ubicación", icon: "ubicacion", action: () => onMoverUbicacion(limnigrafo) },
         { label: "Editar ubicación", icon: "editar", action: () => onEditarUbicacion(limnigrafo) },
-        { label: "Ver en el mapa", icon: "ver", action: () => onVerEnMapa(limnigrafo) },
         {
           label: "Quitar ubicación",
           icon: "eliminar",

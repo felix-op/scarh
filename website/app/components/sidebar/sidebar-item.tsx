@@ -41,6 +41,10 @@ export function filtrarNav(items: SidebarNavItem[], usuario: Usuario): SidebarNa
       if (hijosVisibles.length > 0) resultado.push({ ...item, children: hijosVisibles });
       continue;
     }
+    if (item.href === "/dashboard/admin/documentacion") {
+      if (process.env.NODE_ENV === "development") resultado.push(item);
+      continue;
+    }
     if (puedeVer(usuario, item.permiso)) resultado.push(item);
   }
   return resultado;

@@ -19,7 +19,6 @@ export interface LimnigrafosMapaListaProps {
   selectedLimnigrafo: LimnigrafoResponse | null;
   onSelectLimnigrafo: (_limnigrafo: LimnigrafoResponse) => void;
   onMoverUbicacion?: (_limnigrafo: LimnigrafoResponse) => void;
-  onVerEnMapa?: (_limnigrafo: LimnigrafoResponse) => void;
 }
 
 const ESTADO_CONEXION_COLOR: Record<string, string> = {
@@ -46,7 +45,6 @@ export function LimnigrafosMapaLista({
   selectedLimnigrafo,
   onSelectLimnigrafo,
   onMoverUbicacion,
-  onVerEnMapa,
 }: LimnigrafosMapaListaProps) {
   const [filtros, setFiltros] = useState<FiltrosMapaState>(FILTROS_MAPA_INICIALES);
   const [editandoUbicacion, setEditandoUbicacion] = useState<LimnigrafoResponse | null>(null);
@@ -130,7 +128,6 @@ export function LimnigrafosMapaLista({
                         tieneUbicacion={tieneUbicacion(lim)}
                         onMoverUbicacion={(l) => onMoverUbicacion?.(l)}
                         onEditarUbicacion={(l) => setEditandoUbicacion(l)}
-                        onVerEnMapa={(l) => onVerEnMapa?.(l)}
                         onQuitarUbicacion={(l) => setQuitandoUbicacion(l)}
                       />
                     </div>
@@ -138,19 +135,19 @@ export function LimnigrafosMapaLista({
 
                   {/* Detalle a ancho completo, por debajo del punto de estado. */}
                   <div className="min-w-0">
-                    <p
-                      className="text-xs leading-tight text-foreground truncate"
+                    <span
+                      className="block text-xs leading-tight text-foreground truncate"
                       title={lim.ubicacion?.nombre || "Desconocida"}
                     >
                       {lim.ubicacion?.nombre || "Desconocida"}
-                    </p>
+                    </span>
                     {tieneUbicacion(lim) ? (
-                      <p className="-mt-0.5 text-[9px] leading-none tabular-nums text-foreground-secondary truncate">
+                      <span className="-mt-0.5 block text-xs leading-tight tabular-nums text-foreground-secondary truncate">
                         X: {lim.ubicacion!.geometry.coordinates[0].toFixed(5)} Y:{" "}
                         {lim.ubicacion!.geometry.coordinates[1].toFixed(5)}
-                      </p>
+                      </span>
                     ) : (
-                      <p className="-mt-0.5 text-[9px] leading-none italic text-warn">Sin coordenadas</p>
+                      <span className="-mt-0.5 block text-xs leading-tight italic text-warn">Sin coordenadas</span>
                     )}
                   </div>
                 </div>

@@ -6,6 +6,7 @@ from api.models.medicion import Medicion
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from unittest.mock import patch
+from urllib.parse import quote_plus
 
 
 class LegacyGetTests(APITestCase):
@@ -38,8 +39,8 @@ class LegacyGetTests(APITestCase):
         dato = "10-08-2026 15:30 12,5 11,8"
         response = self.client.get(self.endpoint_url, {'dato': dato})
         
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.content.decode(), "OK")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.content, b"")
         
         # Check measurement was saved
         self.assertEqual(Medicion.objects.count(), 1)
@@ -63,7 +64,7 @@ class LegacyGetTests(APITestCase):
 
     def test_legacy_get_invalid_format(self):
         # Wrong number of parts
-        dato = "10-08-2026 15:30 12,5"
+        dato = "10-08-2026 15:30"
         response = self.client.get(self.endpoint_url, {'dato': dato})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
@@ -73,6 +74,35 @@ class LegacyGetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Medicion.objects.count(), 0)
 
+    def test_legacy_get_ingestion_without_battery(self):
+        dato = "20-08-2026 13:4 47,7"
+
+        response = self.client.get(self.endpoint_url, {'dato': dato})
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        medicion = Medicion.objects.get()
+        self.assertEqual(medicion.altura_agua, 47.7)
+        self.assertIsNone(medicion.nivel_de_bateria)
+
+    def test_legacy_get_accepts_a_double_url_encoded_value(self):
+        dato = quote_plus("10-08-2026 15:30 12,5 11,8")
+
+        response = self.client.get(self.endpoint_url, {'dato': dato})
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Medicion.objects.count(), 1)
+
+    def test_legacy_get_duplicate_is_acknowledged_without_creating_another_measurement(self):
+        dato = "10-08-2026 15:30 12,5 11,8"
+
+        first_response = self.client.get(self.endpoint_url, {'dato': dato})
+        retry_response = self.client.get(self.endpoint_url, {'dato': dato})
+
+        self.assertEqual(first_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(retry_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(retry_response.content, b"")
+        self.assertEqual(Medicion.objects.count(), 1)
+
     def test_legacy_get_sentinels_success(self):
         sentinels = [-1000.0, -1001.0, -1002.0, -1003.0]
         
@@ -81,7 +111,7 @@ class LegacyGetTests(APITestCase):
             # Using different minutes to avoid duplicates constraint
             dato = f"10-08-2026 15:{10 + idx} {str(sentinel).replace('.', ',')} 11,8"
             response = self.client.get(self.endpoint_url, {'dato': dato})
-            self.assertEqual(response.status_code, status.HTTP_200_OK, f"Failed for sentinel {sentinel}")
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, f"Failed for sentinel {sentinel}")
             
         self.assertEqual(Medicion.objects.count(), len(sentinels))
         for sentinel in sentinels:
@@ -101,7 +131,7 @@ class LegacyGetTests(APITestCase):
         with patch.dict('os.environ', {'DEFAULT_LIMNIGRAFO_CODIGO': 'LM-CUSTOM-01'}):
             dato = "10-08-2026 15:30 12,5 11,8"
             response = self.client.get(self.endpoint_url, {'dato': dato})
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
             
             medicion = Medicion.objects.first()
             self.assertEqual(medicion.limnigrafo, custom_lim)

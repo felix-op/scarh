@@ -34,6 +34,7 @@ export function colorDeSerie(indice: number): string {
  * medición puntual, y sin el rótulo el lector cree estar viendo lo segundo.
  */
 export function etiquetaResolucion(bucketSegundos: number): string {
+  if (bucketSegundos === 0) return "mediciones sin agrupar";
   if (bucketSegundos < 3600) {
     const minutos = Math.round(bucketSegundos / 60);
     return `1 punto cada ${minutos} min`;

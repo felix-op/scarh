@@ -1,32 +1,33 @@
-import { format, subHours, subDays } from "date-fns";
+import { subHours, subDays } from "date-fns";
+import { ZONA_PROYECTO, aFechaLocal } from "./estadisticas.utiles";
 
 /**
  * Retorna las fechas string (yyyy-MM-dd) correspondientes a una ventana de tiempo prestablecida.
  */
 export function obtenerFechasVentana(ventana: string): { desde: string; hasta: string } | null {
   const now = new Date();
-  const hoyStr = format(now, "yyyy-MM-dd");
+  const hoyStr = aFechaLocal(now);
 
   switch (ventana) {
     case "hora":
       return {
-        desde: format(subHours(now, 1), "yyyy-MM-dd"),
+        desde: aFechaLocal(subHours(now, 1)),
         hasta: hoyStr,
       };
     case "dia":
       return {
-        desde: format(subDays(now, 1), "yyyy-MM-dd"),
+        desde: aFechaLocal(subDays(now, 1)),
         hasta: hoyStr,
       };
     case "semana":
       return {
-        desde: format(subDays(now, 7), "yyyy-MM-dd"),
+        desde: aFechaLocal(subDays(now, 7)),
         hasta: hoyStr,
       };
     case "mas_semana":
       return {
         desde: "",
-        hasta: format(subDays(now, 7), "yyyy-MM-dd"),
+        hasta: aFechaLocal(subDays(now, 7)),
       };
     case "personalizado":
     default:
@@ -91,14 +92,8 @@ export function formatFechaHora(
   if (iso === null || iso === undefined || iso === "") return fallback;
   const d = new Date(iso);
   if (isNaN(d.getTime())) return fallback;
-  return d.toLocaleString("es-AR", {
-    timeZone: "America/Argentina/Ushuaia",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const partes = partesFechaHora(d, true);
+  return `${partes.dia}/${partes.mes}/${partes.anio}, ${partes.hora}:${partes.minuto}`;
 }
 
 /** Formatea una fecha como "dd/mm/aaaa" (es-AR) o un texto por defecto. Ver `formatFechaHora`. */
@@ -106,12 +101,39 @@ export function formatFecha(iso: string | number | null | undefined, fallback = 
   if (iso === null || iso === undefined || iso === "") return fallback;
   const d = new Date(iso);
   if (isNaN(d.getTime())) return fallback;
-  return d.toLocaleDateString("es-AR", {
-    timeZone: "America/Argentina/Ushuaia",
+  const partes = partesFechaHora(d, false);
+  return `${partes.dia}/${partes.mes}/${partes.anio}`;
+}
+
+/**
+ * Extrae los valores numéricos de una fecha en la zona del proyecto sin usar los literales que
+ * cada runtime decide para un locale (por ejemplo, el espacio antes de "a. m.").
+ * Así el HTML del servidor y el primer render del navegador son idénticos.
+ */
+function partesFechaHora(fecha: Date, incluirHora: boolean) {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: ZONA_PROYECTO,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  });
+    ...(incluirHora
+      ? {
+          hour: "2-digit",
+          minute: "2-digit",
+          hourCycle: "h23" as const,
+        }
+      : {}),
+  }).formatToParts(fecha);
+
+  const valor = (tipo: Intl.DateTimeFormatPartTypes) => partes.find((parte) => parte.type === tipo)?.value ?? "";
+
+  return {
+    dia: valor("day"),
+    mes: valor("month"),
+    anio: valor("year"),
+    hora: incluirHora ? valor("hour") : "",
+    minuto: incluirHora ? valor("minute") : "",
+  };
 }
 
 export type TiempoUltimoDatoBucket = "todos" | "hora" | "dia" | "semana" | "mas_semana";

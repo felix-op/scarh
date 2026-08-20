@@ -7,6 +7,7 @@ import {
   ActionConfig,
   TableColumn,
   BotonAgregar,
+  Boton,
   TextField,
   Select,
   IconifyIcon,
@@ -20,13 +21,14 @@ import {
 } from "@components";
 import { useGetLimnigrafos } from "@hooks";
 import {
-  opcionesEstadoConexion,
-  opcionesEstadoMedicion,
+  evaluarEstadoLimnigrafo,
+  opcionesEstadoLimnigrafoUnificado,
   opcionesTiempoUltimoDato,
   coincideTiempoUltimoDato,
   formatFechaHora,
   formatearBateria,
   type TiempoUltimoDatoBucket,
+  type EstadoLimnigrafoClave,
 } from "@utils";
 import type { LimnigrafoResponse, PaginatedLimnigrafoResponse } from "@models";
 
@@ -44,8 +46,7 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
 
   const [filtros, setFiltros] = useState({
     search: "",
-    estadoConexion: "todos",
-    estadoMedicion: "todos",
+    estado: "todos" as "todos" | EstadoLimnigrafoClave,
     tiempo: "todos",
   });
 
@@ -65,12 +66,15 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
     );
   }
 
-  if (filtros.estadoConexion !== "todos") {
-    filtrados = filtrados.filter((l) => l.estado_conexion === filtros.estadoConexion);
-  }
-
-  if (filtros.estadoMedicion !== "todos") {
-    filtrados = filtrados.filter((l) => l.estado_medicion === filtros.estadoMedicion);
+  if (filtros.estado !== "todos") {
+    filtrados = filtrados.filter(
+      (l) =>
+        evaluarEstadoLimnigrafo({
+          estadoConexion: l.estado_conexion,
+          estadoMedicion: l.estado_medicion,
+          tipoComunicacion: l.tipo_comunicacion,
+        }).clave === filtros.estado
+    );
   }
 
   if (filtros.tiempo !== "todos") {
@@ -79,38 +83,34 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
     );
   }
 
-  const estaActivo = (campo: "search" | "estadoConexion" | "estadoMedicion" | "tiempo") => {
+  const estaActivo = (campo: "search" | "estado" | "tiempo") => {
     if (campo === "search") return Boolean(filtros.search);
-    if (campo === "estadoConexion") return filtros.estadoConexion !== "todos";
-    if (campo === "estadoMedicion") return filtros.estadoMedicion !== "todos";
+    if (campo === "estado") return filtros.estado !== "todos";
     if (campo === "tiempo") return filtros.tiempo !== "todos";
     return false;
   };
 
-  const valorMostrado = (campo: "search" | "estadoConexion" | "estadoMedicion" | "tiempo") => {
+  const valorMostrado = (campo: "search" | "estado" | "tiempo") => {
     if (campo === "search") return filtros.search;
-    if (campo === "estadoConexion")
-      return opcionesEstadoConexion.find((o) => o.value === filtros.estadoConexion)?.label || filtros.estadoConexion;
-    if (campo === "estadoMedicion")
-      return opcionesEstadoMedicion.find((o) => o.value === filtros.estadoMedicion)?.label || filtros.estadoMedicion;
+    if (campo === "estado")
+      return opcionesEstadoLimnigrafoUnificado.find((o) => o.value === filtros.estado)?.label || filtros.estado;
     if (campo === "tiempo") return opcionesTiempoUltimoDato.find((o) => o.value === filtros.tiempo)?.label || filtros.tiempo;
     return "";
   };
 
-  const labelFiltro: Record<"search" | "estadoConexion" | "estadoMedicion" | "tiempo", string> = {
+  const labelFiltro: Record<"search" | "estado" | "tiempo", string> = {
     search: "Búsqueda",
-    estadoConexion: "Estado de conexión",
-    estadoMedicion: "Estado de última medición",
+    estado: "Estado",
     tiempo: "Tiempo últ. dato",
   };
 
-  const camposFiltro: ("search" | "estadoConexion" | "estadoMedicion" | "tiempo")[] = [
+  const camposFiltro: ("search" | "estado" | "tiempo")[] = [
     "search",
-    "estadoConexion",
-    "estadoMedicion",
+    "estado",
     "tiempo",
   ];
   const filtrosActivos = camposFiltro.filter(estaActivo);
+  const restablecerFiltros = () => setFiltros({ search: "", estado: "todos", tiempo: "todos" });
 
   const columns: TableColumn<LimnigrafoResponse>[] = [
     {
@@ -206,48 +206,29 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Toolbar en Card con padding 2 */}
+    <div className="flex min-h-0 flex-1 flex-col gap-6">
       <Card className="p-2">
-        <div className="flex flex-col gap-4">
-          {/* Fila 1: Buscador y Filtros (Grid responsivo: buscador en fila propia en medianas (md:col-span-2), alineados juntos en grandes (lg:grid-cols-4)) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-            <div className="w-full md:col-span-2 lg:col-span-1">
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="w-full">
               <TextField
                 name="search"
                 label="Buscar limnígrafo"
                 placeholder="Por código o ubicación"
-                defaultValue={filtros.search}
+                value={filtros.search}
                 leftIcon={<IconifyIcon variant="search" />}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const timeout = setTimeout(() => handleSearch(val), 500);
-                  return () => clearTimeout(timeout);
-                }}
+                onChange={(e) => handleSearch(e.target.value)}
               />
             </div>
 
-            <div className="w-full">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <Select
-                label="Estado de conexión"
-                name="estadoConexion"
-                options={opcionesEstadoConexion}
-                value={filtros.estadoConexion}
-                onChange={(val) => handleFilterChange("estadoConexion", val)}
+                label="Estado"
+                name="estado"
+                options={opcionesEstadoLimnigrafoUnificado}
+                value={filtros.estado}
+                onChange={(val) => handleFilterChange("estado", val)}
               />
-            </div>
-
-            <div className="w-full">
-              <Select
-                label="Estado de última medición"
-                name="estadoMedicion"
-                options={opcionesEstadoMedicion}
-                value={filtros.estadoMedicion}
-                onChange={(val) => handleFilterChange("estadoMedicion", val)}
-              />
-            </div>
-
-            <div className="w-full">
               <Select
                 label="Tiempo desde el último dato"
                 name="tiempo"
@@ -256,10 +237,22 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
                 onChange={(val) => handleFilterChange("tiempo", val)}
               />
             </div>
+
           </div>
 
-          {/* Fila 2: Chips de filtros activos */}
-          <div className="flex flex-wrap items-center gap-2 w-full">
+          <div className="flex min-h-0 justify-start lg:justify-end">
+            <div className="inline-grid grid-cols-2 grid-rows-1 justify-items-stretch gap-2 lg:h-full lg:grid-cols-1 lg:grid-rows-2">
+              <BotonAgregar
+                content="Agregar"
+                className="self-end"
+                onClick={() => setIsAddOpen(true)}
+                disabled={!puedeEditar}
+              />
+              <Boton content="Restablecer" icon="restablecer" className="self-end" onClick={restablecerFiltros} />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 lg:col-span-2">
             {filtrosActivos.length === 0 ? (
               <span className="text-sm text-foreground-disabled">Sin filtros activos</span>
             ) : (
@@ -271,26 +264,25 @@ export function TablaLimnigrafos({ initialData, puedeEditar }: TablaLimnigrafosP
             )}
           </div>
 
-          {/* Fila 3: Botón Agregar alineado a la derecha */}
-          <div className="flex flex-wrap items-center justify-end gap-3 w-full">
-            <BotonAgregar content="Agregar" onClick={() => setIsAddOpen(true)} disabled={!puedeEditar} />
-          </div>
-
           {!puedeEditar && (
-            <Alert variant="alerta" title="Modo de sólo lectura">
-              No dispones de los permisos necesarios para agregar o modificar limnígrafos.
-            </Alert>
+            <div className="lg:col-span-2">
+              <Alert variant="alerta" title="Modo de sólo lectura">
+                No dispones de los permisos necesarios para agregar o modificar limnígrafos.
+              </Alert>
+            </div>
           )}
         </div>
       </Card>
 
       {/* Tabla */}
       <TablaConAcciones
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
         columns={columns}
         data={filtrados}
         rowIdKey="id"
         actionConfig={actionConfig}
         isLoading={isLoadingQuery}
+        rellenarEspacioRestante
         bordered
       />
 

@@ -2,10 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { TablaConAccionesPaginada, ActionConfig, TableColumn, Chip, ChipVariant, BotonImportar } from "@components";
+import { TablaConAccionesPaginada, ActionConfig, TableColumn, Chip, ChipVariant } from "@components";
 import { useMensajes } from "@services";
 import { obtenerTodasLasMedicionesFiltradas } from "@hooks";
-import { opcionesFuenteMedicion, obtenerFechasVentana, exportarComoCSV, exportarComoJSON, formatearMedicion, etiquetaConUnidad, formatFechaHora } from "@utils";
+import { opcionesFuenteMedicion, obtenerFechasVentana, exportarComoCSV, formatearMedicion, etiquetaConUnidad, formatFechaHora } from "@utils";
 import type { LimnigrafoCatalogoResponse, MedicionResponse, PaginatedMedicionResponse } from "@models";
 import { FiltrosMediciones, type MedicionesFiltrosState } from "./filtros-mediciones";
 
@@ -48,7 +48,7 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
   const filtrosAplicados = extraerFiltros(filtros);
   const [ultimosFiltrosAplicados, setUltimosFiltrosAplicados] = useState(filtrosAplicados);
   const [filtrosPendientes, setFiltrosPendientes] = useState<MedicionesFiltrosState>(filtrosAplicados);
-  const [exportando, setExportando] = useState<"csv" | "json" | null>(null);
+  const [exportando, setExportando] = useState<"csv" | null>(null);
 
   if (JSON.stringify(filtrosAplicados) !== JSON.stringify(ultimosFiltrosAplicados)) {
     setUltimosFiltrosAplicados(filtrosAplicados);
@@ -155,19 +155,6 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
     }
   };
 
-  const handleExportJSON = async () => {
-    setExportando("json");
-    try {
-      const { rows, truncado } = await obtenerTodasLasMedicionesFiltradas(construirFiltrosExport());
-      exportarComoJSON("mediciones.json", rows);
-      avisarResultadoExport(rows.length, truncado, "JSON");
-    } catch (err) {
-      mensajes.error("Error al exportar", err instanceof Error ? err.message : "No se pudo exportar el JSON.");
-    } finally {
-      setExportando(null);
-    }
-  };
-
   const columns: TableColumn<MedicionResponse>[] = [
     {
       id: "fecha_hora",
@@ -226,11 +213,7 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
   const maxPage = Math.max(1, Math.ceil(data.count / filtros.limit));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-end gap-4">
-        <BotonImportar content="Importar datos" onClick={handleImportar} />
-      </div>
-
+    <div className="flex min-h-0 flex-1 flex-col gap-6">
       <FiltrosMediciones
         pendientes={filtrosPendientes}
         aplicados={filtrosAplicados}
@@ -238,15 +221,15 @@ export function TablaMediciones({ data, limnigrafos, limnigrafosOpciones, filtro
         errorCatalogo={errorCatalogo}
         isPending={isPending || exportando !== null}
         exportandoCSV={exportando === "csv"}
-        exportandoJSON={exportando === "json"}
         onChange={(campo, valor) => setFiltrosPendientes((prev) => ({ ...prev, [campo]: valor }))}
         onAplicar={handleAplicarFiltros}
         onRestablecer={handleRestablecerFiltros}
         onExportCSV={handleExportCSV}
-        onExportJSON={handleExportJSON}
+        onImportar={handleImportar}
       />
 
       <TablaConAccionesPaginada
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
         columns={columns}
         data={data.results}
         rowIdKey="id"

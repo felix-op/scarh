@@ -212,8 +212,6 @@ export function TablaHistorial({ data, usuariosOpciones, filtros }: TablaHistori
         onChange={(cambios) => setFiltrosPendientes((prev) => ({ ...prev, ...cambios }))}
         onAplicar={handleAplicarFiltros}
         onRestablecer={handleRestablecerFiltros}
-        onExportCSV={() => mensajes.info("Exportando...", "Exportando historial a CSV.")}
-        onExportJSON={() => mensajes.info("Exportando...", "Exportando historial a JSON.")}
       />
 
       <TablaConAccionesPaginada

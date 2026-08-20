@@ -72,6 +72,8 @@ export interface MedicionSerieResponse {
  * @property {string} fecha_fin Fin del rango, en ISO.
  * @property {number} [max_puntos] Techo de puntos por serie (10 a 1000, 200 por defecto).
  *   El servidor puede devolver menos si los datos no dan para esa resolución.
+ * @property {boolean} [agrupar_siempre] Conserva las cubetas aunque todos los datos
+ *   del período entren dentro de `max_puntos`.
  */
 export type MedicionSerieQueryParams = {
   limnigrafos: string;
@@ -79,4 +81,5 @@ export type MedicionSerieQueryParams = {
   fecha_inicio: string;
   fecha_fin: string;
   max_puntos?: number;
+  agrupar_siempre?: boolean;
 };

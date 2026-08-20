@@ -16,6 +16,7 @@ import {
   VENTANA_POR_DEFECTO,
   VISTAS_ESTADISTICAS,
   construirParamsEstadisticas,
+  exportarTablaEstadisticasCSV,
   obtenerRangoVentana,
   validarFiltrosEstadisticas,
   type FiltrosEstadisticasState as TFiltrosEstadisticas,
@@ -94,6 +95,7 @@ export function PantallaEstadisticas({
       limnigrafos: limnigrafos.map((limnigrafo) => limnigrafo.id),
       ventana: VENTANA_POR_DEFECTO,
       agrupar: AGRUPACION_POR_DEFECTO,
+      agruparSiempre: false,
       ...rango,
     };
     setPendientes(reset);
@@ -125,12 +127,37 @@ export function PantallaEstadisticas({
     navegar(siguientes);
   };
 
+  const handleAgruparSiempre = (agruparSiempre: boolean) => {
+    const siguientes = { ...aplicados, agruparSiempre };
+    setPendientes(siguientes);
+    navegar(siguientes);
+  };
+
   // El resumen analiza el primero de la selección. La lista completa se conserva
   // igual en la URL para que volver a las otras pestañas no la pierda.
   const dispositivoActivo =
     filtros.limnigrafos.length > 0
       ? limnigrafos.find((item) => item.id === filtros.limnigrafos[0])?.codigo
       : undefined;
+
+  const hayDatosParaExportar = [...(datos?.filas ?? []), ...(datos?.total ? [datos.total] : [])].some(
+    (fila) => fila.total_registros > 0
+  );
+
+  const handleExportarCSV = () => {
+    if (!datos) return;
+
+    exportarTablaEstadisticasCSV({
+      nombreArchivo:
+        filtros.vista === "resumen"
+          ? `estadisticas-resumen-${filtros.atributo}-${filtros.agrupar}.csv`
+          : `estadisticas-comparativa-${filtros.atributo}.csv`,
+      atributo: filtros.atributo,
+      agrupacion: filtros.vista === "resumen" ? filtros.agrupar : "dispositivo",
+      filas: datos.filas,
+      total: datos.total,
+    });
+  };
 
   /**
    * El error ocupa el lugar de la tabla en lugar de sumarse arriba.
@@ -164,6 +191,8 @@ export function PantallaEstadisticas({
           datos={serie}
           atributo={filtros.atributo}
           estadisticas={datos?.filas ?? []}
+          agruparSiempre={filtros.agruparSiempre}
+          onAgruparSiempreChange={handleAgruparSiempre}
         />
       ) : (
         <Alert variant="alerta" title="Sin dispositivos seleccionados">
@@ -181,6 +210,7 @@ export function PantallaEstadisticas({
           agrupacion="dispositivo"
           isLoading={isPending}
           nombreArchivo={`estadisticas-comparativa-${filtros.atributo}.csv`}
+          mostrarExportar={false}
         />
       );
     }
@@ -193,6 +223,7 @@ export function PantallaEstadisticas({
         agrupacion={filtros.agrupar}
         isLoading={isPending}
         nombreArchivo={`estadisticas-resumen-${filtros.atributo}-${filtros.agrupar}.csv`}
+        mostrarExportar={false}
         mensajeVacio="Elegí un limnígrafo para ver su resumen por período."
         subtitulo={
           dispositivoActivo
@@ -218,6 +249,7 @@ export function PantallaEstadisticas({
         errores={errores}
         isPending={isPending}
         errorCatalogo={errorCatalogo}
+        exportarCSV={{ disabled: !hayDatosParaExportar, onClick: handleExportarCSV }}
         onChange={(cambios) => setPendientes((previos) => ({ ...previos, ...cambios }))}
         onAplicar={handleAplicar}
         onRestablecer={handleRestablecer}

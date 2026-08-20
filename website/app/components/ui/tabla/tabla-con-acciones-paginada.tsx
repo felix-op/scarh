@@ -27,7 +27,7 @@ export function TablaConAccionesPaginada<T>({
   const showBottom = paginationPosition === "bottom" || paginationPosition === "both";
 
   return (
-    <Card className={className}>
+    <Card className={`flex min-h-0 flex-col ${className}`.trim()}>
       {showTop && (
         <div className="border-b border-border">
           <Paginado config={paginationConfig} idSuffix="top" disabled={disabledSelector} />

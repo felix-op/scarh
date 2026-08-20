@@ -288,6 +288,7 @@ export function BotonAgregar({
   onClick,
   outlined = false,
   type = "button",
+  className = "",
 }: BotonProps) {
   return (
     <Boton
@@ -299,6 +300,7 @@ export function BotonAgregar({
       type={type}
       variant="primary"
       icon="agregar"
+      className={className}
     />
   );
 }

@@ -15,6 +15,9 @@ export const ZONA_PROYECTO = "America/Argentina/Buenos_Aires";
 /** Formato de las fechas que viajan en la URL y en los filtros. */
 export const FORMATO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
 
+/** Formato de fecha y hora local que viaja en los filtros de estadísticas. */
+export const FORMATO_FECHA_HORA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
+
 const formateadorZona = new Intl.DateTimeFormat("en-CA", {
   timeZone: ZONA_PROYECTO,
   year: "numeric",
@@ -50,7 +53,7 @@ export function aFechaLocal(fecha: Date): string {
  * Resuelve una ventana rápida a un rango concreto de fechas.
  *
  * @param ventana Valor de `VENTANAS_ESTADISTICAS`.
- * @returns `{ desde, hasta }` en `yyyy-MM-dd`, o `null` si la ventana es
+ * @returns `{ desde, hasta }` en `yyyy-MM-ddTHH:mm:ss`, o `null` si la ventana es
  *   `personalizado` (el rango lo elige el usuario).
  */
 export function obtenerRangoVentana(ventana: string): { desde: string; hasta: string } | null {
@@ -60,17 +63,16 @@ export function obtenerRangoVentana(ventana: string): { desde: string; hasta: st
   const ahora = new Date();
   const inicio = new Date(ahora.getTime() - opcion.dias * 24 * 60 * 60 * 1000);
 
-  return { desde: aFechaLocal(inicio), hasta: aFechaLocal(ahora) };
+  return { desde: aFechaHoraLocal(inicio), hasta: aFechaHoraLocal(ahora) };
 }
 
 /**
- * Convierte el rango de la UI (dos fechas `yyyy-MM-dd`) en los límites que espera
- * el endpoint. El día final se incluye completo.
+ * Convierte el rango de fecha y hora de la UI en los límites que espera el endpoint.
  */
 export function limitesDelRango(desde: string, hasta: string): { fecha_inicio: string; fecha_fin: string } {
   return {
-    fecha_inicio: `${desde}T00:00:00`,
-    fecha_fin: `${hasta}T23:59:59`,
+    fecha_inicio: desde,
+    fecha_fin: hasta,
   };
 }
 
@@ -155,4 +157,26 @@ export function aFechaDesdeDate(fecha: Date): string {
   const mes = String(fecha.getMonth() + 1).padStart(2, "0");
   const dia = String(fecha.getDate()).padStart(2, "0");
   return `${fecha.getFullYear()}-${mes}-${dia}`;
+}
+
+/** Convierte una fecha y hora local serializada en el `Date` que consume el input. */
+export function aDateDesdeFechaHora(fecha: string): Date | undefined {
+  if (!FORMATO_FECHA_HORA.test(fecha)) return undefined;
+
+  const [fechaTexto, horaTexto] = fecha.split("T");
+  const [anio, mes, dia] = fechaTexto.split("-").map(Number);
+  const [hora, minuto, segundo] = horaTexto.split(":").map(Number);
+  const resultado = new Date(anio, mes - 1, dia, hora, minuto, segundo);
+
+  return Number.isNaN(resultado.getTime()) ? undefined : resultado;
+}
+
+/** Inversa de `aDateDesdeFechaHora`, sin convertir la hora a UTC. */
+export function aFechaHoraDesdeDate(fecha: Date): string {
+  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dia = String(fecha.getDate()).padStart(2, "0");
+  const hora = String(fecha.getHours()).padStart(2, "0");
+  const minuto = String(fecha.getMinutes()).padStart(2, "0");
+  const segundo = String(fecha.getSeconds()).padStart(2, "0");
+  return `${fecha.getFullYear()}-${mes}-${dia}T${hora}:${minuto}:${segundo}`;
 }

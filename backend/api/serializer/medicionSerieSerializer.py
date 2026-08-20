@@ -32,6 +32,10 @@ class MedicionSerieInputSerializer(serializers.Serializer):
         min_value=MIN_PUNTOS_PERMITIDO,
         max_value=MAX_PUNTOS_PERMITIDO,
     )
+    agrupar_siempre = serializers.BooleanField(
+        default=False,
+        help_text="Mantiene las cubetas aunque todas las mediciones entren dentro del límite de puntos.",
+    )
 
     def validate(self, data):
         if data['fecha_inicio'] >= data['fecha_fin']:

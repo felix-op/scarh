@@ -23,7 +23,7 @@ const RUTAS: RutaHeader[] = [
   { href: "/dashboard/admin/historial", titulo: "Historial de Acciones" },
   { href: "/dashboard/limnigrafos/importar", titulo: "Importar mediciones" },
   { href: "/dashboard/limnigrafos/editar", titulo: "Editar limnígrafo" },
-  { href: "/dashboard/limnigrafos", titulo: "Gestión de Limnígrafos" },
+  { href: "/dashboard/limnigrafos", titulo: "Limnígrafos" },
   { href: "/dashboard/mediciones", titulo: "Mediciones" },
   { href: "/dashboard/estadisticas", titulo: "Estadísticas" },
   { href: "/dashboard/alertas", titulo: "Alertas" },

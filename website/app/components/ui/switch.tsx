@@ -4,14 +4,14 @@ import { Ref } from "react";
 import { Switch as ShadcnSwitch } from "../shadcn/switch";
 
 export interface SwitchProps {
-  label: string;
+  label?: string;
   name: string;
   description?: string; // Etiqueta al lado del switch
   errors?: string[];
   disabled?: boolean;
   required?: boolean;
   checked?: boolean;
-  onChange?: (checked: boolean) => void;
+  onChange?: (_checked: boolean) => void;
   className?: string;
   ref?: Ref<HTMLButtonElement>; // ref nativo de React 19
 }
@@ -33,9 +33,11 @@ export function Switch({
   return (
     <div className="flex flex-col gap-1.5 w-full">
       {/* Label principal arriba */}
-      <span className="text-sm font-medium text-foreground">
-        {label} {required && <span className="text-error">*</span>}
-      </span>
+      {label && (
+        <span className="text-sm font-medium text-foreground">
+          {label} {required && <span className="text-error">*</span>}
+        </span>
+      )}
 
       {/* Switch y descripción al lado */}
       <div className="flex items-center gap-3 py-1">

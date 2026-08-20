@@ -1,30 +1,17 @@
-import { auth } from "@auth";
 import {
   Alert,
   AutoRefresco,
-  Saludo,
   GrillaLimnigrafos,
   LayoutBase,
   LineaTiempoAcciones,
-  ResumenInstalacion,
+  ResumenDispositivos,
+  ResumenMediciones,
+  ResumenOrigenCargas,
 } from "@components";
 import { getSSREstadisticasDashboard } from "@services";
-import { obtenerSaludo } from "@utils";
 import { ApiError, type DashboardResponse } from "@models";
 
 export default async function DashboardPage() {
-  const session = await auth();
-  const nombre = session?.user?.first_name || session?.user?.username;
-
-  // Momento en que se resolvieron los datos, para el "actualizado hace…".
-  //
-  // La regla de pureza apunta a componentes que se re-renderizan, donde `Date.now()`
-  // daría un valor distinto en cada pasada. Este es un Server Component asíncrono:
-  // corre una vez por request y su resultado viaja al cliente ya serializado, que es
-  // precisamente lo que hace confiable la marca de tiempo.
-  // eslint-disable-next-line react-hooks/purity
-  const generadoEn = Date.now();
-
   let datos: DashboardResponse | null = null;
   let error: string | undefined;
 
@@ -42,13 +29,8 @@ export default async function DashboardPage() {
     datos?.limnigrafos.filter((limnigrafo) => limnigrafo.estado_conexion === "en_linea").length ?? 0;
 
   return (
-    <LayoutBase
-      titulo={
-        nombre ? <Saludo inicial={obtenerSaludo(nombre, new Date(generadoEn), generadoEn)} /> : "Inicio"
-      }
-      subtitulo="Estado de la red de limnígrafos y actividad reciente del sistema."
-      acciones={<AutoRefresco generadoEn={generadoEn} />}
-    >
+    <LayoutBase>
+      <AutoRefresco />
       {error && (
         <Alert variant="error" title="No se pudo cargar el tablero">
           {error}
@@ -56,23 +38,25 @@ export default async function DashboardPage() {
       )}
 
       {datos && (
-        <div className="flex flex-col gap-6">
-          <ResumenInstalacion resumen={datos.resumen} enLinea={enLinea} />
-
-          {/*
-            Los dispositivos son el contenido principal y la actividad es apoyo, así
-            que la grilla se lleva dos tercios. En pantallas chicas se apilan, con los
-            dispositivos primero.
-          */}
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <section className="xl:col-span-2">
-              <GrillaLimnigrafos limnigrafos={datos.limnigrafos} />
-            </section>
-
-            <aside className="xl:col-span-1">
-              <LineaTiempoAcciones acciones={datos.ultimas_acciones} />
-            </aside>
-          </div>
+        <div className="grid grid-cols-1 gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-5 xl:grid-rows-5">
+          <ResumenDispositivos
+            resumen={datos.resumen}
+            enLinea={enLinea}
+            className="xl:col-start-1 xl:row-start-1"
+          />
+          <ResumenMediciones resumen={datos.resumen} className="xl:col-start-1 xl:row-start-2" />
+          <ResumenOrigenCargas
+            resumen={datos.resumen}
+            className="xl:col-span-2 xl:col-start-2 xl:row-span-2 xl:row-start-1"
+          />
+          <GrillaLimnigrafos
+            limnigrafos={datos.limnigrafos}
+            className="xl:col-span-3 xl:col-start-1 xl:row-span-3 xl:row-start-3"
+          />
+          <LineaTiempoAcciones
+            acciones={datos.ultimas_acciones}
+            className="xl:col-span-2 xl:col-start-4 xl:row-span-5 xl:row-start-1"
+          />
         </div>
       )}
     </LayoutBase>

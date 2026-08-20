@@ -16,6 +16,7 @@ import type { DashboardAccion } from "@models";
  */
 export interface LineaTiempoAccionesProps {
   acciones: DashboardAccion[];
+  className?: string;
 }
 
 /** Ícono por tipo de acción, para reconocer el evento sin leer el texto. */
@@ -34,9 +35,9 @@ const COLOR_POR_ESTADO: Record<string, string> = {
   review: "text-warn",
 };
 
-export function LineaTiempoAcciones({ acciones }: LineaTiempoAccionesProps) {
+export function LineaTiempoAcciones({ acciones, className = "" }: LineaTiempoAccionesProps) {
   return (
-    <Card className="flex h-full flex-col gap-4 p-4">
+    <Card className={`flex h-full min-h-0 flex-col gap-4 p-4 ${className}`.trim()}>
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-foreground-title">Actividad reciente</h2>
         <Link
@@ -50,7 +51,7 @@ export function LineaTiempoAcciones({ acciones }: LineaTiempoAccionesProps) {
       {acciones.length === 0 ? (
         <p className="text-sm text-foreground-disabled">Todavía no hay actividad registrada.</p>
       ) : (
-        <ol className="flex flex-col">
+        <ol className="flex min-h-0 flex-col overflow-y-auto">
           {acciones.map((accion, indice) => (
             <li key={accion.id} className="flex gap-3">
               {/* Riel de la línea de tiempo: el punto marca el evento y la línea lo

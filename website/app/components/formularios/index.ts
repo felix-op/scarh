@@ -4,6 +4,7 @@ export * from "./select-rhf";
 export * from "./checkbox-rhf";
 export * from "./datefield-rhf";
 export * from "./datetime-maskfield";
+export * from "./date-time-field-rhf";
 export * from "./radiofield-rhf";
 export * from "./segmented-control-rhf";
 export * from "./switch-rhf";

@@ -4,7 +4,7 @@ import { LayoutBase } from "@components";
 export default function LimnigrafosLayout({ children }: { children: ReactNode }) {
   return (
     <LayoutBase
-      titulo="Gestión de Limnígrafos"
+      titulo="Limnígrafos"
       subtitulo="Administre los limnígrafos del sistema, su configuración y sus rutas de acceso."
     >
       {children}

@@ -11,7 +11,7 @@ import {
   type VistaEstadistica,
 } from "./constantes-estadisticas";
 import { ATRIBUTO_METADATA } from "./mediciones.formato";
-import { FORMATO_FECHA, obtenerRangoVentana } from "./estadisticas.utiles";
+import { FORMATO_FECHA_HORA, obtenerRangoVentana } from "./estadisticas.utiles";
 
 /**
  * Estado completo de la consulta de estadísticas. Es lo que viaja en la URL, así
@@ -25,9 +25,10 @@ import { FORMATO_FECHA, obtenerRangoVentana } from "./estadisticas.utiles";
  * @property {AtributoEstadistica} atributo Variable analizada.
  * @property {number[]} limnigrafos IDs seleccionados, en orden de selección.
  * @property {string} ventana Ventana rápida, o `personalizado`.
- * @property {string} desde Comienzo del rango en `yyyy-MM-dd`.
- * @property {string} hasta Fin del rango en `yyyy-MM-dd`, incluido.
+ * @property {string} desde Comienzo del rango en `yyyy-MM-ddTHH:mm:ss`.
+ * @property {string} hasta Fin del rango en `yyyy-MM-ddTHH:mm:ss`.
  * @property {AgrupacionEstadistica} agrupar Granularidad de la vista de resumen.
+ * @property {boolean} agruparSiempre Conserva las cubetas aun cuando entren todos los datos.
  */
 export interface FiltrosEstadisticasState {
   vista: VistaEstadistica;
@@ -37,6 +38,7 @@ export interface FiltrosEstadisticasState {
   desde: string;
   hasta: string;
   agrupar: AgrupacionEstadistica;
+  agruparSiempre: boolean;
 }
 
 const VISTAS = VISTAS_ESTADISTICAS.map((vista) => vista.value) as [VistaEstadistica, ...VistaEstadistica[]];
@@ -63,9 +65,10 @@ const searchParamsSchema = z.object({
     .transform(parsearListaIds)
     .catch([] as number[]),
   ventana: z.enum(VENTANAS).catch(VENTANA_POR_DEFECTO),
-  desde: z.string().regex(FORMATO_FECHA).optional().catch(undefined),
-  hasta: z.string().regex(FORMATO_FECHA).optional().catch(undefined),
+  desde: z.string().regex(FORMATO_FECHA_HORA).optional().catch(undefined),
+  hasta: z.string().regex(FORMATO_FECHA_HORA).optional().catch(undefined),
   agrupar: z.enum(AGRUPACIONES).catch(AGRUPACION_POR_DEFECTO),
+  agrupar_siempre: z.literal("1").optional().catch(undefined),
 });
 
 function parsearListaIds(valor: string): number[] {
@@ -102,6 +105,7 @@ export function parsearFiltrosEstadisticas(
     desde,
     hasta,
     agrupar: crudo.agrupar,
+    agruparSiempre: crudo.agrupar_siempre === "1",
   };
 }
 
@@ -122,9 +126,10 @@ export const filtrosEstadisticasSchema = z
     atributo: z.enum(ATRIBUTOS),
     limnigrafos: z.array(z.number().int().positive()).min(1, "Elegí al menos un limnígrafo."),
     ventana: z.enum(VENTANAS),
-    desde: z.string().regex(FORMATO_FECHA, "Fecha de inicio inválida."),
-    hasta: z.string().regex(FORMATO_FECHA, "Fecha de fin inválida."),
+    desde: z.string().regex(FORMATO_FECHA_HORA, "Fecha y hora de inicio inválidas."),
+    hasta: z.string().regex(FORMATO_FECHA_HORA, "Fecha y hora de fin inválidas."),
     agrupar: z.enum(AGRUPACIONES),
+    agruparSiempre: z.boolean(),
   })
   .superRefine((filtros, ctx) => {
     if (filtros.desde > filtros.hasta) {
@@ -174,6 +179,8 @@ export function construirParamsEstadisticas(filtros: FiltrosEstadisticasState): 
   if (filtros.vista === "resumen" && filtros.agrupar !== AGRUPACION_POR_DEFECTO) {
     params.set("agrupar", filtros.agrupar);
   }
+
+  if (filtros.vista === "graficos" && filtros.agruparSiempre) params.set("agrupar_siempre", "1");
 
   return params;
 }

@@ -9,11 +9,24 @@ import { tieneCoberturaAlertas } from "./constantes-limnigrafos";
  * @property {boolean} requiereAtencion Si alguien tiene que hacer algo al respecto.
  */
 export interface EstadoLimnigrafoEvaluado {
+  clave: EstadoLimnigrafoClave;
   etiqueta: string;
   variante: "success" | "warn" | "error" | "neutral";
   criticidad: number;
   requiereAtencion: boolean;
 }
+
+export type EstadoLimnigrafoClave = "en_linea" | "fuera_de_rango" | "demorado" | "sin_conexion" | "sin_envio_de_datos";
+
+/** Opciones del filtro que representa la situación unificada de cada equipo. */
+export const opcionesEstadoLimnigrafoUnificado: { value: "todos" | EstadoLimnigrafoClave; label: string }[] = [
+  { value: "todos", label: "Todos" },
+  { value: "en_linea", label: "En línea" },
+  { value: "fuera_de_rango", label: "Fuera de rango" },
+  { value: "demorado", label: "Demorado" },
+  { value: "sin_conexion", label: "Sin conexión" },
+  { value: "sin_envio_de_datos", label: "Sin envío de datos" },
+];
 
 /** Datos mínimos para evaluar el estado. */
 export interface EntradaEstadoLimnigrafo {
@@ -50,8 +63,9 @@ export function evaluarEstadoLimnigrafo({
 
   if (!tieneCoberturaAlertas(tipoComunicacion)) {
     return fueraDeRango
-      ? { etiqueta: "Fuera de rango", variante: "warn", criticidad: 2, requiereAtencion: true }
+      ? { clave: "fuera_de_rango", etiqueta: "Fuera de rango", variante: "warn", criticidad: 2, requiereAtencion: true }
       : {
+          clave: "sin_envio_de_datos",
           etiqueta: "Sin envío de datos",
           variante: "neutral",
           criticidad: 9,
@@ -60,16 +74,16 @@ export function evaluarEstadoLimnigrafo({
   }
 
   if (estadoConexion === "sin_conexion") {
-    return { etiqueta: "Sin conexión", variante: "error", criticidad: 0, requiereAtencion: true };
+    return { clave: "sin_conexion", etiqueta: "Sin conexión", variante: "error", criticidad: 0, requiereAtencion: true };
   }
   if (estadoConexion === "demorado") {
-    return { etiqueta: "Demorado", variante: "warn", criticidad: 1, requiereAtencion: true };
+    return { clave: "demorado", etiqueta: "Demorado", variante: "warn", criticidad: 1, requiereAtencion: true };
   }
   if (fueraDeRango) {
-    return { etiqueta: "Fuera de rango", variante: "warn", criticidad: 2, requiereAtencion: true };
+    return { clave: "fuera_de_rango", etiqueta: "Fuera de rango", variante: "warn", criticidad: 2, requiereAtencion: true };
   }
 
-  return { etiqueta: "En línea", variante: "success", criticidad: 9, requiereAtencion: false };
+  return { clave: "en_linea", etiqueta: "En línea", variante: "success", criticidad: 9, requiereAtencion: false };
 }
 
 /**
