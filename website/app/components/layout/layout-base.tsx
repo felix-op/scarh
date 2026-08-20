@@ -16,35 +16,27 @@ export interface LayoutBaseProps {
   volver?: boolean;
 }
 
-export function LayoutBase({ titulo, subtitulo, acciones, children, noPadding = false, volver = false }: LayoutBaseProps) {
+export function LayoutBase({ acciones, children, noPadding = false, volver = false }: LayoutBaseProps) {
   const router = useRouter();
-  const tieneHeader = Boolean(titulo || volver);
+  const tieneControles = Boolean(volver || acciones);
 
   return (
-    <div
-      className={`flex flex-col gap-6 ${
-        noPadding ? "h-full min-h-0 flex-1" : "p-2 pb-24 md:p-4 md:pb-12 2xl:p-6 2xl:pb-12"
-      }`}
-    >
-      {tieneHeader && (
-        <div className="flex flex-col gap-3">
-          {volver && (
-            <div>
+    <div className={`flex min-h-0 flex-1 flex-col ${noPadding ? "overflow-hidden" : "overflow-y-auto"}`}>
+      <div
+        className={`flex min-h-0 flex-1 flex-col gap-6 ${
+          noPadding ? "overflow-hidden" : "p-2 pb-24 md:p-4 md:pb-12 2xl:p-6 2xl:pb-12"
+        }`}
+      >
+        {tieneControles && (
+          <div className="flex items-center justify-between gap-3">
+            {volver && (
               <BotonVolver onClick={() => router.back()} />
-            </div>
-          )}
-          {titulo && (
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold text-foreground-title">{titulo}</h1>
-                {subtitulo && <p className="text-foreground-secondary">{subtitulo}</p>}
-              </div>
-              {acciones}
-            </div>
-          )}
-        </div>
-      )}
-      {children}
+            )}
+            {acciones && <div className={volver ? "ml-auto" : "w-full"}>{acciones}</div>}
+          </div>
+        )}
+        {children}
+      </div>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { filtrarNav, type SidebarNavItem } from "./sidebar-item";
 import { SidebarMobileItem } from "./sidebar-mobile-item";
 
 const MOBILE_NAV_ITEMS: SidebarNavItem[] = [
-  { label: "Dashboard", icono: "dashboard", href: "/dashboard" },
+  { label: "Inicio", icono: "inicio", href: "/dashboard" },
   {
     label: "Limnígrafos",
     icono: "chip",

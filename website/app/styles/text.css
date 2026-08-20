@@ -3,9 +3,8 @@
 h1, .h1 {
   font-size: 1.875rem; /* text-3xl */
   font-weight: 700;
-  color: var(--color-foreground-title);
+  color: var(--color-primary);
   margin-top: 0;
-  margin-bottom: 0.5em;
   letter-spacing: -0.025em;
   line-height: 1.25;
 }

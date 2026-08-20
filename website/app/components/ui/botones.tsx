@@ -341,6 +341,11 @@ export function BotonIcono({
   );
 }
 
+/** Botón circular con borde, pensado para las acciones visibles de la cabecera. */
+export function BotonIconoHeader({ className = "", ...props }: BotonIconoProps) {
+  return <BotonIcono className={`button-icon-header ${className}`} {...props} />;
+}
+
 export function BotonIconoEditar({
     className = "",
     ...props

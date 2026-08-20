@@ -4,14 +4,11 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { Usuario } from "@models";
 import { ROLES } from "@utils";
-import { BotonIcono } from "../ui/botones";
 import { SidebarItem, esGrupo, filtrarNav, type SidebarNavItem } from "./sidebar-item";
-import { SidebarProfile } from "./sidebar-profile";
-
-const COLLAPSE_KEY = "scarh-sidebar-collapsed";
+import { useSidebarState } from "./sidebar-state";
 
 const NAV_ITEMS: SidebarNavItem[] = [
-  { label: "Dashboard", icono: "dashboard", href: "/dashboard" },
+  { label: "Inicio", icono: "inicio", href: "/dashboard" },
   { label: "Mapa", icono: "mapa", href: "/dashboard/mapa", permiso: ROLES.MAPA_VISUALIZAR },
   { label: "Limnígrafos", icono: "chip", href: "/dashboard/limnigrafos", permiso: ROLES.LIMNIGRAFOS_VISUALIZAR },
   { label: "Mediciones", icono: "documento", href: "/dashboard/mediciones", permiso: ROLES.MEDICIONES_VISUALIZAR },
@@ -40,39 +37,28 @@ export function Sidebar({ usuario }: SidebarProps) {
   const pathname = usePathname();
   const items = filtrarNav(NAV_ITEMS, usuario);
 
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed } = useSidebarState();
+  // Igual que los SidebarItem: el logo recién se centra cuando terminó de ocultarse el texto.
+  const [logoCentrado, setLogoCentrado] = useState(collapsed);
   const [openGroup, setOpenGroup] = useState<string | null>(
     () => items.find((item) => esGrupo(item) && item.children.some((child) => pathname.startsWith(child.href)))?.label ?? null,
   );
-
-  useEffect(() => {
-    setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "true");
-  }, []);
-
-  const toggleCollapsed = () => {
-    setCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem(COLLAPSE_KEY, String(next));
-      return next;
-    });
-  };
 
   const toggleGroup = (label: string) => {
     setOpenGroup((prev) => (prev === label ? null : label));
   };
 
+  useEffect(() => {
+    const timeout = setTimeout(() => setLogoCentrado(collapsed), collapsed ? 300 : 0);
+    return () => clearTimeout(timeout);
+  }, [collapsed]);
+
   return (
     <aside className={`hidden md:flex h-full shrink-0 bg-sidebar font-outfit transition-[width] duration-300 ease-in-out ${collapsed ? "w-24" : "w-80"}`}>
       <div className="flex flex-1 flex-col gap-3 overflow-hidden p-3 pl-4">
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex w-full justify-end">
-            <BotonIcono
-              icon={collapsed ? "menu_derecha" : "menu_izquierda"}
-              onClick={toggleCollapsed}
-            />
-          </div>
-          <div className="flex items-center gap-3 w-full overflow-hidden px-1">
-            <img src="/logo.png" alt="Logo de SCARH" className="min-h-9 min-w-9 h-9 w-9 shrink-0" />
+        <div className="flex h-12 w-full items-center">
+          <div className={`flex w-full items-center overflow-hidden px-1 transition-[gap] duration-300 ease-in-out ${logoCentrado ? "justify-center gap-0" : "gap-3"}`}>
+            <img src="/logo.png" alt="Logo de SCARH" className="h-10 w-10 shrink-0" />
             <span
               className="overflow-hidden whitespace-nowrap truncate text-xl font-bold text-logo uppercase transition-[max-width] duration-300 ease-in-out"
               style={{ maxWidth: collapsed ? 0 : "8rem" }}
@@ -81,10 +67,6 @@ export function Sidebar({ usuario }: SidebarProps) {
             </span>
           </div>
         </div>
-
-        <div className="h-px w-full shrink-0 bg-border" />
-
-        <SidebarProfile usuario={usuario} collapsed={collapsed} />
 
         <div className="h-px w-full shrink-0 bg-border" />
 

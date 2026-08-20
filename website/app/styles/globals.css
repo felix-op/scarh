@@ -22,6 +22,15 @@ body {
   margin: 0;
 }
 
+/* Fondo neutro que separa las cards blancas sin competir con su contenido. */
+/* .dashboard-background {
+  background: linear-gradient(135deg, #cfd3d8 0%, #dce2e9 100%);
+} */
+
+/* .dark .dashboard-background {
+  background: linear-gradient(135deg, #252a31 0%, #1d2229 100%);
+} */
+
 .font-outfit {
   font-family: var(--font-outfit), sans-serif;
 }
